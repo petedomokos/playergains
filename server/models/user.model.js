@@ -39,6 +39,8 @@ const UserSchema = new mongoose.Schema({
   groups:[{type:mongoose.Schema.ObjectId, ref:'Group'}],
   //groups this user has admin rights to (inc adding data)
   adminGroups:[{type:mongoose.Schema.ObjectId, ref:'Group'}],
+  viewedGroups:[{type:mongoose.Schema.ObjectId, ref:'Group'}],
+  viewedUsers:[{type:mongoose.Schema.ObjectId, ref:'User'}],
   isSystemAdmin:{type:Boolean,default:false},
   hashed_password: {type: String,required: "Password is required"},
   salt: String,

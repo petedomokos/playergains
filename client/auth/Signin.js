@@ -1,4 +1,5 @@
 import React, {useState} from 'react'
+import { withRouter } from 'react-router-dom'
 import Card from '@material-ui/core/Card'
 import CardActions from '@material-ui/core/CardActions'
 import CardContent from '@material-ui/core/CardContent'
@@ -8,7 +9,6 @@ import Typography from '@material-ui/core/Typography'
 import Icon from '@material-ui/core/Icon'
 import { makeStyles } from '@material-ui/core/styles'
 import auth from './../auth/auth-helper'
-import {Redirect} from 'react-router-dom'
 import {signin} from './api-auth.js'
 
 const useStyles = makeStyles(theme => ({
@@ -37,13 +37,12 @@ const useStyles = makeStyles(theme => ({
   }
 }))
 
-export default function Signin(props) {
+export default withRouter(function Signin(props) {
   const classes = useStyles()
   const [values, setValues] = useState({
       email: '',
       password: '',
-      error: '',
-      redirectToReferrer: false
+      error: ''
   })
 
   const clickSubmit = () => {
@@ -51,8 +50,16 @@ export default function Signin(props) {
       email: values.email || undefined,
       password: values.password || undefined
     }
+    console.log('loc state', props.location)
+    //get referrer for redirect
+    const from  = '/'
+    /*const {from} = props.location.state || {
+      from: { pathname: '/' }
+    }*/
+    props.onSignin(user, props.history, from)
+    
 
-    signin(user).then((data) => {
+    /*signin(user).then((data) => {
       if (data.error) {
         setValues({ ...values, error: data.error})
       } else {
@@ -61,12 +68,13 @@ export default function Signin(props) {
         })
       }
     })
+    */
   }
 
   const handleChange = name => event => {
     setValues({ ...values, [name]: event.target.value })
   }
-
+  /*
   const {from} = props.location.state || {
       from: {
         pathname: '/'
@@ -76,6 +84,7 @@ export default function Signin(props) {
   if (redirectToReferrer) {
       return (<Redirect to={from}/>)
   }
+  */
 
   return (
       <Card className={classes.card}>
@@ -97,4 +106,4 @@ export default function Signin(props) {
         </CardActions>
       </Card>
     )
-}
+})

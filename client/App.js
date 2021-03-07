@@ -4,18 +4,25 @@ import {BrowserRouter} from 'react-router-dom'
 import { ThemeProvider } from '@material-ui/styles'
 import theme from './theme'
 import { hot } from 'react-hot-loader'
+//redux dependencies
+import { createStore, combineReducers, applyMiddleware } from 'redux'
+import { Provider } from 'react-redux'
+import { createLogger } from 'redux-logger'
+import thunk from 'redux-thunk'
+import {  user, asyncProcesses, dialogs } from './Reducers'
+import { InitialState } from './InitialStateForStore'
+const middleware = applyMiddleware(thunk, createLogger())
+
+const store = createStore(combineReducers(
+    { user, asyncProcesses, dialogs }), InitialState, middleware)
 
 const App = () => {
-  React.useEffect(() => {
-    const jssStyles = document.querySelector('#jss-server-side')
-    if (jssStyles) {
-      //jssStyles.parentNode.removeChild(jssStyles)
-    }
-  }, [])
   return (
   <BrowserRouter>
       <ThemeProvider theme={theme}>
-        <MainRouter/>
+          <Provider store={store}>
+            <MainRouter/>
+          </Provider>
       </ThemeProvider>
   </BrowserRouter>
 )}

@@ -29,11 +29,13 @@ const signin = async (req, res) => {
 
     return res.json({
       token,
-      user: {
+      user:user
+      /*user: {
         _id: user._id,
         name: user.name,
-        email: user.email
-      }
+        email: user.email,
+
+      }*/
     })
 
   } catch (err) {
