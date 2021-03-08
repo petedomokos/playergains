@@ -8,8 +8,6 @@ import TextField from '@material-ui/core/TextField'
 import Typography from '@material-ui/core/Typography'
 import Icon from '@material-ui/core/Icon'
 import { makeStyles } from '@material-ui/core/styles'
-import auth from './../auth/auth-helper'
-import {signin} from './api-auth.js'
 
 const useStyles = makeStyles(theme => ({
   card: {
@@ -50,42 +48,18 @@ export default withRouter(function Signin(props) {
       email: values.email || undefined,
       password: values.password || undefined
     }
-    console.log('loc state', props.location)
+    //console.log('loc state', props.location)
     //get referrer for redirect
     const from  = '/'
     /*const {from} = props.location.state || {
       from: { pathname: '/' }
     }*/
     props.onSignin(user, props.history, from)
-    
 
-    /*signin(user).then((data) => {
-      if (data.error) {
-        setValues({ ...values, error: data.error})
-      } else {
-        auth.authenticate(data, () => {
-          setValues({ ...values, error: '',redirectToReferrer: true})
-        })
-      }
-    })
-    */
   }
-
   const handleChange = name => event => {
     setValues({ ...values, [name]: event.target.value })
   }
-  /*
-  const {from} = props.location.state || {
-      from: {
-        pathname: '/'
-      }
-  }
-  const {redirectToReferrer} = values
-  if (redirectToReferrer) {
-      return (<Redirect to={from}/>)
-  }
-  */
-
   return (
       <Card className={classes.card}>
         <CardContent>

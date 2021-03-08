@@ -14,7 +14,7 @@ const isActive = (history, path) => {
   else
     return {color: '#ffffff'}
 }
-const Menu = withRouter(({history}) => (
+const Menu = withRouter(({history, onSignout}) => (
   <AppBar position="static">
     <Toolbar>
       <Typography variant="h6" color="inherit">
@@ -45,9 +45,7 @@ const Menu = withRouter(({history}) => (
           <Link to={"/user/" + auth.isAuthenticated().user._id}>
             <Button style={isActive(history, "/user/" + auth.isAuthenticated().user._id)}>My Profile</Button>
           </Link>
-          <Button color="inherit" onClick={() => {
-              auth.clearJWT(() => history.push('/'))
-            }}>Sign out</Button>
+          <Button color="inherit" onClick={() => onSignout(history)}>Sign out</Button>
         </span>)
       }
     </Toolbar>

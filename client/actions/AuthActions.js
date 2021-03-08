@@ -27,19 +27,19 @@ export const signin = (user, history, redirectTo) => dispatch =>{
 }
 
 export const signout = history => dispatch =>{
+	console.log('signing out req to server')
 	fetchThenDispatch(dispatch, 
 		'signingOut',
 		{
 			url: '/auth/signout/',
 			headers:{},
 			nextAction: data => {
-				//clear sessionStorage and cookies
-				if (typeof window !== "undefined")
-      				sessionStorage.removeItem('jwt')
-      			document.cookie = "t=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;"
-      			//return to home
-				history.push("/")
+      			//delete jwt
+				auth.clearJWT()
+				//return to home
+				history.push('/')
 				//clear user in store
+				console.log('signing out in store')
 				return {type:C.SIGN_OUT}
 			}
 		})

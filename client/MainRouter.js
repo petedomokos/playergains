@@ -7,11 +7,11 @@ import SigninContainer from './auth/containers/SigninContainer'
 import EditProfile from './user/EditProfile'
 import Profile from './user/Profile'
 import PrivateRoute from './auth/PrivateRoute'
-import Menu from './core/Menu'
+import MenuContainer from './core/containers/MenuContainer'
 
 const MainRouter = () => {
     return (<div>
-      <Menu/>
+      <MenuContainer/>
       <Switch>
         <Route exact path="/" component={Home}/>
         <Route path="/users" component={Users}/>
