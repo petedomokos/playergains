@@ -26,6 +26,7 @@ const create = async (req, res) => {
  * Load user and append to req.
  */
 const userByID = async (req, res, next, id) => {
+  //console.log('readuserById......', id)
   try {
     let user = await User.findById(id)
     if (!user)
@@ -42,13 +43,13 @@ const userByID = async (req, res, next, id) => {
 }
 
 const read = (req, res) => {
+  console.log('read......', req.profile)
   req.profile.hashed_password = undefined
   req.profile.salt = undefined
   return res.json(req.profile)
 }
 
 const list = async (req, res) => {
-  console.log('list users.......................')
   //const fakeUsers = [{_id:"1", name:"a user", email:"a@b.com"}]
   //res.json(fakeUsers)
   try {

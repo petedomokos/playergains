@@ -9,12 +9,12 @@ import { createStore, combineReducers, applyMiddleware } from 'redux'
 import { Provider } from 'react-redux'
 import { createLogger } from 'redux-logger'
 import thunk from 'redux-thunk'
-import {  user, asyncProcesses, dialogs } from './Reducers'
+import {  user, other, asyncProcesses, dialogs } from './Reducers'
 import { InitialState } from './InitialStateForStore'
 const middleware = applyMiddleware(thunk, createLogger())
 
 const store = createStore(combineReducers(
-    { user, asyncProcesses, dialogs }), InitialState, middleware)
+    { user, other, asyncProcesses, dialogs }), InitialState, middleware)
 
 const App = () => {
   return (

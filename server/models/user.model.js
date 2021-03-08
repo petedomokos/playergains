@@ -27,6 +27,9 @@ const UserSchema = new mongoose.Schema({
     match: [/.+\@.+\..+/, 'Please fill a valid email address'],
     required: 'Email is required'
   },
+  //users and groups this user has admin rights to
+  administeredUsers:[{type:mongoose.Schema.ObjectId, ref:'User'}],
+  administeredGroups:[{type:mongoose.Schema.ObjectId, ref:'Group'}],
   //other users who have admin rights over this user
   adminAccessList:[{type:mongoose.Schema.ObjectId, ref:'User'}],
   //access options: all, groups, private
@@ -36,9 +39,7 @@ const UserSchema = new mongoose.Schema({
   //the groups that this user has been added to
   //note: if access === groups, then access restricted to users
   //who are either players, coaches or admin to one of these groups
-  groups:[{type:mongoose.Schema.ObjectId, ref:'Group'}],
-  //groups this user has admin rights to (inc adding data)
-  adminGroups:[{type:mongoose.Schema.ObjectId, ref:'Group'}],
+  groupsMemberOf:[{type:mongoose.Schema.ObjectId, ref:'Group'}],
   viewedGroups:[{type:mongoose.Schema.ObjectId, ref:'Group'}],
   viewedUsers:[{type:mongoose.Schema.ObjectId, ref:'User'}],
   isSystemAdmin:{type:Boolean,default:false},

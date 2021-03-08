@@ -20,6 +20,9 @@ export const filterUniqueByProperty = (key, array) =>{
 	return uniqueValues
 		.map(val => array.find(elem => elem[key] === val))
 }
+
+export const filterUniqueById = items => filterUniqueByProperty('_id', items)
+
 export const elementsMatching = (elem1, elem2, keys) =>{
 	let matching = true
 	keys.forEach(key => {

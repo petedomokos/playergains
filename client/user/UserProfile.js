@@ -12,8 +12,8 @@ import Typography from '@material-ui/core/Typography'
 import Edit from '@material-ui/icons/Edit'
 import Person from '@material-ui/icons/Person'
 import Divider from '@material-ui/core/Divider'
-import DeleteUser from './DeleteUser'
-import auth from './../auth/auth-helper'
+import DeleteUserContainer from './containers/DeleteUserContainer'
+import auth from '../auth/auth-helper'
 import {read} from './api-user.js'
 import {Redirect, Link} from 'react-router-dom'
 
@@ -30,7 +30,7 @@ const useStyles = makeStyles(theme => ({
   }
 }))
 
-export default function Profile({ match }) {
+export default function UserProfile({ match }) {
   const classes = useStyles()
   const [user, setUser] = useState({})
   const [redirectToSignin, setRedirectToSignin] = useState(false)
@@ -79,7 +79,7 @@ export default function Profile({ match }) {
                     <Edit/>
               </IconButton>
                 </Link>
-                <DeleteUser userId={user._id}/>
+                <DeleteUserContainer/>
               </ListItemSecondaryAction>)
             }
           </ListItem>

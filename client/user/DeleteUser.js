@@ -12,32 +12,13 @@ import auth from './../auth/auth-helper'
 import {remove} from './api-user.js'
 import {Redirect} from 'react-router-dom'
 
-export default function DeleteUser(props) {
+export default function DeleteUser({ id, deleteAccount }) {
   const [open, setOpen] = useState(false)
-  const [redirect, setRedirect] = useState(false)
-
-  const jwt = auth.isAuthenticated()
   const clickButton = () => {
     setOpen(true)
   }
-  const deleteAccount = () => { 
-    remove({
-      userId: props.userId
-    }, {t: jwt.token}).then((data) => {
-      if (data && data.error) {
-        console.log(data.error)
-      } else {
-        auth.clearJWT(() => console.log('deleted'))
-        setRedirect(true)
-      }
-    })
-  }
   const handleRequestClose = () => {
     setOpen(false)
-  }
-
-  if (redirect) {
-    return <Redirect to='/'/>
   }
     return (<span>
       <IconButton aria-label="Delete" onClick={clickButton} color="secondary">
@@ -55,7 +36,7 @@ export default function DeleteUser(props) {
           <Button onClick={handleRequestClose} color="primary">
             Cancel
           </Button>
-          <Button onClick={deleteAccount} color="secondary" autoFocus="autoFocus">
+          <Button onClick={() => deleteAccount(id, history)} color="secondary" autoFocus="autoFocus">
             Confirm
           </Button>
         </DialogActions>
@@ -64,6 +45,6 @@ export default function DeleteUser(props) {
 
 }
 DeleteUser.propTypes = {
-  userId: PropTypes.string.isRequired
+  id: PropTypes.string.isRequired
 }
 

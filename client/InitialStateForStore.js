@@ -1,8 +1,16 @@
 export const InitialState = {
 	user:null,
+	other:{
+		users:[],
+		groups:[]
+	},
 	asyncProcesses:{
-		signingIn:false,
-		signingOut:false,
+		error:{
+			loading:{},
+			updating:{},
+			deleting:{},
+			creating:{}
+		},
 		loading:{
 			user:false,
 			users:false,

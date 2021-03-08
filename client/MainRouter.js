@@ -5,7 +5,7 @@ import Users from './user/Users'
 import Signup from './user/Signup'
 import SigninContainer from './auth/containers/SigninContainer'
 import EditProfile from './user/EditProfile'
-import Profile from './user/Profile'
+import UserContainer from './user/containers/UserContainer'
 import PrivateRoute from './auth/PrivateRoute'
 import MenuContainer from './core/containers/MenuContainer'
 
@@ -18,7 +18,7 @@ const MainRouter = () => {
         <Route path="/signup" component={Signup}/>
         <Route path="/signin" component={SigninContainer}/>
         <PrivateRoute path="/user/edit/:userId" component={EditProfile}/>
-        <Route path="/user/:userId" component={Profile}/>
+        <Route path="/user/:userId" component={UserContainer}/>
       </Switch>
     </div>)
 }

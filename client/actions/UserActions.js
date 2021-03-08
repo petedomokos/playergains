@@ -2,21 +2,22 @@ import C from '../Constants'
 import { status, parseResponse, logError, 
 	fetchStart, fetchEnd, fetchThenDispatch} from './CommonActions'
 import auth from '../auth/auth-helper'
-import { signout } from './Auth.Actions.js'
+import { signout } from './AuthActions.js';
 
 export const fetchUser = id => dispatch => {
+	console.log('fetching user...', id)
 	fetchThenDispatch(dispatch, 
 		'loading.user',
 		{
-			url: '/api/user/'+id, 
+			url: '/api/users/'+id, 
 			requireAuth:true,
 			nextAction: data => {
-				const jwt = auth.isAuthenticated()
+				const jwt = auth.isAuthenticated();
 				//may be reloading the signed in user
-				const userIsSignedIn = jwt ? jwt.user._id === data._id : false
-				return {
-					type:C.SAVE_USER, user:data, userIsSignedIn:userIsSignedIn
+				if(jwt.user._id === data._id){
+					return { type:C.SIGN_IN, user:data };
 				}
+				return { type:C.SAVE_OTHER_USER, user:data };
 			}
 		}) 
 }
@@ -100,10 +101,8 @@ export const updateUser = (id, formData, history) => dispatch => {
 			}
 		})
 }
-export const deleteUser = (id, history) => dispatch => {
-	//console.log("actions.deleteUser()")
-	//deleting ok, but DELETE_USER action not impl in reducer
-	//and also need to clear session storage 
+export const deleteUserAccount = (id, history) => dispatch => {
+	console.log('deleting...')
 	fetchThenDispatch(dispatch, 
 		'deleting.user',
 		{
