@@ -3,6 +3,16 @@ import C from '../Constants'
 import { status, parseResponse, logError, 
 	fetchStart, fetchEnd, fetchThenDispatch, resetStatus} from './CommonActions'
 
+//to fetch a group in full
+export const fetchGroup = id => dispatch => {
+	fetchThenDispatch(dispatch, 
+		'loading.group',
+		{
+			url: '/api/groups/' +id, 
+			requireAuth:true,
+			processor: data => {return {type:C.SAVE_GROUP, group:data}}
+		})
+}
 export const fetchGroups = () => dispatch => {
     fetchThenDispatch(dispatch, 
         'loading.groups',
@@ -13,7 +23,7 @@ export const fetchGroups = () => dispatch => {
         })
 }
 
-/*
+
 export const createGroup = group => dispatch => {
 	console.log("actions.createGroup()")
 	fetchThenDispatch(dispatch, 
@@ -62,19 +72,7 @@ export const updateGroup = (id, formData, history) => dispatch => {
 			}
 		})
 }
-
-
-//to fetch a group in full
-export const fetchGroup = id => dispatch => {
-	fetchThenDispatch(dispatch, 
-		'loading.group',
-		{
-			url: '/api/groups/' +id, 
-			requireAuth:true,
-			processor: data => {return {type:C.SAVE_GROUP, group:data}}
-		})
-}
-
+/*
 export const addPlayer = (player, groupId) => dispatch => {
 	//add to group in store first so UI not held up
 	//warning - this will only save teh client side details of player, not th eplayer that is returned from server.

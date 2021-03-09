@@ -1,18 +1,19 @@
 import React, { } from 'react'
 import UserProfile from './UserProfile'
 import { withLoader } from '../util/HOCs';
+//helper
+import { userProfile } from '../util/ReduxHelpers'
+
 
 function User(props) {
   console.log('User props', props)
   const { user } = props;
   console.log('User', user)
   //note may need useEffect for window.scrollTo(0, 0)
-  const userProfile = {
-    _id:user._id, name:user.name, email:user.email, created:user.created
-  }
+
   return (
     <div>
-      <UserProfile {...userProfile}/>
+      <UserProfile profile={userProfile(user)} />
     </div>
   )
 }

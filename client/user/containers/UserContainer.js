@@ -17,7 +17,7 @@ const mapStateToProps = (state, ownProps) => {
 const mapDispatchToProps = dispatch => ({
 	//2nd load arg is userid here
 	onLoad(propsToLoad, userId){
-		alert('loading user')
+		//alert('loading user')
 		dispatch(fetchUser(userId))
 	}
 })

@@ -1,6 +1,5 @@
 import { connect } from 'react-redux'
-import { fetchUser, fetchUsers } from '../../actions/UserActions'
-import { fetchGroups } from '../../actions/GroupActions'
+import { fetchUser } from '../../actions/UserActions'
 import UserHome  from '../UserHome'
 import { findUser } from '../../util/ReduxHelpers';
 

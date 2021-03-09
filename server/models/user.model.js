@@ -27,25 +27,13 @@ const UserSchema = new mongoose.Schema({
     match: [/.+\@.+\..+/, 'Please fill a valid email address'],
     required: 'Email is required'
   },
-  //users and groups this user has admin rights to
-  administeredUsers:[{type:mongoose.Schema.ObjectId, ref:'User'}],
-  administeredGroups:[{type:mongoose.Schema.ObjectId, ref:'Group'}],
+  //roles are player, coach, player-coach
+  isPlayer:{type:Boolean, default:true},
+  isCoach: {type:Boolean, default:true},
   //other users who have admin rights over this user
-  adminAccessList:[{type:mongoose.Schema.ObjectId, ref:'User'}],
-  //access options: all, groups, private
-  access: {type: String, default: 'all'},
-  //if access === private, then access restricted to these users
-  accessList:[{type:mongoose.Schema.ObjectId, ref:'User'}],
-  //the groups that this user has been added to
-  //note: if access === groups, then access restricted to users
-  //who are either players, coaches or admin to one of these groups
+  admin:[{type:mongoose.Schema.ObjectId, ref:'User'}],
+  administeredGroups:[{type:mongoose.Schema.ObjectId, ref:'Group'}],
   groupsMemberOf:[{type:mongoose.Schema.ObjectId, ref:'Group'}],
-  usersIFollow:[{type:mongoose.Schema.ObjectId, ref:'User'}],
-  groupsIFollow:[{type:mongoose.Schema.ObjectId, ref:'Group'}],
-  viewedGroups:[{type:mongoose.Schema.ObjectId, ref:'Group'}],
-  viewedUsers:[{type:mongoose.Schema.ObjectId, ref:'User'}],
-  //todo Dashboards
-  //.....
 
   isSystemAdmin:{type:Boolean,default:false},
   hashed_password: {type: String,required: "Password is required"},

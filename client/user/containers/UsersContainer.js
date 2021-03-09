@@ -13,7 +13,7 @@ const mapStateToProps = (state, ownProps) => {
 }
 const mapDispatchToProps = dispatch => ({
 	onLoad(){
-		alert('loading users')
+		//alert('loading users')
 		dispatch(fetchUsers())
 	}
 })

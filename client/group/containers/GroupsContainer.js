@@ -13,7 +13,7 @@ const mapStateToProps = (state, ownProps) => {
 }
 const mapDispatchToProps = dispatch => ({
 	onLoad(){
-		alert('loading groups')
+		//alert('loading groups')
 		dispatch(fetchGroups())
 	}
 })

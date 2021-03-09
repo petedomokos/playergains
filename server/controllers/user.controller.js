@@ -54,7 +54,7 @@ const list = async (req, res) => {
   //const fakeUsers = [{_id:"1", name:"a user", email:"a@b.com"}]
   //res.json(fakeUsers)
   try {
-    let users = await User.find().select('username name firstname photo email updated created')
+    let users = await User.find().select('username firstname surname photo email updated created')
     console.log('returning users now.......................')
     console.log('returning users.......................', users)
     res.json(users)

@@ -15,13 +15,17 @@ import Divider from '@material-ui/core/Divider'
 import DeleteUserContainer from './containers/DeleteUserContainer'
 import auth from '../auth/auth-helper'
 import { Link } from 'react-router-dom'
+import { SurroundSoundSharp } from '@material-ui/icons'
 
 const useStyles = makeStyles(theme => ({
   root: theme.mixins.gutters({
-    maxWidth: 600,
-    margin: 'auto',
+    //minWidth:300,
+    //maxWidth: 600,
+    width:300,
+    height:150,
+    //margin: 'auto',
     padding: theme.spacing(3),
-    marginTop: theme.spacing(5)
+    marginTop: theme.spacing(2)
   }),
   title: {
     marginTop: theme.spacing(3),
@@ -29,10 +33,12 @@ const useStyles = makeStyles(theme => ({
   }
 }))
 
-export default function UserProfile(props) {
-  const { _id, name, email, created } = props;
+export default function UserProfile({ profile }) {
+  const { _id, username, firstname, surname, email, created } = profile;
+  console.log('username', username)
   const classes = useStyles()
   const userSignedIn =  auth.isAuthenticated().user  && auth.isAuthenticated().user._id === _id;
+
     return (
       <Paper className={classes.root} elevation={4}>
         <Typography variant="h6" className={classes.title}>
@@ -45,7 +51,7 @@ export default function UserProfile(props) {
                 <Person/>
               </Avatar>
             </ListItemAvatar>
-            <ListItemText primary={name} secondary={email}/>
+            <ListItemText primary={username} secondary={firstname + ' ' +surname}/>
             {userSignedIn &&
               (<ListItemSecondaryAction>
                 <Link to={"/user/edit/" + _id}>
@@ -65,4 +71,4 @@ export default function UserProfile(props) {
         </List>
       </Paper>
     )
-  }
+}

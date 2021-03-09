@@ -12,3 +12,8 @@ export const findUser = (state, id) =>{
 	//default return user from other.users, or undefined
 	return state.other.users ? state.other.users.find(user => user._id === id) : undefined;
 }
+
+export const userProfile = user =>({ 
+	 _id:user._id, username:user.username, firstname:user.firstname, 
+	surname:user.surname, email:user.email, created:user.created 
+})

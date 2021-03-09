@@ -4,6 +4,7 @@ import { status, parseResponse, logError,
 import auth from '../auth/auth-helper'
 import { signout } from './AuthActions.js';
 
+//to fetch a user in full
 export const fetchUser = id => dispatch => {
 	console.log('fetching user...', id)
 	fetchThenDispatch(dispatch, 
@@ -33,34 +34,6 @@ export const fetchUsers = () => dispatch => {
 			nextAction: data => { return { type:C.SAVE_OTHER_USERS, users:data } }
 		}) 
 }
-
-//returns the action to be dispatched that will save the user
-/*
-export const saveUser = user =>{
-	//gather all groups and players  into one array for client-side manipulation
-	//Any temporary saving and retrieving of data on client side happens in here
-	//with specific group and player arrays within user used as references only
-	TODO - make this a helper method accessible from anywhere in app
-	const groups = [
-		...user.adminGroups, 
-		...user.groupsFollowing,
-		...user.groupsViewed, 
-		...user.playerInfo.groups,
-		...user.coachInfo.groups]
-	const filteredGroups = filterUniqueByProperty('_id', groups)
-	const players = [
-	//todo - add playersFollowing and playersViewed properties to user.model
-		...user.adminGroups.map(g => g.players),   
-		...user.playerInfo.groups.map(g => g.players), 
-		...user.coachInfo.groups.map(g => g.players)]
-	const filteredPlayers = filterUniqueByProperty('_id', players)
-	const userWithGroupsAndPlayers = {...user, groups:filteredGroups, players:filteredPlayers}
-	//return {
-		//type:C.SAVE_USER, user:userWithGroupsAndPlayers
-	//}
-
-}
-*/
 
 export const updateUser = (id, formData, history) => dispatch => {
 	console.log('formdata', formData)

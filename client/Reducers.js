@@ -15,80 +15,15 @@ export const user = (state={}, act) =>{
 		case C.SIGN_OUT:{
 			return null;
 		}
-		case C.UPDATE_SIGNED_IN_USER:{
+		case C.UPDATE_USER:{
 			return {...state, ...act.user};
 		}
-		case C.UPDATE_ADMINISTERED_USER:{
-			//must be updating an administeredUser
-			const userToUpdate = state.administeredUsers.find(user => user._id === act.user._id);
-			const otherAdministeredUsers = state.administeredUsers.filter(user => user._id === act.user._id);
-			//overwrite updated properties in current stored version of user
-			const updatedAdministeredUsers = [...otherAdministeredUsers, {...userToUpdate, ...act.user}]
-			return { ...state, administeredUsers:updatedAdministeredUsers };
-		}
-		case C.DELETE_USER:{
-			//this is only called if signed in user deletes an admininistered user
-			return { 
-				...state, 
-				administeredUsers:state.administeredUsers.filter(user => user._id !== act.userId)
-			}
-		}
-		/*
-		case C.SAVE_NEW_GROUP:{
-			//saves a newly created group into groupsAdminFor
-			//ADD_GROUP will add an existing groupId into a specific location eg groupsFollowing
-			return {
-				...state, 
-				administeredGroups:[...state.groupsAdminFor, act.group._id]}
-		}
-		case C.DELETE_GROUP:{
-			//deletes the group from every location 
-			//(note - REMOVE_GROUP will remove from only one location)
-			return {
-				...state, 
-				groupsAdminFor:state.groupsAdminFor.filter(groupId  => groupId !== act.id),
-				groupsFollowing:state.groupsFollowing.filter(groupId  => groupId !== act.id),
-				groupsViewed:state.groupsViewed.filter(groupId  => groupId !== act.id),
-				playerInfo:{
-					...state.playerInfo, 
-					groups:state.playerInfo.groups.filter(groupId  => groupId !== act.id)
-				},
-				coachInfo:{
-					...state.coachInfo, 
-					groups:state.coachInfo.groups.filter(groupId  => groupId !== act.id)
-				}
-			}
-		}
-		case C.ADD_PLAYER:{
-			if(act.player._id === state._id){
-				//add group to users playerInfo
-				const _playerInfo = {
-					...state.playerInfo, 
-					groups:[...state.playerInfo.groups, act.groupId]
-				}
-				return {...state, playerInfo:_playerInfo}
-			}
-			return state
-		}
-		case C.REMOVE_PLAYER:{
-			if(act.player._id === state._id){
-				//remove group from users playerInfo
-				const _playerInfo = {
-					...state.playerInfo, 
-					groups:state.playerInfo.groups.filter(g => g._id === act.groupId)
-				}
-				return {...state, playerInfo:_playerInfo}
-			}
-			return state
-		}
-		*/
 		default:{
 			return state
 		}
 	}
 }
-//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!removed default state={}
-//because this is just  ahelper functoin, it will be passed the state from above, and it could be null
+//helper
 const groups = (state, act) =>{
 	switch(act.type){
 		case C.SAVE_GROUP:{

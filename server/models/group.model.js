@@ -9,10 +9,7 @@ const GroupSchema = new mongoose.Schema({
   },
   photo:{data:Buffer,contentType:String},
   //users who have admin rights over this group
-  adminAccesslist:[{type:mongoose.Schema.ObjectId, ref:'User'}],
-  //access options: all, private 
-  //if private, access is restricted to group admin and players
-  access: {type: String, default: 'all'},
+  admin:[{type:mongoose.Schema.ObjectId, ref:'User'}],
   players:[{type:mongoose.Schema.ObjectId, ref:'User'}],
   //datasets:[DatasetSchema],
   updated: Date,
