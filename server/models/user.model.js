@@ -40,8 +40,13 @@ const UserSchema = new mongoose.Schema({
   //note: if access === groups, then access restricted to users
   //who are either players, coaches or admin to one of these groups
   groupsMemberOf:[{type:mongoose.Schema.ObjectId, ref:'Group'}],
+  usersIFollow:[{type:mongoose.Schema.ObjectId, ref:'User'}],
+  groupsIFollow:[{type:mongoose.Schema.ObjectId, ref:'Group'}],
   viewedGroups:[{type:mongoose.Schema.ObjectId, ref:'Group'}],
   viewedUsers:[{type:mongoose.Schema.ObjectId, ref:'User'}],
+  //todo Dashboards
+  //.....
+
   isSystemAdmin:{type:Boolean,default:false},
   hashed_password: {type: String,required: "Password is required"},
   salt: String,

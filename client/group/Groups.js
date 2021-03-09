@@ -26,21 +26,21 @@ const useStyles = makeStyles(theme => ({
   }
 }))
 
-export default withLoader(function Users(props) {
-  console.log('Users', props)
-  const { users } = props;
+export default withLoader(function Groups(props) {
+  console.log('Groups', props)
+  const { groups } = props;
   const classes = useStyles()
 
     return (
       <Paper className={classes.root} elevation={4}>
         <Typography variant="h6" className={classes.title}>
-          Users
+          Groups
         </Typography>
-        {users.length >= 1 ? 
+        {groups.length >= 1 ? 
           <List dense>
-          {users.map((item, i) => {
+          {groups.map((item, i) => {
             console.log('id', item._id)
-            return <Link to={"/user/" + item._id} key={i}>
+            return <Link to={"/group/" + item._id} key={i}>
                       <ListItem button>
                         <ListItemAvatar>
                           <Avatar>
@@ -59,8 +59,8 @@ export default withLoader(function Users(props) {
               }
           </List>
           :
-          <div>no users</div>
+          <div>no groups</div>
         }
       </Paper>
     )
-}, ['users'])
+}, ['groups'])

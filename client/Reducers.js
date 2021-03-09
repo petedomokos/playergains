@@ -15,6 +15,24 @@ export const user = (state={}, act) =>{
 		case C.SIGN_OUT:{
 			return null;
 		}
+		case C.UPDATE_SIGNED_IN_USER:{
+			return {...state, ...act.user};
+		}
+		case C.UPDATE_ADMINISTERED_USER:{
+			//must be updating an administeredUser
+			const userToUpdate = state.administeredUsers.find(user => user._id === act.user._id);
+			const otherAdministeredUsers = state.administeredUsers.filter(user => user._id === act.user._id);
+			//overwrite updated properties in current stored version of user
+			const updatedAdministeredUsers = [...otherAdministeredUsers, {...userToUpdate, ...act.user}]
+			return { ...state, administeredUsers:updatedAdministeredUsers };
+		}
+		case C.DELETE_USER:{
+			//this is only called if signed in user deletes an admininistered user
+			return { 
+				...state, 
+				administeredUsers:state.administeredUsers.filter(user => user._id !== act.userId)
+			}
+		}
 		/*
 		case C.SAVE_NEW_GROUP:{
 			//saves a newly created group into groupsAdminFor
@@ -69,8 +87,9 @@ export const user = (state={}, act) =>{
 		}
 	}
 }
-
-const groups = (state={}, act) =>{
+//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!removed default state={}
+//because this is just  ahelper functoin, it will be passed the state from above, and it could be null
+const groups = (state, act) =>{
 	switch(act.type){
 		case C.SAVE_GROUP:{
 			//removes any old version and adds new version of group
@@ -82,6 +101,13 @@ const groups = (state={}, act) =>{
 			const otherGroups = state.filter(group => 
 				!act.groups.find(g => g._id === group._id))
 			return [...otherGroups, ...act.groups]
+		}
+		case C.SAVE_OTHER_GROUPS:{
+			console.log('saving other users>>>>>>>', state)
+			if(!state){
+				return act.groups;
+			}
+			return filterUniqueById([...state, ...act.groups]);
 		}
 		case C.SAVE_NEW_GROUP:{
 			return [...state, act.group]
@@ -135,24 +161,45 @@ const group = (state={}, act) =>{
 
 export const other = (state={}, act) =>{
 	switch(act.type){
+		//should maybe remove first case fro now, so all we do is load all users
 		case C.SAVE_OTHER_USER:{
 			console.log('saving other user>>>>>>>')
-			return users(state.users, act)
+			return { ...state, users: users(state.users, act) }
+		}
+		case C.SAVE_OTHER_USERS:{
+			console.log('saving other users>>>>>>>')
+			return { ...state, users:users(state.users, act) }
+		}
+		case C.SAVE_OTHER_GROUPS:{
+			console.log('saving other users>>>>>>>')
+			return { ...state, groups:groups(state.groups, act) }
 		}
 		default:
 			return state;
 	}
 }
 
-const users = (state={}, act) =>{
+const users = (state, act) =>{
 	switch(act.type){
+		//remove first case for, as all users are just loaded
 		case C.SAVE_OTHER_USER:{
-			console.log('saving other user>>>>>>>')
+			console.log('saving other user>>>>>>>', state)
 			//if user already stored, we amend existing user, so we dont overwrite any other properties
 			//that have already been loaded that are not part of this load
+			if(!state){
+				return [act.user]
+			}
 			const userToAmend = state.find(user => user._id === act.user._id) || {};
 			const otherUsers = state.filter(user => user._id !== act.user.id);
 			return [otherUsers, {...userToAmend, ...act.user}];
+		}
+		//unlike case 1, this overwrites, not amends, users that are already saved, if the same user is being saved again
+		case C.SAVE_OTHER_USERS:{
+			console.log('saving other users>>>>>>>', state)
+			if(!state){
+				return act.users;
+			}
+			return filterUniqueById([...state, ...act.users]);
 		}
 		default:
 			return state;

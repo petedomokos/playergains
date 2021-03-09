@@ -1,8 +1,8 @@
 export const InitialState = {
 	user:null,
 	other:{
-		users:[],
-		groups:[]
+		users:null,
+		groups:null
 	},
 	asyncProcesses:{
 		error:{
@@ -18,10 +18,16 @@ export const InitialState = {
 			groups:false
 		},
 		updating:{
+			user:false,
+			group:false,
 		},
 		deleting:{
+			user:false,
+			group:false,
 		},
 		creating:{
+			user:false,
+			group:false,
 		}
 	},
 	dialogs:{

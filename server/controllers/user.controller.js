@@ -1,6 +1,7 @@
 import User from '../models/user.model'
 import extend from 'lodash/extend'
 import errorHandler from './../helpers/dbErrorHandler'
+import formidable from 'formidable'
 
 /*
 attempts to create a new user in in db. 
@@ -53,7 +54,7 @@ const list = async (req, res) => {
   //const fakeUsers = [{_id:"1", name:"a user", email:"a@b.com"}]
   //res.json(fakeUsers)
   try {
-    let users = await User.find().select('name email updated created')
+    let users = await User.find().select('username name firstname photo email updated created')
     console.log('returning users now.......................')
     console.log('returning users.......................', users)
     res.json(users)
@@ -66,22 +67,38 @@ const list = async (req, res) => {
 }
 
 const update = async (req, res) => {
-  try {
+  console.log('updating user....................')
+  let form = new formidable.IncomingForm()
+  form.keepExtensions = true
+  form.parse(req, async (err, fields, files) => {
+    if (err) {
+      return res.status(400).json({
+        error: "Photo could not be uploaded"
+      })
+    }
     let user = req.profile
-    user = extend(user, req.body)
+    user = extend(user, fields)
     user.updated = Date.now()
-    await user.save()
-    user.hashed_password = undefined
-    user.salt = undefined
-    res.json(user)
-  } catch (err) {
-    return res.status(400).json({
-      error: errorHandler.getErrorMessage(err)
-    })
-  }
+    console.log('user now', user)
+    if(files.photo){
+      user.photo.data = fs.readFileSync(files.photo.path)
+      user.photo.contentType = files.photo.type
+    }
+    try {
+      await user.save()
+      user.hashed_password = undefined
+      user.salt = undefined
+      res.json(user)
+    } catch (err) {
+      return res.status(400).json({
+        error: errorHandler.getErrorMessage(err)
+      })
+    }
+  })
 }
 
 const remove = async (req, res) => {
+  console.log('remove user..............')
   try {
     let user = req.profile
     let deletedUser = await user.remove()

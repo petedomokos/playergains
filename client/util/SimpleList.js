@@ -1,4 +1,5 @@
-import React, {useState, useEffect} from 'react'
+import React, {useState} from 'react'
+import {Link} from 'react-router-dom'
 import { makeStyles } from '@material-ui/core/styles'
 import Paper from '@material-ui/core/Paper'
 import List from '@material-ui/core/List'
@@ -11,9 +12,7 @@ import IconButton from '@material-ui/core/IconButton'
 import Typography from '@material-ui/core/Typography'
 import ArrowForward from '@material-ui/icons/ArrowForward'
 import Person from '@material-ui/icons/Person'
-import {Link} from 'react-router-dom'
-import SimpleList from '../util/SimpleList'
-import { withLoader } from '../util/HOCs';
+
 
 const useStyles = makeStyles(theme => ({
   root: theme.mixins.gutters({
@@ -26,28 +25,26 @@ const useStyles = makeStyles(theme => ({
   }
 }))
 
-export default withLoader(function Users(props) {
-  console.log('Users', props)
-  const { users } = props;
+export default function SimpleList({title, emptyMesg, items, primaryTextKey, linkAccessor}) {
+  console.log('List', items)
   const classes = useStyles()
 
     return (
       <Paper className={classes.root} elevation={4}>
-        <Typography variant="h6" className={classes.title}>
-          Users
-        </Typography>
-        {users.length >= 1 ? 
+        {title && <Typography variant="h6" className={classes.title}>
+          {title}
+        </Typography>}
+        {items.length >= 1 ? 
           <List dense>
-          {users.map((item, i) => {
-            console.log('id', item._id)
-            return <Link to={"/user/" + item._id} key={i}>
+          {items.map((item, i) => {
+            return <Link to={linkAccessor(item, i)} key={i}>
                       <ListItem button>
                         <ListItemAvatar>
                           <Avatar>
                             <Person/>
                           </Avatar>
                         </ListItemAvatar>
-                        <ListItemText primary={item.name}/>
+                        <ListItemText primary={item[primaryTextKey]}/>
                         <ListItemSecondaryAction>
                         <IconButton>
                             <ArrowForward/>
@@ -59,8 +56,13 @@ export default withLoader(function Users(props) {
               }
           </List>
           :
-          <div>no users</div>
+          <div>{emptyMesg}</div>
         }
       </Paper>
     )
-}, ['users'])
+}
+
+SimpleList.defaultProps = {
+    emptyMesg:'None',
+    linkAccessor:item => '/'
+}

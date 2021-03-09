@@ -23,32 +23,14 @@ export const fetchUser = id => dispatch => {
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-export const fetchUsers = id => dispatch => {
+export const fetchUsers = () => dispatch => {
+	console.log('url is /api/users')
 	fetchThenDispatch(dispatch, 
-		'loading.user',
+		'loading.users',
 		{
-			url: '/api/users/', 
+			url: '/api/users', 
 			requireAuth:true,
-			nextAction: data => {
-				return { type:C.SAVE_USERS, users:data }
-			}
+			nextAction: data => { return { type:C.SAVE_OTHER_USERS, users:data } }
 		}) 
 }
 
@@ -81,10 +63,11 @@ export const saveUser = user =>{
 */
 
 export const updateUser = (id, formData, history) => dispatch => {
+	console.log('formdata', formData)
 	fetchThenDispatch(dispatch, 
 		'updating.user',
 		{
-			url: '/api/user/'+id,
+			url: '/api/users/'+id,
 			method: 'PUT',
 			headers:{
 	        	'Accept': 'application/json'
@@ -93,10 +76,15 @@ export const updateUser = (id, formData, history) => dispatch => {
 			requireAuth:true,
 			nextAction: data => {
 				history.push("/")
-				const jwt = auth.isAuthenticated()
-				const userIsSignedIn = jwt ? jwt.user._id === data._id : false
-				return {
-					type:C.SAVE_USER, user:data, userIsSignedIn:userIsSignedIn
+				const signedInUserWasUpdated = auth.isAuthenticated().user._id === data._id;
+				if(signedInUserWasUpdated){
+					return {
+						type:C.UPDATE_SIGNED_IN_USER, user:data
+					}
+				}else{
+					return {
+						type:C.UPDATE_ADMINISTERED_USER, user:data
+					}
 				}
 			}
 		})
@@ -106,9 +94,21 @@ export const deleteUserAccount = (id, history) => dispatch => {
 	fetchThenDispatch(dispatch, 
 		'deleting.user',
 		{
-			url: '/api/user/'+id,
+			url: '/api/users/'+id,
 			method: 'DELETE',
 			requireAuth:true,
-			nextAction: data => signout(history)
+			//todo - only signout if user being deleted was signed in
+			nextAction: data => {
+				const signedInUserWasDeleted = auth.isAuthenticated().user._id === data._id;
+				if(signedInUserWasDeleted){
+					return signout(history)
+				}else{
+					history.push('/')
+					return {
+						type:C.DELETE_USER, userId:data._id
+					}
+
+				}
+			}
 		})
 }

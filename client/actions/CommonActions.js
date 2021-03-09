@@ -12,7 +12,7 @@ export const parseResponse = resp => {
 	return resp.json()
 }
 export const logError = (dispatch, err, path) =>{
-	//console.error("There is an action error!!!", err)
+	console.error("There is an action error!!!", err)
 	dispatch({type:C.ERROR, value:err, path:path})
 }
 //higher-order actions
@@ -41,7 +41,7 @@ export const fetchThenDispatch = (dispatch, asyncProcessesPath, options) => {
 	const { method, url, headers, body, requireAuth, nextAction, errorHandler } = options
 	const handleError = errorHandler ? errorHandler : logError
 	const formatNextAction = nextAction ? nextAction : function(data){return {type:C.NO_ACTION}}
-
+	console.log('body', body)
 	const requiredHeaders = headers ? headers : {
 		'Accept': 'application/json', 
      	'Content-Type': 'application/json'

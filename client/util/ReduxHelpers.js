@@ -10,5 +10,5 @@ export const findUser = (state, id) =>{
 		}
 	}
 	//default return user from other.users, or undefined
-	return state.other.users.find(user => user._id === id);
+	return state.other.users ? state.other.users.find(user => user._id === id) : undefined;
 }

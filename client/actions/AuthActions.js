@@ -4,7 +4,7 @@ import auth from '../auth/auth-helper'
 
 export const signin = (user, history, redirectTo) => dispatch =>{
 	fetchThenDispatch(dispatch, 
-		'signingIn',
+		'loading.user',
 		{
 			url: '/auth/signin/',
 			method:'POST',

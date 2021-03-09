@@ -1,0 +1,1 @@
+incorect email or password error handling display - see logError func in CommonActions
