@@ -1,4 +1,4 @@
-import React, {useState} from 'react'
+import React, { useState, useEffect } from 'react'
 import Card from '@material-ui/core/Card'
 import CardActions from '@material-ui/core/CardActions'
 import CardContent from '@material-ui/core/CardContent'
@@ -13,6 +13,7 @@ import DialogContent from '@material-ui/core/DialogContent'
 import DialogContentText from '@material-ui/core/DialogContentText'
 import DialogTitle from '@material-ui/core/DialogTitle'
 import {Link} from 'react-router-dom'
+import auth from '../auth/auth-helper'
 
 const useStyles = makeStyles(theme => ({
   card: {
@@ -40,45 +41,54 @@ const useStyles = makeStyles(theme => ({
   }
 }))
 
-export default function Signup() {
-  const classes = useStyles()
-  const [values, setValues] = useState({
-    username: '',
-    firstname:'',
-    surname:'',
-    password: '',
-    email: '',
-    open: false,
-    error: ''
-  })
-
-  const handleChange = name => event => {
-    setValues({ ...values, [name]: event.target.value })
-  }
-
-  const clickSubmit = () => {
-    /*const user = {
-      username: values.username || undefined,
-      firstname: values.firstname || undefined,
-      surname: values.surname || undefined,
-      email: values.email || undefined,
-      password: values.password || undefined
+export default function CreateUser({ creating, error, open, submit, closeDialog }) {
+  console.log('OPEN', open)
+    const classes = useStyles()
+    const initState = {
+        username: '',
+        firstname:'',
+        surname:'',
+        password: '',
+        email: ''
     }
-    create(user).then((data) => {
-      if (data.error) {
-        setValues({ ...values, error: data.error})
-      } else {
-        setValues({ ...values, error: '', open: true})
-      }
-    })
-    */
-  }
+    const [values, setValues] = useState(initState)
+    //useEffect to reset dialog and error when unmounting (in case user moves away from component)
+    //if this doesnt work, we can always reset in useEffcet itself if need be, although thats a bit wierd
+    useEffect(() => {
+      return () => {
+        alert('unmounting')
+        if(open){
+          closeDialog();
+        }
+      };
+    }, []); // will only apply once, not resetting the dialog at teh end of every render eg re-renders
+
+    const handleChange = name => event => {
+        setValues({ ...values, [name]: event.target.value })
+    }
+
+    const clickSubmit = () => {
+        const user = {
+        username: values.username || undefined,
+        firstname: values.firstname || undefined,
+        surname: values.surname || undefined,
+        email: values.email || undefined,
+        password: values.password || undefined
+        };
+        submit(user);
+    }
+
+    const reset = () =>{
+      console.log('reset-------')
+        closeDialog();
+        setValues(initState)
+    }
 
     return (<div>
       <Card className={classes.card}>
         <CardContent>
           <Typography variant="h6" className={classes.title}>
-            Sign Up
+          {auth.isAuthenticated() ? 'Create user' : 'Sign Up'}
           </Typography>
           <TextField id="username" label="Username" className={classes.textField} value={values.username} onChange={handleChange('username')} margin="normal"/><br/>
           <TextField id="firstname" label="First name" className={classes.textField} value={values.firstname} onChange={handleChange('firstname')} margin="normal"/><br/>
@@ -95,20 +105,33 @@ export default function Signup() {
           <Button color="primary" variant="contained" onClick={clickSubmit} className={classes.submit}>Submit</Button>
         </CardActions>
       </Card>
-      <Dialog open={values.open} disableBackdropClick={true}>
+      <Dialog open={open} disableBackdropClick={true}>
         <DialogTitle>New Account</DialogTitle>
         <DialogContent>
           <DialogContentText>
             New account successfully created.
           </DialogContentText>
         </DialogContent>
-        <DialogActions>
-          <Link to="/signin">
-            <Button color="primary" autoFocus="autoFocus" variant="contained">
-              Sign In
-            </Button>
-          </Link>
-        </DialogActions>
+        {auth.isAuthenticated() ?
+            <DialogActions>
+                <Button onClick={reset} color="primary" autoFocus="autoFocus" variant="contained">
+                Create another
+                </Button>
+                <Link to="/">
+                    <Button color="primary" autoFocus="autoFocus" variant="contained">
+                    Return home
+                    </Button>
+                </Link>
+            </DialogActions>
+            :
+            <DialogActions>
+                <Link to="/signin">
+                    <Button color="primary" autoFocus="autoFocus" variant="contained">
+                    Sign In
+                    </Button>
+                </Link>
+            </DialogActions>
+        }
       </Dialog>
     </div>
     )

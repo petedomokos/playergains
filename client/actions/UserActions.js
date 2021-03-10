@@ -4,6 +4,24 @@ import { status, parseResponse, logError,
 import auth from '../auth/auth-helper'
 import { signout } from './AuthActions.js';
 
+
+export const createUser = user => dispatch => {
+	console.log("actions.createUser()", user)
+	fetchThenDispatch(dispatch, 
+		'creating.user',
+		{
+			url: '/api/users/',
+			method: 'POST',
+			body:JSON.stringify(user),
+			requireAuth:true,
+			//this action will also set dialog.createUser = true
+			nextAction: data => {
+				console.log('next act save new user')
+				return {type:C.SAVE_NEW_USER, user:data }
+			}
+		})
+}
+
 //to fetch a user in full
 export const fetchUser = id => dispatch => {
 	console.log('fetching user...', id)

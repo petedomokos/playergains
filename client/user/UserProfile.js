@@ -54,10 +54,10 @@ export default function UserProfile({ profile }) {
             <ListItemText primary={username} secondary={firstname + ' ' +surname}/>
             {userSignedIn &&
               (<ListItemSecondaryAction>
-                <Link to={"/user/edit/" + _id}>
+                <Link to={"/user/edit/" + _id} >
                   <IconButton aria-label="Edit" color="primary">
                     <Edit/>
-              </IconButton>
+                  </IconButton>
                 </Link>
                 <DeleteUserContainer/>
               </ListItemSecondaryAction>)

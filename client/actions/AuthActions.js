@@ -12,7 +12,8 @@ export const signin = (user, history, redirectTo) => dispatch =>{
 			nextAction: data => {
 				//save to session storage
 				console.log("actions signin data", data)
-				const userCredentials = {email:data.user.email, _id:data.user._id, isSystemAdmin:data.user.isSystemAdmin}
+				//we will store anything here which is to do with site settings or authentication ( as opposed to data, whihc is in the redux store )
+				const userCredentials = {email:data.user.email, _id:data.user._id, isSystemAdmin:data.user.isSystemAdmin, isPlayer:data.user.isPlayer}
 				const jwt = {...data, user:userCredentials}
 				auth.authenticate(jwt, () => {
 					console.log('history', history)

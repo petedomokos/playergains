@@ -1,1 +1,6 @@
 incorect email or password error handling display - see logError func in CommonActions
+
+implement PrivateRoutes so that they dont redirect to home but to referrer
+
+incoproate Signup into store, sharing the action with createUser action. Its the same excepot the dialog at teh end should be diffrent 
+(ie for a signed in user, it is 'create another' and 'return home', whereas for a non-signed in user, its just 'signin')

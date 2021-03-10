@@ -36,7 +36,7 @@ export const createGroup = group => dispatch => {
 	      	},
 			body:group, //not stringify as its a formidable object
 			requireAuth:true,
-			processor: data => {return {type:C.SAVE_NEW_GROUP, group:data, connection:'admin'}}
+			processor: data => {return {type:C.SAVE_NEW_GROUP, group:data }}
 		})
 }
 

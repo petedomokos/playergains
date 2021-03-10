@@ -8,15 +8,18 @@ attempts to create a new user in in db.
 */
 //createuser
 const create = async (req, res) => {
-  console.log('body', req.body)
+  console.log('create user...body', req.body)
   const user = new User(req.body)
   console.log('creating user', user)
   try {
+    console.log('trying')
     await user.save()
+    console.log('success')
     return res.status(200).json({
       message: "Successfully signed up!"
     })
   } catch (err) {
+    console.log('failure', err)
     return res.status(400).json({
       error: errorHandler.getErrorMessage(err)
     })

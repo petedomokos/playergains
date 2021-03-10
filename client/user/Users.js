@@ -25,6 +25,6 @@ export default withLoader(function Users(props) {
     return (
       <SimpleList title='Players' emptyMesg='No users' items={users} 
         primaryText={user => user.firstname + ' ' +user.surname}
-        linkAccesor={user => '/users/'+user._id} actionButtons={actionButtons}/>
+        linkPath={user => {return '/user/'+user._id} } actionButtons={actionButtons}/>
     )
 }, ['users'])

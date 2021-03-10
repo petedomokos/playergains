@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react'
+import React from 'react'
 import { makeStyles } from '@material-ui/core/styles'
 import IconButton from '@material-ui/core/IconButton'
 import GroupAddIcon from '@material-ui/icons/GroupAdd';
@@ -30,6 +30,6 @@ export default withLoader(function Groups(props) {
   return (
     <SimpleList title='Groups' emptyMesg='No groups' items={groups} 
       primaryText={group => group.name}
-      linkAccesor={group => '/groups/'+group._id} actionButtons={actionButtons} />
+      linkPath={group => '/group/'+group._id} actionButtons={actionButtons} />
   )
 }, ['groups'])

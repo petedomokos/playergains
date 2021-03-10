@@ -37,11 +37,12 @@ const useStyles = makeStyles(theme => ({
     color: theme.palette.openTitle
   }
 }))
-
-export default function SimpleList({title, emptyMesg, items, actionButtons, primaryText, linkAccessor, styles}) {
+/*
+ linkPath - an accessor function to get the 'to' property for each (item,index) pair
+*/
+export default function SimpleList({title, emptyMesg, items, actionButtons, primaryText, linkPath, styles}) {
   console.log('List', items)
   const classes = useStyles(styles);
-
     return (
       <Card className={classes.root} elevation={4}>
          <CardContent className={classes.content}>
@@ -51,7 +52,7 @@ export default function SimpleList({title, emptyMesg, items, actionButtons, prim
           {items.length >= 1 ? 
             <List dense>
             {items.map((item, i) => {
-              return <Link to={linkAccessor(item, i)} key={i}>
+              return <Link to={linkPath(item, i)} key={i}>
                         <ListItem button>
                           <ListItemAvatar>
                             <Avatar>
@@ -83,6 +84,6 @@ export default function SimpleList({title, emptyMesg, items, actionButtons, prim
 SimpleList.defaultProps = {
     title:'',
     emptyMesg:'None',
-    linkAccessor:item => '/',
+    linkPathAccessor:item => '/',
     styles:{}
 }

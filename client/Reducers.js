@@ -96,6 +96,10 @@ const group = (state={}, act) =>{
 
 export const other = (state={}, act) =>{
 	switch(act.type){
+		case C.SAVE_NEW_USER:{
+			console.log('saving new user>>>>>>>')
+			return { ...state,  users: users(state.users, act) };
+		}
 		//should maybe remove first case fro now, so all we do is load all users
 		case C.SAVE_OTHER_USER:{
 			console.log('saving other user>>>>>>>')
@@ -116,6 +120,12 @@ export const other = (state={}, act) =>{
 
 const users = (state, act) =>{
 	switch(act.type){
+		case C.SAVE_NEW_USER:{
+			if(!state){
+				return [act.user]
+			}
+			return [...state, act.user];
+		}
 		//remove first case for, as all users are just loaded
 		case C.SAVE_OTHER_USER:{
 			console.log('saving other user>>>>>>>', state)
@@ -169,6 +179,9 @@ export const asyncProcesses = (state={}, act) =>{
 export const dialogs = (state={}, act) =>{
 	const { type, path, value } = act
 	switch(type){
+		case C.SAVE_NEW_USER:{
+			return { ...state, createUser:true };
+		}
 		case C.ERROR:{
 		}
 		/*

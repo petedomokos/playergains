@@ -6,6 +6,8 @@ import Signup from './user/Signup'
 import SigninContainer from './auth/containers/SigninContainer'
 import EditUserProfileContainer from './user/containers/EditUserProfileContainer'
 import UserContainer from './user/containers/UserContainer'
+import CreateUserContainer from './user/containers/CreateUserContainer'
+import CreateGroupContainer from './group/containers/CreateGroupContainer'
 import PrivateRoute from './auth/PrivateRoute'
 import MenuContainer from './core/containers/MenuContainer'
 
@@ -18,6 +20,8 @@ const MainRouter = () => {
       <Route path="/signup" component={Signup}/>
       <Route path="/signin" component={SigninContainer}/>
       <PrivateRoute path="/user/edit/:userId" component={EditUserProfileContainer}/>
+      <PrivateRoute path="/users/new" component={CreateUserContainer}/>
+      <PrivateRoute path="/groups/new" component={CreateGroupContainer}/>
       <Route path="/user/:userId" component={UserContainer}/>
     </Switch>
   </div>)
