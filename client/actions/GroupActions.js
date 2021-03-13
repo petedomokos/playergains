@@ -3,6 +3,24 @@ import C from '../Constants'
 import { status, parseResponse, logError, 
 	fetchStart, fetchEnd, fetchThenDispatch, resetStatus} from './CommonActions'
 
+	
+export const createGroup = group => dispatch => {
+	fetchThenDispatch(dispatch, 
+		'creating.group',
+		{
+			url: '/api/groups/',
+			method: 'POST',
+			body:JSON.stringify(group),
+			requireAuth:true,
+			//this action will also set dialog.createUser = true
+			nextAction: data => {
+				console.log('next act after creategroup')
+				return {type:C.CREATE_NEW_ADMINISTERED_GROUP, mesg:data.mesg, group:data.group }
+			}
+		})
+}
+
+
 //to fetch a group in full
 export const fetchGroup = id => dispatch => {
 	fetchThenDispatch(dispatch, 
@@ -10,7 +28,10 @@ export const fetchGroup = id => dispatch => {
 		{
 			url: '/api/groups/' +id, 
 			requireAuth:true,
-			processor: data => {return {type:C.SAVE_GROUP, group:data}}
+			processor: data => {
+				console.log('nextAction...load group')
+				return {type:C.LOAD_GROUP, group:data}
+			}
 		})
 }
 export const fetchGroups = () => dispatch => {
@@ -19,29 +40,11 @@ export const fetchGroups = () => dispatch => {
         {
             url: '/api/groups',
             requireAuth:true,
-            nextAction: data => {return {type:C.SAVE_OTHER_GROUPS, groups:data}}
+            nextAction: data => {return {type:C.LOAD_GROUPS, groups:data}}
         })
 }
 
-
-export const createGroup = group => dispatch => {
-	console.log("actions.createGroup()")
-	fetchThenDispatch(dispatch, 
-		'creating.group',
-		{
-			url: '/api/groups/',
-			method: 'POST',
-			headers:{
-	        	'Accept': 'application/json'
-	      	},
-			body:group, //not stringify as its a formidable object
-			requireAuth:true,
-			processor: data => {return {type:C.SAVE_NEW_GROUP, group:data }}
-		})
-}
-
 export const deleteGroup = (id, history) => dispatch => {
-	console.log("actions.deleteGroup() history")
 	fetchThenDispatch(dispatch, 
 		'deleting.group',
 		{
@@ -50,7 +53,7 @@ export const deleteGroup = (id, history) => dispatch => {
 			requireAuth:true,
 			processor: data => {
 				history.push("/")
-				return {type:C.DELETE_GROUP, id:id}
+				return {type:C.DELETE_ADMINISTERED_GROUPP, id:id}
 			}
 		})
 }
@@ -68,7 +71,7 @@ export const updateGroup = (id, formData, history) => dispatch => {
 			requireAuth:true,
 			processor: data => {
 				history.push("/group/"+id)
-				return {type:C.SAVE_GROUP, group:data}
+				return {type:C.UPDATE_ADMINISTERED_GROUP, group:data}
 			}
 		})
 }

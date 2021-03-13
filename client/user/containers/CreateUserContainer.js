@@ -5,17 +5,20 @@ import CreateUser from '../CreateUser'
 
 const mapStateToProps = (state, ownProps) => {
 	return({
-		creating:state.asyncProcesses.creating.group,
-		error:state.asyncProcesses.error.creating.group,
-		open:state.dialogs.createUser,
+		user:state.user,
+		creating:state.asyncProcesses.creating.user,
+		error:state.asyncProcesses.error.creating.user,
+		//two possible dialogs could be open (1st is if the signed in user created another user)
+		open:state.dialogs.createUser || state.dialogs.signup,
 	})
 }
 const mapDispatchToProps = dispatch => ({
 	submit(user){
 		dispatch(createUser(user))
 	},
-	closeDialog(){
-		dispatch(closeDialog('createUser'))
+	closeDialog(path){
+		console.log('closing dialog', path)
+		dispatch(closeDialog(path))
 	}
 })
 

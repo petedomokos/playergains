@@ -41,25 +41,25 @@ const useStyles = makeStyles(theme => ({
   }
 }))
 
-export default function CreateUser({ creating, error, open, submit, closeDialog }) {
-  console.log('OPEN', open)
+export default function CreateUser({ user, creating, error, open, submit, closeDialog }) {
     const classes = useStyles()
     const initState = {
         username: '',
         firstname:'',
         surname:'',
         password: '',
-        email: ''
+        email: '',
+        //the signed in user is added to admin (if a user is signed in)
+        admin: user && user._id ? [user._id] : []
     }
     const [values, setValues] = useState(initState)
     //useEffect to reset dialog and error when unmounting (in case user moves away from component)
     //if this doesnt work, we can always reset in useEffcet itself if need be, although thats a bit wierd
     useEffect(() => {
       return () => {
-        alert('unmounting')
-        if(open){
-          closeDialog();
-        }
+        //we dont have access to open prop anymore, so just always close Dialog
+        const path = user._id ? 'createUser' :'signup'
+        closeDialog(path);
       };
     }, []); // will only apply once, not resetting the dialog at teh end of every render eg re-renders
 
@@ -73,16 +73,22 @@ export default function CreateUser({ creating, error, open, submit, closeDialog 
         firstname: values.firstname || undefined,
         surname: values.surname || undefined,
         email: values.email || undefined,
-        password: values.password || undefined
+        password: values.password || undefined,
+        admin: values.admin || undefined
         };
         submit(user);
     }
 
     const reset = () =>{
-      console.log('reset-------')
+      //console.log('reset-------')
         closeDialog();
         setValues(initState)
     }
+
+    //get group once it has been saved to store (unless thre was error)
+    //warning - todo - username should be unique
+    //this will only be uses for non-signed in users created
+    const savedUser = user.loadedUsers.find(us => us.username === values.username);
 
     return (<div>
       <Card className={classes.card}>
@@ -117,6 +123,11 @@ export default function CreateUser({ creating, error, open, submit, closeDialog 
                 <Button onClick={reset} color="primary" autoFocus="autoFocus" variant="contained">
                 Create another
                 </Button>
+                {savedUser && <Link to={"/user/"+savedUser._id} >
+                  <Button color="primary" autoFocus="autoFocus" variant="contained">
+                  Go to user
+                  </Button>
+                </Link>}
                 <Link to="/">
                     <Button color="primary" autoFocus="autoFocus" variant="contained">
                     Return home

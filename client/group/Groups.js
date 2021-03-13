@@ -5,6 +5,9 @@ import GroupAddIcon from '@material-ui/icons/GroupAdd';
 import {Link} from 'react-router-dom'
 import SimpleList from '../util/SimpleList'
 import { withLoader } from '../util/HOCs';
+import { filterUniqueById } from '../util/ArrayHelpers';
+import { user } from '../Reducers';
+import ArrowForward from '@material-ui/icons/ArrowForward'
 
 
 const useStyles = makeStyles(theme => ({
@@ -15,8 +18,7 @@ const useStyles = makeStyles(theme => ({
 }))
 
 export default withLoader(function Groups(props) {
-  console.log('Groups', props)
-  const { groups } = props;
+  const { groups, /*administeredGroups, groupsMemberOf,*/ title, actionButtons, itemAction, emptyMesg } = props;
   const classes = useStyles()
 
   const addButton = (key) => 
@@ -25,11 +27,23 @@ export default withLoader(function Groups(props) {
         <GroupAddIcon/>
       </IconButton>
     </Link>
-  const actionButtons = [addButton]
+  const defaultActionButtons = [addButton]
+
+  const defaultItemAction = {
+    itemLinkPath:group => '/group/'+group._id,
+    ItemIcon:({}) => <ArrowForward/>
+  }
+
+  //todo - sort so administered groups first, then groupsMemberOf, then the rest
+  //remeber its just id now
 
   return (
-    <SimpleList title='Groups' emptyMesg='No groups' items={groups} 
+    <SimpleList
+      title={title || 'Groups'} 
+      emptyMesg={emptyMesg || 'No groups'}
+      items={groups} 
       primaryText={group => group.name}
-      linkPath={group => '/group/'+group._id} actionButtons={actionButtons} />
+      itemAction={itemAction || defaultItemAction}
+      actionButtons={actionButtons || defaultActionButtons} />
   )
-}, ['groups'])
+}, ['groupLoadsComplete'])

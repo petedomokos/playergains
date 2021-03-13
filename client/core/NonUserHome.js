@@ -5,7 +5,6 @@ import CardContent from '@material-ui/core/CardContent'
 import CardMedia from '@material-ui/core/CardMedia'
 import Typography from '@material-ui/core/Typography'
 //children
-import UserHomeContainer from './containers/UserHomeContainer'
 import SimpleList from '../util/SimpleList'
 import auth from '../auth/auth-helper'
 
@@ -20,20 +19,7 @@ const useStyles = makeStyles(theme => ({
   }
 }))
 
-export default function Home(props){
-  const classes = useStyles()
-  const jwt = auth.isAuthenticated()
-  return (
-      <>
-        {jwt ?
-          <UserHomeContainer userId={jwt.user._id}/>
-          :
-          <NonUserHome/>
-        }
-      </>
-  )
-}
-function NonUserHome(){
+export default function NonUserHome(){
   const classes = useStyles()
   return (
       <div className={classes.root}>

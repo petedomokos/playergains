@@ -8,7 +8,6 @@ const mapStateToProps = state => ({
 })
 const mapDispatchToProps = dispatch => ({
 	onSignout(history){
-		console.log('signing out...')
 		dispatch(signout(history))
 	}
 })

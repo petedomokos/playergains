@@ -40,26 +40,8 @@ const useStyles = makeStyles(theme => ({
 /*
  linkPath - an accessor function to get the 'to' property for each (item,index) pair
 */
-export default function SimpleList({ title, emptyMesg, items, itemAction, actionButtons, primaryText, styles}) {
+export default function SimpleList({title, emptyMesg, items, itemAction, actionButtons, primaryText, linkPath, styles}) {
   const classes = useStyles(styles);
-
-  const { ItemIcon, onItemClick, itemLinkPath } = itemAction;
-
-  const listItem = (item, i) => 
-      <ListItem button>
-        <ListItemAvatar>
-          <Avatar>
-            <Person/>
-          </Avatar>
-        </ListItemAvatar>
-        <ListItemText primary={primaryText(item,i)}/>
-        <ListItemSecondaryAction>
-        <IconButton>
-             <ItemIcon/>
-        </IconButton>
-        </ListItemSecondaryAction>
-      </ListItem>
-
     return (
       <Card className={classes.root} elevation={4}>
          <CardContent className={classes.content}>
@@ -68,19 +50,24 @@ export default function SimpleList({ title, emptyMesg, items, itemAction, action
           </Typography>}
           {items.length >= 1 ? 
             <List dense>
-              {items.map((item, i) =>
-                <div key={i}>
-                  {itemLinkPath ? 
-                    <Link to={itemLinkPath(item, i)} >
-                        {listItem(item, i)}
+            {items.map((item, i) => {
+              return <Link to={linkPath(item, i)} key={i}>
+                        <ListItem button>
+                          <ListItemAvatar>
+                            <Avatar>
+                              <Person/>
+                            </Avatar>
+                          </ListItemAvatar>
+                          <ListItemText primary={primaryText(item,i)}/>
+                          <ListItemSecondaryAction>
+                          <IconButton>
+                              <ArrowForward/>
+                          </IconButton>
+                          </ListItemSecondaryAction>
+                        </ListItem>
                     </Link>
-                    :
-                    <div onClick={() => onItemClick(item,i)} >
-                        {listItem(item, i)}
-                    </div>
-                  }
-                </div>
-              )}
+                  })
+                }
             </List>
             :
             <div  className={classes.title}>{emptyMesg}</div>
@@ -97,10 +84,6 @@ SimpleList.defaultProps = {
     title:'',
     emptyMesg:'None',
     items:[],
-    itemAction:{
-      itemLinkPath:() =>'/', 
-      ItemIcon:ArrowForward
-    },
     actionButtons:[],
     primaryText:() =>{},
     linkPath:item => '/',

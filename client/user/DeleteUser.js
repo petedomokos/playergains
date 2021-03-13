@@ -10,7 +10,7 @@ import DialogContentText from '@material-ui/core/DialogContentText'
 import DialogTitle from '@material-ui/core/DialogTitle'
 import { withRouter } from 'react-router-dom'
 
-export default function DeleteUser({ userId, openDialog, closeDialog, deleteAccount, deleting, open, error, history }) {
+export default withRouter(function DeleteUser({ userId, openDialog, closeDialog, deleteAccount, deleting, open, error, history }) {
     return (<span>
       <IconButton aria-label="Delete" onClick={openDialog} color="secondary">
        <DeleteIcon/>
@@ -34,6 +34,6 @@ export default function DeleteUser({ userId, openDialog, closeDialog, deleteAcco
       </Dialog>
     </span>)
 
-}
+})
 
 

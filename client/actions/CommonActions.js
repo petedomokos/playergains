@@ -8,7 +8,6 @@ export const status = resp =>{
 	return Promise.resolve(resp)
 }
 export const parseResponse = resp => {
-	//console.log('response...', resp)
 	return resp.json()
 }
 export const logError = (dispatch, err, path) =>{
@@ -41,7 +40,6 @@ export const fetchThenDispatch = (dispatch, asyncProcessesPath, options) => {
 	const { method, url, headers, body, requireAuth, nextAction, errorHandler } = options
 	const handleError = errorHandler ? errorHandler : logError
 	const formatNextAction = nextAction ? nextAction : function(data){return {type:C.NO_ACTION}}
-	console.log('body', body)
 	const requiredHeaders = headers ? headers : {
 		'Accept': 'application/json', 
      	'Content-Type': 'application/json'
@@ -55,12 +53,12 @@ export const fetchThenDispatch = (dispatch, asyncProcessesPath, options) => {
 		headers: requiredHeaders,
 		body:body //maybe undefined
 	}
-	console.log('making fetch req to url', url)
+	//console.log('making fetch req to url', url)
 	fetch(url, fetchSettings)
 	  .then(status)
 	  .then(parseResponse)
 	  .then(data =>{
-	  	console.log("Response from server: ", data)
+	  	console.log("Server Response:", data)
 	  	return data
 	  })
 	  .then(data => { dispatch(formatNextAction(data)) })

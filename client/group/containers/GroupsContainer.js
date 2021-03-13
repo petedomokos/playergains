@@ -1,12 +1,18 @@
 import { connect } from 'react-redux'
 import { fetchGroups } from '../../actions/GroupActions'
 import Groups  from '../Groups'
+import { findDeepGroup } from '../../util/ReduxHelpers';
 
-const mapStateToProps = (state, ownProps) => {
-	console.log('state', state)
+const mapStateToProps = (state, ownProps) => { 
+	const { loadedGroups, loadsComplete, groupsMemberOf, administeredGroups } = state.user;
+	const { include, exclude } = ownProps;
 	return{
-		user:state.user,
-        groups:state.other.groups,
+		groups:include ? loadedGroups.filter(g => include.includes(g._id)) : 
+		exclude ? loadedGroups.filter(g => !exclude.includes(g._id)) : 
+		loadedGroups,
+		/*administeredGroups:administeredGroups,
+		groupsMemberOf:groupsMemberOf,*/
+		groupLoadsComplete:loadsComplete.groups,
 		loading:state.asyncProcesses.loading.groups,
 		loadingError:state.asyncProcesses.error.loading.groups
 	}

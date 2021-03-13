@@ -7,16 +7,23 @@ import formidable from 'formidable'
 attempts to create a new user in in db. 
 */
 //createuser
+
+  //note - it is possible that group may have been fully loaded, in which case
+  //arrays like admin will not just be id but will be an object. But if user or group was just created,
+  //then only ids are returned. Therefore, we handle both cases.
+  //todo - better soln is to send the admin as objects in create methiods in controllers
+  //but to do that we need to go into teh database to get them, so need to chain promises
 const create = async (req, res) => {
   console.log('create user...body', req.body)
   const user = new User(req.body)
-  console.log('creating user', user)
+  console.log('created', user)
   try {
     console.log('trying')
     await user.save()
     console.log('success')
     return res.status(200).json({
-      message: "Successfully signed up!"
+      mesg: "Successfully signed up!",
+      user:user
     })
   } catch (err) {
     console.log('failure', err)
@@ -30,9 +37,16 @@ const create = async (req, res) => {
  * Load user and append to req.
  */
 const userByID = async (req, res, next, id) => {
-  //console.log('readuserById......', id)
+  console.log('readuserById......', id)
   try {
     let user = await User.findById(id)
+      .populate('admin', '_id username firstname surname created')
+      .populate('administeredGroups', '_id name desc groupType players admin created')
+      .populate('groupsPlayedFor', '_id name desc groupType players admin created')
+       //example from old playergains of how to populate deeper paths
+      //.populate({ path: 'player.groups', select: 'name _id desc groupType players parent admin coaches subgroups' })
+
+    console.log('user in userById', user)
     if (!user)
       return res.status('400').json({
         error: "User not found"
@@ -47,7 +61,7 @@ const userByID = async (req, res, next, id) => {
 }
 
 const read = (req, res) => {
-  console.log('read......', req.profile)
+  console.log('read......')
   req.profile.hashed_password = undefined
   req.profile.salt = undefined
   return res.json(req.profile)
@@ -57,9 +71,9 @@ const list = async (req, res) => {
   //const fakeUsers = [{_id:"1", name:"a user", email:"a@b.com"}]
   //res.json(fakeUsers)
   try {
-    let users = await User.find().select('username firstname surname photo email updated created')
+    let users = await User.find().select('username firstname surname photo email updated created admin')
     console.log('returning users now.......................')
-    console.log('returning users.......................', users)
+    //console.log('returning users.......................', users)
     res.json(users)
   } catch (err) {
     console.log('error listing users.......................')

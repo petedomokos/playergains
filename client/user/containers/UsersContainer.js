@@ -3,10 +3,17 @@ import { fetchUsers } from '../../actions/UserActions'
 import Users  from '../Users'
 
 const mapStateToProps = (state, ownProps) => {
-	//console.log('state', state)
+	console.log('state', state)
+	//todo - implement it using filter in here, so we just passed through the comparator
+	//note: optional filterFunc = (users) => filteredUsers
+	const { loadedUsers, /*administeredUsers,*/ loadsComplete } = state.user;
+	const { include, exclude } = ownProps;
 	return{
-		user:state.user,
-        users:state.other.users,
+		users:include ? loadedUsers.filter(us => include.includes(us._id)) : 
+			exclude ? loadedUsers.filter(us => !exclude.includes(us._id)) : 
+			loadedUsers,
+		/*administeredUsers:administeredUsers,*/
+        userLoadsComplete:loadsComplete.users, //for now, we just load all users at this stage
 		loading:state.asyncProcesses.loading.users,
 		loadingError:state.asyncProcesses.error.loading.users
 	}

@@ -16,7 +16,6 @@ const isActive = (history, path) => {
 }
 const Menu = withRouter(({history, onSignout}) => {
   const user = auth.isAuthenticated() ? auth.isAuthenticated().user : null;
-  console.log('user', user)
   return(
     <AppBar position="static">
       <Toolbar>

@@ -5,11 +5,11 @@ import DeleteUser from '../DeleteUser'
 
 
 const mapStateToProps = (state, ownProps) => {
-	console.log('state', state)
+	//console.log('state', state)
 	return{
 		//id can be passed in if user is deleting a different user that they have admin rights to
 		//or otherwise its the logged in user from store
-		userId:ownProps.id || state.user._id,
+		userId:ownProps.userId || state.user._id,
 		deleting:state.asyncProcesses.deleting.user,
 		open:state.dialogs.deleteUser,
 		error:state.asyncProcesses.error.deleting.user,

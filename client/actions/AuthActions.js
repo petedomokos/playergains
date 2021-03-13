@@ -11,12 +11,10 @@ export const signin = (user, history, redirectTo) => dispatch =>{
 			body: JSON.stringify(user),
 			nextAction: data => {
 				//save to session storage
-				console.log("actions signin data", data)
 				//we will store anything here which is to do with site settings or authentication ( as opposed to data, whihc is in the redux store )
 				const userCredentials = {email:data.user.email, _id:data.user._id, isSystemAdmin:data.user.isSystemAdmin, isPlayer:data.user.isPlayer}
 				const jwt = {...data, user:userCredentials}
 				auth.authenticate(jwt, () => {
-					console.log('history', history)
 				  	history.push(redirectTo || "/")
 		        })
 		        //save to store
@@ -28,7 +26,6 @@ export const signin = (user, history, redirectTo) => dispatch =>{
 }
 
 export const signout = history => dispatch =>{
-	console.log('signing out req to server')
 	fetchThenDispatch(dispatch, 
 		'signingOut',
 		{
@@ -40,7 +37,6 @@ export const signout = history => dispatch =>{
 				//return to home
 				history.push('/')
 				//clear user in store
-				console.log('signing out in store')
 				return {type:C.SIGN_OUT}
 			}
 		})

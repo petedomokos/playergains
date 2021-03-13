@@ -12,7 +12,7 @@ import Typography from '@material-ui/core/Typography'
 import Edit from '@material-ui/icons/Edit'
 import Person from '@material-ui/icons/Person'
 import Divider from '@material-ui/core/Divider'
-import DeleteUserContainer from './containers/DeleteUserContainer'
+import DeleteGroupContainer from './containers/DeleteGroupContainer'
 import auth from '../auth/auth-helper'
 import { Link } from 'react-router-dom'
 
@@ -28,11 +28,17 @@ const useStyles = makeStyles(theme => ({
     color: theme.palette.protectedTitle
   }
 }))
-
-export default function UserProfile(props) {
-  const { _id, name, email, created } = props;
+ 
+export default function GroupProfile({profile}) {
+  console.log('profile', profile)
+  const { _id, name, desc, type, admin, created } = profile;
   const classes = useStyles()
-  const userSignedIn =  auth.isAuthenticated().user  && auth.isAuthenticated().user._id === _id;
+  const jwt = auth.isAuthenticated()
+  //note - it is possible that group may have been fully loaded, in which case
+  //arrays like admin will not just be id but will be an object. 
+  //Therefore, we handle both cases.
+  const adminIds = admin[0] && typeof admin[0] === 'string' ? admin : admin.map(us => us._id);
+  const userHasAdminAuth = jwt && admin.find(userId => userId === jwt.user._id);
     return (
       <Paper className={classes.root} elevation={4}>
         <Typography variant="h6" className={classes.title}>
@@ -45,24 +51,35 @@ export default function UserProfile(props) {
                 <Person/>
               </Avatar>
             </ListItemAvatar>
-            <ListItemText primary={name} secondary={email}/>
-            {userSignedIn &&
+            <ListItemText primary={name} secondary={type}/>
+            {userHasAdminAuth &&
               (<ListItemSecondaryAction>
-                <Link to={"/user/edit/" + _id}>
+                <Link to={"/group/edit/" + _id}>
                   <IconButton aria-label="Edit" color="primary">
                     <Edit/>
               </IconButton>
                 </Link>
-                <DeleteUserContainer/>
+                <DeleteGroupContainer groupId={_id} />
               </ListItemSecondaryAction>)
             }
           </ListItem>
           <Divider/>
           <ListItem>
-            <ListItemText primary={"Joined: " + (
+            <ListItemText primary={"Created: " + (
               new Date(created)).toDateString()}/>
           </ListItem>
         </List>
       </Paper>
     )
   }
+
+  
+GroupProfile.defaultProps = {
+  profile: {
+    _id:'',
+    name:'',
+    desc:'',
+    surname:'',
+    admin:[]
+  }
+}

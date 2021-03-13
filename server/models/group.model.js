@@ -7,9 +7,12 @@ const GroupSchema = new mongoose.Schema({
     trim: true,
     required: 'Group name is required'
   },
+  desc:String,
+  groupType:String,
   photo:{data:Buffer,contentType:String},
   //users who have admin rights over this group
   admin:[{type:mongoose.Schema.ObjectId, ref:'User'}],
+  coaches:[{type:mongoose.Schema.ObjectId, ref:'User'}],
   players:[{type:mongoose.Schema.ObjectId, ref:'User'}],
   //datasets:[DatasetSchema],
   updated: Date,

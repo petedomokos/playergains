@@ -11,7 +11,6 @@ const useStyles = makeStyles(theme => ({
   }
 }))
 
-
 function User(props) {
   console.log('User props', props)
   const { user } = props;
@@ -20,7 +19,7 @@ function User(props) {
 
   return (
     <div>
-      <UserProfile profile={userProfile(user)} />
+      <UserProfile profile={user} />
       <div className={classes.dashboard}>
         This players profile and dashboard (includes links for editing/deleting
          - but only if this player is administered by signedin user])
@@ -29,5 +28,5 @@ function User(props) {
   )
 }
 const Loading = <div>User is loading</div>
-//props for user will be passed to this component below instead
-export default withLoader(User, ['user'], {alwaysRender:false, LoadingPlaceholder:Loading});
+//must load user if we dont have the deep version eg has groupsMemberof property
+export default withLoader(User, ['user.groupsMemberOf'], {alwaysRender:false, LoadingPlaceholder:Loading});

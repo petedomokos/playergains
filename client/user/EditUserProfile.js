@@ -1,4 +1,5 @@
 import React, {useState, useEffect} from 'react'
+import { Redirect } from 'react-router-dom'
 import Card from '@material-ui/core/Card'
 import CardActions from '@material-ui/core/CardActions'
 import CardContent from '@material-ui/core/CardContent'
@@ -35,16 +36,18 @@ const useStyles = makeStyles(theme => ({
   }
 }))
 
-export default withLoader(function EditUserProfile(props) {
+export default function EditUserProfile({ signedInUserId, user, onUpdate, updating, updatingError, history }) {
   const classes = useStyles()
-  const { user, onUpdate, updating, updatingError, history } = props;
+  console.log('user', user)
+  console.log('signedin', signedInUserId)
   const [values, setValues] = useState({
     username: user.username || '',
     firstname:user.firstname || '',
     surname:user.surname || '',
     email: user.email || '',
     //photo: user.photo || '',
-    password: ''
+    password: '',
+    admin:[signedInUserId]
   })
 
   const clickSubmit = () => {
@@ -54,12 +57,21 @@ export default withLoader(function EditUserProfile(props) {
     values.surname && formData.append('surname', values.surname)
     values.email && formData.append('email', values.email)
     values.password && formData.append('password', values.password)
+    const adminUsers = values.admin.length != 0 ? values.admin : [signedInUserId];
+    formData.append('admin', adminUsers)
     //values.photo && formData.append('photo', values.photo)
     onUpdate(user._id, formData, history)
   }
 
   const handleChange = name => event => {
     setValues({...values, [name]: event.target.value})
+  }
+  //todo - remove temp 2nd condition of if, will not be needed once we reset db as admin will default
+  //to the signedInUser
+  if(!user.admin.includes(signedInUserId) && user._id !== signedInUserId){
+    alert('You do not have permission to edit this user.')
+    //todo - redirect to 'from'
+    return <Redirect to='/'/>
   }
 
   return (
@@ -85,6 +97,17 @@ export default withLoader(function EditUserProfile(props) {
       </CardActions>
     </Card>
   )
-}, ['user'])
+}
+
+EditUserProfile.defaultProps = {
+  user:{
+    _id:'',
+    username:'',
+    firstname:'',
+    surname:'',
+    email:''
+  },
+  onUpdate:() =>{}
+}
 
 

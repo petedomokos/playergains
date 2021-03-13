@@ -32,6 +32,7 @@ const UserSchema = new mongoose.Schema({
   isCoach: {type:Boolean, default:true},
   //other users who have admin rights over this user
   admin:[{type:mongoose.Schema.ObjectId, ref:'User'}],
+  administeredUsers:[{type:mongoose.Schema.ObjectId, ref:'User'}],
   administeredGroups:[{type:mongoose.Schema.ObjectId, ref:'Group'}],
   groupsMemberOf:[{type:mongoose.Schema.ObjectId, ref:'Group'}],
 

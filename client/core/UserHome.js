@@ -8,6 +8,7 @@ import GroupsContainer from '../group/containers/GroupsContainer'
 import { withLoader } from '../util/HOCs';
 //helpers
 import { userProfile } from '../util/ReduxHelpers'
+import { withRouter } from 'react-router'
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -35,23 +36,30 @@ const useStyles = makeStyles(theme => ({
   }
 }))
 
-export default withLoader(function UserHome(props){
-  const { user } = props;
-  const classes = useStyles()
-  console.log('UserHome props', props)
-
-  
+const UserHome = ({user, loading, loadingError}) => {
+  const classes = useStyles() 
+  //for now, keep it simple for page refreshes - until user reloads, dont render the children.
+  //note - cant use withRouter in MainRouter as we only want it to load user if signed in
   return (
     <div className={classes.root}>
-      <UserProfile profile={userProfile(user)} />
-      <div className={classes.lists}>
-        <div className={classes.list}>
-          <UsersContainer/>
-        </div>
-        <div className={classes.list}>
-          <GroupsContainer/>
-        </div>
-      </div>
+      {user._id && 
+        <>
+          <UserProfile profile={user} />
+          <div className={classes.lists}>
+              <div className={classes.list}>
+                <UsersContainer/>
+          </div>
+              <div className={classes.list}>
+                <GroupsContainer/>
+              </div>
+          </div>
+        </>}
     </div>
   )
-}, ['user'])
+}
+
+UserHome.defaultProps = {
+  user:{}
+}
+
+export default UserHome 

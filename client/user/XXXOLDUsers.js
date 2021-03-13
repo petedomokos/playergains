@@ -5,13 +5,12 @@ import SimpleList from '../util/SimpleList'
 import { withLoader } from '../util/HOCs';
 import IconButton from '@material-ui/core/IconButton'
 import PersonAddIcon from '@material-ui/icons/PersonAdd';
-import ArrowForward from '@material-ui/icons/ArrowForward'
 
 const useStyles = makeStyles(theme => ({
 }))
 
 export default withLoader(function Users(props) {
-  const { users, /*administeredUsers,*/ title, actionButtons, itemAction, emptyMesg } = props;
+  const { users, /*administeredUsers,*/ title, actionButtons, emptyMesg } = props;
   const classes = useStyles()
 
   const addButton = (key) => 
@@ -21,12 +20,6 @@ export default withLoader(function Users(props) {
       </IconButton>
     </Link>
   const defaultActionButtons = [addButton]
-  
-  const defaultItemAction = {
-    itemLinkPath:user => '/user/'+user._id,
-    //onItemClick:(item, i) => { alert('item '+i)},
-    ItemIcon:({}) => <ArrowForward/>
-  }
 
   //todo - sort so administreed users first //remeber its just id now
 
@@ -36,7 +29,7 @@ export default withLoader(function Users(props) {
       emptyMesg={emptyMesg || 'No users'}
       items={users} 
       primaryText={user => user.firstname + ' ' +user.surname}
-      itemAction={itemAction || defaultItemAction}
+      linkPath={user => {return '/user/'+user._id} } 
       actionButtons={actionButtons || defaultActionButtons}/>
   )
 }, ['userLoadsComplete'])

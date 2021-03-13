@@ -6,7 +6,6 @@ import { signout } from './AuthActions.js';
 
 
 export const createUser = user => dispatch => {
-	console.log("actions.createUser()", user)
 	fetchThenDispatch(dispatch, 
 		'creating.user',
 		{
@@ -16,15 +15,19 @@ export const createUser = user => dispatch => {
 			requireAuth:true,
 			//this action will also set dialog.createUser = true
 			nextAction: data => {
-				console.log('next act save new user')
-				return {type:C.SAVE_NEW_USER, user:data }
+				if(auth.isAuthenticated()){
+					//in this case, we need the new user and the sign up mesg
+					return { type:C.CREATE_NEW_ADMINISTERED_USER, mesg:data.mesg, user:data.user }
+				}else{
+					//in this case, server will send a mesg
+					return { type:C.SIGN_UP, mesg:data.mesg }
+				}
 			}
 		})
 }
 
 //to fetch a user in full
 export const fetchUser = id => dispatch => {
-	console.log('fetching user...', id)
 	fetchThenDispatch(dispatch, 
 		'loading.user',
 		{
@@ -34,27 +37,26 @@ export const fetchUser = id => dispatch => {
 				const jwt = auth.isAuthenticated();
 				//may be reloading the signed in user
 				if(jwt.user._id === data._id){
+					console.log('siging in to store again', data.username)
 					return { type:C.SIGN_IN, user:data };
 				}
-				return { type:C.SAVE_OTHER_USER, user:data };
+				console.log('loading another user into user', data.username)
+				return { type:C.LOAD_USER, user:data };
 			}
 		}) 
 }
 
-
 export const fetchUsers = () => dispatch => {
-	console.log('url is /api/users')
 	fetchThenDispatch(dispatch, 
 		'loading.users',
 		{
 			url: '/api/users', 
 			requireAuth:true,
-			nextAction: data => { return { type:C.SAVE_OTHER_USERS, users:data } }
+			nextAction: data => { return { type:C.LOAD_USERS, users:data } }
 		}) 
 }
 
 export const updateUser = (id, formData, history) => dispatch => {
-	console.log('formdata', formData)
 	fetchThenDispatch(dispatch, 
 		'updating.user',
 		{
@@ -67,21 +69,15 @@ export const updateUser = (id, formData, history) => dispatch => {
 			requireAuth:true,
 			nextAction: data => {
 				history.push("/")
-				const signedInUserWasUpdated = auth.isAuthenticated().user._id === data._id;
-				if(signedInUserWasUpdated){
-					return {
-						type:C.UPDATE_SIGNED_IN_USER, user:data
-					}
-				}else{
-					return {
-						type:C.UPDATE_ADMINISTERED_USER, user:data
-					}
+				const jwt = auth.isAuthenticated();
+				if(jwt.user._id === data._id){
+					return { type:C.UPDATE_SIGNEDIN_USER, user:data };
 				}
+				return { type:C.UPDATE_ADMINISTERED_USER, user:data }
 			}
 		})
 }
 export const deleteUserAccount = (id, history) => dispatch => {
-	console.log('deleting...')
 	fetchThenDispatch(dispatch, 
 		'deleting.user',
 		{
@@ -90,16 +86,12 @@ export const deleteUserAccount = (id, history) => dispatch => {
 			requireAuth:true,
 			//todo - only signout if user being deleted was signed in
 			nextAction: data => {
-				const signedInUserWasDeleted = auth.isAuthenticated().user._id === data._id;
-				if(signedInUserWasDeleted){
-					return signout(history)
-				}else{
-					history.push('/')
-					return {
-						type:C.DELETE_USER, userId:data._id
-					}
-
+				history.push('/')
+				const jwt = auth.isAuthenticated();
+				if(jwt.user._id === data._id){
+					return { type:C.SIGN_OUT };
 				}
+				return { type:C.DELETE_ADMINISTERED_USER, user:data }
 			}
 		})
 }

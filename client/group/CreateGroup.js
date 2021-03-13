@@ -1,4 +1,4 @@
-import React, {useState} from 'react'
+import React, { useState, useEffect } from 'react'
 import Card from '@material-ui/core/Card'
 import CardActions from '@material-ui/core/CardActions'
 import CardContent from '@material-ui/core/CardContent'
@@ -13,6 +13,7 @@ import DialogContent from '@material-ui/core/DialogContent'
 import DialogContentText from '@material-ui/core/DialogContentText'
 import DialogTitle from '@material-ui/core/DialogTitle'
 import {Link} from 'react-router-dom'
+import { withLoader } from '../util/HOCs';
 
 const useStyles = makeStyles(theme => ({
   card: {
@@ -40,76 +41,100 @@ const useStyles = makeStyles(theme => ({
   }
 }))
 
-export default function Signup() {
+export default withLoader(function CreateGroup({ user, creating, error, success, open, submit, closeDialog }) {
+  console.log('open', open)
   const classes = useStyles()
-  const [values, setValues] = useState({
-    username: '',
-    firstname:'',
-    surname:'',
-    password: '',
-    email: '',
-    open: false,
-    error: ''
-  })
+  const initState = {
+      parent:'',
+      name: '', //must be unique to this user
+      desc:'',
+      groupType:'',
+      admin:[user._id]
+  }
+  const [values, setValues] = useState(initState)
+
+  //useEffect to reset dialog and error when unmounting (in case user moves away from component)
+  //if this doesnt work, we can always reset in useEffcet itself if need be, although thats a bit wierd
+  useEffect(() => {
+    //note - if we check open here, it gives false, dont know why, so we just closeDialog always.
+    return () => {
+        closeDialog();
+      //if(error || success){
+        //resetAsyncProcesses
+     // }
+    };
+  }, []); // will only apply once, not resetting the dialog at teh end of every render eg re-renders
 
   const handleChange = name => event => {
     setValues({ ...values, [name]: event.target.value })
   }
 
   const clickSubmit = () => {
-    /*const user = {
-      username: values.username || undefined,
-      firstname: values.firstname || undefined,
-      surname: values.surname || undefined,
-      email: values.email || undefined,
-      password: values.password || undefined
+    if(user.administeredGroups.find(grp => grp.name === values.name)){
+      alert('You already have a group with this name.')
+    }else{
+      //validate name is unique 
+      const group = {
+        parent: values.parent || undefined,
+        name: values.name || undefined, //must be unique to this user
+        desc: values.desc || undefined,
+        groupType: values.groupType || undefined,
+        admin:values.admin || [user._id]
+      };
+
+      submit(group);
     }
-    create(user).then((data) => {
-      if (data.error) {
-        setValues({ ...values, error: data.error})
-      } else {
-        setValues({ ...values, error: '', open: true})
-      }
-    })
-    */
   }
 
-    return (<div>
-      <Card className={classes.card}>
-        <CardContent>
-          <Typography variant="h6" className={classes.title}>
-            Sign Up
-          </Typography>
-          <TextField id="username" label="Username" className={classes.textField} value={values.username} onChange={handleChange('username')} margin="normal"/><br/>
-          <TextField id="firstname" label="First name" className={classes.textField} value={values.firstname} onChange={handleChange('firstname')} margin="normal"/><br/>
-          <TextField id="surname" label="Surname" className={classes.textField} value={values.surname} onChange={handleChange('surname')} margin="normal"/><br/>
-          <TextField id="email" type="email" label="Email" className={classes.textField} value={values.email} onChange={handleChange('email')} margin="normal"/><br/>
-          <TextField id="password" type="password" label="Password" className={classes.textField} value={values.password} onChange={handleChange('password')} margin="normal"/>
-          <br/> {
-            values.error && (<Typography component="p" color="error">
-              <Icon color="error" className={classes.error}>error</Icon>
-              {values.error}</Typography>)
-          }
-        </CardContent>
-        <CardActions>
-          <Button color="primary" variant="contained" onClick={clickSubmit} className={classes.submit}>Submit</Button>
-        </CardActions>
-      </Card>
-      <Dialog open={values.open} disableBackdropClick={true}>
-        <DialogTitle>New Account</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            New account successfully created.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Link to="/signin">
+  const reset = () =>{
+    //console.log('reset-------')
+      closeDialog();
+      setValues(initState)
+  }
+  //get group once it has been saved to store (unless thre was error)
+  const savedGroup = user.loadedGroups.find(grp => grp.name === values.name);
+
+  return (<div>
+    <Card className={classes.card}>
+      <CardContent>
+        <Typography variant="h6" className={classes.title}>
+          Create Group
+        </Typography>
+        <TextField id="name" label="name" className={classes.textField} value={values.name} onChange={handleChange('name')} margin="normal"/><br/>
+        <TextField id="desc" label="Description" className={classes.textField} value={values.desc} onChange={handleChange('desc')} margin="normal"/><br/>
+        <br/> {
+          values.error && (<Typography component="p" color="error">
+            <Icon color="error" className={classes.error}>error</Icon>
+            {values.error}</Typography>)
+        }
+      </CardContent>
+      <CardActions>
+        <Button color="primary" variant="contained" onClick={clickSubmit} className={classes.submit}>Submit</Button>
+      </CardActions>
+    </Card>
+    <Dialog open={open} disableBackdropClick={true}>
+      <DialogTitle>New Group</DialogTitle>
+      <DialogContent>
+        <DialogContentText>
+          New group successfully created.
+        </DialogContentText>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={reset} color="primary" autoFocus="autoFocus" variant="contained">
+        Create another
+        </Button>
+        {savedGroup && <Link to={"/group/"+savedGroup._id} >
             <Button color="primary" autoFocus="autoFocus" variant="contained">
-              Sign In
+            Go to group
             </Button>
-          </Link>
-        </DialogActions>
-      </Dialog>
-    </div>
-    )
-}
+      </Link>}
+        <Link to={"/"} >
+            <Button color="primary" autoFocus="autoFocus" variant="contained">
+            Return home
+            </Button>
+        </Link>
+      </DialogActions>
+    </Dialog>
+  </div>
+  )
+},['user'])

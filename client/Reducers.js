@@ -2,154 +2,177 @@ import C from './Constants'
 import _ from 'lodash'
 import * as cloneDeep from 'lodash/cloneDeep'
 import { filterUniqueById, filterUniqueByProperty } from './util/ArrayHelpers'
-
+import { InitialState } from './InitialState'
+import { GroupOutlined } from '@material-ui/icons'
 //HELPERS
 
 
 //STORE
-export const user = (state={}, act) =>{
+export const user = (state=InitialState.user, act) =>{
 	switch(act.type){
+		//SIGNED IN USER
 		case C.SIGN_IN:{
-			return act.user
+			const { administeredUsers, administeredGroups, groupsMemberOf } = act.user;
+			//put all users and groups into loadedUsers and loadedGroups
+			//and reset those to model state (ie just list of ids)
+			return { 
+				...state, 
+				...act.user,
+				administeredUsers:administeredUsers.map(us => us._id),
+				administeredGroups:administeredGroups.map(g => g._id),
+				groupsMemberOf:groupsMemberOf.map(g => g._id),
+				//store the deeper objects here in one place
+				loadedUsers:[...administeredUsers], //later iterations will have following etc
+				loadedGroups:[...administeredGroups, ...groupsMemberOf]
+			}
 		}
 		case C.SIGN_OUT:{
-			return null;
+			return InitialState.user;
 		}
-		case C.UPDATE_USER:{
-			return {...state, ...act.user};
+		case C.UPDATE_SIGNEDIN_USER:{
+			return { ...state, ...act.user };
+		}
+		//OTHER USERS AND GROUPS
+		//CREATE
+		case C.CREATE_NEW_ADMINISTERED_USER:{
+			return { 
+				...state, 
+				administeredUsers:[...state.administeredUsers, act.user._id],
+				loadedUsers:[...state.loadedUsers, act.user]
+			}
+		}
+		case C.CREATE_NEW_ADMINISTERED_GROUP:{
+			return { 
+				...state, 
+				administeredGroups:[...state.administeredGroups, act.group._id],
+				loadedGroups:[...state.loadedGroups, act.group]
+			}
+		}
+		//UPDATE (overwrite properties with any updated or new ones)
+		case C.UPDATE_ADMINISTERED_USER:{
+			//we only update in loadedUsers, as _id doesnt ever change
+			const userToUpdate = state.loadedUsers.find(us => us._id === act.user._id);
+			const updatedUser = { ...userToUpdate, ...act.user }
+			//use filter to remove old version, and add updated version
+			return {
+				...state,
+				loadedUsers:filterUniqueById([...state.administeredUsers, updatedUser])
+			}
+		}
+		case C.UPDATE_ADMINISTERED_GROUP:{
+			//we only update in loadedUsers, as _id doesnt ever change
+			const groupToUpdate = state.loadedGroups.find(g => g._id === act.group._id);
+			const updatedGroup = { ...groupToUpdate, ...act.group };
+			//use filter to remove old version, and add updated version
+			return {
+				...state,
+				loadedGroups:filterUniqueById([...state.administeredGroups, updatedGroup])
+			}
+		}
+		//DELETE
+		//must remove from both administered and loaded arrays
+		case C.DELETE_ADMINISTERED_USER:{
+			return {
+				...state,
+				administeredUsers:state.administeredUsers.filter(us => us._id !== act.user._id),
+				loadedUsers:state.loadedUsers.filter(us => us._id !== act.user._id)
+			}
+		}
+		case C.DELETE_ADMINISTERED_GROUP:{
+			return {
+				...state,
+				administeredGroups:state.administeredGroups.filter(g => g._id !== act.group._id),
+				loadedGroups:state.loadedGroups.filter(g => g._id !== act.group._id)
+			}
+		}
+		//LOAD EXISTING FROM SERVER 
+		//Note 1 - this cannot be the signed in user - they are always loaded fully
+		//Note 2 - this will overwrite/enhance any existing objects rather than replace
+		case C.LOAD_USER:{
+			//find if there is any existing version to update
+			const userToUpdate = state.loadedUsers.find(us => us._id === act.user._id) || {};
+			const updatedUser = { ...userToUpdate, ...act.user }
+			return { 
+				...state, 
+				loadedUsers:[...state.loadedUsers, updatedUser]
+			}
+		}
+		case C.LOAD_GROUP:{
+			//find if there is any existing version to update
+			const groupToUpdate = state.loadedGroups.find(g => g._id === act.group._id) || {};
+			const updatedGroup = { ...groupToUpdate, ...act.group }
+			return { 
+				...state, 
+				loadedGroups:[...state.loadedGroups, updatedGroup]
+			}
+		}
+		case C.LOAD_USERS:{
+			//these user objects will be shallow, so we dont overwrite any 
+			//existing deeper versions, so if user already exists, then it is not loaded
+			const usersNotLoadedBefore = act.users
+				.filter(us => us._id !== state._id)
+				.filter(us => !state.loadedUsers.find(u => u._id === us._id))
+			
+
+			//for now, all users are sent first time
+			return { 
+				...state, 
+				loadedUsers:[...state.loadedUsers, ...usersNotLoadedBefore],
+				loadsComplete:{ ...state.loadsComplete, users:true }
+			}
+		}
+		
+		case C.LOAD_GROUPS:{
+			//these user objects will be shallow, so we dont overwrite any 
+			//existing deeper versions, so if user already exists, then it is not loaded
+			const groupsNotLoadedBefore = act.groups
+				.filter(grp => !state.loadedGroups.find(g => g._id === grp._id))
+
+			return { 
+				...state, 
+				loadedGroups:[...state.loadedGroups, ...groupsNotLoadedBefore],
+				loadsComplete:{ ...state.loadsComplete, groups:true }
+			}
 		}
 		default:{
+			console.log('default returniung state')
 			return state
 		}
+
 	}
 }
-//helper
-const groups = (state, act) =>{
+/*
+//CANNOT CALL THIS USER
+const otherUser = (state, act) =>{
 	switch(act.type){
-		case C.SAVE_GROUP:{
-			//removes any old version and adds new version of group
-			const otherGroups = state.filter(g => g._id !== act.group._id)
-			return [...otherGroups, act.group]
+		case C.UPDATE_ADMINISTERED_USER:{
+			
 		}
-		case C.SAVE_GROUPS:{
-			//removes any old version and adds new version of group
-			const otherGroups = state.filter(group => 
-				!act.groups.find(g => g._id === group._id))
-			return [...otherGroups, ...act.groups]
-		}
-		case C.SAVE_OTHER_GROUPS:{
-			console.log('saving other users>>>>>>>', state)
-			if(!state){
-				return act.groups;
-			}
-			return filterUniqueById([...state, ...act.groups]);
-		}
-		case C.SAVE_NEW_GROUP:{
-			return [...state, act.group]
-		}
-		case C.UPDATE_GROUP:{
-			//updates any existing version of group, or adds if new
-			const groupToUpdate = state.find(g => g._id === act.group._id) || {}
-			const otherGroups = state.filter(g => g._id !== act.group._id)
-			return [...otherGroups, {...groupToUpdate, ...act.group}]
-		}
-		case C.DELETE_GROUP:{
-			return state.filter(g => g._id !== act.id)
-		}
-		case C.ADD_PLAYER:{
-			const groupToUpdate = state.find(g => g._id === act.groupId)
-			const otherGroups = state.filter(g => g._id !== act.groupId)
-			return [...otherGroups, group(groupToUpdate, act)]
-		}
-		case C.REMOVE_PLAYER:{
-			const groupToUpdate = state.find(g => g._id === act.groupId)
-			const otherGroups = state.filter(g => g._id !== act.groupId)
-			return [...otherGroups, group(groupToUpdate, act)]
-		}
-		default:
-			return state
-	}
-
-}
-const group = (state={}, act) =>{
-	switch(act.type){
-		//todo - change to update group
-		//note - no need to check group as it was done in groups reducer above
-		case C.SAVE_ELIGIBLE_PLAYERS:{
-			if(act.groupId !== state._id)
-				return state 
-			return {...state, eligiblePlayers:act.players}
-		}
-		case C.ADD_PLAYER:{
-			const otherPlayers = state.players.filter(p => p._id !== act.player._id)
-			return {...state, players:[...otherPlayers, act.player]}
-		}
-		case C.REMOVE_PLAYER:{
-			const otherPlayers = state.players.filter(p => p._id !== act.player._id)
-			return {...state, players:otherPlayers}
-		}
-		default:
-			return state
-	}
-
-}
-
-export const other = (state={}, act) =>{
-	switch(act.type){
-		case C.SAVE_NEW_USER:{
-			console.log('saving new user>>>>>>>')
-			return { ...state,  users: users(state.users, act) };
-		}
-		//should maybe remove first case fro now, so all we do is load all users
-		case C.SAVE_OTHER_USER:{
-			console.log('saving other user>>>>>>>')
-			return { ...state, users: users(state.users, act) }
-		}
-		case C.SAVE_OTHER_USERS:{
-			console.log('saving other users>>>>>>>')
-			return { ...state, users:users(state.users, act) }
-		}
-		case C.SAVE_OTHER_GROUPS:{
-			console.log('saving other users>>>>>>>')
-			return { ...state, groups:groups(state.groups, act) }
+		case C.LOAD_USER:{
+			return {...state, ...act.user}
 		}
 		default:
 			return state;
 	}
 }
-
-const users = (state, act) =>{
+*/
+/*
+const group = (state, act) =>{
 	switch(act.type){
-		case C.SAVE_NEW_USER:{
-			if(!state){
-				return [act.user]
-			}
-			return [...state, act.user];
+		case C.ADD_PLAYER:{
+			
 		}
-		//remove first case for, as all users are just loaded
-		case C.SAVE_OTHER_USER:{
-			console.log('saving other user>>>>>>>', state)
-			//if user already stored, we amend existing user, so we dont overwrite any other properties
-			//that have already been loaded that are not part of this load
-			if(!state){
-				return [act.user]
-			}
-			const userToAmend = state.find(user => user._id === act.user._id) || {};
-			const otherUsers = state.filter(user => user._id !== act.user.id);
-			return [otherUsers, {...userToAmend, ...act.user}];
-		}
-		//unlike case 1, this overwrites, not amends, users that are already saved, if the same user is being saved again
-		case C.SAVE_OTHER_USERS:{
-			console.log('saving other users>>>>>>>', state)
-			if(!state){
-				return act.users;
-			}
-			return filterUniqueById([...state, ...act.users]);
+		case C.REMOVE_PLAYER:{
+			return {...state, ...act.group}
 		}
 		default:
-			return state;
+			return state
 	}
 }
+*/
+/*
+Need to remove during main actions, not fetchEnd
+*/
 
 export const asyncProcesses = (state={}, act) =>{
 	const { type, path, value } = act
@@ -163,13 +186,15 @@ export const asyncProcesses = (state={}, act) =>{
 		case C.START:{
 			let _state = cloneDeep(state)
 			_.set(_state, path, true)
-			console.log('_state', _state)
 			return _state
 		}
 		case C.END:{
 			let _state = cloneDeep(state)
 			_.set(_state, path, false)
 			return _state			
+		}
+		case C.SIGN_OUT:{
+			return InitialState.asyncProcesses;
 		}
 		default:
 			return state
@@ -179,17 +204,25 @@ export const asyncProcesses = (state={}, act) =>{
 export const dialogs = (state={}, act) =>{
 	const { type, path, value } = act
 	switch(type){
-		case C.SAVE_NEW_USER:{
+		case C.SIGN_UP:{
+			return { ...state, signup:true };
+		}
+		//create - user has created, so dialog must open for next steps
+		case C.CREATE_NEW_ADMINISTERED_USER:{
 			return { ...state, createUser:true };
+		}
+		case C.CREATE_NEW_ADMINISTERED_GROUP:{
+			return { ...state, createGroup:true };
+		}
+		//delete - user has confirmed delete and been redirected, so dialog must close
+		case C.DELETE_ADMINISTERED_USER:{
+			return { ...state, deleteUser:false };
+		}
+		case C.DELETE_ADMINISTERED_GROUP:{
+			return { ...state, deleteGroup:false };
 		}
 		case C.ERROR:{
 		}
-		/*
-		case C.SIGN_OUT:{
-			//todo - impl this return to init state
-			return InitialState.dialogs
-		}
-		*/
 		case C.OPEN_DIALOG:{
 			let _state = cloneDeep(state)
 			_.set(_state, path, true)
@@ -199,6 +232,9 @@ export const dialogs = (state={}, act) =>{
 			let _state = cloneDeep(state)
 			_.set(_state, path, false)
 			return _state			
+		}
+		case C.SIGN_OUT:{
+			return InitialState.dialogs;
 		}
 		//automatically close dialog upon deletion
 		/*

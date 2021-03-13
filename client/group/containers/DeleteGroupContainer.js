@@ -1,38 +1,38 @@
 import { connect } from 'react-redux'
 import { openDialog, closeDialog } from '../../actions/CommonActions'
-import { fetchUser, deleteUserAccount } from '../../actions/UserActions'
-import DeleteUser from '../DeleteUser'
+import { fetchGroup, deleteGroup } from '../../actions/GroupActions'
+import DeleteGroup from '../DeleteGroup'
 
 
 const mapStateToProps = (state, ownProps) => {
-	console.log('state', state)
+	//console.log('state', state)
 	return{
-		//id can be passed in if user is deleting a different user that they have admin rights to
-		//or otherwise its the logged in user from store
-		userId:ownProps.id || state.user._id,
-		deleting:state.asyncProcesses.deleting.user,
-		open:state.dialogs.deleteUser,
-		error:state.asyncProcesses.error.deleting.user,
+		//id can be passed in if group is deleting a different group that they have admin rights to
+		//or otherwise its the logged in group from store
+		groupId:ownProps.groupId,
+		deleting:state.asyncProcesses.deleting.group,
+		open:state.dialogs.deleteGroup,
+		error:state.asyncProcesses.error.deleting.group,
 	}
 }
 const mapDispatchToProps = dispatch => ({
 	openDialog(){
-		dispatch(openDialog('deleteUser'))
+		dispatch(openDialog('deleteGroup'))
 	},
-	deleteAccount(userId, history){
+	deleteAccount(groupId, history){
 		console.log('deleting...')
-		dispatch(deleteUserAccount(userId, history))
+		dispatch(deleteGroupAccount(groupId, history))
 	},
 	closeDialog(){
-		dispatch(closeDialog('deleteUser'))
+		dispatch(closeDialog('deleteGroup'))
 	}
 })
 
 //wrap all 4 sections in the same container for now.
-const DeleteUserContainer = connect(
+const DeleteGroupContainer = connect(
 	mapStateToProps,
 	mapDispatchToProps
-	)(DeleteUser)
+	)(DeleteGroup)
 
-export default DeleteUserContainer
+export default DeleteGroupContainer
 

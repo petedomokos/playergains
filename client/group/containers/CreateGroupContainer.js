@@ -1,21 +1,32 @@
 import { connect } from 'react-redux'
+import { fetchUser } from '../../actions/UserActions'
 import { createGroup } from '../../actions/GroupActions'
+import { closeDialog } from '../../actions/CommonActions'
 import CreateGroup from '../CreateGroup'
+import auth from '../../auth/auth-helper'
 
 const mapStateToProps = (state, ownProps) => {
 	return({
+		extraLoadArg:auth.isAuthenticated().user._id, //under a private route so user will be signed in
 		user:state.user,
-		groups:state.storedItems.groups,
-		//parent undefined unless user has selected to create subgroup from a group
-		parent:ownProps.parent || '',
+		//may need to load user first if page refreshed
+		loading:state.asyncProcesses.loading.user,
+		loadingError:state.asyncProcesses.error.loading.user,
 		creating:state.asyncProcesses.creating.group,
-		open:false,
-		error:''
+		error:state.asyncProcesses.error.creating.group,
+		open:state.dialogs.createGroup
 	})
 }
 const mapDispatchToProps = dispatch => ({
+	//extraLoadAreg here is userId
+	onLoad(propsToLoad, userId){
+		dispatch(fetchUser(userId))
+	},
 	submit(group){
 		dispatch(createGroup(group))
+	},
+	closeDialog(){
+		dispatch(closeDialog('createGroup'))
 	}
 })
 
@@ -26,4 +37,3 @@ const CreateGroupContainer = connect(
 	)(CreateGroup)
 
 export default CreateGroupContainer
-

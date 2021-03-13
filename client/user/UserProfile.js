@@ -34,12 +34,18 @@ const useStyles = makeStyles(theme => ({
 }))
 
 export default function UserProfile({ profile }) {
-  const { _id, username, firstname, surname, email, created } = profile;
-  console.log('username', username)
+  console.log('profile', profile)
+  const { _id, username, firstname, surname, email, created, admin } = profile;
   const classes = useStyles()
-  const userSignedIn =  auth.isAuthenticated().user  && auth.isAuthenticated().user._id === _id;
-
-    return (
+  const jwt = auth.isAuthenticated();
+  //note - it is possible that group may have been fully loaded, in which case
+  //arrays like admin will not just be id but will be an object. But if user or group was just created,
+  //then only ids are returned. Therefore, we handle both cases.
+  //todo - better soln is to send the admin as objects in create methiods in controllers
+  //but to do that we need to go into teh database to get them, so need to chain promises
+  const adminIds = admin[0] && typeof admin[0] === 'string' ? admin : admin.map(us => us._id);
+  const userHasAdminAuth =  jwt && (jwt.user._id === _id || adminIds.find(userId => userId === jwt.user._id));
+  return (
       <Paper className={classes.root} elevation={4}>
         <Typography variant="h6" className={classes.title}>
           Profile
@@ -52,23 +58,33 @@ export default function UserProfile({ profile }) {
               </Avatar>
             </ListItemAvatar>
             <ListItemText primary={username} secondary={firstname + ' ' +surname}/>
-            {userSignedIn &&
+            {userHasAdminAuth &&
               (<ListItemSecondaryAction>
                 <Link to={"/user/edit/" + _id} >
                   <IconButton aria-label="Edit" color="primary">
                     <Edit/>
                   </IconButton>
                 </Link>
-                <DeleteUserContainer/>
+                <DeleteUserContainer userId={_id}/>
               </ListItemSecondaryAction>)
             }
           </ListItem>
           <Divider/>
           <ListItem>
-            <ListItemText primary={"Joined: " + (
-              new Date(created)).toDateString()}/>
+            <ListItemText primary={created ? "Joined: " + (new Date(created)).toDateString() : ''}/>
           </ListItem>
         </List>
       </Paper>
     )
+}
+
+UserProfile.defaultProps = {
+  profile: {
+    _id:'',
+    username:'',
+    firstname:'',
+    surname:'',
+    email:'',
+    admin:[]
+  }
 }

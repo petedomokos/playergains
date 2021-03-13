@@ -4,3 +4,60 @@ implement PrivateRoutes so that they dont redirect to home but to referrer
 
 incoproate Signup into store, sharing the action with createUser action. Its the same excepot the dialog at teh end should be diffrent 
 (ie for a signed in user, it is 'create another' and 'return home', whereas for a non-signed in user, its just 'signin')
+
+impl the sign up mesg into dialog for CreatUser, in both cases. do this by refactoring dialog state object into ...
+dialog:{
+    createUser:{
+        open:false, mesg:''
+    }
+}
+
+
+refactor asyncProcesses into an object that contains the response if required
+eg for CreateGroup 
+{status:creating}
+then
+{status:completed, error:?, group:? }
+then
+{status:undefined}
+
+whereas for loading group, no need to store group here aswell as in the right place,so just
+{status:loading}
+then
+{status:completed}
+then
+{status:undefined}
+THEN I CAN IMPL THINGS LIKE 'GO TO GROUP' LINK IN DIALOG IN CREATEGROUP, AND 'GO TO USER' IN CREATEUSER
+
+
+move auth stuff out of ui comps into cotainers (so containers deals with store and storage) - look online about best practice
+
+CHECK ALL ROUTES AND AUTH ACTIONS - make aure only a user can edit or delete their account or groups
+
+STORE QUESTIONS when signup, is the dialog initiated?
+
+
+change asyncProcesses so it stores teh id of teh user or group that is loading.
+that way, more than one user or group can be loaded simultaneously through multiple fetchUser calls
+eg is if we are on User page of another user and page is refreshed - then first teh signedin user is loaded,
+and currently the other User cannot start loading until signed in user returns,
+becuase teh HOC withLoader looks to see if  loading =true. So need that loading flag to be false for that User.
+ie multiple loading flags via use of ideg asyncProcesses = {loading.user._id = true}
+BUT we also need to integrate with error (see below)
+
+!!! HANDLE ERRORS - EG CreatUser and CreateGroup need to have different action buttons if not created
+allowing them to fix error
+
+//warning - username should be unique - needed fro CreateUser for example
+
+for fetchUsers on the wserver side, we will filter them to only users who are 
+connected to teh signedIn user. That means users who are in a group that teh signedInUser
+is a memberOf or is admin for. (ie must be in user.administeredGroups.players
+or user.groupsMemberOf.players) //in future, we will also add a following option
+so any 2 players can choose top connect with each other and see each others profiles
+and data
+
+chain promises in create methods in user and group controllers, to go back into db and populate admin with username etc
+instead of just sending back teh created user or group
+
+Dialogs have an onClose prop - not sure what that is for - investigate eg see DeleteUser
