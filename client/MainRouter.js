@@ -11,12 +11,14 @@ import GroupContainer from './group/containers/GroupContainer'
 import CreateGroupContainer from './group/containers/CreateGroupContainer'
 import PrivateRoute from './auth/PrivateRoute'
 import MenuContainer from './core/containers/MenuContainer'
+import auth from './auth/auth-helper'
 
-const MainRouter = ({jwt, user, loadUser, loadingUser}) => {
+const MainRouter = ({userId, loadUser, loadingUser}) => {
   //load user if page is refreshed. MainRouter is under the store so can 
   //trigger re-render once loaded
+  const jwt = auth.isAuthenticated();
   useEffect(() => {
-    if(jwt && !user._id && !loadingUser){
+    if(jwt && !userId && !loadingUser){
       loadUser(jwt.user._id)
     }
   }); 
@@ -38,8 +40,8 @@ const MainRouter = ({jwt, user, loadUser, loadingUser}) => {
         <PrivateRoute path="/user/edit/:userId" component={EditUserProfileContainer}/>
         <PrivateRoute path="/users/new" component={CreateUserContainer}/>
         <PrivateRoute path="/groups/new" component={CreateGroupContainer}/>
-        {user._id && <Route path="/user/:userId" component={UserContainer}/>}
-        {user._id && <Route path="/group/:groupId" component={GroupContainer}/>}
+        {userId && <Route path="/user/:userId" component={UserContainer}/>}
+        {userId && <Route path="/group/:groupId" component={GroupContainer}/>}
       </Switch>
     </div>
     )

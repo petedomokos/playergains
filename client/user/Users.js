@@ -11,7 +11,8 @@ const useStyles = makeStyles(theme => ({
 }))
 
 export default withLoader(function Users(props) {
-  const { users, /*administeredUsers,*/ title, actionButtons, itemAction, emptyMesg } = props;
+  const { users, title, actionButtons, itemActions, emptyMesg } = props;
+  console.log('props', props)
   const classes = useStyles()
 
   const addButton = (key) => 
@@ -22,13 +23,14 @@ export default withLoader(function Users(props) {
     </Link>
   const defaultActionButtons = [addButton]
   
-  const defaultItemAction = {
-    itemLinkPath:user => '/user/'+user._id,
-    //onItemClick:(item, i) => { alert('item '+i)},
-    ItemIcon:({}) => <ArrowForward/>
+  const defaultItemActions = {
+    main:{
+      itemLinkPath:user => '/user/'+user._id,
+      //onItemClick:(item, i) => { alert('item '+i)},
+      ItemIcon:({}) => <ArrowForward/>
+    },
+    other:[]
   }
-
-  //todo - sort so administreed users first //remeber its just id now
 
   return (
     <SimpleList 
@@ -36,7 +38,7 @@ export default withLoader(function Users(props) {
       emptyMesg={emptyMesg || 'No users'}
       items={users} 
       primaryText={user => user.firstname + ' ' +user.surname}
-      itemAction={itemAction || defaultItemAction}
+      itemActions={itemActions || defaultItemActions}
       actionButtons={actionButtons || defaultActionButtons}/>
   )
 }, ['userLoadsComplete'])

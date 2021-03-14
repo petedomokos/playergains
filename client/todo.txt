@@ -61,3 +61,12 @@ chain promises in create methods in user and group controllers, to go back into 
 instead of just sending back teh created user or group
 
 Dialogs have an onClose prop - not sure what that is for - investigate eg see DeleteUser
+
+Think thought how to handle that fact that the database could update from elsewhere during a session eg another user 
+may change their name or delete. In that case, currently, loadUsers when called may bring the latest groups and administeredUsers,
+but these would not override a deep user or group if I have previously loaded them.
+One solution is a helper function eg groupHasUpdated, and call it in eg loadUsers.
+current soln is to merge associated users and groups (with existing versions ) whenever a deep user or group is loaded 
+
+
+Group addPlayers page - useEffect to remind user to save, and to reset

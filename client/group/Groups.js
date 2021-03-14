@@ -18,7 +18,7 @@ const useStyles = makeStyles(theme => ({
 }))
 
 export default withLoader(function Groups(props) {
-  const { groups, /*administeredGroups, groupsMemberOf,*/ title, actionButtons, itemAction, emptyMesg } = props;
+  const { groups, title, actionButtons, itemActions, emptyMesg } = props;
   const classes = useStyles()
 
   const addButton = (key) => 
@@ -29,13 +29,12 @@ export default withLoader(function Groups(props) {
     </Link>
   const defaultActionButtons = [addButton]
 
-  const defaultItemAction = {
-    itemLinkPath:group => '/group/'+group._id,
-    ItemIcon:({}) => <ArrowForward/>
+  const defaultItemActions = {
+    main:{
+      itemLinkPath:group => '/group/'+group._id,
+      ItemIcon:({}) => <ArrowForward/>
+    }
   }
-
-  //todo - sort so administered groups first, then groupsMemberOf, then the rest
-  //remeber its just id now
 
   return (
     <SimpleList
@@ -43,7 +42,7 @@ export default withLoader(function Groups(props) {
       emptyMesg={emptyMesg || 'No groups'}
       items={groups} 
       primaryText={group => group.name}
-      itemAction={itemAction || defaultItemAction}
+      itemActions={itemActions || defaultItemActions}
       actionButtons={actionButtons || defaultActionButtons} />
   )
 }, ['groupLoadsComplete'])

@@ -1,3 +1,43 @@
+export const findIn = (arr, itemOrId) =>{
+	if(typeof itemOrId === 'string'){
+		//2nd arg is id
+		return arr.find(it => it._id === itemOrId)
+	}
+	//2nd arg is object with id
+	return (arr.find(it => it._id === itemOrId._id))
+}
+export const isIn = (arr, item) =>{
+	if(arr.find(it => it._id === item._id)){
+		return true;
+	}
+	return false;
+}
+export const isNotIn = (arr, item) =>{
+	if(arr.find(it => it._id === item._id)){
+		return false;
+	}
+	return true;
+}
+//doesnt test for properties stored on the array, just elements
+export const isSame = (arr1, arr2) => {
+	if(!Array.isArray(arr1) || !Array.isArray(arr1)){
+	  return false;
+	}
+	const inArr1NotArr2 = arr1.filter(item => !arr2.includes(item));
+	const inArr2NotArr1 = arr2.filter(item => !arr1.includes(item));
+	return inArr1NotArr2.length === 0 && inArr2NotArr1.length === 0;
+}
+
+  //doesnt test for properties stored on the array, just elements
+export const isSameById = (arr1, arr2) => {
+	if(!Array.isArray(arr1) || !Array.isArray(arr1)){
+	  return false;
+	}
+	const inArr1NotArr2 = arr1.filter(item => !arr2.find(it => it._id === item._id));
+	const inArr2NotArr1 = arr2.filter(item => !arr1.find(it => it._id === item._id));
+	return inArr1NotArr2.length === 0 && inArr2NotArr1.length === 0;
+}
+
 /**
 *
 **/

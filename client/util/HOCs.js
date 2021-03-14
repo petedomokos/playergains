@@ -24,6 +24,7 @@ import React, { useEffect, useState } from 'react';
 export function withLoader(ComponentWhenLoaded, propsToCheck=[], whileNotLoaded={}){
     //when loader is called, eg by UserContainer, it is passed the props
     const loader = props => {
+        console.log('props', props)
         //note: we dont control the loading state here - it is contained in store as other components may also load this resource
         const {extraLoadArg, onLoad, loading, loadingError, ...passedThroughProps} = props;
         
@@ -31,27 +32,39 @@ export function withLoader(ComponentWhenLoaded, propsToCheck=[], whileNotLoaded=
         //need to check props have all been loaded ( 0 and false are ok) every time in case page refreshed etc
         
         //a function that tests for various conditions which mean prop needs to be loaded
-        const failed = prop => prop !== 0 && prop !== false && prop 
+        const failed = prop => {
+            //console.log('prop', prop)
+            return prop !== 0 && prop !== false && !prop 
+        }
         
         //recursively check complex paths existence eg group.players
-        const checkProp = path => {
-            const checkNext = (pathSoFar, remaining) =>{
+        const checkProp = propPath => {
+            const checkNext = (nextPartOfPath, lookIn, remaining) =>{
+               // console.log('checkNext nextPartOfPath', nextPartOfPath)
+                //console.log('checkNext lookIn', lookIn)
+                //console.log('checkNext remianing', remaining)
                 //test pathSoFar
-                if(failed(props[pathSoFar])){
+                const propObject = lookIn[nextPartOfPath];
+               //console.log('propObject', propObject)
+                
+                if(failed(propObject)){
+                   //console.log('failed!')
                     return false;
                 }
+              // console.log('passed')
                 if(remaining[0]){
-                    //there is a next part of path, so call method on that
-                    return checkNext(pathSoFar+remaining[0], remaining.slice(1,10))
+                    //there is a next part of path, so look in the object returned for that
+                    return checkNext(remaining[0], propObject, remaining.slice(1,10))
                 }
                 //no more parts of path left to check
                 return true;
             };
             //split path into array
-            const splitPath = path.split('.');
-            return checkNext(splitPath[0], splitPath.slice(1,10))
+            const splitPath = propPath.split('.');
+           //console.log('initial check ')
+            return checkNext(splitPath[0], props, splitPath.slice(1,10))
         }        
-        const propsToLoad = propsToCheck.filter(prop => checkProp(prop))
+        const propsToLoad = propsToCheck.filter(propPath => !checkProp(propPath))
 
         console.log('Loader propsTocheck', propsToCheck)
         console.log('Loader propsToload', propsToLoad)

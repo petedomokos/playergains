@@ -1,12 +1,10 @@
 import { connect } from 'react-redux'
 import { fetchUser } from './actions/UserActions'
 import MainRouter  from './MainRouter'
-import auth from './auth/auth-helper'
 
 const mapStateToProps = (state, ownProps) => {
 	return{
-        jwt:auth.isAuthenticated(),
-		user:state.user,
+		userId:state.user._id,
 		loadingUser:state.asyncProcesses.loading.user,
 		loadingError:state.asyncProcesses.error.loading.user
 	}

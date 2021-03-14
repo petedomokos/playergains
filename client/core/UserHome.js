@@ -59,7 +59,6 @@ const UserHome = ({user, loading, loadingError}) => {
 }
 
 UserHome.defaultProps = {
-  user:{}
 }
 
 export default UserHome 

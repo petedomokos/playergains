@@ -10,7 +10,7 @@ router.route('/api/groups')
 
 router.route('/api/groups/:groupId')
   .get(authCtrl.requireSignin, groupCtrl.read)
-  .put(authCtrl.requireSignin, authCtrl.hasAuthorization, groupCtrl.update)
+  .put(authCtrl.requireSignin, /*authCtrl.hasAuthorization,*/ groupCtrl.update)
   .delete(authCtrl.requireSignin, authCtrl.hasAuthorization, groupCtrl.remove)
 
 router.param('groupId', groupCtrl.groupByID)

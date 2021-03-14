@@ -1,7 +1,7 @@
 import C from './Constants'
 import _ from 'lodash'
 import * as cloneDeep from 'lodash/cloneDeep'
-import { isIn, isNotIn, isSame, filterUniqueById, filterUniqueByProperty } from './util/ArrayHelpers'
+import { isIn, isNotIn, isSameById, filterUniqueById, filterUniqueByProperty } from './util/ArrayHelpers'
 import { InitialState } from './InitialState'
 import { GroupOutlined } from '@material-ui/icons'
 //HELPERS
@@ -12,20 +12,7 @@ export const user = (state=InitialState.user, act) =>{
 	switch(act.type){
 		//SIGNED IN USER
 		case C.SIGN_IN:{
-			const { admin, administeredUsers, administeredGroups, groupsMemberOf } = act.user;
-			//put all users and groups into loadedUsers and loadedGroups
-			//and reset those to model state (ie just list of ids)
-			return { 
-				...state, 
-				...act.user,
-				admin:admin.map(us => us._id),
-				administeredUsers:administeredUsers.map(us => us._id),
-				administeredGroups:administeredGroups.map(g => g._id),
-				groupsMemberOf:groupsMemberOf.map(g => g._id),
-				//store the deeper objects here in one place
-				loadedUsers:filterUniqueById([...admin, ...administeredUsers]), //later iterations will have following etc
-				loadedGroups:filterUniqueById([...administeredGroups, ...groupsMemberOf])
-			}
+			return act.user;
 		}
 		case C.SIGN_OUT:{
 			return InitialState.user;
@@ -39,46 +26,67 @@ export const user = (state=InitialState.user, act) =>{
 		case C.CREATE_NEW_ADMINISTERED_USER:{
 			return { 
 				...state, 
-				administeredUsers:[...state.administeredUsers, act.user._id],
-				loadedUsers:[...state.loadedUsers, act.user]
+				administeredUsers:[...state.administeredUsers, act.user._id]
 			}
 		}
 		case C.CREATE_NEW_ADMINISTERED_GROUP:{
 			return { 
 				...state, 
-				administeredGroups:[...state.administeredGroups, act.group._id],
-				loadedGroups:[...state.loadedGroups, act.group]
+				administeredGroups:[...state.administeredGroups, act.group._id]
 			}
 		}
 		//UPDATE (overwrite properties with any updated or new ones)
 
 		case C.UPDATE_ADMINISTERED_USER:{
 			//we only update in loadedUsers, as _id doesnt ever change
-			const userToUpdate = state.loadedUsers.find(us => us._id === act.user._id);
+			const userToUpdate = state.user.administeredUsers.find(us => us._id === act.user._id);
 			const updatedUser = { ...userToUpdate, ...act.user }
+			if(!isSameById(userToUpdate.admin, updatedUser.admin)){
+				//user admin has changed
+				//add/remove from/to user.administeredUsers for affected users
+				//...todo
+			}
 			//use filter to remove old version, and add updated version
 			return {
 				...state,
-				loadedUsers:filterUniqueById([updatedUser, ...state.administeredUsers])
+				administeredUsers:filterUniqueById([updatedUser, ...state.administeredUsers])
 			}
 		}
 
 		case C.UPDATE_ADMINISTERED_GROUP:{
-			//we only update in loadedUsers, as _id doesnt ever change
-			const groupToUpdate = state.loadedGroups.find(g => g._id === act.group._id);
+			const groupToUpdate = state.administeredGroups.find(g => g._id === act.group._id);
 			const updatedGroup = { ...groupToUpdate, ...act.group };
-			var updatedLoadedUsers = state.loadedUsers;
-			//add/remove groupId from affected players
+			const updatedAdministeredGroups = filterUniqueById([updatedGroup, ...state.administeredGroups])
+			//also update in groupsMemeberOf if its there
+			const updatedGroupsMemberOf = state.groupsMemberOf.find(g => g._id === act.group._id) ?
+				filterUniqueById([updatedGroup, ...state.groupsMemberOf]) : state.groupsMemberOf;
+			//if group admin changed, update user.administeredGroups for affected users
+			if(!isSameById(groupToUpdate.admin, updatedGroup.admin)){
+				//todo
+			}
+			//if players changed, update groupsMemberOf in affected players (users)
+			//only if deep versions of users are stored, otherwise those groups wont exist on the user
 			if(!isSame(groupToUpdate.players, updatedGroup.players)){
-				const playersAdded = updatedGroup.players.filter(userId => !groupToUpdate.players.includes(userId))
+				const playersAdded = updatedGroup.players.filter(user => isNotIn(groupToUpdate, user))
 				console.log('playersAdded', playersAdded)
-				const playersRemoved = groupToUpdate.players.filter(userId => !updatedGroup.players.includes(userId))
+				const playersRemoved = groupToUpdate.players.filter(userId => isNotIn(updatedGroup, user))
 				console.log('playersRemoved', playersRemoved)
-				updatedLoadedUsers = state.loadedUsers.map(user =>{
-					//only add groupId to user if groupsMemberOf is loaded (ie deep version of user is loaded)
-					if(!user.groupsMemberOf){
-						return user;
+				var updatedAdmin = state.admin,
+					updatedAdministeredUsers = state.administeredUsers,
+					updatedOtherUsers = state.otherUsers;
+				
+				playersAdded.forEach(user =>{
+					if(isIn(state.admin, user)){
+						const _user = updatedAdmin.find(us => us._id === user._id);
+						if(_user.groupsMemberOf)
+							_user.players.push(user);
 					}
+					else if(isIn(state.administeredUsers, user)){
+						updatedAdministeredUsers.find(us => us._id === user._id).players.push(user);
+					}
+
+				})
+				const updatedLoadedUsers = state.loadedUsers.map(user =>{
 					if(playersAdded.includes(user._id)){
 						//add groupId to user
 						return { ...user, groupsMemberOf:[...user.groupsMemberOf, act.group._id]}
@@ -101,48 +109,19 @@ export const user = (state=InitialState.user, act) =>{
 		//DELETE
 		//must remove from both administered and loaded arrays
 		case C.DELETE_ADMINISTERED_USER:{
-			//must also remove the userId from any users administeredGroups
-			const updatedLoadedUsers = state.loadedUsers
-				.filter(us => us._id !== act.user._id)
-				.map(user =>{
-					//if deep version of user is loaded and user was in the administered list
-					if(user.administeredUsers && user.administeredUsers.includes(act.user._id)){
-						//remove groupId from list
-						return { 
-							...user, 
-							administeredUsers:user.administeredUsers.filter(g => g._id !== act.user._id)
-						}
-					}
-					return user;
-				})
-
+			//todo - also delete them from any other user's user.administeredGroups
 			return {
 				...state,
 				administeredUsers:state.administeredUsers.filter(us => us._id !== act.user._id),
-				loadedUsers:updatedLoadedUsers
+				loadedUsers:state.loadedUsers.filter(us => us._id !== act.user._id)
 			}
 		}
 		case C.DELETE_ADMINISTERED_GROUP:{
-			//must also remove the groupId from any users administeredGroups
-			const updatedLoadedUsers = state.loadedUsers
-				.map(user =>{
-					//if deep version of user is loaded and group was in the administered list
-					if(user.administeredGroups && user.administeredGroups.includes(act.user._id)){
-						//remove groupId from list
-						return { 
-							...user, 
-							administeredGroups:user.administeredGroups.filter(g => g._id !== act.user._id)
-						}
-					}
-					return user;
-				})
-
+			//todo - also delete them from any other user's user.administeredGroups
 			return {
 				...state,
 				administeredGroups:state.administeredGroups.filter(g => g._id !== act.group._id),
-				loadedGroups:state.loadedGroups.filter(g => g._id !== act.group._id),
-				loadedUsers:updatedLoadedUsers
-
+				loadedGroups:state.loadedGroups.filter(g => g._id !== act.group._id)
 			}
 		}
 		//LOAD EXISTING FROM SERVER 
@@ -155,13 +134,10 @@ export const user = (state=InitialState.user, act) =>{
 			const updatedUser = { 
 				...userToUpdate, 
 				...act.user,
-				admin:admin.map(us => us._id),
 				administeredUsers:administeredUsers.map(us => us._id),
 				administeredGroups:administeredGroups.map(g => g._id),
 				groupsMemberOf:groupsMemberOf.map(g => g._id)
 			}
-			//All teh following groups come in from server in shallow form, not just flat ids.
-			//we save them to teh central group store, to be accessed when required by containers
 			const mergedAdmin = admin.map(adminUser => {
 				const existingVersion = state.loadedUsers.find(us => us._id === adminUser._id) || {};
 				//override any properties in latest version from server, in case of database changes from elsewhere
@@ -229,7 +205,8 @@ export const user = (state=InitialState.user, act) =>{
 			const usersNotLoadedBefore = act.users
 				.filter(us => us._id !== state._id)
 				.filter(us => !state.loadedUsers.find(u => u._id === us._id))
-			console.log('USERS NOT LOADED B4', usersNotLoadedBefore)
+			
+
 			//for now, all users are sent first time
 			return { 
 				...state, 

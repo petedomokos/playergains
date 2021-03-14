@@ -38,8 +38,6 @@ const useStyles = makeStyles(theme => ({
 
 export default function EditUserProfile({ signedInUserId, user, onUpdate, updating, updatingError, history }) {
   const classes = useStyles()
-  console.log('user', user)
-  console.log('signedin', signedInUserId)
   const [values, setValues] = useState({
     username: user.username || '',
     firstname:user.firstname || '',

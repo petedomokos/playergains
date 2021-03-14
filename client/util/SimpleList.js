@@ -35,15 +35,31 @@ const useStyles = makeStyles(theme => ({
   title: {
     margin: `0 ${theme.spacing(2)}px ${theme.spacing(2)}px ${theme.spacing(2)}px`,
     color: theme.palette.openTitle
+  },
+  listItemWrapper:{
+    border:'solid',
+    display:'flex',
+    justifyContent:'space-between'
+  },
+  itemMainPart:{
+    flex:'80% 1 1',
+    border:'solid',
+    borderColor:'blue'
+  },
+  extraItemButtons:{
+    width:props => props.extraItemButtonsWidth,
+    border:'solid'
   }
 }))
 /*
  linkPath - an accessor function to get the 'to' property for each (item,index) pair
 */
-export default function SimpleList({ title, emptyMesg, items, itemAction, actionButtons, primaryText, styles}) {
-  const classes = useStyles(styles);
+export default function SimpleList({ title, emptyMesg, items, itemActions, actionButtons, primaryText, styles}) {
+  const nrOfExtraItemActions = itemActions.other ? itemActions.other.length : 0;
+  const stylesProps = {...styles, extraItemButtonsWidth:nrOfExtraItemActions * 40}
+  const classes = useStyles(stylesProps);
 
-  const { ItemIcon, onItemClick, itemLinkPath } = itemAction;
+  const { ItemIcon, onItemClick, itemLinkPath } = itemActions.main;
 
   const listItem = (item, i) => 
       <ListItem button>
@@ -59,6 +75,11 @@ export default function SimpleList({ title, emptyMesg, items, itemAction, action
         </IconButton>
         </ListItemSecondaryAction>
       </ListItem>
+  
+  const extraItemButton = (action, i) =>
+      <IconButton key={i}>
+        <action.ItemIcon/>
+      </IconButton> 
 
     return (
       <Card className={classes.root} elevation={4}>
@@ -69,16 +90,31 @@ export default function SimpleList({ title, emptyMesg, items, itemAction, action
           {items.length >= 1 ? 
             <List dense>
               {items.map((item, i) =>
-                <div key={i}>
+                <div key={i} className={classes.listItemWrapper}>
                   {itemLinkPath ? 
-                    <Link to={itemLinkPath(item, i)} >
+                    <Link to={itemLinkPath(item, i)} className={classes.itemMainPart}>
                         {listItem(item, i)}
                     </Link>
                     :
-                    <div onClick={() => onItemClick(item,i)} >
+                    <div onClick={() => onItemClick(item,i)} className={classes.itemMainPart} >
                         {listItem(item, i)}
                     </div>
                   }
+                  <div className={classes.extraItemButtons}>
+                    {itemActions.other && itemActions.other.map((action,i) =>
+                      <div>
+                        {action.linkPath ? 
+                          <Link to={action.linkPath(item, i)} >
+                              {extraItemButton(action,i)}
+                          </Link>
+                          :
+                          <div onClick={() => action.onClick(item,i)} >
+                              {extraItemButton(action,i)}
+                          </div>
+                        }
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
             </List>
@@ -97,9 +133,12 @@ SimpleList.defaultProps = {
     title:'',
     emptyMesg:'None',
     items:[],
-    itemAction:{
-      itemLinkPath:() =>'/', 
-      ItemIcon:ArrowForward
+    itemActions:{
+      main:{
+        itemLinkPath:() =>'/', 
+        ItemIcon:ArrowForward
+      },
+      other:[]
     },
     actionButtons:[],
     primaryText:() =>{},

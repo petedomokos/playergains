@@ -45,14 +45,14 @@ const create = async (req, res) => {
  * Load group and append to req.
  */
 const groupByID = async (req, res, next, id) => {
-  //console.log('readgroupById......', id)
+  console.log('readgroupById......', id)
   try {
     let group = await Group.findById(id)
-        .populate('admin', '_id username firstname surname')
-        .populate('players', '_id username firstname surname')
+        .populate('admin', '_id username firstname surname photo')
+        .populate('players', '_id username firstname surname photo')
          //example from old playergains of how to populate deeper paths
       //.populate({ path: 'player.groups', select: 'name _id desc groupType players parent admin coaches subgroups' })
-
+    console.log('group', group)
     if (!group)
       return res.status('400').json({
         error: "Group not found"
@@ -75,8 +75,11 @@ const list = async (req, res) => {
   //const fakeGroups = [{_id:"1", name:"a group", email:"a@b.com"}]
   //res.json(fakeGroups)
   try {
-    let groups = await Group.find().select('name photo created admin')
-      .populate('admin', '_id username firstname surname')
+    let groups = await Group.find()
+      .select('_id name desc photo groupType admin created') //not players as shallow
+      .populate('admin', '_id username firstname surname created')
+      //.populate('players', '_id firstname surname photo')
+
     console.log('returning groups now.......................')
     //console.log('returning groups.......................', groups)
     res.json(groups)
@@ -93,15 +96,24 @@ const update = async (req, res) => {
   let form = new formidable.IncomingForm()
   form.keepExtensions = true
   form.parse(req, async (err, fields, files) => {
+    console.log('fields', fields)
     if (err) {
       return res.status(400).json({
         error: "Photo could not be uploaded"
       })
     }
+    //players field to array
+    if(fields.players === ''){
+      fields.players = [];
+    }else{
+      const playersArray = fields.players.split(',')
+      console.log('playersArray', playersArray)
+      fields.players = playersArray
+    }
     let group = req.profile
     group = extend(group, fields)
     group.updated = Date.now()
-    console.log('group now', group)
+    console.log('group now.................', group)
     if(files.photo){
       group.photo.data = fs.readFileSync(files.photo.path)
       group.photo.contentType = files.photo.type

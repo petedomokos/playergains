@@ -28,7 +28,7 @@ export const fetchGroup = id => dispatch => {
 		{
 			url: '/api/groups/' +id, 
 			requireAuth:true,
-			processor: data => {
+			nextAction: data => {
 				console.log('nextAction...load group')
 				return {type:C.LOAD_GROUP, group:data}
 			}
@@ -51,7 +51,7 @@ export const deleteGroup = (id, history) => dispatch => {
 			url: '/api/groups/'+id,
 			method: 'DELETE',
 			requireAuth:true,
-			processor: data => {
+			nextAction: data => {
 				history.push("/")
 				return {type:C.DELETE_ADMINISTERED_GROUPP, id:id}
 			}
@@ -69,12 +69,16 @@ export const updateGroup = (id, formData, history) => dispatch => {
 	      	},
 			body:formData, //not stringify as its a formidable object
 			requireAuth:true,
-			processor: data => {
-				history.push("/group/"+id)
+			nextAction: data => {
+				console.log('update_administered_group', data)
+				if(history){
+					history.push("/group/"+id)
+				}
 				return {type:C.UPDATE_ADMINISTERED_GROUP, group:data}
 			}
 		})
 }
+
 /*
 export const addPlayer = (player, groupId) => dispatch => {
 	//add to group in store first so UI not held up

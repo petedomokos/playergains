@@ -41,10 +41,11 @@ const userByID = async (req, res, next, id) => {
   try {
     let user = await User.findById(id)
       .populate('admin', '_id username firstname surname created')
-      .populate('administeredGroups', '_id name desc groupType players admin created')
-      .populate('groupsPlayedFor', '_id name desc groupType players admin created')
+      .populate('administeredGroups', '_id name desc photo groupType created')
+      .populate('groupsMemberOf', '_id name desc groupType created')
        //example from old playergains of how to populate deeper paths
-      //.populate({ path: 'player.groups', select: 'name _id desc groupType players parent admin coaches subgroups' })
+      //.populate({ path: 'administeredGroups.players', select: '_id firstname surname photo' })
+      //.populate({ path: 'groupsMemberOf.players', select: '_id firstname surname photo' })
 
     console.log('user in userById', user)
     if (!user)
@@ -71,7 +72,10 @@ const list = async (req, res) => {
   //const fakeUsers = [{_id:"1", name:"a user", email:"a@b.com"}]
   //res.json(fakeUsers)
   try {
-    let users = await User.find().select('username firstname surname photo email updated created admin')
+    let users = await User.find()
+      .select('username firstname surname photo email updated created admin')
+      .populate('admin', '_id username firstname surname created')
+
     console.log('returning users now.......................')
     //console.log('returning users.......................', users)
     res.json(users)

@@ -37,8 +37,11 @@ export default function GroupProfile({profile}) {
   //note - it is possible that group may have been fully loaded, in which case
   //arrays like admin will not just be id but will be an object. 
   //Therefore, we handle both cases.
-  const adminIds = admin[0] && typeof admin[0] === 'string' ? admin : admin.map(us => us._id);
-  const userHasAdminAuth = jwt && admin.find(userId => userId === jwt.user._id);
+  //admin could be either flat or object from (if comes thrroguh Group, it will be object form)
+  const adminIds = admin[0] && typeof admin[0] != 'string' ? 
+    admin.map(user => user._id) : admin
+  const userHasAdminAuth = jwt && adminIds.includes(jwt.user._id);
+
     return (
       <Paper className={classes.root} elevation={4}>
         <Typography variant="h6" className={classes.title}>

@@ -8,8 +8,8 @@ const signin = async (req, res) => {
   try {
     let user = await User.findOne({ "email": req.body.email})
       .populate('admin', '_id username firstname surname created')
-      .populate('administeredGroups', '_id name desc groupType players admin created')
-      .populate('groupsPlayedFor', '_id name desc groupType players admin created')
+      .populate('administeredGroups', '_id name desc groupType admin created')
+      .populate('groupsPlayedFor', '_id name desc groupType admin created')
       //example from old playergains of how to populate deeper paths
       //.populate({ path: 'player.groups', select: 'name _id desc groupType players parent admin coaches subgroups' })
 

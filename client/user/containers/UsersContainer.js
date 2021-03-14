@@ -3,19 +3,26 @@ import { fetchUsers } from '../../actions/UserActions'
 import Users  from '../Users'
 
 const mapStateToProps = (state, ownProps) => {
-	console.log('state', state)
-	//todo - implement it using filter in here, so we just passed through the comparator
-	//note: optional filterFunc = (users) => filteredUsers
-	const { loadedUsers, /*administeredUsers,*/ loadsComplete } = state.user;
-	const { include, exclude } = ownProps;
+	//console.log('state', state)
+
+	const { loadedUsers, loadsComplete } = state.user;
+	//add the signed in user, who is not stored in loadedUsers
+	const allUsers = [...loadedUsers, state.user];
+	//remove users if specified via a prop from parent
+	var requiredUsers = allUsers;
+	if(ownProps.include){
+		requiredUsers = allUsers.filter(us => ownProps.include.includes(us._id));
+	}
+	if(ownProps.exclude){
+		requiredUsers = allUsers.filter(us => !ownProps.exclude.includes(us._id))
+	}
 	return{
-		users:include ? loadedUsers.filter(us => include.includes(us._id)) : 
-			exclude ? loadedUsers.filter(us => !exclude.includes(us._id)) : 
-			loadedUsers,
-		/*administeredUsers:administeredUsers,*/
+		users:requiredUsers,
+		//A flag propToCheck for withLoader HOC to make sure all users have been loaded
         userLoadsComplete:loadsComplete.users, //for now, we just load all users at this stage
 		loading:state.asyncProcesses.loading.users,
-		loadingError:state.asyncProcesses.error.loading.users
+		loadingError:state.asyncProcesses.error.loading.users,
+		...ownProps //do we need this for our custom props or are they passed through automatically?
 	}
 }
 const mapDispatchToProps = dispatch => ({

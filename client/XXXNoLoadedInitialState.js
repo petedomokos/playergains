@@ -3,12 +3,13 @@ export const InitialState = {
 	//so all of them will need to receive the update actions, not just adminUsers/adminGroups
 	//but when creating a new user or group, they dont need to go into other.
 	user:{
+		admin:[],
 		administeredUsers:[],
 		administeredGroups:[],
 		groupsMemberOf:[],
-		loadedUsers:[],
-		loadedGroups:[],
-		loadsComplete:{
+		otherUsers:[],
+		otherGroups:[],
+		loadStatus:{
 			users:'',
 			groups:''
 		}

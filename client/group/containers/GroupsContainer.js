@@ -4,17 +4,22 @@ import Groups  from '../Groups'
 import { findDeepGroup } from '../../util/ReduxHelpers';
 
 const mapStateToProps = (state, ownProps) => { 
-	const { loadedGroups, loadsComplete, groupsMemberOf, administeredGroups } = state.user;
-	const { include, exclude } = ownProps;
+	const { loadedGroups, loadsComplete } = state.user;
+	//remove users if specified via a prop from parent
+	var requiredGroups = loadedGroups;
+	if(ownProps.include){
+		requiredGroups = allGroups.filter(g => include.includes(g._id));
+	}
+	if(ownProps.exclude){
+		requiredGroups = allGroups.filter(g => !exclude.includes(g._id))
+	}
 	return{
-		groups:include ? loadedGroups.filter(g => include.includes(g._id)) : 
-		exclude ? loadedGroups.filter(g => !exclude.includes(g._id)) : 
-		loadedGroups,
-		/*administeredGroups:administeredGroups,
-		groupsMemberOf:groupsMemberOf,*/
+		groups:requiredGroups,
+		//A flag propToCheck for withLoader HOC to make sure all groups have been loaded
 		groupLoadsComplete:loadsComplete.groups,
 		loading:state.asyncProcesses.loading.groups,
-		loadingError:state.asyncProcesses.error.loading.groups
+		loadingError:state.asyncProcesses.error.loading.groups,
+		...ownProps
 	}
 }
 const mapDispatchToProps = dispatch => ({

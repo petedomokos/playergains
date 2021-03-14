@@ -1,14 +1,20 @@
-import React, { } from 'react'
+import React, { useState, useEffect } from 'react'
+//styles
 import { makeStyles } from '@material-ui/core/styles'
+import Button from '@material-ui/core/Button';
+import IconButton from '@material-ui/core/IconButton'
+import EditIcon from '@material-ui/icons/Edit';
+import AddCircleIcon from '@material-ui/icons/AddCircle';
+import DeleteIcon from '@material-ui/icons/Delete';
+import PersonAddIcon from '@material-ui/icons/AddCircle';
+import ArrowForward from '@material-ui/icons/ArrowForward'
+//children
 import GroupProfile from './GroupProfile';
 import UsersContainer from '../user/containers/UsersContainer'
 import { withLoader } from '../util/HOCs';
-import SimpleList from '../util/SimpleList'
-import AddCircleIcon from '@material-ui/icons/AddCircle';
-import RemoveCircleIcon from '@material-ui/icons/RemoveCircle';
-import PersonAddIcon from '@material-ui/icons/AddCircle';
-import IconButton from '@material-ui/core/IconButton'
-//helper
+import SimpleList from '../util/SimpleList';
+import { isSameById } from '../util/ArrayHelpers';
+import auth from '../auth/auth-helper'
 
 const useStyles = makeStyles(theme => ({
   dashboard:{
@@ -21,27 +27,103 @@ const useStyles = makeStyles(theme => ({
   }
 }))
 
+//component
 function Group(props) {
-  console.log('Group props', props)
-  const { group } = props;
+  const { group, updatePlayers, playersUpdating, playersUpdated, playerUpdateError } = props;
   const classes = useStyles();
+  const [showPlayersToAdd, setShowPlayersToAdd] =  useState(false);
+  const [updatedPlayers, setUpdatedPlayers] = useState(group.players);
 
+  useEffect(() => {
+    return () => {
+      //todo - ask user if they wish to save if there is unsaved changes
+      //reset
+      //closeDialog();
+    };
+  }, []); // will only apply once, not resetting the dialog at teh end of every render eg re-renders
+
+  //helper
+  const playersHaveChanged = !isSameById(group.players, updatedPlayers);
+  
+  const onAddPlayer = user =>{
+    setUpdatedPlayers(prevState => [...prevState, user])
+  }
+
+  const onRemovePlayer = user =>{
+    setUpdatedPlayers(prevState => prevState.filter(us => us._id !== user._id))
+  }
+
+  const onClickCancel = () =>{
+    setShowPlayersToAdd(false);
+    setUpdatedPlayers(group.players);
+  }
+
+  const onClickSubmit = () =>{
+      setShowPlayersToAdd(false)
+      //we use form data as that is required for updateGroup request
+      let formData = new FormData();
+      formData.append('players', updatedPlayers.map(us => us._id))
+      //we dont pass history as we dont need to redirect
+      updatePlayers(group._id, formData)
+      //note - we will open dialog that saves saving, then saved, then disappears by itself (unless error)
+  }
   const addButton = (key) => 
       <IconButton aria-label="add-player" color="primary" key={key}
-        onClick={() => alert('add player')}>
-        <PersonAddIcon/>
+        onClick={() => setShowPlayersToAdd(true)}>
+        <EditIcon/>
       </IconButton>
-  const actionButtons = [addButton]
 
-  const addPlayerItemAction = {
-    onItemClick:(item, i) => { alert('add item '+i)},
-    ItemIcon:({}) => <AddCircleIcon/>
+  const cancelButton = (key) => 
+      <Button aria-label="add-player" color="secondary" key={key}
+        onClick={onClickCancel}>
+        Cancel
+      </Button>
+
+  const saveButton = (key) => 
+      <Button aria-label="add-player" color="secondary" key={key}
+        onClick={onClickSubmit}>
+        Save changes
+      </Button>
+  var adminActionButtons = [];
+  if(!showPlayersToAdd){
+    adminActionButtons.push(addButton);
+  }else{
+    adminActionButtons.push(cancelButton);
   }
-  const removePlayerItemAction = {
-    onItemClick:(item, i) => { alert('remove item '+i)},
-    ItemIcon:({}) => <RemoveCircleIcon/>
+  if(playersHaveChanged){
+    adminActionButtons =  [saveButton, cancelButton];
+  }
+ 
+  const nonAdminActionButtons = [];
+  const jwt = auth.isAuthenticated();
+  
+  //group.admin has been loaded up in GroupContainer so not just id
+  const actionButtons = jwt && group.admin.find(user => user._id === jwt.user._id) ? 
+    adminActionButtons : nonAdminActionButtons;
+
+  const addPlayerItemActions = {
+    main:{
+      onItemClick:onAddPlayer,
+      ItemIcon:({}) => <AddCircleIcon/>
+    }
+  }
+  //we want buttons to switch from the main froward arrow (for player link)
+  //when not editing, to the delete idon when editing.
+  //using main and other gives a positional difference to make it obvious
+  const removePlayerItemActions = {
+    main:{
+      itemLinkPath:(item) =>'/user/'+item._id, 
+      ItemIcon:showPlayersToAdd ? () => null : ArrowForward
+    },
+    other:[{
+      onClick:showPlayersToAdd ? onRemovePlayer : () => {},
+      ItemIcon: showPlayersToAdd ? DeleteIcon : () => null
+    }]
   }
 
+  //we exclude players that are in the new version of group from players to add list, even before saved
+  //note that all group players are also put into loadedusers list in store when group is loaded
+  //although these will be reloaded anyway if users havent all been loaded yet (as currently set up)
   return (
     <div>
       <GroupProfile profile={group} />
@@ -49,18 +131,19 @@ function Group(props) {
           <SimpleList 
             title='Players in group' 
             emptyMesg='No players yet' 
-            items={group.players}
-            itemAction={removePlayerItemAction}
+            items={updatedPlayers}
+            itemActions={removePlayerItemActions}
             actionButtons={actionButtons}
             primaryText={user => user.firstname + ' ' +user.surname}/>
 
-          <div className={classes.list}>
+          {showPlayersToAdd && <div className={classes.list}>
             <UsersContainer
               title='Players to add'
               emptyMesg='No players left to add'
-              exclude={group.players.map(us => us._id)}
-              itemAction={addPlayerItemAction} />
-        </div>
+              exclude={updatedPlayers.map(us => us._id)}
+              itemActions={addPlayerItemActions}
+              actionButtons={[]} />
+          </div>}
       </div>
       <div className={classes.dashboard}>
         This groups profile and dashboard (includes links for editing/deleting
