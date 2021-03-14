@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { Route } from 'react-router-dom'
 //styles
 import { makeStyles } from '@material-ui/core/styles'
 import Button from '@material-ui/core/Button';
@@ -11,6 +12,7 @@ import ArrowForward from '@material-ui/icons/ArrowForward'
 //children
 import GroupProfile from './GroupProfile';
 import UsersContainer from '../user/containers/UsersContainer'
+import DatasetsContainer from '../dataset/containers/DatasetsContainer'
 import { withLoader } from '../util/HOCs';
 import SimpleList from '../util/SimpleList';
 import { isSameById } from '../util/ArrayHelpers';
@@ -29,10 +31,12 @@ const useStyles = makeStyles(theme => ({
 
 //component
 function Group(props) {
-  const { group, updatePlayers, playersUpdating, playersUpdated, playerUpdateError } = props;
+  const { group, updateGroup, updating, updated, updateError } = props;
   const classes = useStyles();
   const [showPlayersToAdd, setShowPlayersToAdd] =  useState(false);
   const [updatedPlayers, setUpdatedPlayers] = useState(group.players);
+  const [showDatasetsToAdd, setShowDatasetsToAdd] =  useState(false);
+  const [updatedDatasets, setUpdatedDatasets] = useState(group.datasets);
 
   useEffect(() => {
     return () => {
@@ -41,6 +45,9 @@ function Group(props) {
       //closeDialog();
     };
   }, []); // will only apply once, not resetting the dialog at teh end of every render eg re-renders
+
+
+  //PLAYERS-----------------------------------------------------------------------------------------------
 
   //helper
   const playersHaveChanged = !isSameById(group.players, updatedPlayers);
@@ -64,10 +71,11 @@ function Group(props) {
       let formData = new FormData();
       formData.append('players', updatedPlayers.map(us => us._id))
       //we dont pass history as we dont need to redirect
-      updatePlayers(group._id, formData)
+      updateGroup(group._id, formData)
       //note - we will open dialog that saves saving, then saved, then disappears by itself (unless error)
   }
-  const addButton = (key) => 
+  //group player list buttons
+  const editButton = (key) => 
       <IconButton aria-label="add-player" color="primary" key={key}
         onClick={() => setShowPlayersToAdd(true)}>
         <EditIcon/>
@@ -84,9 +92,10 @@ function Group(props) {
         onClick={onClickSubmit}>
         Save changes
       </Button>
+  
   var adminActionButtons = [];
   if(!showPlayersToAdd){
-    adminActionButtons.push(addButton);
+    adminActionButtons.push(editButton);
   }else{
     adminActionButtons.push(cancelButton);
   }
@@ -100,6 +109,9 @@ function Group(props) {
   //group.admin has been loaded up in GroupContainer so not just id
   const actionButtons = jwt && group.admin.find(user => user._id === jwt.user._id) ? 
     adminActionButtons : nonAdminActionButtons;
+  
+
+  //player item buttons
 
   const addPlayerItemActions = {
     main:{
@@ -124,6 +136,86 @@ function Group(props) {
   //we exclude players that are in the new version of group from players to add list, even before saved
   //note that all group players are also put into loadedusers list in store when group is loaded
   //although these will be reloaded anyway if users havent all been loaded yet (as currently set up)
+
+  //DATASETS ----------------------------------------------------------------------------------------------
+  //helper
+  const datasetsHaveChanged = !isSameById(group.datasets, updatedDatasets);
+
+  const onAddDataset = dataset =>{
+    setUpdatedDatasets(prevState => [...prevState, dataset])
+  }
+  const onRemoveDataset = dataset =>{
+    setUpdatedDatasets(prevState => prevState.filter(dset => dset._id !== dataset._id))
+  }
+  const onClickCancelDatasets = () =>{
+    setShowDatasetsToAdd(false);
+    setUpdatedDatasets(group.datasets);
+  }
+  const onClickSubmitDatasets = () =>{
+    setShowDatasetsToAdd(false)
+    //we use form data as that is required for updateGroup request
+    let formData = new FormData();
+    formData.append('datasets', updatedDatasets.map(dset => dset._id))
+    //we dont pass history as we dont need to redirect
+    updateGroup(group._id, formData)
+    //note - we will open dialog that saves saving, then saved, then disappears by itself (unless error)
+  }
+  //dataset list buttons
+  const editDatasetsButton = (key) => 
+    <IconButton aria-label="add-player" color="primary" key={key}
+      onClick={() => setShowDatasetsToAdd(true)}>
+      <EditIcon/>
+    </IconButton>
+
+  const cancelDatasetsButton = (key) => 
+      <Button aria-label="add-player" color="secondary" key={key}
+        onClick={onClickCancelDatasets}>
+        Cancel
+      </Button>
+
+  const saveDatasetsButton = (key) => 
+      <Button aria-label="add-player" color="secondary" key={key}
+        onClick={onClickSubmitDatasets}>
+        Save changes
+      </Button>
+  
+  var adminDatasetActionButtons = [];
+  if(!showDatasetsToAdd){
+    adminDatasetActionButtons.push(editDatasetsButton);
+  }else{
+    adminDatasetActionButtons.push(cancelDatasetsButton);
+  }
+  if(datasetsHaveChanged){
+    adminDatasetActionButtons =  [saveDatasetsButton, cancelDatasetsButton];
+  }
+ 
+  const nonAdminDatasetActionButtons = [];
+  //group.admin has been loaded up in GroupContainer so not just id
+  const datasetActionButtons = jwt && group.admin.find(user => user._id === jwt.user._id) ? 
+    adminDatasetActionButtons : nonAdminDatasetActionButtons;
+
+
+  const addDatasetItemActions = {
+    main:{
+      onItemClick:onAddDataset,
+      ItemIcon:({}) => <AddCircleIcon/>
+    }
+  }
+
+  //we want buttons to switch from the main froward arrow (for dataset link)
+  //when not editing, to the delete idon when editing.
+  //using main and other gives a positional difference to make it obvious
+  const removeDatasetItemActions = {
+    main:{
+      itemLinkPath:(item) =>'/dataset/'+item._id, 
+      ItemIcon:showDatasetsToAdd ? () => null : ArrowForward
+    },
+    other:[{
+      onClick:showDatasetsToAdd ? onRemoveDataset : () => {},
+      ItemIcon: showDatasetsToAdd ? DeleteIcon : () => null
+    }]
+  }
+  console.log('updatedDatasets', updatedDatasets)
   return (
     <div>
       <GroupProfile profile={group} />
@@ -144,10 +236,29 @@ function Group(props) {
               itemActions={addPlayerItemActions}
               actionButtons={[]} />
           </div>}
+
+          <SimpleList 
+            title='Datasets in group' 
+            emptyMesg='No datasets yet' 
+            items={updatedDatasets}
+            itemActions={removeDatasetItemActions}
+            actionButtons={datasetActionButtons}
+            primaryText={dset => dset.name}
+            secondaryText={dset => dset.desc} />
+
+          {showDatasetsToAdd && <div className={classes.list}>
+            <DatasetsContainer
+              title='Datasets to add'
+              emptyMesg='No datasets left to add'
+              exclude={updatedDatasets.map(us => us._id)}
+              itemActions={addDatasetItemActions}
+              actionButtons={[]} />
+          </div>}
+
+
       </div>
       <div className={classes.dashboard}>
-        This groups profile and dashboard (includes links for editing/deleting
-         - but only if this group is administered by signedin user])
+        This groups profile, players, datasets and data
       </div>
     </div>
   )

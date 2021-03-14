@@ -47,6 +47,7 @@ export default function CreateUser({ user, creating, error, open, submit, closeD
         username: '',
         firstname:'',
         surname:'',
+        initials:'', //max 5 chars
         password: '',
         email: '',
         //the signed in user is added to admin (if a user is signed in)
@@ -68,15 +69,20 @@ export default function CreateUser({ user, creating, error, open, submit, closeD
     }
 
     const clickSubmit = () => {
+      if(values.initials.length >= 6){
+        alert('User initials must be 5 characters or less.')
+      }else{
         const user = {
         username: values.username || undefined,
         firstname: values.firstname || undefined,
         surname: values.surname || undefined,
+        initials: values.initials || undefined,
         email: values.email || undefined,
         password: values.password || undefined,
         admin: values.admin || undefined
         };
         submit(user);
+      }
     }
 
     const reset = () =>{
@@ -99,6 +105,7 @@ export default function CreateUser({ user, creating, error, open, submit, closeD
           <TextField id="username" label="Username" className={classes.textField} value={values.username} onChange={handleChange('username')} margin="normal"/><br/>
           <TextField id="firstname" label="First name" className={classes.textField} value={values.firstname} onChange={handleChange('firstname')} margin="normal"/><br/>
           <TextField id="surname" label="Surname" className={classes.textField} value={values.surname} onChange={handleChange('surname')} margin="normal"/><br/>
+          <TextField id="initials" label="Initials (max 5)" className={classes.textField} value={values.initials} onChange={handleChange('initials')} margin="normal"/><br/>
           <TextField id="email" type="email" label="Email" className={classes.textField} value={values.email} onChange={handleChange('email')} margin="normal"/><br/>
           <TextField id="password" type="password" label="Password" className={classes.textField} value={values.password} onChange={handleChange('password')} margin="normal"/>
           <br/> {

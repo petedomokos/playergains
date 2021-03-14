@@ -37,24 +37,20 @@ const useStyles = makeStyles(theme => ({
     color: theme.palette.openTitle
   },
   listItemWrapper:{
-    border:'solid',
     display:'flex',
     justifyContent:'space-between'
   },
   itemMainPart:{
-    flex:'80% 1 1',
-    border:'solid',
-    borderColor:'blue'
+    flex:'80% 1 1'
   },
   extraItemButtons:{
-    width:props => props.extraItemButtonsWidth,
-    border:'solid'
+    width:props => props.extraItemButtonsWidth
   }
 }))
 /*
  linkPath - an accessor function to get the 'to' property for each (item,index) pair
 */
-export default function SimpleList({ title, emptyMesg, items, itemActions, actionButtons, primaryText, styles}) {
+export default function SimpleList({ title, emptyMesg, items, itemActions, actionButtons, primaryText, secondaryText, styles}) {
   const nrOfExtraItemActions = itemActions.other ? itemActions.other.length : 0;
   const stylesProps = {...styles, extraItemButtonsWidth:nrOfExtraItemActions * 40}
   const classes = useStyles(stylesProps);
@@ -68,7 +64,7 @@ export default function SimpleList({ title, emptyMesg, items, itemActions, actio
             <Person/>
           </Avatar>
         </ListItemAvatar>
-        <ListItemText primary={primaryText(item,i)}/>
+        <ListItemText primary={primaryText(item,i)} secondary={secondaryText(item,i)}/>
         <ListItemSecondaryAction>
         <IconButton>
              <ItemIcon/>
@@ -77,7 +73,7 @@ export default function SimpleList({ title, emptyMesg, items, itemActions, actio
       </ListItem>
   
   const extraItemButton = (action, i) =>
-      <IconButton key={i}>
+      <IconButton>
         <action.ItemIcon/>
       </IconButton> 
 
@@ -102,7 +98,7 @@ export default function SimpleList({ title, emptyMesg, items, itemActions, actio
                   }
                   <div className={classes.extraItemButtons}>
                     {itemActions.other && itemActions.other.map((action,i) =>
-                      <div>
+                      <div key={i}>
                         {action.linkPath ? 
                           <Link to={action.linkPath(item, i)} >
                               {extraItemButton(action,i)}
@@ -141,7 +137,8 @@ SimpleList.defaultProps = {
       other:[]
     },
     actionButtons:[],
-    primaryText:() =>{},
+    primaryText:() =>'',
+    secondaryText:() =>'',
     linkPath:item => '/',
     styles:{}
 }

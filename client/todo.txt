@@ -1,3 +1,40 @@
+
+NEXT
+
+ 1.
+ sort the addRefs and removeRefs stuff for adding and removing players and datasets from groups - 
+ mustnt happen each time, unless it is built in that it will be unique.
+ otherwise need another way to send mesg from serve as to which is happening.
+ could just have two separate requests, /add and /remove, and only send the players being added or removed
+ thats probably best all round - because what if a group has thousands of users, we dont wasnt to send 
+ that each time
+
+ 2.
+ work out why the deeper paths arent working for populate methods. or maybe they are once we fix the above issue.
+ get the User profile page displaying the datasets that they are part of, via their groups. (we will do individual later)
+
+ 3.
+ The user page will then also render a Dashboard child, whiuch will itself use withLoader 
+ to load all the datasets fro that user fully, so that when user page loads, it displays a summary dashboard of just 
+ that users data. impl this, except not the dashboard content.
+
+ 4. impl addDatasets measures property {name, unit, value}
+
+ 5. impl addDatapoints
+
+ 6. fix bugs and refactor everything to date.
+
+
+
+
+
+
+
+
+
+
+
+
 incorect email or password error handling display - see logError func in CommonActions
 
 implement PrivateRoutes so that they dont redirect to home but to referrer
@@ -70,3 +107,23 @@ current soln is to merge associated users and groups (with existing versions ) w
 
 
 Group addPlayers page - useEffect to remind user to save, and to reset
+
+
+chnage groupsMemberOf to groups, and datasetsMemberOf to just datasets. so we have administeredGroups, and groups (same for datsets)
+
+
+impl add/remove datasets from group - atm the Group page just shows all datasets. we want group admin to be able to edit, just like with players.
+need to decide how best to handle datasetsMemberOf property in users. we dont want it getting overfilled every time a group asdmin adds another dataset.
+But then again, we want a coach to be able to add a dataset to their groupo, and tehn when they go to the individual player page, they can see the dataset for that player,
+rtaher than only being able to see it for the group.
+So best soln is to keep user.groupsMemberOf fro only teh users benefit. And just when loading a user, we get groupsMemberOf, aso we can get groupsMemberOf.datasetsMemberOf for each group using 'populate' with a deep path
+
+impl Delete/Edit Group/Dataset profiles
+
+
+in SinmpleList, reduce secondary text to a max nr of chars, replace last  3 with ... and on hover reveal the full secondary text in a tooltip eg dataset.desc
+
+on server addRef methods, they should only be added if they are unique. eg when adding players, we only want to 
+add a groupRef if it doesnt exist yet. (we can tempoirarily filtering on client for now)
+
+impl user being able to add datasets to themselves or to an administeredUser

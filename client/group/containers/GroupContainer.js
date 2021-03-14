@@ -22,16 +22,16 @@ const mapStateToProps = (state, ownProps) => {
 		//user is deep version so need to replace id-refs with objects
 		_group.admin = _group.admin.map(id => findIn(allUsers, id));
 		_group.players = _group.players.map(id => findIn(allUsers, id));
+		_group.datasets = _group.datasets.map(id => findIn(state.user.loadedDatasets, id));
 	}
-	console.log('_group', _group)
 	return{
 		extraLoadArg:groupId,
 		group:_group,
 		loading:state.asyncProcesses.loading.group,
 		loadingError:state.asyncProcesses.error.loading.group,
-		playersUpdating:state.asyncProcesses.updating.group,
-		playerUpdateError:state.asyncProcesses.error.updating.group,
-		playersUpdated:state.asyncProcesses.success.updating.group,
+		updating:state.asyncProcesses.updating.group,
+		updateError:state.asyncProcesses.error.updating.group,
+		updated:state.asyncProcesses.success.updating.group,
 	}
 }
 const mapDispatchToProps = dispatch => ({
@@ -40,7 +40,7 @@ const mapDispatchToProps = dispatch => ({
 		//alert('loading group')
 		dispatch(fetchGroup(groupId))
 	},
-	updatePlayers(groupId, formData){
+	updateGroup(groupId, formData){
 		dispatch(updateGroup(groupId, formData))
 	}
 })

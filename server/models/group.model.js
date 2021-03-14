@@ -1,11 +1,15 @@
 import mongoose from 'mongoose'
-//import DatasetSchema from './dataset.model'
 
 const GroupSchema = new mongoose.Schema({ 
   name:{
     type: String,
     trim: true,
     required: 'Group name is required'
+  },
+  initials:{
+    type: String,
+    trim: true,
+    required: 'Group initials are required'
   },
   desc:String,
   groupType:String,
@@ -14,7 +18,7 @@ const GroupSchema = new mongoose.Schema({
   admin:[{type:mongoose.Schema.ObjectId, ref:'User'}],
   coaches:[{type:mongoose.Schema.ObjectId, ref:'User'}],
   players:[{type:mongoose.Schema.ObjectId, ref:'User'}],
-  //datasets:[DatasetSchema],
+  datasets:[{type:mongoose.Schema.ObjectId, ref:'Dataset'}],
   updated: Date,
   created: {type: Date,default: Date.now},
 })

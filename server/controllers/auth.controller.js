@@ -8,10 +8,14 @@ const signin = async (req, res) => {
   try {
     let user = await User.findOne({ "email": req.body.email})
       .populate('admin', '_id username firstname surname created')
-      .populate('administeredGroups', '_id name desc groupType admin created')
-      .populate('groupsPlayedFor', '_id name desc groupType admin created')
-      //example from old playergains of how to populate deeper paths
-      //.populate({ path: 'player.groups', select: 'name _id desc groupType players parent admin coaches subgroups' })
+      .populate('administeredUsers', '_id username firstname surname photo created')
+      .populate('administeredGroups', '_id name desc groupType created')
+      .populate('administeredDatasets', '_id name desc created')
+      .populate('groupsMemberOf', '_id name desc groupType created')
+      .populate('datasetsMemberOf', '_id name desc created')
+       //we also want to be able to show users datasets they are in, so we get these for each group
+      .populate({ path: 'administeredGroups.datasets', select: '_id name desc photo' })
+      .populate({ path: 'groupsMemberOf.datasets', select: '_id name desc photo' })
 
     console.log('signin......a')
     if (!user){

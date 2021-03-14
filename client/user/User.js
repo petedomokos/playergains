@@ -21,8 +21,7 @@ function User(props) {
     <div>
       <UserProfile profile={user} />
       <div className={classes.dashboard}>
-        This players profile and dashboard (includes links for editing/deleting
-         - but only if this player is administered by signedin user])
+        This players profile, list of groups and datasets they are a member of, and data
       </div>
     </div>
   )

@@ -5,6 +5,7 @@ import Typography from '@material-ui/core/Typography'
 import UserProfile from '../user/UserProfile'
 import UsersContainer from '../user/containers/UsersContainer'
 import GroupsContainer from '../group/containers/GroupsContainer'
+import DatasetsContainer from '../dataset/containers/DatasetsContainer'
 import { withLoader } from '../util/HOCs';
 //helpers
 import { userProfile } from '../util/ReduxHelpers'
@@ -45,12 +46,16 @@ const UserHome = ({user, loading, loadingError}) => {
       {user._id && 
         <>
           <UserProfile profile={user} />
+
           <div className={classes.lists}>
               <div className={classes.list}>
                 <UsersContainer/>
-          </div>
+              </div>
               <div className={classes.list}>
                 <GroupsContainer/>
+              </div>
+              <div className={classes.list}>
+                <DatasetsContainer/>
               </div>
           </div>
         </>}

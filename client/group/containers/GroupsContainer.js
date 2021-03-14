@@ -8,10 +8,10 @@ const mapStateToProps = (state, ownProps) => {
 	//remove users if specified via a prop from parent
 	var requiredGroups = loadedGroups;
 	if(ownProps.include){
-		requiredGroups = allGroups.filter(g => include.includes(g._id));
+		requiredGroups = loadedGroups.filter(g => ownProps.include.includes(g._id));
 	}
 	if(ownProps.exclude){
-		requiredGroups = allGroups.filter(g => !exclude.includes(g._id))
+		requiredGroups = loadedGroups.filter(g => !ownProps.exclude.includes(g._id))
 	}
 	return{
 		groups:requiredGroups,

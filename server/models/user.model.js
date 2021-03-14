@@ -16,6 +16,11 @@ const UserSchema = new mongoose.Schema({
     trim: true,
     required: 'Surname is required'
   },
+  initials:{
+    type: String,
+    trim: true,
+    required: 'User initials are required'
+  },
   photo:{
     data:Buffer,
     contentType:String
@@ -34,7 +39,9 @@ const UserSchema = new mongoose.Schema({
   admin:[{type:mongoose.Schema.ObjectId, ref:'User'}],
   administeredUsers:[{type:mongoose.Schema.ObjectId, ref:'User'}],
   administeredGroups:[{type:mongoose.Schema.ObjectId, ref:'Group'}],
+  administeredDatasets:[{type:mongoose.Schema.ObjectId, ref:'Dataset'}],
   groupsMemberOf:[{type:mongoose.Schema.ObjectId, ref:'Group'}],
+  datasetsMemberOf:[{type:mongoose.Schema.ObjectId, ref:'Dataset'}],
 
   isSystemAdmin:{type:Boolean,default:false},
   hashed_password: {type: String,required: "Password is required"},

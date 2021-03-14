@@ -50,6 +50,7 @@ const groupByID = async (req, res, next, id) => {
     let group = await Group.findById(id)
         .populate('admin', '_id username firstname surname photo')
         .populate('players', '_id username firstname surname photo')
+        .populate('datasets', '_id name desc photo')
          //example from old playergains of how to populate deeper paths
       //.populate({ path: 'player.groups', select: 'name _id desc groupType players parent admin coaches subgroups' })
     console.log('group', group)
@@ -57,7 +58,7 @@ const groupByID = async (req, res, next, id) => {
       return res.status('400').json({
         error: "Group not found"
       })
-    req.profile = group
+    req.group = group
     next()
   } catch (err) {
     return res.status('400').json({
@@ -67,8 +68,8 @@ const groupByID = async (req, res, next, id) => {
 }
 
 const read = (req, res) => {
-  console.log('read group......', req.profile)
-  return res.json(req.profile)
+  console.log('read group......')
+  return res.json(req.group)
 }
 
 const list = async (req, res) => {
@@ -102,15 +103,26 @@ const update = async (req, res) => {
         error: "Photo could not be uploaded"
       })
     }
+    const { players, datasets, admin } = fields;
     //players field to array
-    if(fields.players === ''){
-      fields.players = [];
-    }else{
-      const playersArray = fields.players.split(',')
-      console.log('playersArray', playersArray)
-      fields.players = playersArray
+    if(typeof players === 'string'){
+      fields.players = players === '' ? [] : players.split(',');
+      //WARNING - THIS ADDS EVERY TIME!!!!!!TO EACH PLAYER
+      fields.players.forEach(userId =>{
+        addRefToUserArray(userId, 'groupsMemberOf', group._id)
+      })
     }
-    let group = req.profile
+    if(typeof datasets === 'string'){
+      console.log('datasets are', datasets)
+      fields.datasets = datasets === '' ? [] : datasets.split(',')
+      /*
+      fields.datasets.forEach(datasetId =>{
+        addRefToDatasetArray(datasetId, 'groupsInvolved', group._id)
+      })
+      */
+    }
+
+    let group = req.group
     group = extend(group, fields)
     group.updated = Date.now()
     console.log('group now.................', group)
@@ -132,7 +144,7 @@ const update = async (req, res) => {
 const remove = async (req, res) => {
   console.log('remove group..............')
   try {
-    let group = req.profile
+    let group = req.group
     let deletedGroup = await group.remove()
     res.json(deletedGroup)
   } catch (err) {
@@ -142,11 +154,40 @@ const remove = async (req, res) => {
   }
 }
 
+//DATASETS
+const createDataset = async (req, res) => {
+  console.log('createDataset')
+  const dataset = new Dataset(req.body)
+  console.log('creating dset', dataset)
+  try {
+    await dataset.save()
+    console.log('success')
+
+    //add references to the group that created it
+    addRefToGroupArray(group._id, 'administeredDatasets', dataset._id)
+    addRefToGroupArray(group._id, 'datasets', dataset._id)
+
+    return res.status(200).json({
+      message: "Successfully created dataset!",
+      group:group
+    })
+  } catch (err) {
+    console.log('failure', err)
+    return res.status(400).json({
+      error: errorHandler.getErrorMessage(err)
+    })
+  }
+}
+
+
+
+
 export default {
   create,
   groupByID,
   read,
   list,
   remove,
-  update
+  update,
+  createDataset
 }

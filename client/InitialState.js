@@ -5,12 +5,16 @@ export const InitialState = {
 	user:{
 		administeredUsers:[],
 		administeredGroups:[],
+		administeredDatasets:[],
 		groupsMemberOf:[],
+		datasetsMemberOf:[],
 		loadedUsers:[],
 		loadedGroups:[],
+		loadedDatasets:[],
 		loadsComplete:{
 			users:'',
-			groups:''
+			groups:'',
+			datasets:''
 		}
 	},
 	asyncProcesses:{

@@ -6,9 +6,11 @@ import UserHomeContainer from './core/containers/UserHomeContainer'
 import SigninContainer from './auth/containers/SigninContainer'
 import EditUserProfileContainer from './user/containers/EditUserProfileContainer'
 import UserContainer from './user/containers/UserContainer'
-import CreateUserContainer from './user/containers/CreateUserContainer'
 import GroupContainer from './group/containers/GroupContainer'
+import DatasetContainer from './dataset/containers/DatasetContainer'
+import CreateUserContainer from './user/containers/CreateUserContainer'
 import CreateGroupContainer from './group/containers/CreateGroupContainer'
+import CreateDatasetContainer from './dataset/containers/CreateDatasetContainer'
 import PrivateRoute from './auth/PrivateRoute'
 import MenuContainer from './core/containers/MenuContainer'
 import auth from './auth/auth-helper'
@@ -40,8 +42,10 @@ const MainRouter = ({userId, loadUser, loadingUser}) => {
         <PrivateRoute path="/user/edit/:userId" component={EditUserProfileContainer}/>
         <PrivateRoute path="/users/new" component={CreateUserContainer}/>
         <PrivateRoute path="/groups/new" component={CreateGroupContainer}/>
+        <PrivateRoute path="/datasets/new" component={CreateDatasetContainer}/>
         {userId && <Route path="/user/:userId" component={UserContainer}/>}
         {userId && <Route path="/group/:groupId" component={GroupContainer}/>}
+        {userId && <Route path="/dataset/:datasetId" component={DatasetContainer}/>}
       </Switch>
     </div>
     )

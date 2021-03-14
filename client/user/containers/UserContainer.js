@@ -27,7 +27,6 @@ const mapStateToProps = (state, ownProps) => {
 		_user.administeredGroups = _user.administeredGroups.map(id => findIn(loadedGroups, id));
 		_user.groupsMemberOf = _user.groupsMemberOf.map(id => findIn(loadedGroups, id));
 	}
-	console.log('_user', _user)
 
 	return{
 		extraLoadArg:userId,

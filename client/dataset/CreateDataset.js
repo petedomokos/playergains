@@ -41,14 +41,13 @@ const useStyles = makeStyles(theme => ({
   }
 }))
 
-export default withLoader(function CreateGroup({ user, creating, error, success, open, submit, closeDialog }) {
+export default withLoader(function CreateDataset({ user, creating, error, success, open, submit, closeDialog }) {
   const classes = useStyles()
   const initState = {
-      parent:'',
       name: '', //must be unique to this user
       initials:'', //max 5 chars
       desc:'',
-      groupType:'',
+      datasetType:'',
       admin:[user._id]
   }
   const [values, setValues] = useState(initState)
@@ -70,24 +69,24 @@ export default withLoader(function CreateGroup({ user, creating, error, success,
   }
 
   const clickSubmit = () => {
-    if(user.administeredGroups.find(grp => grp.name === values.name)){
-      alert('You already have a group with this name.')
+    if(user.administeredDatasets.find(grp => grp.name === values.name)){
+      alert('You already have a dataset with this name.')
     }
     else if(values.initials.length >= 6){
-      alert('Group initials must be 5 characters or less.')
+      alert('Dataset initials must be 5 characters or less.')
     }
     else{
       //validate name is unique 
-      const group = {
+      const dataset = {
         parent: values.parent || undefined,
         name: values.name || undefined, //must be unique to this user
         initials: values.initials || undefined,
         desc: values.desc || undefined,
-        groupType: values.groupType || undefined,
+        datasetType: values.datasetType || undefined,
         admin:values.admin || [user._id]
       };
 
-      submit(group);
+      submit(dataset);
     }
   }
 
@@ -96,14 +95,14 @@ export default withLoader(function CreateGroup({ user, creating, error, success,
       closeDialog();
       setValues(initState)
   }
-  //get group once it has been saved to store (unless thre was error)
-  const savedGroup = user.loadedGroups.find(grp => grp.name === values.name);
+  //get dataset once it has been saved to store (unless thre was error)
+  const savedDataset = user.loadedDatasets.find(grp => grp.name === values.name);
 
   return (<div>
     <Card className={classes.card}>
       <CardContent>
         <Typography variant="h6" className={classes.title}>
-          Create Group
+          Create Dataset
         </Typography>
         <TextField id="name" label="name" className={classes.textField} value={values.name} onChange={handleChange('name')} margin="normal"/><br/>
         <TextField id="initials" label="Initials (max 5)" className={classes.textField} value={values.initials} onChange={handleChange('initials')} margin="normal"/><br/>
@@ -119,19 +118,19 @@ export default withLoader(function CreateGroup({ user, creating, error, success,
       </CardActions>
     </Card>
     <Dialog open={open} disableBackdropClick={true}>
-      <DialogTitle>New Group</DialogTitle>
+      <DialogTitle>New Dataset</DialogTitle>
       <DialogContent>
         <DialogContentText>
-          New group successfully created.
+          New dataset successfully created.
         </DialogContentText>
       </DialogContent>
       <DialogActions>
         <Button onClick={reset} color="primary" autoFocus="autoFocus" variant="contained">
         Create another
         </Button>
-        {savedGroup && <Link to={"/group/"+savedGroup._id} >
+        {savedDataset && <Link to={"/dataset/"+savedDataset._id} >
             <Button color="primary" autoFocus="autoFocus" variant="contained">
-            Go to group
+            Go to dataset
             </Button>
       </Link>}
         <Link to={"/"} >
