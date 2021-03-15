@@ -4,6 +4,7 @@ import errorHandler from './../helpers/dbErrorHandler'
 import formidable from 'formidable'
 import { addRefToGroupArray, addRefToUserArray,
   removeRefFromGroupArray, removeRefFromUserArray } from './../helpers/dbQueries'
+import { useDebugValue } from 'react'
 
 /*
 attempts to create a new group in in db. 
@@ -25,7 +26,7 @@ const create = async (req, res) => {
     await group.save()
     console.log('success')
 
-    //add refderence to this group in all admin users
+    //add reference to this group in all admin users
     group.admin.forEach(userId =>{
       addRefToUserArray(userId, 'administeredGroups', group._id)
     })
@@ -103,26 +104,34 @@ const update = async (req, res) => {
         error: "Photo could not be uploaded"
       })
     }
-    const { players, datasets, admin } = fields;
-    //players field to array
-    if(typeof players === 'string'){
-      fields.players = players === '' ? [] : players.split(',');
-      //WARNING - THIS ADDS EVERY TIME!!!!!!TO EACH PLAYER
-      fields.players.forEach(userId =>{
-        addRefToUserArray(userId, 'groupsMemberOf', group._id)
-      })
+
+    //convert some fields to arrays
+    if(typeof fields.players === 'string'){
+      fields.players = fields.players === '' ? [] : fields.players.split(',');
     }
-    if(typeof datasets === 'string'){
-      console.log('datasets are', datasets)
-      fields.datasets = datasets === '' ? [] : datasets.split(',')
-      /*
-      fields.datasets.forEach(datasetId =>{
-        addRefToDatasetArray(datasetId, 'groupsInvolved', group._id)
-      })
-      */
+    if(typeof fields.datasets === 'string'){
+      fields.datasets = fields.datasets === '' ? [] : fields.datasets.split(',')
+    }
+    //todo - same as above for fields.admin
+    console.log('fields players', fields.players)
+    let group = req.group
+    console.log('group.players', group.players)
+    //add/remove group refs in users
+
+    if(fields.players){
+        const addedPlayers = fields.players.filter(userId => !group.players.find(uId => uId.equals(userId)));
+        //d => !d._id.equals(datasetId)
+        console.log('nr of added players', addedPlayers.length)
+        addedPlayers.forEach(userId =>{
+          addRefToUserArray(userId, 'groupsMemberOf', group._id)
+        })
+        const removedPlayers = group.players.filter(userId => !fields.players.find(uId => uId.equals(userId)));
+        console.log('nr of removed players', removedPlayers.length)
+        removedPlayers.forEach(userId =>{
+          removeRefFromUserArray(userId, 'groupsMemberOf', group._id)
+        })
     }
 
-    let group = req.group
     group = extend(group, fields)
     group.updated = Date.now()
     console.log('group now.................', group)
@@ -154,40 +163,11 @@ const remove = async (req, res) => {
   }
 }
 
-//DATASETS
-const createDataset = async (req, res) => {
-  console.log('createDataset')
-  const dataset = new Dataset(req.body)
-  console.log('creating dset', dataset)
-  try {
-    await dataset.save()
-    console.log('success')
-
-    //add references to the group that created it
-    addRefToGroupArray(group._id, 'administeredDatasets', dataset._id)
-    addRefToGroupArray(group._id, 'datasets', dataset._id)
-
-    return res.status(200).json({
-      message: "Successfully created dataset!",
-      group:group
-    })
-  } catch (err) {
-    console.log('failure', err)
-    return res.status(400).json({
-      error: errorHandler.getErrorMessage(err)
-    })
-  }
-}
-
-
-
-
 export default {
   create,
   groupByID,
   read,
   list,
   remove,
-  update,
-  createDataset
+  update
 }

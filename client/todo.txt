@@ -1,14 +1,9 @@
 
 NEXT
 
- 1.
- sort the addRefs and removeRefs stuff for adding and removing players and datasets from groups - 
- mustnt happen each time, unless it is built in that it will be unique.
- otherwise need another way to send mesg from serve as to which is happening.
- could just have two separate requests, /add and /remove, and only send the players being added or removed
- thats probably best all round - because what if a group has thousands of users, we dont wasnt to send 
- that each time
-
+ 1. DONE  - sort the addRefs and removeRefs stuff for adding and removing players and datasets from groups - 
+ just changed update method on group ctrl so it gets group first so it can compare exisitng players
+-------------------------------------------------
  2.
  work out why the deeper paths arent working for populate methods. or maybe they are once we fix the above issue.
  get the User profile page displaying the datasets that they are part of, via their groups. (we will do individual later)
