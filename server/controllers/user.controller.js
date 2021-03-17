@@ -42,13 +42,24 @@ const userByID = async (req, res, next, id) => {
     let user = await User.findById(id)
       .populate('admin', '_id username firstname surname created')
       .populate('administeredUsers', '_id username firstname surname photo created')
-      .populate('administeredGroups', '_id name desc photo groupType created')
+      .populate({ 
+        path: 'administeredGroups', 
+        select: '_id name desc photo groupType created datasets',
+        populate: {
+          path:'datasets',
+          select:'_id name desc'
+        } 
+      })
+      .populate({ 
+        path: 'groupsMemberOf', 
+        select: '_id name desc photo groupType created datasets',
+        populate: {
+          path:'datasets',
+          select:'_id name desc'
+        } 
+      })
       .populate('administeredDatasets', '_id name desc created')
-      .populate('groupsMemberOf', '_id name desc groupType created')
       .populate('datasetsMemberOf', '_id name desc created')
-      //we also want to be able to show users datasets they are in, so we get these for each group
-      .populate({ path: 'administeredGroups.datasets', select: '_id name desc photo' })
-      .populate({ path: 'groupsMemberOf.datasets', select: '_id name desc photo' })
 
     console.log('user in userById', user)
     if (!user)

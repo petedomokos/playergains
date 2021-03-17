@@ -3,19 +3,22 @@ NEXT
 
  1. DONE  - sort the addRefs and removeRefs stuff for adding and removing players and datasets from groups - 
  just changed update method on group ctrl so it gets group first so it can compare exisitng players
--------------------------------------------------
- 2.
- work out why the deeper paths arent working for populate methods. or maybe they are once we fix the above issue.
- get the User profile page displaying the datasets that they are part of, via their groups. (we will do individual later)
+
+ 2a. DONE   -  work out why the deeper paths arent working for populate methods
+
+ -------------------------------------------------
+
+ 2b. get the User profile page displaying the datasets that they are part of, via their groups. (we will do individual later)
 
  3.
  The user page will then also render a Dashboard child, whiuch will itself use withLoader 
  to load all the datasets fro that user fully, so that when user page loads, it displays a summary dashboard of just 
  that users data. impl this, except not the dashboard content.
 
- 4. impl addDatasets measures property {name, unit, value}
+ 4. impl addDatasets measures property {name, unit, value} 
+    - have raw and derived measures. eg raw = time, penalties   derived = score = time + penalties
 
- 5. impl addDatapoints
+ 5. impl addDatapoints (note: no need to do targets diffeently - a target is just a datapoint with a future date)
 
  6. fix bugs and refactor everything to date.
 

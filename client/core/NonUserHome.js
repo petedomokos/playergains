@@ -4,6 +4,7 @@ import Card from '@material-ui/core/Card'
 import CardContent from '@material-ui/core/CardContent'
 import CardMedia from '@material-ui/core/CardMedia'
 import Typography from '@material-ui/core/Typography'
+import SketchpadWrapper from '../random/SketchpadWrapper'
 //children
 import SimpleList from '../util/SimpleList'
 import auth from '../auth/auth-helper'
@@ -26,6 +27,7 @@ export default function NonUserHome(){
         <Typography className={classes.strapline} type="body1" component="p">
           Data visuals for player development 
         </Typography>
+        <SketchpadWrapper/>
       </div>
   )
 }
