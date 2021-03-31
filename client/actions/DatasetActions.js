@@ -23,6 +23,7 @@ export const createDataset = dataset => dispatch => {
 
 //to fetch a dataset in full
 export const fetchDataset = id => dispatch => {
+	console.log('fetchDataset', id)
 	fetchThenDispatch(dispatch, 
 		'loading.dataset',
 		{

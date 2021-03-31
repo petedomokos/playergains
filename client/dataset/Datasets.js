@@ -2,6 +2,7 @@ import React from 'react'
 import { makeStyles } from '@material-ui/core/styles'
 import IconButton from '@material-ui/core/IconButton'
 import GroupAddIcon from '@material-ui/icons/GroupAdd';
+import AddCircleIcon from '@material-ui/icons/AddCircle';
 import {Link} from 'react-router-dom'
 import SimpleList from '../util/SimpleList'
 import { withLoader } from '../util/HOCs';
@@ -24,14 +25,14 @@ export default withLoader(function Datasets(props) {
   const addButton = (key) => 
     <Link to={"/datasets/new"} key={key}>
       <IconButton aria-label="add-dataset" color="primary">
-        <GroupAddIcon/>
+        <AddCircleIcon/>
       </IconButton>
     </Link>
   const defaultActionButtons = [addButton]
 
   const defaultItemActions = {
     main:{
-      itemLinkPath:dataset => "/dataset/" + dataset._id +"dataset/" + dataset._id,
+      itemLinkPath:dataset => "/dataset/" + dataset._id,
       ItemIcon:({}) => <ArrowForward/>
     }
   }

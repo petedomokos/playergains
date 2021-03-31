@@ -18,10 +18,13 @@ import { Link } from 'react-router-dom'
 
 const useStyles = makeStyles(theme => ({
   root: theme.mixins.gutters({
-    maxWidth: 600,
-    margin: 'auto',
+    //minWidth:300,
+    //maxWidth: 600,
+    width:300,
+    height:150,
+    //margin: 'auto',
     padding: theme.spacing(3),
-    marginTop: theme.spacing(5)
+    marginTop: theme.spacing(2)
   }),
   title: {
     marginTop: theme.spacing(3),
@@ -45,7 +48,7 @@ export default function DatasetProfile({profile}) {
     return (
       <Paper className={classes.root} elevation={4}>
         <Typography variant="h6" className={classes.title}>
-          Profile
+          Dataset
         </Typography>
         <List dense>
           <ListItem>
@@ -57,7 +60,7 @@ export default function DatasetProfile({profile}) {
             <ListItemText primary={name} secondary={type}/>
             {userHasAdminAuth &&
               (<ListItemSecondaryAction>
-                <Link to={"/dataset/" + dataset._id +"dataset/edit/" + _id}>
+                <Link to={"dataset/edit/" + _id}>
                   <IconButton aria-label="Edit" color="primary">
                     <Edit/>
               </IconButton>

@@ -13,9 +13,7 @@ import DialogActions from '@material-ui/core/DialogActions'
 import DialogContent from '@material-ui/core/DialogContent'
 import DialogContentText from '@material-ui/core/DialogContentText'
 import DialogTitle from '@material-ui/core/DialogTitle'
-import CreateDatasetMeasures from './CreateDatasetMeasures'
-import CreateDatasetCalculations from './CreateDatasetCalculations'
-import { withLoader } from '../util/HOCs';
+import { withLoader } from '../../util/HOCs';
 
 const useStyles = makeStyles(theme => ({
   card: {
@@ -54,16 +52,17 @@ const useStyles = makeStyles(theme => ({
   }
 }))
 
-function CreateDataset({ user, availableMeasures, creating, error, success, open, submit, closeDialog }) {
+function CreateDatapoint({ userId, availableMeasures, creating, error, success, open, submit, closeDialog }) {
+    console.log("create datapoint")
   const classes = useStyles()
   const initState = {
       name: '', //must be unique to this user
       initials:'', //max 5 chars
       desc:'',
-      datasetType:'',
+      datapointType:'',
       measures:[],
       calculations:[],
-      admin:[user._id]
+      admin:[userId]
   }
   const [values, setValues] = useState(initState)
 
@@ -85,33 +84,29 @@ function CreateDataset({ user, availableMeasures, creating, error, success, open
   }
 
   const clickSubmit = () => {
-    if(user.administeredDatasets.find(grp => grp.name === values.name)){
-      alert('You already have a dataset with this name.')
-    }
-    else if(values.initials.length >= 6){
-      alert('Dataset initials must be 5 characters or less.')
-    }
     /*
-    //todo - measures match method
-    else if(measuresMatch(values.measures)){
-       alert('You have measures with the same name and configuration. Change then name, number or side, or use custom labels to distinguish.')
+    if(...){
+      alert('...')
     }
-    */
+    else if(...){
+      alert('....')
+    }
     else{
-      const dataset = {
+        */
+      const datapoint = {
         parent: values.parent || undefined,
         name: values.name || undefined,
         initials: values.initials || undefined,
         desc: values.desc || undefined,
-        datasetType: values.datasetType || undefined,
+        datapointType: values.datapointType || undefined,
         //we dont save measure._id to server, as it is given an _id in db
         measures: values.measures.map(m => ({ ...m, _id:undefined })),
         calculations: values.calculations.map(c => ({ ...c, _id:undefined })),
-        admin:values.admin || [user._id]
+        admin:values.admin || [userId]
       };
 
-      submit(dataset);
-    }
+      submit(datapoint);
+    //}
   }
 
   const reset = () =>{
@@ -119,8 +114,6 @@ function CreateDataset({ user, availableMeasures, creating, error, success, open
       closeDialog();
       setValues(initState)
   }
-  //get dataset once it has been saved to store (unless thre was error)
-  const savedDataset = user.loadedDatasets.find(grp => grp.name === values.name);
 
   const addItemToProperty = key => item =>{
     setValues(prevState => ({ ...prevState, [key]:[...prevState[key], item] }))
@@ -144,7 +137,7 @@ function CreateDataset({ user, availableMeasures, creating, error, success, open
     <Card className={classes.card}>
       <CardContent>
         <Typography variant="h6" className={classes.title}>
-          Create Dataset
+          Create Datapoint
         </Typography>
         <TextField 
               id="name" label="name" className={classes.textField} value={values.name} 
@@ -160,22 +153,15 @@ function CreateDataset({ user, availableMeasures, creating, error, success, open
             <Icon color="error" className={classes.error}>error</Icon>
             {values.error}</Typography>)
         }
-        <div className={classes.measuresContainer}>
-          <CreateDatasetMeasures
+        {/**<div className={classes.measuresContainer}>
+          <CreateDatapointMeasureValues
               available={availableMeasures} 
               current={values.measures}
               add={addItemToProperty("measures")}
               update={updateItemInProperty("measures")}
               remove={removeItemFromProperty("measures")} />
-        </div>
-        <div className={classes.calculationsContainer}>
-          <CreateDatasetCalculations
-              currentCalculations={values.calculations}
-              measures={values.measures}
-              add={addItemToProperty("calculations")}
-              update={updateItemInProperty("calculations")}
-              remove={removeItemFromProperty("calculations")} />
-        </div>
+            </div>**/}
+
          {/**current.length != 0 && <SelectMainDisplayValue calculations={current} />  can be a measure or a calculation**/}
       </CardContent>
       <CardActions>
@@ -183,21 +169,16 @@ function CreateDataset({ user, availableMeasures, creating, error, success, open
       </CardActions>
     </Card>
     <Dialog open={open} disableBackdropClick={true}>
-      <DialogTitle>New Dataset</DialogTitle>
+      <DialogTitle>New Datapoint</DialogTitle>
       <DialogContent>
         <DialogContentText>
-          New dataset successfully created.
+          New datapoint successfully created.
         </DialogContentText>
       </DialogContent>
       <DialogActions>
         <Button onClick={reset} color="primary" autoFocus="autoFocus" variant="contained">
         Create another
         </Button>
-        {savedDataset && <Link to={"/dataset/"+savedDataset._id} >
-            <Button color="primary" autoFocus="autoFocus" variant="contained">
-            Go to dataset
-            </Button>
-      </Link>}
         <Link to={"/"} >
             <Button color="primary" autoFocus="autoFocus" variant="contained">
             Return home
@@ -209,8 +190,9 @@ function CreateDataset({ user, availableMeasures, creating, error, success, open
   )
 }
 
-CreateDataset.defaultProps = {
+CreateDatapoint.defaultProps = {
   availableMeasures:[]
 }
 
-export default withLoader(CreateDataset, ['user',/* 'measures'*/]);
+//note - loader will load user if no datapoints
+export default withLoader(CreateDatapoint, ['datasets',/* 'measures'*/]);

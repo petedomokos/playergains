@@ -29,10 +29,10 @@ const Menu = withRouter(({history, onSignout}) => {
         </Link>
         {
           !user && (<span>
-            {/**<Link to="/signup">
+            <Link to="/signup">
               <Button style={isActive(history, "/signup")}>Sign up
               </Button>
-          </Link>**/}
+          </Link>
             <Link to="/signin">
               <Button style={isActive(history, "/signin")}>Sign In
               </Button>

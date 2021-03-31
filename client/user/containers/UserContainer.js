@@ -18,14 +18,16 @@ const mapStateToProps = (state, ownProps) => {
 	//IF DEEP USER IS LOADED, WE DO NEED TO LOAD IN THOSE GROUPS FROM LOADEDGROUPS 
 	//-> THE DEEP USER ONLY HAS IDS
 	const allUsers = [state.user, ...state.user.loadedUsers];
-	const { loadedGroups } = state.user;
+	const { loadedGroups, loadedDatasets } = state.user;
 
 	if(_user && _user.groupsMemberOf){
 		//user is deep version so need to replace id-refs with objects
 		_user.admin = _user.admin.map(id => findIn(allUsers, id));
 		_user.administeredUsers = _user.administeredUsers.map(id => findIn(allUsers, id));
 		_user.administeredGroups = _user.administeredGroups.map(id => findIn(loadedGroups, id));
+		_user.administeredDatasets = _user.administeredDatasets.map(id => findIn(loadedDatasets, id));
 		_user.groupsMemberOf = _user.groupsMemberOf.map(id => findIn(loadedGroups, id));
+		_user.datasetsMemberOf = _user.datasetsMemberOf.map(id => findIn(loadedDatasets, id));
 	}
 
 	return{

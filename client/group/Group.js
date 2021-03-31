@@ -4,10 +4,9 @@ import { Route } from 'react-router-dom'
 import { makeStyles } from '@material-ui/core/styles'
 import Button from '@material-ui/core/Button';
 import IconButton from '@material-ui/core/IconButton'
-import EditIcon from '@material-ui/icons/Edit';
 import AddCircleIcon from '@material-ui/icons/AddCircle';
 import DeleteIcon from '@material-ui/icons/Delete';
-import PersonAddIcon from '@material-ui/icons/AddCircle';
+import PersonAddIcon from '@material-ui/icons/PersonAdd';
 import ArrowForward from '@material-ui/icons/ArrowForward'
 //children
 import GroupProfile from './GroupProfile';
@@ -19,13 +18,30 @@ import { isSameById } from '../util/ArrayHelpers';
 import auth from '../auth/auth-helper'
 
 const useStyles = makeStyles(theme => ({
+  root:{
+    display:'flex',
+    alignItems:'flex-start', //note - when removing this, it makes item stretch more
+    flexDirection:'column'
+  },
   dashboard:{
     margin:'50px'
   },
+  lists:{
+    marginTop:`${theme.spacing(4)}px`,
+    alignSelf:'stretch',
+    display:'flex',
+    justifyContent:'space-around',
+    flexWrap:'wrap'
+  },
   list:{
-    width:'400px',
-    maxWidth:'90vw'
-
+    flex:'400px 0 0',
+    maxWidth:'90vw', //keeps it on small mobile screens
+  },
+  currentItemsList:{
+    height:'400px',
+  },
+  availableItemsList:{
+    height:'500px',
   }
 }))
 
@@ -78,7 +94,7 @@ function Group(props) {
   const editButton = (key) => 
       <IconButton aria-label="add-player" color="primary" key={key}
         onClick={() => setShowPlayersToAdd(true)}>
-        <EditIcon/>
+        <PersonAddIcon/>
       </IconButton>
 
   const cancelButton = (key) => 
@@ -164,7 +180,7 @@ function Group(props) {
   const editDatasetsButton = (key) => 
     <IconButton aria-label="add-player" color="primary" key={key}
       onClick={() => setShowDatasetsToAdd(true)}>
-      <EditIcon/>
+      < AddCircleIcon/>
     </IconButton>
 
   const cancelDatasetsButton = (key) => 
@@ -217,43 +233,50 @@ function Group(props) {
   }
   console.log('updatedDatasets', updatedDatasets)
   return (
-    <div>
+    <div className={classes.root} >
       <GroupProfile profile={group} />
       <div className={classes.lists}>
-          <SimpleList 
-            title='Players in group' 
-            emptyMesg='No players yet' 
-            items={updatedPlayers}
-            itemActions={removePlayerItemActions}
-            actionButtons={actionButtons}
-            primaryText={user => user.firstname + ' ' +user.surname}/>
+          <div className={classes.list}>
+              <div className={classes.currentItemsList}>
+                  <SimpleList 
+                    title='Players in group' 
+                    emptyMesg='No players yet' 
+                    items={updatedPlayers}
+                    itemActions={removePlayerItemActions}
+                    actionButtons={actionButtons}
+                    primaryText={user => user.firstname + ' ' +user.surname} />
+              </div>
+              {showPlayersToAdd && <div className={classes.availableItemsList}>
+                <UsersContainer
+                  title='Players to add'
+                  emptyMesg='No players left to add'
+                  exclude={updatedPlayers.map(us => us._id)}
+                  itemActions={addPlayerItemActions}
+                  actionButtons={[]} />
+              </div>}
+          </div>
 
-          {showPlayersToAdd && <div className={classes.list}>
-            <UsersContainer
-              title='Players to add'
-              emptyMesg='No players left to add'
-              exclude={updatedPlayers.map(us => us._id)}
-              itemActions={addPlayerItemActions}
-              actionButtons={[]} />
-          </div>}
+          <div className={classes.list} >
+              <div className={classes.currentItemsList}>
+                  <SimpleList 
+                    title='Datasets in group' 
+                    emptyMesg='No datasets yet' 
+                    items={updatedDatasets}
+                    itemActions={removeDatasetItemActions}
+                    actionButtons={datasetActionButtons}
+                    primaryText={dset => dset.name}
+                    secondaryText={dset => dset.desc} />
+              </div>
 
-          <SimpleList 
-            title='Datasets in group' 
-            emptyMesg='No datasets yet' 
-            items={updatedDatasets}
-            itemActions={removeDatasetItemActions}
-            actionButtons={datasetActionButtons}
-            primaryText={dset => dset.name}
-            secondaryText={dset => dset.desc} />
-
-          {showDatasetsToAdd && <div className={classes.list}>
-            <DatasetsContainer
-              title='Datasets to add'
-              emptyMesg='No datasets left to add'
-              exclude={updatedDatasets.map(us => us._id)}
-              itemActions={addDatasetItemActions}
-              actionButtons={[]} />
-          </div>}
+              {showDatasetsToAdd && <div className={classes.availableItemsList}>
+                <DatasetsContainer
+                  title='Datasets to add'
+                  emptyMesg='No datasets left to add'
+                  exclude={updatedDatasets.map(us => us._id)}
+                  itemActions={addDatasetItemActions}
+                  actionButtons={[]} />
+              </div>}
+          </div>
 
 
       </div>

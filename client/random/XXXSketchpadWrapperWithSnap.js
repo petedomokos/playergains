@@ -1,7 +1,9 @@
 import React, { useEffect } from 'react'
 import * as d3 from 'd3'
+//import * as snap from 'snap'
 import { makeStyles } from '@material-ui/core/styles'
 import Typography from '@material-ui/core/Typography'
+import { path } from 'd3'
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -26,6 +28,12 @@ export default function SketchpadWrapper(){
     const width = window.innerWidth*0.8;
     const height = window.innerHeight*0.6;
     const paths = [];
+
+    //Make the entire area a Snap instance
+    const target = d3.select("#chart-area");
+    const S = new Snap(width, height);
+    S.appendTo(target);
+    console.log('S', S)
         
     const svg = d3.select("#chart-area").append("svg")
         .attr("width", width)
@@ -67,6 +75,7 @@ export default function SketchpadWrapper(){
         //new drawing path will start from where circle is
         const start = "M" +event.x +',' +event.y;
         const pathNr = paths.length;
+        //conditionally add isCircle -> const newPath = svg.append("path").attr('class', 'isCircle drawing drawing-'+pathNr)
         const newPath = svg.append("path").attr('class', 'drawing drawing-'+pathNr)
             .attr("d", start)
             .attr("stroke", "blue")
@@ -94,6 +103,10 @@ export default function SketchpadWrapper(){
     }
 
     function dragended(event, d) {
+      /*if(isCircle){
+        remove path
+        append circle
+      }*/
         //clean up
     }
   }, [])

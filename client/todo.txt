@@ -6,21 +6,52 @@ NEXT
 
  2a. DONE   -  work out why the deeper paths arent working for populate methods
 
- -------------------------------------------------
+ 2b. DONE - get the User profile page displaying the datasets that they are part of, via their groups. (we will do individual later)
 
- 2b. get the User profile page displaying the datasets that they are part of, via their groups. (we will do individual later)
-
- 3.
- The user page will then also render a Dashboard child, whiuch will itself use withLoader 
- to load all the datasets fro that user fully, so that when user page loads, it displays a summary dashboard of just 
- that users data. impl this, except not the dashboard content.
-
- 4. impl addDatasets measures property {name, unit, value} 
+ 3. DONE (except calculations not finished) impl addDatasets measures property -> impl SimpleTable to do this
     - have raw and derived measures. eg raw = time, penalties   derived = score = time + penalties
 
- 5. impl addDatapoints (note: no need to do targets diffeently - a target is just a datapoint with a future date)
+ -------------------------------------------------
 
- 6. fix bugs and refactor everything to date.
+ 4. impl addDatapoints (note: no need to do targets differently - a target is just a datapoint with a future date)
+ 
+-------------------------------------------
+
+ 5. Make User page look good. The user page will render a Dashboard child, whiuch will itself use withLoader 
+ to load all the datasets fro that user fully, so that when user page loads, it displays a summary dashboard of just 
+ that users data. impl this, except not the dashboard content.
+ Note that the datasets and groups on user home page should be filtered fro the user, and their dashboard
+ shouldnt have these lists. Instead the datasets are just one of the filters, but the page is focused on the users data.
+ Best is probably to show one summary chart or div for each dashboard, so user can click to drilldown into dashboard
+  - maybe just use teh Rehab dashboard, except with the projections
+
+6. Make group hoem page look good (similar principles as above)
+
+  7. change url to user.username instead of id.
+
+  8. edit option for user profile, inc add photos, and include add videos
+
+9. styling for medium+ screens -> pss in screen.availWidth to all pages styles like i did in userHome
+
+10. make addDatapoint only show for users when they have datasets administered. also check all other edit, add and delete options that they 
+only show fro authorized users (can worry about server auth checking later)
+
+ 20. fix bugs and refactor everything to date.
+  a) create dataset sometimes gives admin as [null]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

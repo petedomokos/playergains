@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { makeStyles } from '@material-ui/core/styles'
 import Typography from '@material-ui/core/Typography'
+import Button from '@material-ui/core/Button'
 //children
 import UserProfile from '../user/UserProfile'
 import UsersContainer from '../user/containers/UsersContainer'
@@ -9,21 +10,23 @@ import DatasetsContainer from '../dataset/containers/DatasetsContainer'
 import { withLoader } from '../util/HOCs';
 //helpers
 import { userProfile } from '../util/ReduxHelpers'
-import { withRouter } from 'react-router'
+import { Link } from 'react-router-dom'
 
-const useStyles = makeStyles(theme => ({
+const useStyles = makeStyles((theme) => ({
   root: {
     margin: theme.spacing(2),
     display:'flex',
     alignItems:'flex-start', //note - when removing this, it makes item stretch more
     flexDirection:'column'
   },
-  title: {
-    padding:`${theme.spacing(3)}px ${theme.spacing(2.5)}px ${theme.spacing(2)}px`,
-    color: theme.palette.openTitle
+  topRow: {
+    //padding:`${theme.spacing(3)}px ${theme.spacing(2.5)}px ${theme.spacing(2)}px`,
+    width:"100%",
+    display:"flex",
+    justifyContent:"space-between"
   },
   lists:{
-    height:'calc(70vh - 150px)',
+    height:'400px',
     marginTop:`${theme.spacing(4)}px`,
     alignSelf:'stretch',
     display:'flex',
@@ -31,21 +34,36 @@ const useStyles = makeStyles(theme => ({
     flexWrap:'wrap'
   },
   list:{
-    flex:'400px 0 0',
-    maxWidth:'90vw', //keeps it on small mobile screens
+    flex: props => props.availWidth <= 500 ? '90vw 0 0' : '500px 0 0',
+   // maxWidth:'90vw', //keeps it on small mobile screens
     height:'100%',
+  },
+  quickLinks:{
+    height:"50px"
+  },
+  quickLinkBtn:{
+
   }
 }))
 
 const UserHome = ({user, loading, loadingError}) => {
-  const classes = useStyles() 
+  const styleProps = { availWidth: screen.availWidth, availHeight:screen.availHeight };
+  const classes = useStyles(styleProps) 
   //for now, keep it simple for page refreshes - until user reloads, dont render the children.
   //note - cant use withRouter in MainRouter as we only want it to load user if signed in
+
+  const quickLinks = [
+    {label:"Add datapoint", to:"/datapoints/new"}
+  ]
+
   return (
     <div className={classes.root}>
       {user._id && 
         <>
-          <UserProfile profile={user} />
+          <div className={classes.topRow} >
+              <UserProfile profile={user} />
+              <QuickLinks links={quickLinks}/>
+          </div>
 
           <div className={classes.lists}>
               <div className={classes.list}>
@@ -66,4 +84,16 @@ const UserHome = ({user, loading, loadingError}) => {
 UserHome.defaultProps = {
 }
 
+const QuickLinks = ({links}) =>{
+  const classes = useStyles()
+  return(
+    <div className={classes.quickLinks}>
+        {links.map(link =>
+          <Link to={link.to} key={"quicklink-"+link.to}>
+              <Button color="primary" variant="contained" className={classes.quickLinkBtn}>add datapoint</Button>
+          </Link>
+        )}
+    </div>
+  )
+}
 export default UserHome 

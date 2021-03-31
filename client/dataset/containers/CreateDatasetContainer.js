@@ -4,11 +4,17 @@ import { createDataset } from '../../actions/DatasetActions'
 import { closeDialog } from '../../actions/CommonActions'
 import CreateDataset from '../CreateDataset'
 import auth from '../../auth/auth-helper'
+import { availableMeasures } from '../../data/AvailableMeasures'
 
 const mapStateToProps = (state, ownProps) => {
+	
 	return({
 		extraLoadArg:auth.isAuthenticated().user._id, //under a private route so user will be signed in
 		user:state.user,
+		//for now just store in file. todo - get from db, all main measures and also all ones created 
+		//by this user. Whenever they cretae a new measure in teh process of creatng a dataset,
+		//it can also be stored as a measure (or can just be got from administeredDatasets)
+		availableMeasures:availableMeasures,
 		//may need to load user first if page refreshed
 		loading:state.asyncProcesses.loading.user,
 		loadingError:state.asyncProcesses.error.loading.user,
@@ -20,7 +26,9 @@ const mapStateToProps = (state, ownProps) => {
 const mapDispatchToProps = dispatch => ({
 	//extraLoadAreg here is userId
 	onLoad(propsToLoad, userId){
-		dispatch(fetchUser(userId))
+		if(propsToLoad.includes('user')){
+			dispatch(fetchUser(userId))
+		}
 	},
 	submit(dataset){
 		dispatch(createDataset(dataset))

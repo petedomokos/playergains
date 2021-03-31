@@ -44,15 +44,13 @@ const useStyles = makeStyles(theme => ({
     flex:'80% 1 1'
   },
   extraItemButtons:{
-    width:props => props.extraItemButtonsWidth,
-    display:'flex',
-    alignItems:'center',
+    width:props => props.extraItemButtonsWidth
   }
 }))
 /*
  linkPath - an accessor function to get the 'to' property for each (item,index) pair
 */
-export default function SimpleList({ title, emptyMesg, items, itemActions, actionButtons, primaryText, secondaryText, styles}) {
+export default function SimpleTable({ title, emptyMesg, items, itemActions, actionButtons, primaryText, secondaryText, styles}) {
   const nrOfExtraItemActions = itemActions.other ? itemActions.other.length : 0;
   const stylesProps = {...styles, extraItemButtonsWidth:nrOfExtraItemActions * 40}
   const classes = useStyles(stylesProps);
@@ -60,14 +58,14 @@ export default function SimpleList({ title, emptyMesg, items, itemActions, actio
   const { ItemIcon, onItemClick, itemLinkPath } = itemActions.main;
 
   const listItem = (item, i) => 
-      <ListItem button >
+      <ListItem button>
         <ListItemAvatar>
           <Avatar>
             <Person/>
           </Avatar>
         </ListItemAvatar>
-        <ListItemText primary={primaryText(item,i)} secondary={secondaryText(item,i)} />
-        <ListItemSecondaryAction >
+        <ListItemText primary={primaryText(item,i)} secondary={secondaryText(item,i)}/>
+        <ListItemSecondaryAction>
         <IconButton>
              <ItemIcon/>
         </IconButton>
@@ -106,7 +104,7 @@ export default function SimpleList({ title, emptyMesg, items, itemActions, actio
                               {extraItemButton(action,i)}
                           </Link>
                           :
-                          <div onClick={() => action.onItemClick(item,i)} >
+                          <div onClick={() => action.onClick(item,i)} >
                               {extraItemButton(action,i)}
                           </div>
                         }
@@ -127,7 +125,7 @@ export default function SimpleList({ title, emptyMesg, items, itemActions, actio
     )
 }
 
-SimpleList.defaultProps = {
+SimpleTable.defaultProps = {
     title:'',
     emptyMesg:'None',
     items:[],

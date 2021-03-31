@@ -25,7 +25,7 @@ const signin = async (req, res) => {
           select:'_id name desc'
         } 
       })
-      .populate('administeredDatasets', '_id name desc created')
+      .populate('administeredDatasets', '_id name desc created measures')
       .populate('datasetsMemberOf', '_id name desc created')
 
     console.log('signin......a')

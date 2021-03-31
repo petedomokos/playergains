@@ -12,7 +12,6 @@ const useStyles = makeStyles(theme => ({
 
 export default withLoader(function Users(props) {
   const { users, title, actionButtons, itemActions, emptyMesg } = props;
-  console.log('props', props)
   const classes = useStyles()
 
   const addButton = (key) => 

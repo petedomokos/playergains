@@ -11,6 +11,7 @@ import DatasetContainer from './dataset/containers/DatasetContainer'
 import CreateUserContainer from './user/containers/CreateUserContainer'
 import CreateGroupContainer from './group/containers/CreateGroupContainer'
 import CreateDatasetContainer from './dataset/containers/CreateDatasetContainer'
+import CreateDatapointContainer from './dataset/datapoints/containers/CreateDatapointContainer'
 import PrivateRoute from './auth/PrivateRoute'
 import MenuContainer from './core/containers/MenuContainer'
 import auth from './auth/auth-helper'
@@ -43,6 +44,7 @@ const MainRouter = ({userId, loadUser, loadingUser}) => {
         <PrivateRoute path="/users/new" component={CreateUserContainer}/>
         <PrivateRoute path="/groups/new" component={CreateGroupContainer}/>
         <PrivateRoute path="/datasets/new" component={CreateDatasetContainer}/>
+        <PrivateRoute path="/datapoints/new" component={CreateDatapointContainer}/>
         {userId && <Route path="/user/:userId" component={UserContainer}/>}
         {userId && <Route path="/group/:groupId" component={GroupContainer}/>}
         {userId && <Route path="/dataset/:datasetId" component={DatasetContainer}/>}

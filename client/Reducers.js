@@ -228,6 +228,7 @@ export const user = (state=InitialState.user, act) =>{
 		//Note 1 - this cannot be the signed in user - they are always loaded fully
 		//Note 2 - this will overwrite/enhance any existing objects rather than replace
 		case C.LOAD_USER:{
+			alert('Reducer loaduser')
 			const { admin, administeredUsers, administeredGroups, administeredDatasets, groupsMemberOf, datasetsMemberOf } = act.user;
 			//find if there is any existing version to update
 			const userToUpdate = state.loadedUsers.find(us => us._id === act.user._id) || {};
@@ -311,11 +312,13 @@ export const user = (state=InitialState.user, act) =>{
 				//but maintain any properties not sent from server ie deep properties
 				return { ...existingVersion, ...player }
 			})
+			//no need to update signedin player as they will be deep loaded anyway
+			const nonSignedInPlayers = mergedPlayers.filter(u => u._id !== state._id)
 			return { 
 				...state,
 				//group is deep, so we will override any existing version
 				loadedGroups:filterUniqueById([updatedGroup, ...state.loadedGroups]),
-				loadedUsers:filterUniqueById([/*...mergedAdmin, */ ...mergedPlayers, ...state.loadedUsers])
+				loadedUsers:filterUniqueById([/*...mergedAdmin, */ ...nonSignedInPlayers, ...state.loadedUsers])
 			}
 		}
 

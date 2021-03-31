@@ -7,7 +7,6 @@ const mapStateToProps = (state, ownProps) => {
 	console.log('state', state)
 	//id can be passed through, or else for params (may not be the signed in dataset)
 	const datasetId = ownProps.datasetId  || ownProps.match.params.datasetId
-	console.log('datasetId', datasetId)
 	const _dataset = state.user.loadedDatasets.find(g => g._id === datasetId)
 	//Dataset may or may not exist in store, and may be deep or shallow.
 	//Dataset component expects a deep dataset, ie it must have dataset.admin, dataset.players, etc
@@ -36,7 +35,6 @@ const mapStateToProps = (state, ownProps) => {
 const mapDispatchToProps = dispatch => ({
 	//2nd load arg is datasetid here
 	onLoad(propsToLoad, datasetId){
-		//alert('loading dataset')
 		dispatch(fetchDataset(datasetId))
 	},
 	updatePlayers(datasetId, formData){

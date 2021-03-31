@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import {Link} from 'react-router-dom'
 //styles
 import { makeStyles } from '@material-ui/core/styles'
 import Button from '@material-ui/core/Button';
@@ -10,29 +11,32 @@ import PersonAddIcon from '@material-ui/icons/AddCircle';
 import ArrowForward from '@material-ui/icons/ArrowForward'
 //children
 import DatasetProfile from './DatasetProfile';
-import UsersContainer from '../user/containers/UsersContainer'
+import DatapointsTable from './datapoints/DatapointsTable'
 import { withLoader } from '../util/HOCs';
-import SimpleList from '../util/SimpleList';
-import { isSameById } from '../util/ArrayHelpers';
 import auth from '../auth/auth-helper'
 
 const useStyles = makeStyles(theme => ({
+  root:{
+    display:'flex',
+    alignItems:'flex-start', //note - when removing this, it makes item stretch more
+    flexDirection:'column'
+  },
   dashboard:{
     margin:'50px'
   },
-  list:{
-    width:'400px',
-    maxWidth:'90vw'
-
+  datapointsTable:{
   }
 }))
 
 //component
 function Dataset(props) {
   const { dataset, updateDatapoints, datapointsUpdating, datapointsUpdated, datapointUpdateError } = props;
+  const { _id, name, desc, created, datapoints } = dataset;
+  
   const classes = useStyles();
-  const [showDatapointsToAdd, setShowDatapointsToAdd] =  useState(false);
-  const [updatedDatapoints, setUpdatedDatapoints] = useState(dataset.datapoints);
+  const [showDatapoints, setShowDatapoints] =  useState(false);
+  const [updatedDatapoints, setUpdatedDatapoints] = useState(datapoints);
+  console.log('Dataset', dataset)
 
   useEffect(() => {
     return () => {
@@ -41,6 +45,8 @@ function Dataset(props) {
       //closeDialog();
     };
   }, []); // will only apply once, not resetting the dialog at teh end of every render eg re-renders
+
+  /*
 
   //helper
   const datapointsHaveChanged = !isSameById(dataset.datapoints, updatedDatapoints);
@@ -121,29 +127,27 @@ function Dataset(props) {
     }]
   }
 
-  //we exclude datapoints that are in the new version of dataset from datapoints to add list, even before saved
-  //note that all dataset datapoints are also put into loadedusers list in store when dataset is loaded
-  //although these will be reloaded anyway if users havent all been loaded yet (as currently set up)
-  return (
-    <div>
-      <DatasetProfile profile={dataset} />
-      <div className={classes.lists}>
-          <SimpleList 
-            title='Datapoints in dataset' 
-            emptyMesg='No datapoints yet' 
-            items={updatedDatapoints}
-            itemActions={removeDatapointItemActions}
-            actionButtons={actionButtons}
-            primaryText={user => user.firstname + ' ' +user.surname}/>
+  */
 
-          {showDatapointsToAdd && <div className={classes.list}>
-            <UsersContainer
-              title='Datapoints to add'
-              emptyMesg='No datapoints left to add'
-              exclude={updatedDatapoints.map(us => us._id)}
-              itemActions={addDatapointItemActions}
-              actionButtons={[]} />
-          </div>}
+  const addButton = (key) => 
+  <Link to={"/datapoints/new"} key={key}>
+    <IconButton aria-label="add-datapoint" color="primary">
+      <AddCircleIcon/>
+    </IconButton>
+  </Link>
+  const datapointActionButtons = [addButton]
+
+  return (
+    <div className={classes.root} >
+      <DatasetProfile profile={dataset} />
+      <div className={classes.datapointsTable}>
+          <DatapointsTable 
+            title={'Datapoints'} 
+            emptyMesg={'No datapoints'}
+            items={updatedDatapoints}
+            primaryText={d => d.player.firstName+ ' ' +d.player.surname}
+            secondaryText={d => d.date}
+            actionButtons={datapointActionButtons} />
       </div>
       <div className={classes.dashboard}>
         This datasets profile and dashboard (includes links for editing/deleting

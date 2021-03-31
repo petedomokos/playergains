@@ -42,7 +42,7 @@ export default function UserProfile({ profile }) {
   return (
       <Paper className={classes.root} elevation={4}>
         <Typography variant="h6" className={classes.title}>
-          Profile
+          Player
         </Typography>
         <List dense>
           <ListItem>
