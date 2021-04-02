@@ -24,10 +24,9 @@ import React, { useEffect, useState } from 'react';
 export function withLoader(ComponentWhenLoaded, propsToCheck=[], whileNotLoaded={}){
     //when loader is called, eg by UserContainer, it is passed the props
     const loader = props => {
-        //console.log('props', props)
+        console.log('HOC.................props', props)
         //note: we dont control the loading state here - it is contained in store as other components may also load this resource
         const {extraLoadArg, onLoad, loading, loadingError, ...passedThroughProps} = props;
-        
         //1. CHECK IF PROPS MISSING
         //need to check props have all been loaded ( 0 and false are ok) every time in case page refreshed etc
         

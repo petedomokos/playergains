@@ -14,6 +14,7 @@ const DatasetSchema = new mongoose.Schema({
     required: 'Dataset initials is required'
   },
   desc:String,
+  notes:String,
   //datasetType:String,
   photo:{data:Buffer,contentType:String},
   //users who have admin rights over this dataset

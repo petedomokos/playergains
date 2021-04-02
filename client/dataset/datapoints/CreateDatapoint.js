@@ -14,6 +14,12 @@ import DialogContent from '@material-ui/core/DialogContent'
 import DialogContentText from '@material-ui/core/DialogContentText'
 import DialogTitle from '@material-ui/core/DialogTitle'
 import { withLoader } from '../../util/HOCs';
+import { DropdownSelector } from "../../util/Selector";
+import SelectPlayer from "./SelectPlayer";
+import SelectEventDate from "./SelectEventDate";
+import EnterGeneralValues from "./EnterGeneralValues";
+import EnterMeasureValues from "./EnterMeasureValues";
+import { fatigueLevel, surface } from "../../data/datapointOptions";
 
 const useStyles = makeStyles(theme => ({
   card: {
@@ -22,7 +28,10 @@ const useStyles = makeStyles(theme => ({
     margin: 'auto',
     textAlign: 'center',
     marginTop: theme.spacing(5),
-    paddingBottom: theme.spacing(2)
+    paddingBottom: theme.spacing(2),
+    display:'flex',
+    flexDirection:'column',
+    alignItems:'center'
   },
   error: {
     verticalAlign: 'middle'
@@ -36,12 +45,11 @@ const useStyles = makeStyles(theme => ({
     marginRight: theme.spacing(1),
     width: '90%'
   },
-  measuresContainer:{
-    display:"flex",
-    flexDirection:"column",
-    alignItems:'center',
+  dateContainer:{
+    marginTop: theme.spacing(6)
   },
-  calculationsContainer:{
+  generalValuesContainer:{
+    marginTop: theme.spacing(10),
     display:"flex",
     flexDirection:"column",
     alignItems:'center',
@@ -49,22 +57,49 @@ const useStyles = makeStyles(theme => ({
   submit: {
     margin: 'auto',
     marginBottom: theme.spacing(2)
+  },
+  otherBtn:{
+    margin: theme.spacing(1)
   }
 }))
 
-function CreateDatapoint({ userId, availableMeasures, creating, error, success, open, submit, closeDialog }) {
-    console.log("create datapoint")
+function CreateDatapoint({ userId, datasets, players, creating, error, success, open, submit, closeDialog, userLoadsComplete, loadUsers, loadingUsers, loadDataset, loadingDataset }) {
+  console.log("create datapoint", datasets)
+  console.log("loadingUsers", loadingUsers)
   const classes = useStyles()
+  const _fatigueLevel = fatigueLevel || {};
+  const _surface = surface || {};
   const initState = {
-      name: '', //must be unique to this user
-      initials:'', //max 5 chars
-      desc:'',
-      datapointType:'',
-      measures:[],
-      calculations:[],
-      admin:[userId]
+      dataset:null,
+      player: null,
+      notes:"",
+      surface:surface.default || "",
+      fatigueLevel:fatigueLevel.default || "",
+      eventDate:Date.now(),
+      isTarget:false,
+      //location:"", //todo - location geography
+      measureValues:[],
   }
   const [values, setValues] = useState(initState)
+  const [showGeneralMeasures, setShowGeneralMeasures] = useState(false)
+  console.log("values", values)
+  useEffect(() =>{
+    //update dataset in state once the dataset measures have been loaded from the server for the selected dataset
+    //(needed so select options are in sync with selection, and for easy access of dataset measures)
+    if(values.dataset){
+      const updatedDataset = datasets.find(d => d._id === values.dataset._id);
+      const updatedMeasureValues = updatedDataset.measures ? 
+        updatedDataset.measures.map(m => ({
+          measure:m._id,
+          value:""
+      })) : [];
+      setValues(prevState => ({ 
+          ...prevState, 
+          dataset: updatedDataset,
+          measureValues: updatedMeasureValues
+      }))
+    }
+  }, [datasets])
 
 
   //useEffect to reset dialog and error when unmounting (in case user moves away from component)
@@ -81,6 +116,14 @@ function CreateDatapoint({ userId, availableMeasures, creating, error, success, 
 
   const handleChange = name => event => {
     setValues({ ...values, [name]: event.target.value })
+  }
+
+  const handleDateChange = event => {
+    const now = new Date()
+    const date = new Date(event.target.value) 
+    const _isTarget = now < date ? true : false
+    console.log('now < date ? ', (now < date))
+    setValues({...values, eventDate:date.getTime(), isTarget:_isTarget})
   }
 
   const clickSubmit = () => {
@@ -100,9 +143,8 @@ function CreateDatapoint({ userId, availableMeasures, creating, error, success, 
         desc: values.desc || undefined,
         datapointType: values.datapointType || undefined,
         //we dont save measure._id to server, as it is given an _id in db
-        measures: values.measures.map(m => ({ ...m, _id:undefined })),
-        calculations: values.calculations.map(c => ({ ...c, _id:undefined })),
-        admin:values.admin || [userId]
+        measures: values.measureValues.map(m => ({ ...m, _id:undefined })),
+        createdBy:userId,
       };
 
       submit(datapoint);
@@ -115,84 +157,98 @@ function CreateDatapoint({ userId, availableMeasures, creating, error, success, 
       setValues(initState)
   }
 
-  const addItemToProperty = key => item =>{
-    setValues(prevState => ({ ...prevState, [key]:[...prevState[key], item] }))
+  const handleMeasureChange = (event, measure) =>{
+    //note - in measureValue, measure is just the measure _id ref(see value.model)
+    const measureValueToUpdate = values.measureValues.find(m => m.measure === measure._id);
+    const updatedMeasureValue = { ...measureValueToUpdate, value : event.target.value };
+    const otherMeasureValues = values.measureValues.filter(m => m.measure !== measure._id)
+    setValues(prevState => ({ ...prevState, measureValues:[...otherMeasureValues, updatedMeasureValue] }));
   }
 
-  const updateItemInProperty = key => (id, propertiesToUpdate) =>{
-    const itemToUpdate = values[key].find(item => item._id === id);
-    const updatedItem = {...itemToUpdate, ...propertiesToUpdate};
-    const otherItems = values[key].filter(item => item._id !== id)
-    setValues(prevState => ({ ...prevState, [key]:[...otherItems, updatedItem] }));
-  }
-
-  const removeItemFromProperty = key => item =>{
-    setValues(prevState => ({
-      ...prevState,
-      [key]:prevState[key].filter(it => it._id !== item._id) 
-    }));
-  }
-
-  return (<div>
-    <Card className={classes.card}>
-      <CardContent>
-        <Typography variant="h6" className={classes.title}>
-          Create Datapoint
-        </Typography>
-        <TextField 
-              id="name" label="name" className={classes.textField} value={values.name} 
-              onChange={handleChange('name')} margin="normal"/><br/>
-        <TextField 
-            id="initials" label="Initials (max 5)" className={classes.textField} 
-        value={values.initials} onChange={handleChange('initials')} margin="normal"/><br/>
-        <TextField 
-            id="desc" label="Description" className={classes.textField} 
-            value={values.desc} onChange={handleChange('desc')} margin="normal"/><br/>
-        <br/> {
-          values.error && (<Typography component="p" color="error">
-            <Icon color="error" className={classes.error}>error</Icon>
-            {values.error}</Typography>)
-        }
-        {/**<div className={classes.measuresContainer}>
-          <CreateDatapointMeasureValues
-              available={availableMeasures} 
-              current={values.measures}
-              add={addItemToProperty("measures")}
-              update={updateItemInProperty("measures")}
-              remove={removeItemFromProperty("measures")} />
-            </div>**/}
-
-         {/**current.length != 0 && <SelectMainDisplayValue calculations={current} />  can be a measure or a calculation**/}
-      </CardContent>
-      <CardActions>
-        <Button color="primary" variant="contained" onClick={clickSubmit} className={classes.submit}>Submit</Button>
-      </CardActions>
-    </Card>
-    <Dialog open={open} disableBackdropClick={true}>
-      <DialogTitle>New Datapoint</DialogTitle>
-      <DialogContent>
-        <DialogContentText>
-          New datapoint successfully created.
-        </DialogContentText>
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={reset} color="primary" autoFocus="autoFocus" variant="contained">
-        Create another
-        </Button>
-        <Link to={"/"} >
-            <Button color="primary" autoFocus="autoFocus" variant="contained">
-            Return home
+  return (
+    <div>
+      <Card className={classes.card}>
+        <CardContent>
+            <Typography variant="h6" className={classes.title}>
+              Create Datapoint
+            </Typography>
+            <DropdownSelector
+                description="Dataset"
+                selected={values.dataset}
+                options={datasets}
+                labelAccessor = {option => option.name}
+                handleChange={handleChange('dataset')} 
+                style={{width:"350px"}}
+                />
+            <SelectPlayer
+                selected={values.player}
+                players={players}
+                handleChange={handleChange('player')}
+                userLoadsComplete={userLoadsComplete}
+                onLoad={loadUsers}
+                loading={loadingUsers}
+                style={{width:"350px"}}
+                />
+            <SelectEventDate 
+              handleChange={handleDateChange} 
+              selectedDate={values.eventDate}
+              classes={classes}
+            />
+            {values.dataset && values.player && <EnterMeasureValues
+                measures={values.dataset.measures}
+                values={values.measureValues}
+                handleChange= {handleMeasureChange}
+                onLoad={() => loadDataset(values.dataset._id)}
+                loading={loadingDataset}
+            />}
+            <div className={classes.generalValuesContainer}>
+                <Button
+                  onClick={() => setShowGeneralMeasures(prevState => !prevState)}
+                  className={classes.otherBtn}
+                  color="primary" autoFocus="autoFocus" variant="contained">
+                  {showGeneralMeasures ? "Hide options" : "Show more options"}
+                </Button>
+                {showGeneralMeasures && <EnterGeneralValues
+                      values={values}
+                      optionObjects = {{
+                        fatigueLevel:fatigueLevel,
+                        surface:surface
+                      }}
+                      handleChange={handleChange}
+                      />}
+            </div>
+        </CardContent>
+        <CardActions>
+            <Button color="primary" variant="contained" onClick={clickSubmit} className={classes.submit}>Submit</Button>
+        </CardActions>
+      </Card>
+      <Dialog open={open} disableBackdropClick={true}>
+          <DialogTitle>New Datapoint</DialogTitle>
+          <DialogContent>
+            <DialogContentText>
+              New datapoint successfully created.
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={reset} color="primary" autoFocus="autoFocus" variant="contained">
+            Create another
             </Button>
-        </Link>
-      </DialogActions>
+            <Link to={"/"} >
+                <Button color="primary" autoFocus="autoFocus" variant="contained">
+                Return home
+                </Button>
+            </Link>
+          </DialogActions>
       </Dialog>
-  </div>
+    </div>
   )
 }
 
 CreateDatapoint.defaultProps = {
-  availableMeasures:[]
+  availableMeasures:[],
+  open:false,
+  loadDataset:() =>{}
 }
 
 //note - loader will load user if no datapoints
-export default withLoader(CreateDatapoint, ['datasets',/* 'measures'*/]);
+export default withLoader(CreateDatapoint, ['datasets', /* 'measures'*/]);

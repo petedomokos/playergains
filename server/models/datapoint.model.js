@@ -8,6 +8,7 @@ const DatapointSchema = new mongoose.Schema({
   values:[ValueSchema],
   date:{type: Date,default: Date.now},
   created: {type: Date,default: Date.now},
+  notes:String,
   updated: Date
 })
 

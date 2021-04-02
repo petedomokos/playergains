@@ -6,7 +6,7 @@ export default new mongoose.Schema({
     required:'Measure is required'
   },
   value:{
-    type:Number,
+    type:String,
     required:'Value is required'
   }
 })

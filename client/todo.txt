@@ -14,6 +14,10 @@ NEXT
  -------------------------------------------------
 
  4. impl addDatapoints (note: no need to do targets differently - a target is just a datapoint with a future date)
+ add surface and notes properties to datapoint model, and also add notes to datasets model
+ add fatigueLevel (1 - 10) to datapoint.model
+ 
+ DONE - EXCEPT  -> SUBMIT process on client and server, and also add notes to dataset
  
 -------------------------------------------
 
@@ -35,6 +39,18 @@ NEXT
 
 10. make addDatapoint only show for users when they have datasets administered. also check all other edit, add and delete options that they 
 only show fro authorized users (can worry about server auth checking later)
+
+
+11. schedule component on userhome, done with matchref days, 1 row per match, match day is at teh end of row
+incldues food plan, training plan, and other section
+for past days, includes summary of data
+
+think about schedule
+think about targets -> need a way to track what players focus was on a date, and then we see the 
+progress they made. so they can show managers, ' 2 months ago my target was to improve strength
+and this is what I achieved in that time.'
+
+
 
  20. fix bugs and refactor everything to date.
   a) create dataset sometimes gives admin as [null]

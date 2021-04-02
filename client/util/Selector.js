@@ -10,21 +10,22 @@ import RadioGroup from '@material-ui/core/RadioGroup'
 //child components
 
 
-
-export const DropdownSelector = ({description, selected, options, handleChange}) =>
-    <div style={{display:'flex', flexDirection:'column', margin:20}}>
-      <h4>Select {description}</h4>
-      <Select value={selected}
-         labelId="label" id={'select-' +description} 
-         onChange={handleChange}>
-        {options.map(option =>
-          <MenuItem value={option} key={option}>{option}</MenuItem>
-        )}
-      </Select>
-      {selected && options.length !== 1 &&
-        <div style={{alignSelf:'flex-end', color:'red', marginTop:10}}
-          onClick={() => handleChange('')}>X</div>}
-    </div>
+const dropdownSt = {display:'flex', flexDirection:'column', margin:20, width:300}
+export const DropdownSelector = ({description, selected, options, labelAccessor, handleChange, style}) =>
+  <div style={{...dropdownSt, ...style}}>
+    <h4>{description}</h4>
+    <Select value={selected || ""}
+        labelId="label" id={'select-' +description} 
+        onChange={handleChange}>
+      {options.map((option,i) =>
+        <MenuItem value={option} key={'option-'+description+i}>{labelAccessor(option)}</MenuItem>
+      )}
+    </Select>
+  </div>
+DropdownSelector.defaultProps = {
+  labelAccessor:option => option,
+  style:{}
+}
 
 //must have at least 1 option
 export const RadioSelector  = ({formLabel, options, defaultOpt, onChange}) =>{
