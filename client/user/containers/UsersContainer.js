@@ -3,7 +3,7 @@ import { fetchUsers } from '../../actions/UserActions'
 import Users  from '../Users'
 
 const mapStateToProps = (state, ownProps) => {
-	//console.log('state', state)
+	console.log('state', state)
 
 	const { loadedUsers, loadsComplete } = state.user;
 	//add the signed in user, who is not stored in loadedUsers
@@ -16,6 +16,7 @@ const mapStateToProps = (state, ownProps) => {
 	if(ownProps.exclude){
 		requiredUsers = allUsers.filter(us => !ownProps.exclude.includes(us._id))
 	}
+	console.log("loadsCompl users", loadsComplete.users)
 	return{
 		users:requiredUsers,
 		//A flag propToCheck for withLoader HOC to make sure all users have been loaded

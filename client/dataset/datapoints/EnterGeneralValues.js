@@ -20,7 +20,6 @@ import { fatigueLevel, surface } from "../../data/datapointOptions";
 const useStyles = makeStyles(theme => ({
   textField:{
     width:"100%"
-
   }
 }))
 

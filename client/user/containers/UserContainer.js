@@ -21,13 +21,12 @@ const mapStateToProps = (state, ownProps) => {
 	const { loadedGroups, loadedDatasets } = state.user;
 
 	if(_user && _user.groupsMemberOf){
-		//user is deep version so need to replace id-refs with objects
-		_user.admin = _user.admin.map(id => findIn(allUsers, id));
-		_user.administeredUsers = _user.administeredUsers.map(id => findIn(allUsers, id));
-		_user.administeredGroups = _user.administeredGroups.map(id => findIn(loadedGroups, id));
-		_user.administeredDatasets = _user.administeredDatasets.map(id => findIn(loadedDatasets, id));
-		_user.groupsMemberOf = _user.groupsMemberOf.map(id => findIn(loadedGroups, id));
-		_user.datasetsMemberOf = _user.datasetsMemberOf.map(id => findIn(loadedDatasets, id));
+		_user.admin = _user.admin.map(user => findIn(allUsers, user));
+		_user.administeredUsers = _user.administeredUsers.map(user => findIn(allUsers, user));
+		_user.administeredGroups = _user.administeredGroups.map(g => findIn(loadedGroups, g));
+		_user.administeredDatasets = _user.administeredDatasets.map(dset => findIn(loadedDatasets, dset));
+		_user.groupsMemberOf = _user.groupsMemberOf.map(g => findIn(loadedGroups, g));
+		_user.datasetsMemberOf = _user.datasetsMemberOf.map(dset => findIn(loadedDatasets, dset));
 	}
 
 	return{

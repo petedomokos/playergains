@@ -21,10 +21,13 @@ import React, { useEffect, useState } from 'react';
 //need to rethink the load thing - maybe should be settings or loadInfoObject,
 
 //todo - add a signal to optionally cancel the load if user unmounts before completion
-export function withLoader(ComponentWhenLoaded, propsToCheck=[], whileNotLoaded={}){
+export function withLoader(ComponentWhenLoaded, propsToCheck=[], options={}){
+    const { whileNotLoaded, allow } = options;
+    const allowedValues = allow || [0];
+    const notLoadedOptions = whileNotLoaded || {};
     //when loader is called, eg by UserContainer, it is passed the props
     const loader = props => {
-        console.log('HOC.................props', props)
+        //console.log('HOC.................props', props)
         //note: we dont control the loading state here - it is contained in store as other components may also load this resource
         const {extraLoadArg, onLoad, loading, loadingError, ...passedThroughProps} = props;
         //1. CHECK IF PROPS MISSING
@@ -33,7 +36,13 @@ export function withLoader(ComponentWhenLoaded, propsToCheck=[], whileNotLoaded=
         //a function that tests for various conditions which mean prop needs to be loaded
         const failed = prop => {
             //console.log('prop', prop)
-            return prop !== 0 && prop !== false && !prop 
+            let propValueAllowed = false;
+            allowedValues.forEach(allowedValue =>{
+                if(prop === allowedValue){
+                    propValueAllowed = true;
+                }
+            })
+            return !propValueAllowed && !prop;
         }
         
         //recursively check complex paths existence eg group.players
@@ -81,7 +90,7 @@ export function withLoader(ComponentWhenLoaded, propsToCheck=[], whileNotLoaded=
             return <ComponentWhenLoaded {...passedThroughProps} />;
         }
         //3 options while props not loaded - load anyway, load custom placeholder, load default placeholder
-        const { alwaysRender, LoadingPlaceholder, ErrorPlaceholder } = whileNotLoaded;
+        const { alwaysRender, LoadingPlaceholder, ErrorPlaceholder } = notLoadedOptions;
         if(alwaysRender){
             //needs props about load status so it can handle
             return <ComponentWhenLoaded {...passedThroughProps} loading={loading} error={error}/>;

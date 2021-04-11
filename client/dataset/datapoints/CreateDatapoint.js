@@ -50,6 +50,7 @@ const useStyles = makeStyles(theme => ({
   },
   generalValuesContainer:{
     marginTop: theme.spacing(10),
+    marginBottom: theme.spacing(5),
     display:"flex",
     flexDirection:"column",
     alignItems:'center',
@@ -64,8 +65,6 @@ const useStyles = makeStyles(theme => ({
 }))
 
 function CreateDatapoint({ userId, datasets, players, creating, error, success, open, submit, closeDialog, userLoadsComplete, loadUsers, loadingUsers, loadDataset, loadingDataset }) {
-  console.log("create datapoint", datasets)
-  console.log("loadingUsers", loadingUsers)
   const classes = useStyles()
   const _fatigueLevel = fatigueLevel || {};
   const _surface = surface || {};
@@ -75,14 +74,22 @@ function CreateDatapoint({ userId, datasets, players, creating, error, success, 
       notes:"",
       surface:surface.default || "",
       fatigueLevel:fatigueLevel.default || "",
-      eventDate:Date.now(),
+      date:Date.now(),
       isTarget:false,
       //location:"", //todo - location geography
-      measureValues:[],
+      values:[],
   }
   const [values, setValues] = useState(initState)
   const [showGeneralMeasures, setShowGeneralMeasures] = useState(false)
-  console.log("values", values)
+  //warn user if they try to re-enter datapoint with same details
+  //todo - this goes true on submit, and resets to false when either dataset, player or date changes
+  const [datapointEntered, setDatapointEntered] = useState(false);
+
+  //submit btn doesnt show until all values are entered
+  const datapointReadyToSave = values.dataset && values.dataset.measures && 
+    values.values.filter(v => v.value !== "" && typeof v.value === "string")
+                        .length === values.dataset.measures.length
+
   useEffect(() =>{
     //update dataset in state once the dataset measures have been loaded from the server for the selected dataset
     //(needed so select options are in sync with selection, and for easy access of dataset measures)
@@ -96,10 +103,10 @@ function CreateDatapoint({ userId, datasets, players, creating, error, success, 
       setValues(prevState => ({ 
           ...prevState, 
           dataset: updatedDataset,
-          measureValues: updatedMeasureValues
+          values: updatedMeasureValues
       }))
     }
-  }, [datasets])
+  }, [datasets, values.dataset])
 
 
   //useEffect to reset dialog and error when unmounting (in case user moves away from component)
@@ -115,40 +122,38 @@ function CreateDatapoint({ userId, datasets, players, creating, error, success, 
   }, []); // will only apply once, not resetting the dialog at teh end of every render eg re-renders
 
   const handleChange = name => event => {
+    //reset the check to stop double entry of same point
+    if(datapointEntered && ['dataset', 'player'.includes(name)]){
+      setDatapointEntered(false);
+    }
     setValues({ ...values, [name]: event.target.value })
   }
 
   const handleDateChange = event => {
+    //reset the check to stop double entry of same point
+    if(datapointEntered){
+      setDatapointEntered(false);
+    }
     const now = new Date()
     const date = new Date(event.target.value) 
     const _isTarget = now < date ? true : false
-    console.log('now < date ? ', (now < date))
-    setValues({...values, eventDate:date.getTime(), isTarget:_isTarget})
+    setValues({...values,date:date.getTime(), isTarget:_isTarget})
   }
 
   const clickSubmit = () => {
-    /*
-    if(...){
-      alert('...')
-    }
-    else if(...){
-      alert('....')
-    }
-    else{
-        */
-      const datapoint = {
-        parent: values.parent || undefined,
-        name: values.name || undefined,
-        initials: values.initials || undefined,
-        desc: values.desc || undefined,
-        datapointType: values.datapointType || undefined,
-        //we dont save measure._id to server, as it is given an _id in db
-        measures: values.measureValues.map(m => ({ ...m, _id:undefined })),
-        createdBy:userId,
-      };
+      if(datapointEntered){
+        alert("WARNING: You have already saved a datapoint for this dataset, player and date.")
+      }else{
+        setDatapointEntered(true);
+      }
 
-      submit(datapoint);
-    //}
+      const { dataset, player, ...datapointValues } = values;
+      const datapoint = {
+        ...datapointValues,
+        createdBy:userId,
+        player:player._id
+      };
+      submit(dataset._id, datapoint);
   }
 
   const reset = () =>{
@@ -158,11 +163,16 @@ function CreateDatapoint({ userId, datasets, players, creating, error, success, 
   }
 
   const handleMeasureChange = (event, measure) =>{
+    console.log("measure change values", values)
+    const { value } = event.target;
+    console.log("measure change", value)
     //note - in measureValue, measure is just the measure _id ref(see value.model)
-    const measureValueToUpdate = values.measureValues.find(m => m.measure === measure._id);
-    const updatedMeasureValue = { ...measureValueToUpdate, value : event.target.value };
-    const otherMeasureValues = values.measureValues.filter(m => m.measure !== measure._id)
-    setValues(prevState => ({ ...prevState, measureValues:[...otherMeasureValues, updatedMeasureValue] }));
+    const measureValueToUpdate = values.values.find(m => m.measure === measure._id);
+    console.log("measurevaluetoupdate", measureValueToUpdate)
+    const updatedMeasureValue = { ...measureValueToUpdate, value : value };
+    console.log("updated", updatedMeasureValue)
+    const otherMeasureValues = values.values.filter(m => m.measure !== measure._id)
+    setValues(prevState => ({ ...prevState,values:[...otherMeasureValues, updatedMeasureValue] }));
   }
 
   return (
@@ -196,7 +206,7 @@ function CreateDatapoint({ userId, datasets, players, creating, error, success, 
             />
             {values.dataset && values.player && <EnterMeasureValues
                 measures={values.dataset.measures}
-                values={values.measureValues}
+                values={values.values}
                 handleChange= {handleMeasureChange}
                 onLoad={() => loadDataset(values.dataset._id)}
                 loading={loadingDataset}
@@ -218,9 +228,9 @@ function CreateDatapoint({ userId, datasets, players, creating, error, success, 
                       />}
             </div>
         </CardContent>
-        <CardActions>
+        {datapointReadyToSave && <CardActions>
             <Button color="primary" variant="contained" onClick={clickSubmit} className={classes.submit}>Submit</Button>
-        </CardActions>
+        </CardActions>}
       </Card>
       <Dialog open={open} disableBackdropClick={true}>
           <DialogTitle>New Datapoint</DialogTitle>

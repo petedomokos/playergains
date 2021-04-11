@@ -23,8 +23,8 @@ export const availableMeasures = [
 		unit:'points', unitOptions:['points', 'goals', 'laps', 'reps', 'sets']
 	},
 	{ 
-		key:'reps', name : 'Reps', nr:"", side:"", custom:"", initials: "Reps",  numberOrder:'low-to-high', min:0,
-		unit:'reps', unitOptions:['reps']
+		key:'level', name : 'Level', nr:"", side:"", custom:"", initials: "Level",  numberOrder:'low-to-high', min:0,
+		unit:'', unitOptions:[]
 	},
 	//pens default unit is '' ie none
 	{ 

@@ -6,6 +6,7 @@ import Group from '../models/group.model'
 import User from '../models/user.model'
 //import Player from '../models/player.model'
 
+//todo - only add refs if not already in it
 export const addRefToUserArray = (userId, key, value) =>{
   User.findByIdAndUpdate(userId, {$push: {[key]: value}}, (err,val) =>{
     if(err)

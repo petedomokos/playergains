@@ -11,23 +11,26 @@ NEXT
  3. DONE (except calculations not finished) impl addDatasets measures property -> impl SimpleTable to do this
     - have raw and derived measures. eg raw = time, penalties   derived = score = time + penalties
 
- -------------------------------------------------
-
- 4. impl addDatapoints (note: no need to do targets differently - a target is just a datapoint with a future date)
+ 4. DONE - impl addDatapoints (note: no need to do targets differently - a target is just a datapoint with a future date)
  add surface and notes properties to datapoint model, and also add notes to datasets model
  add fatigueLevel (1 - 10) to datapoint.model
- 
- DONE - EXCEPT  -> SUBMIT process on client and server, and also add notes to dataset
- 
--------------------------------------------
 
- 5. Make User page look good. The user page will render a Dashboard child, whiuch will itself use withLoader 
- to load all the datasets fro that user fully, so that when user page loads, it displays a summary dashboard of just 
- that users data. impl this, except not the dashboard content.
- Note that the datasets and groups on user home page should be filtered fro the user, and their dashboard
- shouldnt have these lists. Instead the datasets are just one of the filters, but the page is focused on the users data.
- Best is probably to show one summary chart or div for each dashboard, so user can click to drilldown into dashboard
-  - maybe just use teh Rehab dashboard, except with the projections
+5: PLAYER DASHBOARD.....
+
+5a) DONE - add notes option to dataset model and createDataset
+ 
+5b) DONE ->impl fetchmultipleFullDatasets on server side
+
+--------------------------------------------------------
+
+5c) show scatter/line chart for all user datasets with their datapoints pn PlayerDashboard
+(for now, the calculations for each dataset are just defined in a file on client. 
+later, we will work back from there to get a good ui for entering them)
+
+
+-------------------------------------------------
+
+5d) fix load users bug when page refreshes
 
 6. Make group hoem page look good (similar principles as above)
 
@@ -39,6 +42,8 @@ NEXT
 
 10. make addDatapoint only show for users when they have datasets administered. also check all other edit, add and delete options that they 
 only show fro authorized users (can worry about server auth checking later)
+
+and add tags and subtags to dataset eg fitness -> core / LB /LME / maximal strength
 
 
 11. schedule component on userhome, done with matchref days, 1 row per match, match day is at teh end of row
@@ -54,12 +59,16 @@ and this is what I achieved in that time.'
 
  20. fix bugs and refactor everything to date.
   a) create dataset sometimes gives admin as [null]
+ b) when refreshing page, loadUsers doesnt work - gets stuck
 
 
+Goals - user can create a goal, with a date, and assign datasets (with specific values/calculations), and target addDatapoints
+that have been previously created the usual way for that dataset. 
+Under that goal, the dashboard shows all the datasets (with the specified values/calculations) in charts,
+and it also calculates an overall goal completion rate based on proximity to targets.
 
 
-
-
+allow multiple players for a dataset and datapoint
 
 
 

@@ -52,6 +52,7 @@ export default function DatapointsTable({ title, emptyMesg, items, itemActions, 
   const nrOfExtraItemActions = itemActions.other ? itemActions.other.length : 0;
   const stylesProps = {...styles, extraItemButtonsWidth:nrOfExtraItemActions * 40}
   const classes = useStyles(stylesProps);
+  console.log("items", items)
 
   const { ItemIcon, onItemClick, itemLinkPath } = itemActions.main;
 

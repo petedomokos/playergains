@@ -1,4 +1,5 @@
 import Dataset from '../models/dataset.model'
+import Datapoint from '../models/datapoint.model'
 import extend from 'lodash/extend'
 import errorHandler from './../helpers/dbErrorHandler'
 import formidable from 'formidable'
@@ -49,7 +50,17 @@ const datasetByID = async (req, res, next, id) => {
   try {
     let dataset = await Dataset.findById(id)
         .populate('admin', '_id username firstname surname photo')
-        .populate('players', '_id username firstname surname photo')
+        //.populate('players', '_id username firstname surname photo')
+        .populate('datapoints.player', '_id firstname surname photo')
+        /*.populate({ 
+          path: 'datapoints', 
+          select: '_id player date values notes surface fatigueLevel isTarget',
+          populate: {
+            path:'values',
+            select:'_id measure value'
+          }
+          //todo - pop measure with name etc
+        })*/
          //example from old playergains of how to populate deeper paths
       //.populate({ path: 'player.datasets', select: 'name _id desc datasetType players parent admin coaches subdatasets' })
     console.log('dataset', dataset)
@@ -71,14 +82,38 @@ const read = (req, res) => {
   return res.json(req.dataset)
 }
 
+//todo - dont send photo with every d
+const readMultiple = async (req, res) => {
+  console.log('read multiple full datasets......', req.body)
+  // @TODO instead of getting all then filtering, just make request for the ones we need
+  try{
+      let datasets = await Dataset.find()
+          .populate('datapoints.player', '_id firstname surname photo')
+      
+      const playerDatasets = datasets
+        .filter(dset => req.body.datasetIds.find(id => dset._id.equals(id)))
+      //cant use spread operator or functional style with mongoose
+      playerDatasets.forEach(dset =>{
+        dset.datapoints = dset.datapoints.filter(d => d.player._id.equals(req.body.playerId));
+      })
+
+      return res.json(playerDatasets)
+  }
+  catch (err) {
+      console.log('error reading multiple datasets.......................')
+      return res.status(400).json({
+        error: errorHandler.getErrorMessage(err)
+      })
+  }
+}
 const list = async (req, res) => {
-  //const fakeDatasets = [{_id:"1", name:"a dataset", email:"a@b.com"}]
-  //res.json(fakeDatasets)
   try {
     let datasets = await Dataset.find()
       .select('_id name desc photo datasetType admin created') //not players as shallow
       .populate('admin', '_id username firstname surname created')
       //.populate('players', '_id firstname surname photo')
+    
+    //WARNING - THIS WILL ALSO SEND DATAPOINTS - WE MAY WANT TO CUT THOSE OUT WITH OBJECT DESTRUCTUIRNG
 
     console.log('returning datasets now.......................')
     //console.log('returning datasets.......................', datasets)
@@ -142,12 +177,38 @@ const remove = async (req, res) => {
   }
 }
 
+const createDatapoint = async (req, res) => {
+  let { dataset } = req;
+  const datapoint = req.body;
+  //add ref to this dataset to player if not added before
+  const playersSoFar = dataset.datapoints.map(d => d.player);
+  if(!playersSoFar.find(p => p.equals(datapoint.player))){
+      addRefToUserArray(datapoint.player, "datasetsMemberOf", dataset._id)
+  }
+   /*
+  NOTE - datapoint is an object that fits a schema. So it is not a model, so we do not create it with New Datapoint
+  */
+  dataset.datapoints.push(datapoint)
+  dataset.updated = Date.now()
+  console.log("dataset new", dataset)
+  try {
+    await dataset.save()
+    res.json(datapoint)
+  } catch (err) {
+    return res.status(400).json({
+      error: errorHandler.getErrorMessage(err)
+    })
+  }
+}
+
 
 export default {
   create,
   datasetByID,
   read,
+  readMultiple,
   list,
   remove,
-  update
+  update,
+  createDatapoint
 }

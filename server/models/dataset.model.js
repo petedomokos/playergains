@@ -1,4 +1,5 @@
 import mongoose from 'mongoose'
+import DatapointSchema from './datapoint.model'
 import MeasureSchema from './measure.model'
 import CalculationSchema from './calculation.model'
 
@@ -23,7 +24,16 @@ const DatasetSchema = new mongoose.Schema({
   calculations:[{type:CalculationSchema}],
   //main value can be a measure key or a calculation key
   mainValueToDisplay:String,
-  datapoints:[{type:mongoose.Schema.ObjectId, ref:'Datapoint'}],
+  /*
+  NOTE - datapoint is an object that fits a schema. So it is not a model, so we do not create it with New Datapoint.
+  Also we do not populate it -> they all just get sent with the datapoint.
+  If we wish to restict datapoints, we can turn them into refs, or we can trim it down in the DatasetCtrl.read
+  We dont have to worry about dataset.list so much, because we dont send the full datapoints there anyway, just id,
+  whihc may be useful so we can show number of datapoints beside each dataset in a list
+  */
+  datapoints:[{type:DatapointSchema}],
+  notes:{type: String, default:""},
+  tags:[String],
   updated: Date,
   created: {type: Date,default: Date.now}
 })

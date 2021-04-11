@@ -36,8 +36,6 @@ const useStyles = makeStyles(theme => ({
 }))
 
 function EnterMeasureValues({ measures, values, handleChange }) {
-  //console.log("measures", measures)
-  //console.log("values", values)
   //wrap this with with:Loader fro datasets
   const classes = useStyles()
   return (
@@ -54,7 +52,7 @@ function EnterMeasureValues({ measures, values, handleChange }) {
                     <TextField 
                         id={"value-"+i} label={measure.name} 
                         className={classes.textField} 
-                        value={ (value || "                                 ")} 
+                        value={ (value || "")} 
                         onChange={event => handleChange(event, measure)} 
                         margin="normal"
                         />

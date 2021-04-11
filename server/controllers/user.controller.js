@@ -58,8 +58,8 @@ const userByID = async (req, res, next, id) => {
           select:'_id name desc'
         } 
       })
-      .populate('administeredDatasets', '_id name desc created')
-      .populate('datasetsMemberOf', '_id name desc created')
+      .populate('administeredDatasets', '_id name desc notes photo admin created')
+      .populate('datasetsMemberOf', '_id name desc notes photo admin created')
 
     console.log('user in userById', user)
     if (!user)
@@ -89,8 +89,6 @@ const list = async (req, res) => {
     let users = await User.find()
       .select('username firstname surname photo email updated created admin')
       .populate('admin', '_id username firstname surname created')
-
-    console.log('returning users now.......................')
     //console.log('returning users.......................', users)
     res.json(users)
   } catch (err) {

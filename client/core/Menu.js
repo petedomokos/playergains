@@ -40,9 +40,16 @@ const Menu = withRouter(({history, onSignout}) => {
           </span>)
         }
         {
-          user && user.isPlayer && (<span>
+          user && (<span>
             <Link to={"/user/" + auth.isAuthenticated().user._id}>
-              <Button style={isActive(history, "/user/" + auth.isAuthenticated().user._id)}>My Dashboard</Button>
+              <Button style={isActive(history, "/user/" + auth.isAuthenticated().user._id)}>My Profile</Button>
+            </Link>
+          </span>)
+        }
+        {
+          user && user.isPlayer && (<span>
+            <Link to={"/user/" + auth.isAuthenticated().user._id+"/dashboard"}>
+              <Button style={isActive(history, "/user/" + auth.isAuthenticated().user._id+"/dashboard")}>My Dashboard</Button>
             </Link>
           </span>)
         }

@@ -19,8 +19,8 @@ const mapStateToProps = (state, ownProps) => {
 
 	if(_dataset && _dataset.players){
 		//user is deep version so need to replace id-refs with objects
-		_dataset.admin = _dataset.admin.map(id => findIn(allUsers, id));
-		_dataset.players = _dataset.players.map(id => findIn(allUsers, id));
+		_dataset.admin = _dataset.admin.map(dset => findIn(allUsers, dset));
+		_dataset.players = _dataset.players.map(dset => findIn(allUsers, dset));
 	}
 	return{
 		extraLoadArg:datasetId,

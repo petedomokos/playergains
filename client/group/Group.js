@@ -73,6 +73,7 @@ function Group(props) {
   }
 
   const onRemovePlayer = user =>{
+    console.log("remove!!!!!!!!!!!!!!!!!!!!!!!!!!", user)
     setUpdatedPlayers(prevState => prevState.filter(us => us._id !== user._id))
   }
 
@@ -138,13 +139,14 @@ function Group(props) {
   //we want buttons to switch from the main froward arrow (for player link)
   //when not editing, to the delete idon when editing.
   //using main and other gives a positional difference to make it obvious
+  console.log("onRemovePlayer", onRemovePlayer)
   const removePlayerItemActions = {
     main:{
       itemLinkPath:(item) =>'/user/'+item._id, 
       ItemIcon:showPlayersToAdd ? () => null : ArrowForward
     },
     other:[{
-      onClick:showPlayersToAdd ? onRemovePlayer : () => {},
+      onItemClick:showPlayersToAdd ? onRemovePlayer : () => {},
       ItemIcon: showPlayersToAdd ? DeleteIcon : () => null
     }]
   }
@@ -227,7 +229,7 @@ function Group(props) {
       ItemIcon:showDatasetsToAdd ? () => null : ArrowForward
     },
     other:[{
-      onClick:showDatasetsToAdd ? onRemoveDataset : () => {},
+      onItemClick:showDatasetsToAdd ? onRemoveDataset : () => {},
       ItemIcon: showDatasetsToAdd ? DeleteIcon : () => null
     }]
   }

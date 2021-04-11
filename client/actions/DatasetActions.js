@@ -35,6 +35,24 @@ export const fetchDataset = id => dispatch => {
 			}
 		})
 }
+
+//for now, use  a PUT with body, but should change to get with params
+//note - userId may not be the signed in user
+export const fetchMultipleFullDatasets = (datasetIds, playerId) => dispatch => {
+	console.log("fetchmultiple p", playerId)
+	console.log("fetchmultiple dsets", datasetIds)
+	fetchThenDispatch(dispatch, 
+        'loading.datasets',
+        {
+            url: '/api/datasets/multiple',
+			method:'PUT', 	
+			requireAuth:true,
+			body:JSON.stringify({ datasetIds:datasetIds, playerId:playerId }),
+            nextAction: data => {return {type:C.LOAD_DEEP_DATASETS, datasets:data}}
+        })
+}
+
+
 export const fetchDatasets = () => dispatch => {
     fetchThenDispatch(dispatch, 
         'loading.datasets',

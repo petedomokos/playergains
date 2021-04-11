@@ -12,17 +12,9 @@ export const user = (state=InitialState.user, act) =>{
 		//SIGNED IN USER
 		case C.SIGN_IN:{
 			const { admin, administeredUsers, administeredGroups, administeredDatasets, groupsMemberOf, datasetsMemberOf } = act.user;
-			//put all users and groups into loadedUsers and loadedGroups
-			//and reset those to model state (ie just list of ids)
 			return { 
 				...state, 
 				...act.user,
-				admin:admin.map(us => us._id),
-				administeredUsers:administeredUsers.map(us => us._id),
-				administeredGroups:administeredGroups.map(g => g._id),
-				administeredDatasets:administeredDatasets.map(g => g._id),
-				groupsMemberOf:groupsMemberOf.map(g => g._id),
-				datasetsMemberOf:datasetsMemberOf.map(dset => dset._id),
 				//store the deeper objects here in one place
 				loadedUsers:filterUniqueById([...admin, ...administeredUsers]), //later iterations will have following etc
 				loadedGroups:filterUniqueById([...administeredGroups, ...groupsMemberOf]),
@@ -41,22 +33,33 @@ export const user = (state=InitialState.user, act) =>{
 		case C.CREATE_NEW_ADMINISTERED_USER:{
 			return { 
 				...state, 
-				administeredUsers:[...state.administeredUsers, act.user._id],
+				administeredUsers:[...state.administeredUsers, act.user],
 				loadedUsers:[...state.loadedUsers, act.user]
 			}
 		}
 		case C.CREATE_NEW_ADMINISTERED_GROUP:{
 			return { 
 				...state, 
-				administeredGroups:[...state.administeredGroups, act.group._id],
+				administeredGroups:[...state.administeredGroups, act.group],
 				loadedGroups:[...state.loadedGroups, act.group]
 			}
 		}
 		case C.CREATE_NEW_ADMINISTERED_DATASET:{
 			return { 
 				...state, 
-				administeredDatasets:[...state.administeredDatasets, act.dataset._id],
+				administeredDatasets:[...state.administeredDatasets, act.dataset],
 				loadedDatasets:[...state.loadedDatasets, act.dataset]
+			}
+		}
+		case C.CREATE_NEW_DATAPOINT:{
+			const datasetToUpdate = state.loadedDatasets.find(dset => dset._id === act.datasetId);
+			const updatedDataset = {
+				...datasetToUpdate,
+				datapoints:[...datasetToUpdate.datapoints, act.datapoint]
+			};
+			return { 
+				...state, 
+				loadedDatasets:filterUniqueById([updatedDataset, ...state.loadedDatasets])
 			}
 		}
 		//UPDATE (overwrite properties with any updated or new ones)
@@ -79,9 +82,9 @@ export const user = (state=InitialState.user, act) =>{
 			var updatedLoadedUsers = state.loadedUsers;
 			//adding and removing players -> add/remove groupId from affected players
 			if(!isSame(groupToUpdate.players, updatedGroup.players)){
-				const playersAdded = updatedGroup.players.filter(userId => !groupToUpdate.players.includes(userId))
+				const playersAdded = updatedGroup.players.filter(player => !isIn(groupToUpdate.players, player)).map(p => p._id)
 				console.log('playersAdded', playersAdded)
-				const playersRemoved = groupToUpdate.players.filter(userId => !updatedGroup.players.includes(userId))
+				const playersRemoved = groupToUpdate.players.filter(player => !isIn(updatedGroup.players, player)).map(p => p._id)
 				console.log('playersRemoved', playersRemoved)
 				updatedLoadedUsers = state.loadedUsers.map(user =>{
 					//only add groupId to user if groupsMemberOf is loaded (ie deep version of user is loaded)
@@ -90,7 +93,7 @@ export const user = (state=InitialState.user, act) =>{
 					}
 					if(playersAdded.includes(user._id)){
 						//add groupId to user
-						return { ...user, groupsMemberOf:[...user.groupsMemberOf, act.group._id]}
+						return { ...user, groupsMemberOf:[...user.groupsMemberOf, act.group]}
 					}
 					if(playersRemoved.includes(user._id)){
 						//remove groupId from user
@@ -117,9 +120,10 @@ export const user = (state=InitialState.user, act) =>{
 			//note - anyone can add players they administer to a dataset, its not like group where they need to be in group.admin
 			//also a group admin can add/remove all players from their group to a dataset in one go (just by doing add/remove dataset from group page)
 			if(!isSame(datasetToUpdate.players, updatedDataset.players)){
-				const playersAdded = updatedDataset.players.filter(userId => !datasetToUpdate.players.includes(userId))
+				//not sure why group.players is only id here -> isnt it an object
+				const playersAdded = updatedDataset.players.filter(player => !isIn(datasetToUpdate.players, player)).map(p => p._id)
 				console.log('playersAdded', playersAdded)
-				const playersRemoved = datasetToUpdate.players.filter(userId => !updatedDataset.players.includes(userId))
+				const playersRemoved = datasetToUpdate.players.filter(player => !isIn(updatedDataset.players, player)).map(p => p._id)
 				console.log('playersRemoved', playersRemoved)
 				updatedLoadedUsers = state.loadedUsers.map(user =>{
 					//only add datasetId to user if datasetsMemberOf is loaded (ie deep version of user is loaded)
@@ -157,7 +161,7 @@ export const user = (state=InitialState.user, act) =>{
 				.filter(us => us._id !== act.user._id)
 				.map(user =>{
 					//if deep version of user is loaded and user was in the administered list
-					if(user.administeredUsers && user.administeredUsers.includes(act.user._id)){
+					if(user.administeredUsers && isIn(user.administeredUsers, act.user)){
 						//remove groupId from list
 						return { 
 							...user, 
@@ -178,7 +182,7 @@ export const user = (state=InitialState.user, act) =>{
 			const updatedLoadedUsers = state.loadedUsers
 				.map(user =>{
 					//if deep version of user is loaded and group was in the administered list
-					if(user.administeredGroups && user.administeredGroups.includes(act.group._id)){
+					if(user.administeredGroups && isIn(user.administeredGroups, act.group)){
 						//remove groupId from list
 						return { 
 							...user, 
@@ -202,7 +206,7 @@ export const user = (state=InitialState.user, act) =>{
 			const updatedLoadedUsers = state.loadedUsers
 				.map(user =>{
 					//if deep version of user is loaded and dataset was in the administered list
-					if(user.administeredDatasets && user.administeredDatasets.includes(act.dataset._id)){
+					if(user.administeredDatasets && isIn(user.administeredDatasets, act.dataset)){
 						//remove datasetId from list
 						return { 
 							...user, 
@@ -228,22 +232,9 @@ export const user = (state=InitialState.user, act) =>{
 		//Note 1 - this cannot be the signed in user - they are always loaded fully
 		//Note 2 - this will overwrite/enhance any existing objects rather than replace
 		case C.LOAD_USER:{
-			alert('Reducer loaduser')
 			const { admin, administeredUsers, administeredGroups, administeredDatasets, groupsMemberOf, datasetsMemberOf } = act.user;
-			//find if there is any existing version to update
-			const userToUpdate = state.loadedUsers.find(us => us._id === act.user._id) || {};
-			const updatedUser = { 
-				...userToUpdate, 
-				...act.user,
-				//these are added here as not in shallow loads (without deep loads, we can still tell which users are administered
-				//by the signed on user)
-				admin:admin.map(us => us._id),
-				administeredUsers:administeredUsers.map(us => us._id),
-				administeredGroups:administeredGroups.map(g => g._id),
-				administeredDatasets:administeredDatasets.map(g => g._id),
-				groupsMemberOf:groupsMemberOf.map(g => g._id),
-				datasetsMemberOf:datasetsMemberOf.map(dset => dset._id)
-			}
+
+			//TODO - sort these - do we need?
 			//All teh following groups come in from server in shallow form, not just flat ids.
 			//we save them to teh central group store, to be accessed when required by containers
 			const mergedAdmin = admin.map(adminUser => {
@@ -263,43 +254,27 @@ export const user = (state=InitialState.user, act) =>{
 				//override any properties from server, but maintain any other properties
 				return { ...existingVersion, ...adminGroup }
 			})
-			const mergedAdministeredDatasets = administeredDatasets.map(adminDataset => {
-				const existingVersion = state.loadedDatasets.find(us => us._id === adminDataset._id) || {};
-				//override any properties from server, but maintain any other properties
-				return { ...existingVersion, ...adminDataset }
-			})
 			const mergedGroupsMemberOf = groupsMemberOf.map(groupMemberOf => {
 				const existingVersion = state.loadedGroups.find(us => us._id === groupMemberOf._id) || {};
 				//override any properties from server, but maintain any other properties
 				return { ...existingVersion, ...groupMemberOf }
 			})
-			const mergedDatasetssMemberOf = datasetsMemberOf.map(datasetMemberOf => {
+			const mergedDatasetsMemberOf = datasetsMemberOf.map(datasetMemberOf => {
 				const existingVersion = state.loadedGroups.find(us => us._id === datasetMemberOf._id) || {};
 				//override any properties from server, but maintain any other properties
 				return { ...existingVersion, ...datasetMemberOf }
 			})
+
 			return { 
 				...state,
 				//user is deep , so we overide any existing version
-				loadedUsers:filterUniqueById([...mergedAdmin, ...mergedAdministeredUsers, updatedUser, ...state.loadedUsers]),
-				loadedDatasets:filterUniqueById([...mergedAdministeredDatasets, ...mergedDatasetsMemberOf, ...state.loadedDatasets]),
-				loadedGroups:filterUniqueById([...mergedAdministeredGroups, ...mergedGroupsMemberOf, ...state.loadedGroups])
+				loadedUsers:[act.user, ...state.loadedUsers],
+				loadedDatasets:filterUniqueById([...mergedDatasetsMemberOf, ...state.loadedDatasets]), //??????????????????????????????
+				loadedGroups:filterUniqueById([...mergedAdministeredGroups, ...mergedGroupsMemberOf, ...state.loadedGroups]) //?????????????????????
 			}
 		}
 		case C.LOAD_GROUP:{
 			const { admin, players, datasets } = act.group;
-			//find if there is any existing version to update
-			const groupToUpdate = state.loadedGroups.find(g => g._id === act.group._id) || {};
-			const updatedGroup = { 
-				...groupToUpdate, 
-				...act.group,
-				//these are added here as not in shallow loads (without deep loads, we can still tell which groups are administered
-				//by the signed on user)
-				admin:admin.map(us => us._id),
-				players:players.map(us => us._id),
-				datasets:datasets.map(dset => dset._id)
-			}
-			console.log('updatedgroup being added to loadedgroups', updatedGroup)
 			/*const mergedAdmin = admin.map(adminUser => {
 				const existingVersion = state.loadedUsers.find(us => us._id === adminUser._id) || {};
 				//override any properties in latest version from server, in case of database changes from elsewhere
@@ -317,28 +292,17 @@ export const user = (state=InitialState.user, act) =>{
 			return { 
 				...state,
 				//group is deep, so we will override any existing version
-				loadedGroups:filterUniqueById([updatedGroup, ...state.loadedGroups]),
+				loadedGroups:filterUniqueById([act.group, ...state.loadedGroups]),
 				loadedUsers:filterUniqueById([/*...mergedAdmin, */ ...nonSignedInPlayers, ...state.loadedUsers])
 			}
 		}
 
 		case C.LOAD_DATASET:{
 			const { admin, datapoints } = act.dataset;
-			//find if there is any existing version to update
-			const datasetToUpdate = state.loadedDatasets.find(dset => dset._id === act.dataset._id) || {};
-			const updatedDataset = { 
-				...datasetToUpdate, 
-				...act.dataset,
-				//these are added here as not in shallow loads (without deep loads, we can still tell which datasets are administered
-				//by the signed on user)
-				admin:admin.map(us => us._id),
-				datapoints:datapoints.map(d => d._id)
-			}
-			console.log('updateddataset being added to loadeddatasets', updatedDataset)
 			return { 
 				...state,
 				//dataset is deep, so we will override any existing version
-				loadedDatasets:filterUniqueById([updatedDataset, ...state.loadedDatasets]),
+				loadedDatasets:filterUniqueById([act.dataset, ...state.loadedDatasets]),
 			}
 		}
 		//2. MULTIPLE SHALLOW LOADS -------------------------------------------------------------------------------------
@@ -351,7 +315,7 @@ export const user = (state=InitialState.user, act) =>{
 			const usersNotLoadedBefore = act.users
 				.filter(us => us._id !== state._id)
 				.filter(us => !state.loadedUsers.find(u => u._id === us._id))
-			console.log('USERS NOT LOADED B4', usersNotLoadedBefore)
+			
 			//for now, all users are sent first time
 			return { 
 				...state, 
@@ -374,7 +338,7 @@ export const user = (state=InitialState.user, act) =>{
 			}
 		}
 		default:{
-			console.log('default returniung state')
+			console.log('default returning state')
 			return state
 		}
 
@@ -390,6 +354,22 @@ export const user = (state=InitialState.user, act) =>{
 				...state, 
 				loadedDatasets:[...state.loadedDatasets, ...datasetsNotLoadedBefore],
 				loadsComplete:{ ...state.loadsComplete, datasets:'complete' }
+			}
+		}
+		case C.LOAD_DEEP_DATASETS:{
+			const updatedDatasets = act.datasets.map(dset =>{
+				//get the existing dataset
+				const datasetToUpdate = state.loadedDatasets.find(dset => dset._id === dset._id) || {};
+				//merge new datapoints with any existing (eg from another previously viewed player)
+				const updatedDatapoints = datasetToUpdate.datapoints ? [...datasetToUpdate.datapoints, dset.datapoints] : dset.datapoints;
+				//overwrite all other properties and add merged datapoints
+				return { ...datasetToUpdate, ...dset, datapoints:updatedDatapoints }
+			})
+
+			return { 
+				...state, 
+				loadedDatasets:filterUniqueById([ ...updatedDatasets, ...state.loadedDatasets]),
+				//loadsComplete:{ ...state.loadsComplete, datasets:'complete' }
 			}
 		}
 

@@ -74,9 +74,9 @@ const UserHome = ({user, loading, loadingError}) => {
               </div>
               <div className={classes.list}>
                 <DatasetsContainer/>
-              </div>
           </div>
-        </>}
+          </div>
+      </>}
     </div>
   )
 }
@@ -90,7 +90,7 @@ const QuickLinks = ({links}) =>{
     <div className={classes.quickLinks}>
         {links.map(link =>
           <Link to={link.to} key={"quicklink-"+link.to}>
-              <Button color="primary" variant="contained" className={classes.quickLinkBtn}>add datapoint</Button>
+              <Button color="primary" variant="contained" className={classes.quickLinkBtn}>{link.label}</Button>
           </Link>
         )}
     </div>

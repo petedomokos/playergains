@@ -37,6 +37,7 @@ function Dataset(props) {
   const [showDatapoints, setShowDatapoints] =  useState(false);
   const [updatedDatapoints, setUpdatedDatapoints] = useState(datapoints);
   console.log('Dataset', dataset)
+  console.log("updatedDatapoints", updatedDatapoints)
 
   useEffect(() => {
     return () => {
@@ -145,7 +146,7 @@ function Dataset(props) {
             title={'Datapoints'} 
             emptyMesg={'No datapoints'}
             items={updatedDatapoints}
-            primaryText={d => d.player.firstName+ ' ' +d.player.surname}
+            primaryText={d => d.player.firstname+ ' ' +d.player.surname}
             secondaryText={d => d.date}
             actionButtons={datapointActionButtons} />
       </div>

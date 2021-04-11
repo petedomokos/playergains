@@ -1,14 +1,13 @@
 import { connect } from 'react-redux'
 import { fetchUser, fetchUsers } from '../../../actions/UserActions'
 import { fetchDataset } from '../../../actions/DatasetActions'
-//import { createDatapoint } from '../../../actions/DatapointActions'
+import { createDatapoint } from '../../../actions/DatapointActions'
 import { closeDialog } from '../../../actions/CommonActions'
 import CreateDatapoint from '../CreateDatapoint'
 import auth from '../../../auth/auth-helper'
 import { findIn } from "../../../util/ArrayHelpers"
 
 const mapStateToProps = (state, ownProps) => {
-	console.log("create datapoint cont user", state.user)
 	const userId = auth.isAuthenticated().user._id;
 
 	return({
@@ -43,11 +42,11 @@ const mapDispatchToProps = dispatch => ({
 		dispatch(fetchUsers())
 	},
 	loadDataset(datasetId){
-		console.log('loading dataset-----------------------------------------------------------------------------')
 		dispatch(fetchDataset(datasetId))
 	},
-	submit(datapoint){
-		//dispatch(createDatapoint(datapoint))
+	submit(datasetId, datapoint){
+		console.log("create d dset id", datasetId)
+		dispatch(createDatapoint(datasetId, datapoint))
 	},
 	closeDialog(){
 		dispatch(closeDialog('createDatapoint'))

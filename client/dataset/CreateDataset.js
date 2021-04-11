@@ -60,13 +60,14 @@ function CreateDataset({ user, availableMeasures, creating, error, success, open
       name: '', //must be unique to this user
       initials:'', //max 5 chars
       desc:'',
+      tags:'',
+      notes:'',
       datasetType:'',
       measures:[],
       calculations:[],
       admin:[user._id]
   }
   const [values, setValues] = useState(initState)
-
 
   //useEffect to reset dialog and error when unmounting (in case user moves away from component)
   //if this doesnt work, we can always reset in useEffcet itself if need be, although thats a bit wierd
@@ -103,6 +104,8 @@ function CreateDataset({ user, availableMeasures, creating, error, success, open
         name: values.name || undefined,
         initials: values.initials || undefined,
         desc: values.desc || undefined,
+        notes: values.desc || undefined,
+        tags: values.tags ? values.tags.split(" ") : undefined,
         datasetType: values.datasetType || undefined,
         //we dont save measure._id to server, as it is given an _id in db
         measures: values.measures.map(m => ({ ...m, _id:undefined })),
@@ -155,6 +158,12 @@ function CreateDataset({ user, availableMeasures, creating, error, success, open
         <TextField 
             id="desc" label="Description" className={classes.textField} 
             value={values.desc} onChange={handleChange('desc')} margin="normal"/><br/>
+        <TextField 
+            id="tags" label="Tags" className={classes.textField} 
+            value={values.tags} onChange={handleChange('tags')} margin="normal"/><br/>
+        <TextField 
+            id="notes" label="Notes" className={classes.textField} 
+            value={values.notes} onChange={handleChange('notes')} margin="normal"/><br/>
         <br/> {
           values.error && (<Typography component="p" color="error">
             <Icon color="error" className={classes.error}>error</Icon>

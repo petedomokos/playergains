@@ -1,9 +1,14 @@
 import React, { } from 'react'
+import { Route, Switch, Link } from 'react-router-dom'
+//styles
 import { makeStyles } from '@material-ui/core/styles'
 import UserProfile from './UserProfile'
 import ArrowForward from '@material-ui/icons/ArrowForward'
+import Button from '@material-ui/core/Button'
+//children
 import { withLoader } from '../util/HOCs';
 import SimpleList from '../util/SimpleList'
+import PlayerDashboardContainer from "../dashboard/containers/PlayerDashboardContainer"
 //helper
 import { userProfile } from '../util/ReduxHelpers'
 import { filterUniqueById } from '../util/ArrayHelpers';
@@ -28,6 +33,14 @@ const useStyles = makeStyles(theme => ({
     flex:'400px 0 0',
     maxWidth:'90vw', //keeps it on small mobile screens
     height:'100%',
+  },
+  quickLinks:{
+    margin:`${theme.spacing(2)}px`,
+    height:"50px"
+  },
+  quickLinkBtn:{
+    margin:`${theme.spacing(1)}px`,
+
   }
 }))
 
@@ -63,9 +76,19 @@ function User(props) {
     ...datasetsMemberOf
   ])
 
+  const quickLinks = [
+    {label:"Profile", to:"/user/"+user._id},
+    {label:"Dashboard", to:"/user/"+user._id +"/dashboard"}
+  ]
+
   return (
     <div className={classes.root} >
-      <UserProfile profile={user} />
+      {/**<UserProfile profile={user} /> */}
+      <QuickLinks links={quickLinks} />
+      <Switch>
+          <Route path="/user/:userId/dashboard" component={PlayerDashboardContainer}/>
+          <Route component={PlayerProfile}/>
+      </Switch>
       <div className={classes.lists}>
           <div className={classes.list}>
             <SimpleList 
@@ -87,12 +110,26 @@ function User(props) {
                   secondaryText={dset => dset.desc} />
           </div>
       </div>
-      <div className={classes.dashboard}>
-        Data dashboard / summary 
-      </div>
     </div>
   )
 }
+
+
+const QuickLinks = ({links}) =>{
+  const classes = useStyles()
+  return(
+    <div className={classes.quickLinks}>
+        {links.map(link =>
+          <Link to={link.to} key={"quicklink-"+link.to}>
+              <Button color="primary" variant="contained" className={classes.quickLinkBtn}>{link.label}</Button>
+          </Link>
+        )}
+    </div>
+  )
+}
+
+const PlayerProfile = () =><div style={{margin:50}}>Player Profile</div>
+
 const Loading = <div>User is loading</div>
 //must load user if we dont have the deep version eg has groupsMemberof property
 export default withLoader(User, ['user.groupsMemberOf'], {alwaysRender:false, LoadingPlaceholder:Loading});
