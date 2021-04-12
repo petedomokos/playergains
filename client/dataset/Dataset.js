@@ -25,6 +25,13 @@ const useStyles = makeStyles(theme => ({
     margin:'50px'
   },
   datapointsTable:{
+    border:'solid',
+    [theme.breakpoints.down('md')]: {
+      width:'90vw',
+    },
+    [theme.breakpoints.up('lg')]: {
+      width:'600px',
+    },
   }
 }))
 

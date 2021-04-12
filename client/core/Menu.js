@@ -1,4 +1,5 @@
 import React from 'react'
+import { makeStyles } from '@material-ui/core/styles'
 import AppBar from '@material-ui/core/AppBar'
 import Toolbar from '@material-ui/core/Toolbar'
 import Typography from '@material-ui/core/Typography'
@@ -14,27 +15,73 @@ const isActive = (history, path) => {
   else
     return {color: '#ffffff'}
 }
+
+
+const useStyles = makeStyles(theme => ({
+  root: {
+  },
+  toolbar:{
+
+  },
+  logo:{
+    [theme.breakpoints.down('md')]: {
+      fontSize:"24px",
+    },
+    [theme.breakpoints.up('lg')]: {
+      fontSize:"16px",
+    },
+
+  },
+  homeIcon:{
+    [theme.breakpoints.down('md')]: {
+      height:"50px",
+      width:"50px",
+    },
+    [theme.breakpoints.up('lg')]: {
+    },
+
+  },
+  menuBtn: {
+    [theme.breakpoints.down('md')]: {
+      fontSize:"24px",
+    },
+    [theme.breakpoints.up('lg')]: {
+      fontSize:"16px",
+    },
+    
+  }
+}))
 const Menu = withRouter(({history, onSignout}) => {
+  const classes = useStyles()
   const user = auth.isAuthenticated() ? auth.isAuthenticated().user : null;
   return(
-    <AppBar position="static">
-      <Toolbar>
-        <Typography variant="h6" color="inherit">
+    <AppBar 
+        position="static" className={classes.root}>
+      <Toolbar 
+          className={classes.toolbar}>
+        <Typography variant="h6" color="inherit" className={classes.logo}>
           Switchplay (dev)
         </Typography>
         <Link to="/">
-          <IconButton aria-label="Home" style={isActive(history, "/")}>
-            <HomeIcon/>
+          <IconButton 
+              aria-label="Home" 
+              style={isActive(history, "/")}>
+              <HomeIcon
+                  className={classes.homeIcon}/>
           </IconButton>
         </Link>
         {
           !user && (<span>
             <Link to="/signup">
-              <Button style={isActive(history, "/signup")}>Sign up
+              <Button
+                className={classes.menuBtn}
+                style={isActive(history, "/signup")}>Sign up
               </Button>
           </Link>
             <Link to="/signin">
-              <Button style={isActive(history, "/signin")}>Sign In
+              <Button 
+                className={classes.menuBtn}
+                style={isActive(history, "/signin")}>Sign In
               </Button>
             </Link>
           </span>)
@@ -42,20 +89,30 @@ const Menu = withRouter(({history, onSignout}) => {
         {
           user && (<span>
             <Link to={"/user/" + auth.isAuthenticated().user._id}>
-              <Button style={isActive(history, "/user/" + auth.isAuthenticated().user._id)}>My Profile</Button>
+              <Button
+                className={classes.menuBtn}
+                style={isActive(history, "/user/" + auth.isAuthenticated().user._id)}>My Profile
+              </Button>
             </Link>
           </span>)
         }
         {
           user && user.isPlayer && (<span>
             <Link to={"/user/" + auth.isAuthenticated().user._id+"/dashboard"}>
-              <Button style={isActive(history, "/user/" + auth.isAuthenticated().user._id+"/dashboard")}>My Dashboard</Button>
+              <Button
+                className={classes.menuBtn}
+                style={isActive(history, "/user/" + auth.isAuthenticated().user._id+"/dashboard")}>My Dashboard
+              </Button>
             </Link>
           </span>)
         }
         {
           user && (<span>
-            <Button color="inherit" onClick={() => onSignout(history)}>Sign out</Button>
+            <Button
+              className={classes.menuBtn}
+              color="inherit" 
+              onClick={() => onSignout(history)}>Sign out
+            </Button>
           </span>)
         }
       </Toolbar>

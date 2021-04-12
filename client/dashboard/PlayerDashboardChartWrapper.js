@@ -9,8 +9,8 @@ import timeSeries from "../charts/time-series/timeSeries";
 const useStyles = makeStyles((theme) => ({
   root: {
     margin: theme.spacing(2) +"px " +theme.spacing(1) +"px",
-    border:'solid',
-    borderColor:"pink",
+    //border:'solid',
+    //borderColor:"pink",
     display:"flex",
     flexDirection:"column"
   },
@@ -18,11 +18,17 @@ const useStyles = makeStyles((theme) => ({
     fontSize:"12px"
   },
   svg:{
-    width:"100%",
-    height:"200px",
+    [theme.breakpoints.down('md')]: {
+      width:'90vw',
+      height:'calc(90vw * 0.5)'
+    },
+    [theme.breakpoints.up('lg')]: {
+      width:'600px',
+      height:'calc(600px * 0.5)'
+    },
     alignSelf:"center",
-    border:'solid',
-    borderColor:"black"
+    //border:'solid',
+    //borderColor:"black"
   }
 }))
 
@@ -37,7 +43,7 @@ const PlayerDashboardChartWrapper= ({data, settings}) => {
           setChart(() => timeSeries())
       }else{
           const width = containerRef.current.getBoundingClientRect().width;
-          const height = 200//containerRef.current.getBoundingClientRect().height;
+          const height = containerRef.current.getBoundingClientRect().height;
           const margin = { left:50, right:25, top:25, bottom:50 };
           const sizes = {
               width,

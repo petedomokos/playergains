@@ -34,8 +34,12 @@ const useStyles = makeStyles((theme) => ({
     flexWrap:'wrap'
   },
   list:{
-    flex: props => props.availWidth <= 500 ? '90vw 0 0' : '500px 0 0',
-   // maxWidth:'90vw', //keeps it on small mobile screens
+    [theme.breakpoints.down('md')]: {
+      width:"90vw"
+    },
+    [theme.breakpoints.up('lg')]: {
+      width:"400px"
+    },
     height:'100%',
   },
   quickLinks:{

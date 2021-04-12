@@ -8,8 +8,8 @@ import PlayerDashboardChartWrapper from "./PlayerDashboardChartWrapper"
 const useStyles = makeStyles((theme) => ({
   root: {
     margin: theme.spacing(2) + "px 0px",
-    border:'solid',
-    borderColor:"blue"
+    //border:'solid',
+    //borderColor:"blue"
   },
   title:{
     fontSize:"14px"

@@ -19,18 +19,21 @@ NEXT
 
 5a) DONE - add notes option to dataset model and createDataset
  
-5b) DONE ->impl fetchmultipleFullDatasets on server side
+5b) DONE impl fetchmultipleFullDatasets on server side
 
---------------------------------------------------------
 
-5c) show scatter/line chart for all user datasets with their datapoints pn PlayerDashboard
-(for now, the calculations for each dataset are just defined in a file on client. 
-later, we will work back from there to get a good ui for entering them)
-
+5c) DONE show scatter/line chart for all user datasets with their datapoints pn PlayerDashboard
 
 -------------------------------------------------
 
-5d) fix load users bug when page refreshes
+5d) sort sizings so they look good on mobile ie full width
+
+------------------------------------------------------
+
+5e) ADD CALCULATIONS to PlayerDashboard - just stoire them in a file for each dataset
+
+
+5f) fix load users bug when page refreshes
 
 6. Make group hoem page look good (similar principles as above)
 

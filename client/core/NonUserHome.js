@@ -15,11 +15,18 @@ const useStyles = makeStyles(theme => ({
   },
   strapline: {
     padding:`${theme.spacing(1)}px ${theme.spacing(1)}px ${theme.spacing(1)}px`,
-    color: theme.palette.openTitle
+    color: theme.palette.openTitle,
+    [theme.breakpoints.down('md')]: {
+      fontSize:"24px",
+    },
+    [theme.breakpoints.up('lg')]: {
+      fontSize:"16px",
+    },
   }
 }))
 
 export default function NonUserHome(){
+  console.log("screen width", screen.width)
   const classes = useStyles()
   return (
       <div className={classes.root}>

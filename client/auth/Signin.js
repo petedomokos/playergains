@@ -11,7 +11,12 @@ import { makeStyles } from '@material-ui/core/styles'
 
 const useStyles = makeStyles(theme => ({
   card: {
-    maxWidth: 600,
+    [theme.breakpoints.down('md')]: {
+      width:"90%"
+    },
+    [theme.breakpoints.up('lg')]: {
+      width:"500px"
+    },
     margin: 'auto',
     textAlign: 'center',
     marginTop: theme.spacing(5),
@@ -22,12 +27,26 @@ const useStyles = makeStyles(theme => ({
   },
   title: {
     marginTop: theme.spacing(2),
-    color: theme.palette.openTitle
+    color: theme.palette.openTitle,
+    [theme.breakpoints.down('md')]: {
+      fontSize:"50px"
+    }
   },
   textField: {
     marginLeft: theme.spacing(1),
     marginRight: theme.spacing(1),
-    width: 300
+    [theme.breakpoints.down('md')]: {
+      width:"80%",
+      fontSize:"40px"
+    },
+    [theme.breakpoints.up('lg')]: {
+      width:"400px"
+    },
+  },
+  resize:{
+    [theme.breakpoints.down('md')]: {
+      fontSize:"34px"
+    },
   },
   submit: {
     margin: 'auto',
@@ -67,8 +86,28 @@ export default withRouter(function Signin(props) {
           <Typography variant="h6" className={classes.title}>
             Sign In
           </Typography>
-          <TextField id="email" type="email" label="Email" className={classes.textField} value={values.email} onChange={handleChange('email')} margin="normal"/><br/>
-          <TextField id="password" type="password" label="Password" className={classes.textField} value={values.password} onChange={handleChange('password')} margin="normal"/>
+          <TextField 
+              id="email" type="email" label="Email" 
+              className={classes.textField} 
+              value={values.email} 
+              onChange={handleChange('email')} 
+              margin="normal"
+              InputProps={{
+                classes: {
+                  input: classes.resize,
+                },
+              }}
+          /><br/>
+          <TextField 
+              id="password" type="password" label="Password" 
+              className={classes.textField} value={values.password} 
+              onChange={handleChange('password')} margin="normal"
+              InputProps={{
+                classes: {
+                  input: classes.resize,
+                },
+              }}
+          />
           <br/> {
             values.error && (<Typography component="p" color="error">
               <Icon color="error" className={classes.error}>error</Icon>

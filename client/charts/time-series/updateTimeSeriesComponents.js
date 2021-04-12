@@ -132,7 +132,7 @@ export const updateXAxis = (container, scale, sizes) =>{
         .selectAll('*')
             .style("stroke-width", 0.6)
             .style("stroke", "black")
-            .style("opacity", 0.6);
+            .style("opacity", 0.5);
 
     axisGEnter
         .selectAll('text')

@@ -16,6 +16,8 @@ const middleware = applyMiddleware(thunk, createLogger())
 const store = createStore(combineReducers(
     { user, asyncProcesses, dialogs }), InitialState, middleware)
 
+
+
 const App = () => {
   
   return (

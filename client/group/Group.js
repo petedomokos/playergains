@@ -34,8 +34,12 @@ const useStyles = makeStyles(theme => ({
     flexWrap:'wrap'
   },
   list:{
-    flex:'400px 0 0',
-    maxWidth:'90vw', //keeps it on small mobile screens
+    [theme.breakpoints.down('md')]: {
+      flex:'90vw 0 0',
+    },
+    [theme.breakpoints.up('lg')]: {
+      flex:'400px 0 0',
+    },
   },
   currentItemsList:{
     height:'400px',

@@ -12,8 +12,8 @@ import { createProjectedDatapoints } from './Projector';
 const useStyles = makeStyles((theme) => ({
   root: {
     margin: theme.spacing(2) +"px " +theme.spacing(2) +"px",
-    border:'solid',
-    borderColor:'green'
+    //border:'solid',
+    //borderColor:'green'
   },
 }))
 

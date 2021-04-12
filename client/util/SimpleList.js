@@ -34,7 +34,10 @@ const useStyles = makeStyles(theme => ({
   },
   title: {
     margin: `0 ${theme.spacing(2)}px ${theme.spacing(2)}px ${theme.spacing(2)}px`,
-    color: theme.palette.openTitle
+    color: theme.palette.openTitle,
+    [theme.breakpoints.down('md')]: {
+      fontSize:"36px"
+    }
   },
   listItemWrapper:{
     display:'flex',
@@ -47,6 +50,16 @@ const useStyles = makeStyles(theme => ({
     width:props => props.extraItemButtonsWidth,
     display:'flex',
     alignItems:'center',
+  },
+  listItemTextPrimary:{
+    [theme.breakpoints.down('md')]: {
+      fontSize:"24px"
+    }
+  },
+  listItemTextSecondary:{
+    [theme.breakpoints.down('md')]: {
+      fontSize:"18px"
+    }
   }
 }))
 /*
@@ -66,7 +79,10 @@ export default function SimpleList({ title, emptyMesg, items, itemActions, actio
             <Person/>
           </Avatar>
         </ListItemAvatar>
-        <ListItemText primary={primaryText(item,i)} secondary={secondaryText(item,i)} />
+        <ListItemText 
+            classes={{primary:classes.listItemTextPrimary, secondary:classes.listItemTextSecondary}}
+            primary={primaryText(item,i)} 
+            secondary={secondaryText(item,i)} />
         <ListItemSecondaryAction >
         <IconButton>
              <ItemIcon/>
