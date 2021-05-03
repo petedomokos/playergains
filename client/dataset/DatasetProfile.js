@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { makeStyles } from '@material-ui/core/styles'
+import { getLuminance, makeStyles } from '@material-ui/core/styles'
 import Paper from '@material-ui/core/Paper'
 import List from '@material-ui/core/List'
 import ListItem from '@material-ui/core/ListItem'
@@ -33,7 +33,6 @@ const useStyles = makeStyles(theme => ({
 }))
  
 export default function DatasetProfile({profile}) {
-  console.log('profile', profile)
   const { _id, name, desc, type, admin, created } = profile;
   const classes = useStyles()
   const jwt = auth.isAuthenticated()
@@ -60,7 +59,7 @@ export default function DatasetProfile({profile}) {
             <ListItemText primary={name} secondary={type}/>
             {userHasAdminAuth &&
               (<ListItemSecondaryAction>
-                <Link to={"dataset/edit/" + _id}>
+                <Link to={"edit/" + _id}>
                   <IconButton aria-label="Edit" color="primary">
                     <Edit/>
               </IconButton>

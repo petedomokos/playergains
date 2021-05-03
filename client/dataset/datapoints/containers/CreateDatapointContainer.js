@@ -9,14 +9,16 @@ import { findIn } from "../../../util/ArrayHelpers"
 
 const mapStateToProps = (state, ownProps) => {
 	const userId = auth.isAuthenticated().user._id;
+	const { loadedDatasets, loadedUsers } = state.user;
+	const allUsers = [state.user, ...loadedUsers]
 
 	return({
 		extraLoadArg:userId, //under a private route so user will be signed in
 		userId:userId,
 		//user can add datapoint to only a dataset that they administer
-		datasets:state.user.administeredDatasets.map(dsetId => findIn(state.user.loadedDatasets, dsetId)),
+		datasets:state.user.administeredDatasets.map(dsetId => findIn(loadedDatasets, dsetId)),
 		//user can add datapoint to themselves or to any other user
-		players:[state.user, ...state.user.loadedUsers],
+		players:allUsers,
 		//may need to load user first if page refreshed
 		loading:state.asyncProcesses.loading.user,
 		loadingError:state.asyncProcesses.error.loading.user,

@@ -4,7 +4,6 @@ import Datasets  from '../Datasets'
 import { findDeepDataset } from '../../util/ReduxHelpers';
 
 const mapStateToProps = (state, ownProps) => { 
-	console.log('state', state)
 	const { loadedDatasets, loadsComplete } = state.user;
 	//remove users if specified via a prop from parent
 	var requiredDatasets = loadedDatasets;

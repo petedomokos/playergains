@@ -1,9 +1,9 @@
 import { SyncDisabledSharp } from '@material-ui/icons';
 import * as d3 from 'd3';
-import { updateXAxis, updateYAxis, updateDatapoints, updateDatapointTracks, updateLineToTarget } from "./updateTimeSeriesComponents";
+import { updateXAxis, updateYAxis, updateClipPath, updateDatapoints, updateDatapointTracks, updateLineToTarget } from "./updateTimeSeriesComponents";
 
 function timeSeries(){
-    var svg;
+    var svg, chartG;
     var sizes ={
         //default is MS sizes
         width:600, height:400,
@@ -16,16 +16,30 @@ function timeSeries(){
     }
     function chart(selection){
         selection.each(function(data){
-            console.log("data", data);
+            //console.log("timeSeires data", data);
             const { ds }= data;
-            console.log("ds", ds)
+            //console.log("ds", ds)
             const actualDs = ds.filter(d => !d.isTarget && !d.isProjection);
             const targetDs = ds.filter(d => d.isTarget);
             const projectedDs = ds.filter(d => d.isProjection);
 
-            console.log("actualDs", actualDs)
+            //console.log("actualDs", actualDs)
             svg = d3.select(this);
             const { margin, chartWidth, chartHeight } = sizes;
+
+            //init clipPath G
+			svg.append('defs')
+                .append('clipPath')
+                    .attr('id', 'clip')
+                .append('rect')
+
+            //chartG
+           chartG = svg
+                .append('g')
+                    .attr('class', 'chartG')
+                    .attr('clip-path', "url(#clip)")
+            
+            updateClipPath(svg, sizes)
 
             //SCALES
             //y domain
@@ -41,13 +55,12 @@ function timeSeries(){
             scales.y.range([chartHeight + margin.top, margin.top])//.nice();
             //console.log("x range", scales.x.range())
             //console.log("y range", scales.y.range())
-
 			updateXAxis(svg, scales.x, sizes);
 			updateYAxis(svg, scales.y, sizes);
-			updateDatapoints(svg, ds, scales);
+			updateDatapoints(chartG, ds, scales);
             //@TODO - add selected d to trackDs when user hovers 
             //in that ds band (must split background into rect strip bands)
-            updateDatapointTracks(svg, targetDs, scales);
+            updateDatapointTracks(chartG, targetDs, scales);
 
             //line to target
             const lastActualDate = d3.max(actualDs, d => d.date)

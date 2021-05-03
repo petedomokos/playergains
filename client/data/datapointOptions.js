@@ -7,3 +7,7 @@ export const surface = {
     options:["grass", "synthentic", "concrete", "track"],
     default:""
 }
+
+export const datapointTags = [
+
+]

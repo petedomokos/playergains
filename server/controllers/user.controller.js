@@ -14,7 +14,7 @@ attempts to create a new user in in db.
   //todo - better soln is to send the admin as objects in create methiods in controllers
   //but to do that we need to go into teh database to get them, so need to chain promises
 const create = async (req, res) => {
-  console.log('create user...body', req.body)
+  //console.log('create user...body', req.body)
   const user = new User(req.body)
   console.log('created', user)
   try {
@@ -109,6 +109,9 @@ const update = async (req, res) => {
         error: "Photo could not be uploaded"
       })
     }
+
+    //parse array fields which have been stringified
+    fields.admin = JSON.parse(fields.admin);
     let user = req.profile
     user = extend(user, fields)
     user.updated = Date.now()

@@ -25,7 +25,6 @@ const useStyles = makeStyles(theme => ({
     margin:'50px'
   },
   datapointsTable:{
-    border:'solid',
     [theme.breakpoints.down('md')]: {
       width:'90vw',
     },
@@ -43,8 +42,6 @@ function Dataset(props) {
   const classes = useStyles();
   const [showDatapoints, setShowDatapoints] =  useState(false);
   const [updatedDatapoints, setUpdatedDatapoints] = useState(datapoints);
-  console.log('Dataset', dataset)
-  console.log("updatedDatapoints", updatedDatapoints)
 
   useEffect(() => {
     return () => {
@@ -158,12 +155,10 @@ function Dataset(props) {
             actionButtons={datapointActionButtons} />
       </div>
       <div className={classes.dashboard}>
-        This datasets profile and dashboard (includes links for editing/deleting
-         - but only if this dataset is administered by signedin user])
       </div>
     </div>
   )
 }
 const Loading = <div>Dataset is loading</div>
-//must load user if we dont have the deep version eg has datapoints property
+//must load dataset if we dont have the deep version eg has datapoints property
 export default withLoader(Dataset, ['dataset.datapoints'], {alwaysRender:false, LoadingPlaceholder:Loading});

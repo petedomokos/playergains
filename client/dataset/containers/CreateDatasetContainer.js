@@ -4,7 +4,7 @@ import { createDataset } from '../../actions/DatasetActions'
 import { closeDialog } from '../../actions/CommonActions'
 import CreateDataset from '../CreateDataset'
 import auth from '../../auth/auth-helper'
-import { availableMeasures } from '../../data/AvailableMeasures'
+import { getAvailableMeasures } from '../../data/measures'
 
 const mapStateToProps = (state, ownProps) => {
 	
@@ -14,7 +14,7 @@ const mapStateToProps = (state, ownProps) => {
 		//for now just store in file. todo - get from db, all main measures and also all ones created 
 		//by this user. Whenever they cretae a new measure in teh process of creatng a dataset,
 		//it can also be stored as a measure (or can just be got from administeredDatasets)
-		availableMeasures:availableMeasures,
+		availableMeasures:getAvailableMeasures(),
 		//may need to load user first if page refreshed
 		loading:state.asyncProcesses.loading.user,
 		loadingError:state.asyncProcesses.error.loading.user,

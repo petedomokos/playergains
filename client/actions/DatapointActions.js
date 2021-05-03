@@ -14,7 +14,6 @@ export const createDatapoint = (datasetId, datapoint) => dispatch => {
 			requireAuth:true,
 			//this action will also set dialog.createUser = true
 			nextAction: data => {
-				console.log('next act after createdatapoint', data)
 				return {type:C.CREATE_NEW_DATAPOINT, mesg:data.mesg, datasetId:datasetId, datapoint:data }
 			}
 		})

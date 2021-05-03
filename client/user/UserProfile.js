@@ -19,13 +19,17 @@ import { SurroundSoundSharp } from '@material-ui/icons'
 
 const useStyles = makeStyles(theme => ({
   root: theme.mixins.gutters({
-    //minWidth:300,
-    //maxWidth: 600,
-    width:300,
-    height:150,
+    [theme.breakpoints.down('sm')]: {
+      width:"80vw",
+      alignSelf:"center"
+    },
+    [theme.breakpoints.up('lg')]: {
+      width:"300px"
+    },
+    //flex:"100px 0 0",
     //margin: 'auto',
     padding: theme.spacing(3),
-    marginTop: theme.spacing(2)
+    margin: theme.spacing(2) + "px 0px"
   }),
   title: {
     marginTop: theme.spacing(3),
@@ -33,17 +37,17 @@ const useStyles = makeStyles(theme => ({
   }
 }))
 
-export default function UserProfile({ profile }) {
+export default function UserProfile({ profile, withTitle }) {
   //console.log('profile', profile)
   const { _id, username, firstname, surname, email, created, admin } = profile;
   const classes = useStyles()
   const jwt = auth.isAuthenticated();
-  const userHasAdminAuth =  jwt && (jwt.user._id === _id || admin.find(userId => userId === jwt.user._id));
+  const userHasAdminAuth =  jwt && (jwt.user._id === _id || admin.find(user => user._id === jwt.user._id));
   return (
       <Paper className={classes.root} elevation={4}>
-        <Typography variant="h6" className={classes.title}>
+      {withTitle && <Typography variant="h6" className={classes.title}>
           Player
-        </Typography>
+        </Typography>}
         <List dense>
           <ListItem>
             <ListItemAvatar>
@@ -80,5 +84,5 @@ UserProfile.defaultProps = {
     surname:'',
     email:'',
     admin:[]
-  }
+  },
 }

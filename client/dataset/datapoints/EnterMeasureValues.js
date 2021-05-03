@@ -48,7 +48,7 @@ function EnterMeasureValues({ measures, values, handleChange }) {
               const currentValue = values.find(d => d.measure === measure._id)
               const value = currentValue && currentValue.value ? currentValue.value : "";
               return(
-                <div className={classes.textContainer} key={'measure-'+measure.name} >
+                <div className={classes.textContainer} key={measure.key} >
                     <TextField 
                         id={"value-"+i} label={measure.name} 
                         className={classes.textField} 

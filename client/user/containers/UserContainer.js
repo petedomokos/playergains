@@ -30,6 +30,7 @@ const mapStateToProps = (state, ownProps) => {
 	}
 
 	return{
+		//url:ownProps.history.location.pathname,
 		extraLoadArg:userId,
 		user:_user,
 		loading:state.asyncProcesses.loading.user,
@@ -39,7 +40,6 @@ const mapStateToProps = (state, ownProps) => {
 const mapDispatchToProps = dispatch => ({
 	//2nd load arg is userid here
 	onLoad(propsToLoad, userId){
-		//alert('loading user')
 		dispatch(fetchUser(userId))
 	}
 })

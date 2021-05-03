@@ -3,7 +3,8 @@ import _ from 'lodash'
 import * as cloneDeep from 'lodash/cloneDeep'
 import { isIn, isNotIn, isSame, filterUniqueById, filterUniqueByProperty } from './util/ArrayHelpers'
 import { InitialState } from './InitialState'
-import { GroupOutlined } from '@material-ui/icons'
+import { getDerivedMeasures, hydrateMeasure } from "./data/measures";
+import { getGoals, getStartDate } from "./data/goals";
 //HELPERS
 
 //STORE
@@ -15,6 +16,7 @@ export const user = (state=InitialState.user, act) =>{
 			return { 
 				...state, 
 				...act.user,
+				goals:getGoals(act.user._id),
 				//store the deeper objects here in one place
 				loadedUsers:filterUniqueById([...admin, ...administeredUsers]), //later iterations will have following etc
 				loadedGroups:filterUniqueById([...administeredGroups, ...groupsMemberOf]),
@@ -52,10 +54,15 @@ export const user = (state=InitialState.user, act) =>{
 			}
 		}
 		case C.CREATE_NEW_DATAPOINT:{
+			//add player info to datapoint (we only really need firstName and surname) 
+			const datapointToAdd = {
+				...act.datapoint,
+				player:state.loadedUsers.find(u => u._id === act.datapoint.player)
+			}
 			const datasetToUpdate = state.loadedDatasets.find(dset => dset._id === act.datasetId);
 			const updatedDataset = {
 				...datasetToUpdate,
-				datapoints:[...datasetToUpdate.datapoints, act.datapoint]
+				datapoints:[...datasetToUpdate.datapoints, datapointToAdd]
 			};
 			return { 
 				...state, 
@@ -112,45 +119,12 @@ export const user = (state=InitialState.user, act) =>{
 		}
 
 		case C.UPDATE_ADMINISTERED_DATASET:{
-			//we only update in loadedUsers, as _id doesnt ever change
 			const datasetToUpdate = state.loadedDatasets.find(dset => dset._id === act.dataset._id);
 			const updatedDataset = { ...datasetToUpdate, ...act.dataset };
-			var updatedLoadedUsers = state.loadedUsers;
-			//adding and removing players -> add/remove datasetId from affected players
-			//note - anyone can add players they administer to a dataset, its not like group where they need to be in group.admin
-			//also a group admin can add/remove all players from their group to a dataset in one go (just by doing add/remove dataset from group page)
-			if(!isSame(datasetToUpdate.players, updatedDataset.players)){
-				//not sure why group.players is only id here -> isnt it an object
-				const playersAdded = updatedDataset.players.filter(player => !isIn(datasetToUpdate.players, player)).map(p => p._id)
-				console.log('playersAdded', playersAdded)
-				const playersRemoved = datasetToUpdate.players.filter(player => !isIn(updatedDataset.players, player)).map(p => p._id)
-				console.log('playersRemoved', playersRemoved)
-				updatedLoadedUsers = state.loadedUsers.map(user =>{
-					//only add datasetId to user if datasetsMemberOf is loaded (ie deep version of user is loaded)
-					if(!user.datasetsMemberOf){
-						return user;
-					}
-					if(playersAdded.includes(user._id)){
-						//add groupId to user
-						return { ...user, datasetsMemberOf:[...user.datasetsMemberOf, act.dataset._id]}
-					}
-					if(playersRemoved.includes(user._id)){
-						//remove groupId from user
-						return { ...user, datasetsMemberOf:user.datasetsMemberOf.filter(dset => dset._id !== act.dataset._id) }
-					}
-					//no change
-					return user
-				});
-			}
-			//add/remove datapoint
-			if(!isSame(datasetToUpdate.datapoints, updatedDataset.datapoints)){
-				//todo ....
-			}
-			//use filter to remove old version, and add updated version
+			//remove old version, and add updated version
 			return {
 				...state,
-				loadedDatasets:filterUniqueById([updatedDataset, ...state.administeredDatasets]),
-				loadedUsers:updatedLoadedUsers
+				loadedDatasets:filterUniqueById([updatedDataset, ...state.administeredDatasets])
 			}
 		}
 		//DELETE
@@ -265,10 +239,12 @@ export const user = (state=InitialState.user, act) =>{
 				return { ...existingVersion, ...datasetMemberOf }
 			})
 
+			const user = {...act.user, goals: getGoals(act.user._id) }
+
 			return { 
 				...state,
 				//user is deep , so we overide any existing version
-				loadedUsers:[act.user, ...state.loadedUsers],
+				loadedUsers:[user, ...state.loadedUsers],
 				loadedDatasets:filterUniqueById([...mergedDatasetsMemberOf, ...state.loadedDatasets]), //??????????????????????????????
 				loadedGroups:filterUniqueById([...mergedAdministeredGroups, ...mergedGroupsMemberOf, ...state.loadedGroups]) //?????????????????????
 			}
@@ -298,11 +274,22 @@ export const user = (state=InitialState.user, act) =>{
 		}
 
 		case C.LOAD_DATASET:{
+			//start date
+			const startDate = getStartDate(act.dataset);
 			const { admin, datapoints } = act.dataset;
+			const rawMeasures = act.dataset.measures.map(m => hydrateMeasure(m));
+			const derivedMeasures = getDerivedMeasures(act.dataset._id);
 			return { 
 				...state,
 				//dataset is deep, so we will override any existing version
-				loadedDatasets:filterUniqueById([act.dataset, ...state.loadedDatasets]),
+				loadedDatasets:filterUniqueById([{ 
+						...act.dataset,
+						rawMeasures,
+						derivedMeasures, 
+						startDate 
+					}, 
+					...state.loadedDatasets
+				]),
 			}
 		}
 		//2. MULTIPLE SHALLOW LOADS -------------------------------------------------------------------------------------
@@ -349,6 +336,9 @@ export const user = (state=InitialState.user, act) =>{
 			//existing deeper versions, so if user already exists, then it is not loaded
 			const datasetsNotLoadedBefore = act.datasets
 				.filter(dataset => !state.loadedDatasets.find(dset => dset._id === dataset._id))
+			//not sure if we need derivedmeasures for shallow datastes, probably not
+			//const dsetsToAddWithDerivedMeasures = datasetsNotLoadedBefore
+				//.map(dset => ({...dset, derivedMeasures:[]}))
 
 			return { 
 				...state, 
@@ -357,13 +347,24 @@ export const user = (state=InitialState.user, act) =>{
 			}
 		}
 		case C.LOAD_DEEP_DATASETS:{
+			//start date
 			const updatedDatasets = act.datasets.map(dset =>{
 				//get the existing dataset
 				const datasetToUpdate = state.loadedDatasets.find(dset => dset._id === dset._id) || {};
 				//merge new datapoints with any existing (eg from another previously viewed player)
 				const updatedDatapoints = datasetToUpdate.datapoints ? [...datasetToUpdate.datapoints, dset.datapoints] : dset.datapoints;
+				const derivedMeasures = getDerivedMeasures(dset._id);
+				const rawMeasures = dset.measures.map(m => hydrateMeasure(m));
+				const startDate = getStartDate(dset);
 				//overwrite all other properties and add merged datapoints
-				return { ...datasetToUpdate, ...dset, datapoints:updatedDatapoints }
+				return { 
+					...datasetToUpdate, 
+					...dset, 
+					datapoints:updatedDatapoints,
+					rawMeasures,
+					derivedMeasures,
+					startDate 
+				}
 			})
 
 			return { 

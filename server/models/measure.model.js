@@ -25,6 +25,16 @@ export default new mongoose.Schema({
     type:String,
     default:'number'
   },
+  formula:String, //for derived
+  notes:String,
+  hidden:{
+    type:Boolean,
+    default:false
+  },
+  isMain:{
+    type:Boolean,
+    default:false
+  },
   createdBy:{type:mongoose.Schema.ObjectId, ref:'User'}
 })
 

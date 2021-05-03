@@ -29,7 +29,7 @@ const useStyles = makeStyles(theme => ({
     marginTop: theme.spacing(2),
     color: theme.palette.openTitle,
     [theme.breakpoints.down('md')]: {
-      fontSize:"50px"
+      //fontSize:"50px"
     }
   },
   textField: {
@@ -37,7 +37,7 @@ const useStyles = makeStyles(theme => ({
     marginRight: theme.spacing(1),
     [theme.breakpoints.down('md')]: {
       width:"80%",
-      fontSize:"40px"
+      //fontSize:"40px"
     },
     [theme.breakpoints.up('lg')]: {
       width:"400px"
@@ -45,7 +45,7 @@ const useStyles = makeStyles(theme => ({
   },
   resize:{
     [theme.breakpoints.down('md')]: {
-      fontSize:"34px"
+      //fontSize:"34px"
     },
   },
   submit: {

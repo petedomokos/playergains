@@ -21,6 +21,7 @@ const DatasetSchema = new mongoose.Schema({
   //users who have admin rights over this dataset
   admin:[{type:mongoose.Schema.ObjectId, ref:'User'}],
   measures:[{type:MeasureSchema}],
+  //todo - addDerivedmeasures here and remove calculations and change measures to rawmeasures
   calculations:[{type:CalculationSchema}],
   //main value can be a measure key or a calculation key
   mainValueToDisplay:String,

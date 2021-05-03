@@ -42,7 +42,7 @@ export function createProjectedDatapoints(actualDatapoints, options={}){
 		const datapairs = latestEntries.map((d,i) => {
 			return [i, d.value]
 		})
-		console.log("datapairs", datapairs)
+		//console.log("datapairs", datapairs)
 		//adjust first value if 0 as it doesnt work
 		const ds = datapairs.map(d =>{
 			if(d[1] == 0)

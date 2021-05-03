@@ -12,6 +12,7 @@ import PlayerDashboardContainer from "../dashboard/containers/PlayerDashboardCon
 //helper
 import { userProfile } from '../util/ReduxHelpers'
 import { filterUniqueById } from '../util/ArrayHelpers';
+import { matches } from 'lodash'
 
 const useStyles = makeStyles(theme => ({
   root:{
@@ -43,14 +44,13 @@ const useStyles = makeStyles(theme => ({
     height:"50px"
   },
   quickLinkBtn:{
-    margin:`${theme.spacing(1)}px`,
-
+    margin:`${theme.spacing(1)}px`
   }
 }))
 
 function User(props) {
-  console.log('User props', props)
-  const { user } = props;
+  //console.log('User props..............', props)
+  const { user, match, location } = props;
   const { groupsMemberOf, datasetsMemberOf } = user;
   const classes = useStyles()
   //note may need useEffect for window.scrollTo(0, 0)
@@ -81,14 +81,22 @@ function User(props) {
   ])
 
   const quickLinks = [
-    {label:"Profile", to:"/user/"+user._id},
-    {label:"Dashboard", to:"/user/"+user._id +"/dashboard"}
+    {
+      label:"Profile", 
+      to:"/user/"+user._id, 
+      isActive: () => match.isExact
+    },
+    {
+      label:"Dashboard",
+      to:"/user/"+user._id +"/dashboard",
+      isActive:() => location.pathname.includes("dashboard")
+    }
   ]
 
   return (
     <div className={classes.root} >
-      {/**<UserProfile profile={user} /> */}
-      <QuickLinks links={quickLinks} />
+      <UserProfile profile={user} />
+      <QuickLinks links={quickLinks} url={location.pathname} />
       <Switch>
           <Route path="/user/:userId/dashboard" component={PlayerDashboardContainer}/>
           <Route component={PlayerProfile}/>
@@ -125,11 +133,20 @@ const QuickLinks = ({links}) =>{
     <div className={classes.quickLinks}>
         {links.map(link =>
           <Link to={link.to} key={"quicklink-"+link.to}>
-              <Button color="primary" variant="contained" className={classes.quickLinkBtn}>{link.label}</Button>
+              <Button color="primary" variant="contained" 
+                  className={classes.quickLinkBtn}
+                  style={{opacity:(link.isActive() ? 1 : 0.5)}}
+                  >
+                    {link.label}
+              </Button>
           </Link>
         )}
     </div>
   )
+}
+
+QuickLinks.defaultProps = {
+  links:[]
 }
 
 const PlayerProfile = () =><div style={{margin:50}}>Player Profile</div>

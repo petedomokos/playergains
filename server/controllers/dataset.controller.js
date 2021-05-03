@@ -1,3 +1,4 @@
+import * as d3 from 'd3';
 import Dataset from '../models/dataset.model'
 import Datapoint from '../models/datapoint.model'
 import extend from 'lodash/extend'
@@ -19,7 +20,6 @@ attempts to create a new dataset in in db.
   //todo - better soln is to send the admin as objects in create methiods in controllers
   //but to do that we need to go into teh database to get them, so need to chain promises
   const create = async (req, res) => {
-    console.log('createDataset----------------------------------------')
     const dataset = new Dataset(req.body)
     console.log('creating dset', dataset)
     try {
@@ -63,7 +63,7 @@ const datasetByID = async (req, res, next, id) => {
         })*/
          //example from old playergains of how to populate deeper paths
       //.populate({ path: 'player.datasets', select: 'name _id desc datasetType players parent admin coaches subdatasets' })
-    console.log('dataset', dataset)
+    //console.log('dataset', dataset)
     if (!dataset)
       return res.status('400').json({
         error: "Dataset not found"
@@ -137,25 +137,31 @@ const update = async (req, res) => {
         error: "Photo could not be uploaded"
       })
     }
-    //players field to array
-    if(fields.players === ''){
-      fields.players = [];
-    }else{
-      const playersArray = fields.players.split(',')
-      console.log('playersArray', playersArray)
-      fields.players = playersArray
-    }
+
+  //parse array fields which have been stringified
+  fields.measures = JSON.parse(fields.measures);
+  fields.calculations = JSON.parse(fields.calculations);
+  //@TODO - piut admin back - check if issue - its just an id but seems to be read as a populated object before its saved,
+  //but only an id after
+  //fields.admin= JSON.parse(fields.admin);
+  fields.tags = JSON.parse(fields.tags);
+
+  console.log('formatted fields', fields)
+
     let dataset = req.dataset
+    console.log("dataset b4 update", req.dataset)
     dataset = extend(dataset, fields)
     dataset.updated = Date.now()
-    console.log('dataset now.................', dataset)
-    if(files.photo){
+    console.log("dataset after update", dataset)
+    /*if(files.photo){
       dataset.photo.data = fs.readFileSync(files.photo.path)
       dataset.photo.contentType = files.photo.type
-    }
+    }*/
     try {
-      await dataset.save()
-      res.json(dataset)
+      console.log("trying to save...............")
+      const result = await dataset.save()
+      console.log("returning...........................", result)
+      res.json(result)
     } catch (err) {
       return res.status(400).json({
         error: errorHandler.getErrorMessage(err)
@@ -170,6 +176,8 @@ const remove = async (req, res) => {
     let dataset = req.dataset
     let deletedDataset = await dataset.remove()
     res.json(deletedDataset)
+
+    //REMOVE DATASET FROM ALL PLAYERS WHO HAVE THIS DATASET IN THERE DATASETSMEMBEROF PROPERTIY
   } catch (err) {
     return res.status(400).json({
       error: errorHandler.getErrorMessage(err)
@@ -180,9 +188,15 @@ const remove = async (req, res) => {
 const createDatapoint = async (req, res) => {
   let { dataset } = req;
   const datapoint = req.body;
+  console.log("datapoint player", datapoint.player)
   //add ref to this dataset to player if not added before
   const playersSoFar = dataset.datapoints.map(d => d.player);
+  console.log("playersSoFar", playersSoFar)
+  console.log("already with equals ? ", playersSoFar.find(p => p.equals(datapoint.player)))
+  console.log("already with === ? ", playersSoFar.find(p => p === datapoint.player))
+   //ONLY ADD IF NOT ALREADY THERE----------------------
   if(!playersSoFar.find(p => p.equals(datapoint.player))){
+    console.log("adding player to ref.................................................")
       addRefToUserArray(datapoint.player, "datasetsMemberOf", dataset._id)
   }
    /*
@@ -190,10 +204,20 @@ const createDatapoint = async (req, res) => {
   */
   dataset.datapoints.push(datapoint)
   dataset.updated = Date.now()
-  console.log("dataset new", dataset)
   try {
-    await dataset.save()
-    res.json(datapoint)
+    console.log("trying to save")
+    const savedDataset = await dataset.save()
+   
+    const sortedMostRecentFirst = savedDataset.datapoints.sort((d1, d2) => {
+      const milli1 = new Date(d1.created).getTime()
+      const milli2 = new Date(d2.created).getTime()
+      return milli2 - milli1
+    })
+    const savedDatapoint = sortedMostRecentFirst[0];
+    console.log("saved datapoint", savedDatapoint)
+    //need to add these to datapoint that is returned
+    
+    res.json(savedDatapoint)
   } catch (err) {
     return res.status(400).json({
       error: errorHandler.getErrorMessage(err)

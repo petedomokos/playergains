@@ -23,8 +23,12 @@ import { fatigueLevel, surface } from "../../data/datapointOptions";
 
 const useStyles = makeStyles(theme => ({
   card: {
-    width:'90vw',
-    maxWidth: 600,
+    [theme.breakpoints.down('md')]: {
+      width:'90vw',
+    },
+    [theme.breakpoints.up('lg')]: {
+      width:'600px',
+    },
     margin: 'auto',
     textAlign: 'center',
     marginTop: theme.spacing(5),
@@ -163,14 +167,10 @@ function CreateDatapoint({ userId, datasets, players, creating, error, success, 
   }
 
   const handleMeasureChange = (event, measure) =>{
-    console.log("measure change values", values)
     const { value } = event.target;
-    console.log("measure change", value)
     //note - in measureValue, measure is just the measure _id ref(see value.model)
     const measureValueToUpdate = values.values.find(m => m.measure === measure._id);
-    console.log("measurevaluetoupdate", measureValueToUpdate)
     const updatedMeasureValue = { ...measureValueToUpdate, value : value };
-    console.log("updated", updatedMeasureValue)
     const otherMeasureValues = values.values.filter(m => m.measure !== measure._id)
     setValues(prevState => ({ ...prevState,values:[...otherMeasureValues, updatedMeasureValue] }));
   }
@@ -188,7 +188,6 @@ function CreateDatapoint({ userId, datasets, players, creating, error, success, 
                 options={datasets}
                 labelAccessor = {option => option.name}
                 handleChange={handleChange('dataset')} 
-                style={{width:"350px"}}
                 />
             <SelectPlayer
                 selected={values.player}
@@ -197,7 +196,6 @@ function CreateDatapoint({ userId, datasets, players, creating, error, success, 
                 userLoadsComplete={userLoadsComplete}
                 onLoad={loadUsers}
                 loading={loadingUsers}
-                style={{width:"350px"}}
                 />
             <SelectEventDate 
               handleChange={handleDateChange} 
@@ -205,7 +203,7 @@ function CreateDatapoint({ userId, datasets, players, creating, error, success, 
               classes={classes}
             />
             {values.dataset && values.player && <EnterMeasureValues
-                measures={values.dataset.measures}
+                measures={values.dataset.rawMeasures}
                 values={values.values}
                 handleChange= {handleMeasureChange}
                 onLoad={() => loadDataset(values.dataset._id)}

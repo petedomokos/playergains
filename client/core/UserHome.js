@@ -23,7 +23,8 @@ const useStyles = makeStyles((theme) => ({
     //padding:`${theme.spacing(3)}px ${theme.spacing(2.5)}px ${theme.spacing(2)}px`,
     width:"100%",
     display:"flex",
-    justifyContent:"space-between"
+    justifyContent:"space-between",
+    flexWrap:"wrap"
   },
   lists:{
     height:'400px',

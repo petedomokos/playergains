@@ -1,13 +1,21 @@
-export const findIn = (arr, itemOrId) =>{
-	if(typeof itemOrId === 'string'){
-		//2nd arg is id
-		return arr.find(it => it._id === itemOrId)
-	}
-	//2nd arg is object with id
-	return (arr.find(it => it._id === itemOrId._id))
+export function compareAlpha(obj1, obj2){
+	const getName = obj => obj.name || obj.surname || obj.username || ""
+    if(getName(obj1) > getName(obj2)){
+      return 1;
+    }
+    if(getName(obj2) > getName(obj1)){
+      return -1;
+    }
+    return 0;
+}
+
+export const findIn = (arr, item) =>{
+	const id = typeof item === "string" ? item : item._id;
+	return arr.find(it => it._id === id)
 }
 export const isIn = (arr, item) =>{
-	if(arr.find(it => it._id === item._id)){
+	const id = typeof item === "string" ? item : item._id;
+	if(arr.find(it => it._id === id)){
 		return true;
 	}
 	return false;

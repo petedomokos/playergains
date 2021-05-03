@@ -6,7 +6,7 @@ import SettingsIcon from '@material-ui/icons/Settings';
 import SimpleList from '../util/SimpleList';
 import DeleteIcon from '@material-ui/icons/Delete';
 import AddCircleIcon from '@material-ui/icons/AddCircle';
-import { measureConfig } from '../data/AvailableMeasures'
+import { getMeasureConfigForForm } from '../data/measures'
 import Divider from '@material-ui/core/Divider';
 import TextField from '@material-ui/core/TextField'
 import IconButton from '@material-ui/core/IconButton'
@@ -58,14 +58,18 @@ const useStyles = makeStyles(theme => ({
 }))
 
 
-//todo - think about mins and maxes, and left/right side -> do we give user the chance to add these when they select a measure for a dataset
+//todo - think about mins and maxes, and left/right side -> 
+//do we give user the chance to add these when they select a measure for a dataset
+//has dependancy on measureConfig object
 export default function CreateDatasetMeasures({ current, available, add, update, remove}) {
+    console.log("current", current)
+    console.log("available", available)
     const [adding, setAdding] = useState(false);
     const [measureBeingConfigured, setMeasureBeingConfigured] = useState(null);
     const classes = useStyles()
 
     const saveConfig = config =>{
-      console.log("config now", config)
+      console.log("saving config as", config)
       setMeasureBeingConfigured(null);
       update(measureBeingConfigured._id, {...config});
     }
@@ -83,7 +87,8 @@ export default function CreateDatasetMeasures({ current, available, add, update,
 
     const availableMeasuresItemActions = {
       main:{
-         //give a temp id for manipulating before saved 
+         //give a temp id for manipulating before saved
+         //@TODO - make _id a string
         onItemClick:(m,i) => add({...m, _id:Date.now()}),
         ItemIcon:({}) => <AddCircleIcon/>
       }
@@ -113,7 +118,7 @@ export default function CreateDatasetMeasures({ current, available, add, update,
                   primaryText={measure => measure.name}
                   secondaryText={measure=> constructSecondaryText(measure)} />
           </div>
-          <div classname={classes.buttons}>
+          <div className={classes.buttons}>
               <Button 
                   color="primary" 
                   variant="contained"
@@ -156,20 +161,61 @@ const useConfigStyles = makeStyles(theme => ({
   }
 }))
 
+const toStr = (value, configKey="") => {
+  //(note values are not numbers so 0 = "0")
+  switch(value){
+    case "":{
+      console.log("configkey", configKey)
+      return configKey === "side" ? "unspecified" : "none";
+    }
+    case false:{ return "false";}
+    case true:{ return "true";}
+    default:{
+      return value
+    }
+  }
+}
+
+const toValue = value => {
+  switch(value){
+    case "unspecified":{ return "";}
+    case "none":{ return "";}
+    case "false":{ return false;}
+    case "true":{ return true;}
+    default:{
+      return value
+    }
+  }
+}
+
+const formatForServer = values => ({
+  ...values,
+  nr:toValue(values.nr),
+  side:toValue(values.side),
+  unit:toValue(values.unit),
+  isMain:toValue(values.isMain),
+  hidden:toValue(values.hidden)
+})
 
 //!had ext dep on measureConfig
 const MeasureConfig = ({measure, saveConfig}) =>{
+  const { nr, side, custom, unit, order, min, max, notes, isMain, hidden } = measure;
   const classes = useConfigStyles()
-  const config = measureConfig;
-  //set to the measures default value for each config item, or else the config item's built in default
+  const config = getMeasureConfigForForm(measure.key);
+  console.log("measure", measure)
+  console.log("config", config)
+
   const initState = {
-    nr:measure.nr || config.nr.default,
-    side:measure.side || config.side.default,
-    custom:measure.custom || config.custom.default,
-    unit:measure.unit || config.unit.default,
-    order:measure.order || config.order.default,
-    min:measure.min || config.min.default,
-    max:measure.max || config.max.default,
+    nr:toStr(nr) || toStr(config.nr.default),
+    side:toStr(side, "side") || toStr(config.side.default),
+    custom:custom || config.custom.default,
+    unit:toStr(unit) || toStr(config.unit.default),
+    order:order || config.order.default,
+    min:min || config.min.default,
+    max:max || config.max.default,
+    notes:notes || config.notes.default,
+    isMain:toStr(isMain) || config.isMain.default,
+    hidden:toStr(hidden) || config.hidden.default
   }
   const [values, setValues] = useState(initState);
   const { name } = measure;
@@ -183,55 +229,79 @@ const MeasureConfig = ({measure, saveConfig}) =>{
       document.body.style.overflow = "initial"
     };
   }); 
+
   return (
     <div style={{margin:30}} className = {classes.root}>
       <div style={{margin:20, fontSize:"20px"}}>{name}</div>
       <RadioSelector
           id="side"
           formLabel='Side'
-          options={config.side.options}
+          options={config.side.options.map(opt => toStr(opt, "side"))}
           defaultOpt={values.side}
           onChange={handleChange("side")} />
        <br/> <br/> <br/>
       <RadioSelector
           id='number'
           formLabel='Number'
-          options={config.nr.options}
+          options={config.nr.options.map(opt => toStr(opt))}
           defaultOpt={values.nr}
           onChange={handleChange("nr")} />
       <br/> <br/> <br/>
-       <RadioSelector
-          id="unit"
-          formLabel='Unit'
-          options={measure.unitOptions || config.unit.options}
-          defaultOpt={values.unit}
-          onChange={handleChange("unit")} />
-        <br/> <br/> <br/>
-        <RadioSelector
-          id="order"
-          formLabel='Order'
-          options={config.order.options}
-          defaultOpt={values.order}
-          onChange={handleChange("order")} />
-        <br/> <br/> <br/>
-       <TextField 
-          id="custom" label="Custom Label" 
-          className={classes.textField} value={values.custom} 
-          onChange={handleChange('custom')} margin="normal" placeholder="none"/>
-       <br/>
-       <TextField 
-          id="min" label="Minimum possible value" 
-          className={classes.textField} value={values.min} 
-          onChange={handleChange('min')} margin="normal" placeholder="none"/>
-       <br/>
-       <TextField 
-          id="max" label="Maximum possible value" 
-          className={classes.textField} value={values.max} 
-          onChange={handleChange('max')} margin="normal" placeholder="none"/>
-       <br/>
-         <IconButton onClick={() => saveConfig(values)}>
-             <DoneIcon style={{width:'50px', height:'50px', margin:"30px"}}/>
-        </IconButton>
+      {config.unit.options.length !== 0 &&
+        <>
+          <RadioSelector
+            id="unit"
+            formLabel='Unit'
+            options={config.unit.options.map(opt => toStr(opt))}
+            defaultOpt={values.unit}
+            onChange={handleChange("unit")} />
+          <br/> <br/> <br/>
+        </>
+      }
+      <RadioSelector
+        id="order"
+        formLabel='Order'
+        options={config.order.options.map(opt => toStr(opt))}
+        defaultOpt={values.order}
+        onChange={handleChange("order")} />
+      <br/> <br/> <br/>
+      <TextField 
+        id="custom" label="Custom Label" 
+        className={classes.textField} value={values.custom} 
+        onChange={handleChange('custom')} margin="normal" placeholder="none"/>
+      <br/>
+      <TextField 
+        id="min" label="Minimum possible value" 
+        className={classes.textField} value={values.min} 
+        onChange={handleChange('min')} margin="normal" placeholder="none"/>
+      <br/>
+      <TextField 
+        id="max" label="Maximum possible value" 
+        className={classes.textField} value={values.max} 
+        onChange={handleChange('max')} margin="normal" placeholder="none"/>
+      <br/>
+      <TextField 
+        id="notes" label="Notes" 
+        className={classes.textField} value={values.notes} 
+        onChange={handleChange('notes')} margin="normal" placeholder="none"/>
+      <br/>
+      <RadioSelector
+        id="hidden"
+        formLabel='Hide'
+        options={config.hidden.options.map(opt => toStr(opt))}
+        defaultOpt={values.hidden}
+        onChange={handleChange("hidden")} />
+      <br/> <br/> <br/>
+      <RadioSelector
+        id="isMain"
+        formLabel='Is Main Measure'
+        options={config.isMain.options.map(opt => toStr(opt))}
+        defaultOpt={values.isMain}
+        onChange={handleChange("isMain")} />
+      <br/> <br/> <br/>
+        <IconButton onClick={() => saveConfig(formatForServer(values))}>
+            <DoneIcon style={{width:'50px', height:'50px', margin:"30px"}}/>
+      </IconButton>
 
     </div>
   )

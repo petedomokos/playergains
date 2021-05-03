@@ -13,10 +13,20 @@ const useStyles = makeStyles((theme) => ({
   },
   title:{
     fontSize:"14px"
+  },
+  sectionChart:{
+    [theme.breakpoints.down('md')]: {
+      height:"250px",
+      width:"90vw"
+  },
+  [theme.breakpoints.up('lg')]: {
+      height:"500px",
+      width:"300px"
+  },
   }
 }))
 
-const PlayerDashboardSection = ({data, settings}) => {
+const PlayerDashboardSection = ({sectionType, data, settings}) => {
   //console.log("section---------------------", data)
   const classes = useStyles() 
 
@@ -26,10 +36,16 @@ const PlayerDashboardSection = ({data, settings}) => {
   return (
     <div className={classes.root}>
        <Typography variant="h6" className={classes.title}>
-          {data.name}
+          {sectionType}: {data.name}
         </Typography>
       {data.chartsData.map((chartData,i)=>
-        <PlayerDashboardChartWrapper data={chartData} key={chartData.key} settings={settings} />
+        <div className={classes.sectionChart} key={chartData.key}>
+            <PlayerDashboardChartWrapper
+                chartType="timeSeries"
+                data={chartData}
+                settings={settings}
+                />
+        </div>
       )}
     </div>
   )

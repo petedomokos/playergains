@@ -55,6 +55,7 @@ const useStyles = makeStyles(theme => ({
 }))
 
 function CreateDataset({ user, availableMeasures, creating, error, success, open, submit, closeDialog }) {
+  console.log("open", open)
   const classes = useStyles()
   const initState = {
       name: '', //must be unique to this user
@@ -67,6 +68,7 @@ function CreateDataset({ user, availableMeasures, creating, error, success, open
       calculations:[],
       admin:[user._id]
   }
+
   const [values, setValues] = useState(initState)
 
   //useEffect to reset dialog and error when unmounting (in case user moves away from component)
@@ -104,8 +106,8 @@ function CreateDataset({ user, availableMeasures, creating, error, success, open
         name: values.name || undefined,
         initials: values.initials || undefined,
         desc: values.desc || undefined,
-        notes: values.desc || undefined,
-        tags: values.tags ? values.tags.split(" ") : undefined,
+        notes: values.notes || undefined,
+        tags: values.tags.split(" "),
         datasetType: values.datasetType || undefined,
         //we dont save measure._id to server, as it is given an _id in db
         measures: values.measures.map(m => ({ ...m, _id:undefined })),
@@ -128,12 +130,15 @@ function CreateDataset({ user, availableMeasures, creating, error, success, open
   const addItemToProperty = key => item =>{
     setValues(prevState => ({ ...prevState, [key]:[...prevState[key], item] }))
   }
-
+  
   const updateItemInProperty = key => (id, propertiesToUpdate) =>{
-    const itemToUpdate = values[key].find(item => item._id === id);
-    const updatedItem = {...itemToUpdate, ...propertiesToUpdate};
-    const otherItems = values[key].filter(item => item._id !== id)
-    setValues(prevState => ({ ...prevState, [key]:[...otherItems, updatedItem] }));
+    //helper
+    const update = (oldItem, properties) => ({...oldItem, ...properties})
+    //to maintain order, we map each item to itself except the updated one
+    const updatedItems = values[key]
+      .map(item => item._id === id ? update(item, propertiesToUpdate) : item)
+
+    setValues(prevState => ({ ...prevState, [key]: updatedItems }));
   }
 
   const removeItemFromProperty = key => item =>{
@@ -219,7 +224,8 @@ function CreateDataset({ user, availableMeasures, creating, error, success, open
 }
 
 CreateDataset.defaultProps = {
-  availableMeasures:[]
+  availableMeasures:[],
+  open:false
 }
 
 export default withLoader(CreateDataset, ['user',/* 'measures'*/]);

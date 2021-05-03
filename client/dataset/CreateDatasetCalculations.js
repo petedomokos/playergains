@@ -161,7 +161,7 @@ export default function CreateDatasetCalculations({ currentCalculations, measure
                   primaryText={calculation => calculation.name}
                   secondaryText={calculation=> constructSecondaryText(calculation)} />
           </div>
-          <div classname={classes.buttons}>
+          <div className={classes.buttons}>
               <Button 
                   color="primary" 
                   variant="contained"

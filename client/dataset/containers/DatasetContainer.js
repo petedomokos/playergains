@@ -4,10 +4,9 @@ import Dataset  from '../Dataset'
 import { findIn } from '../../util/ArrayHelpers'
 
 const mapStateToProps = (state, ownProps) => {
-	console.log('state', state)
 	//id can be passed through, or else for params (may not be the signed in dataset)
 	const datasetId = ownProps.datasetId  || ownProps.match.params.datasetId
-	const _dataset = state.user.loadedDatasets.find(g => g._id === datasetId)
+	let dataset = state.user.loadedDatasets.find(g => g._id === datasetId)
 	//Dataset may or may not exist in store, and may be deep or shallow.
 	//Dataset component expects a deep dataset, ie it must have dataset.admin, dataset.players, etc
 	//it only gets those via fetchDataset which reads the dataset in more fully from database
@@ -17,14 +16,14 @@ const mapStateToProps = (state, ownProps) => {
 	//-> THE DEEP USER ONLY HAS IDS
 	const allUsers = [state.user, ...state.user.loadedUsers];
 
-	if(_dataset && _dataset.players){
+	if(dataset && dataset.players){
 		//user is deep version so need to replace id-refs with objects
-		_dataset.admin = _dataset.admin.map(dset => findIn(allUsers, dset));
-		_dataset.players = _dataset.players.map(dset => findIn(allUsers, dset));
+		dataset.admin = dataset.admin.map(dset => findIn(allUsers, dset));
+		dataset.players = dataset.players.map(dset => findIn(allUsers, dset));
 	}
 	return{
 		extraLoadArg:datasetId,
-		dataset:_dataset,
+		dataset:dataset,
 		loading:state.asyncProcesses.loading.dataset,
 		loadingError:state.asyncProcesses.error.loading.dataset,
 		playersUpdating:state.asyncProcesses.updating.dataset,

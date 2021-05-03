@@ -3,18 +3,22 @@ import { withRouter } from 'react-router-dom'
 import { fetchMultipleFullDatasets } from '../../actions/DatasetActions'
 import { closeDialog } from '../../actions/CommonActions'
 import PlayerDashboard from '../PlayerDashboard'
+import { onlyUnique } from "../../util/ArrayHelpers"
 
 const mapStateToProps = (state, ownProps) => {
     const { user, asyncProcesses} = state;
     const { loadedUsers, loadedDatasets } = user;
+	console.log("laodedDatasets", loadedDatasets)
     const { userId }  = ownProps.match.params;
     const userIsSignedIn = state.user._id === userId;
 	//user may be the signed in user or could be another user - we assume loadUser will have been called before this point
 	//WARNING - PLAYER CONTAINS USERS/GROUOS AND DATASETS THAT MAY NOT BE UPDATED - THESE ARE NOT REQUIRED HERE SO WE REDUCE THEM TO idS ONLY
     const requiredPlayer = userIsSignedIn ? state.user : loadedUsers.find(u => u._id === userId);
+	console.log("requiredPlayer", requiredPlayer)
 	const player = {
 		...requiredPlayer,
-		datasetsMemberOf:requiredPlayer.datasetsMemberOf.map(dset => dset._id) //probably dont even need datasetsMemberOf at all here
+		//@TODO BUG we have to filter fro unqiuer as for some reason datasetsMemeberOf has copies of smae dataset
+		datasetsMemberOf:requiredPlayer.datasetsMemberOf.map(dset => dset._id).filter(onlyUnique) //probably dont even need datasetsMemberOf at all here
 		//todo - reduce other arrays same as above
 	}
 	//we know datasets wiull have been loaded into loadedDatasets when user was loaded

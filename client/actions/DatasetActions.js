@@ -14,7 +14,6 @@ export const createDataset = dataset => dispatch => {
 			requireAuth:true,
 			//this action will also set dialog.createUser = true
 			nextAction: data => {
-				console.log('next act after createdataset')
 				return {type:C.CREATE_NEW_ADMINISTERED_DATASET, mesg:data.mesg, dataset:data.dataset }
 			}
 		})
@@ -30,7 +29,6 @@ export const fetchDataset = id => dispatch => {
 			url: '/api/datasets/' +id, 
 			requireAuth:true,
 			nextAction: data => {
-				console.log('nextAction...load dataset')
 				return {type:C.LOAD_DATASET, dataset:data}
 			}
 		})

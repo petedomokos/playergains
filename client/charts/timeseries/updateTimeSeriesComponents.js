@@ -1,6 +1,16 @@
 import * as d3 from 'd3';
 //import tooltipChart from '../tooltip/TooltipChart';
 
+export const updateClipPath = (selection, sizes) =>{
+	selection.select('clipPath#clip').select('rect')
+		//.transition()
+		//.duration(500)
+		.attr('width', sizes.chartWidth)
+		.attr('height', sizes.chartHeight)
+		.attr('x', sizes.margin.left)
+		.attr('y', sizes.margin.top)
+}
+
 export const updateDatapoints = (container, ds, scales) =>{
     const { x, y } = scales;
 
@@ -96,7 +106,7 @@ export const updateDatapointTracks = (container, ds, scales) =>{
     }
 }
 
-export const updateLineToTarget = (container, fromD, targetD, scales) =>{
+export const updateLineToTarget = (container, fromD={}, targetD={}, scales) =>{
     const { x, y } = scales;
     const line = container.selectAll("line.lineToTarget").data([1])
     //enter
@@ -107,9 +117,10 @@ export const updateLineToTarget = (container, fromD, targetD, scales) =>{
         .attr("stroke-opacity", 0.5)
         .attr("stroke-width", 0.5)
         .attr("stroke-dasharray", 1)
-    
+        
     //update
     line.merge(lineEnter)
+        .attr("display", fromD.date && targetD.date ? "initial" : "none")
         .attr("x1", x(fromD.date))
         .attr("x2", x(targetD.date))
         .attr("y1", y(fromD.value))

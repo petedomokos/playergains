@@ -19,6 +19,7 @@ export default new mongoose.Schema({
   },
   formula:String, //must refer to keys for existing measures in this dataset eg "distance div time" or time-1 plus time2
   unit:String, // can be 'base-on-calc', or a diffrent name, or undefined
+  isMain:Boolean,
   createdBy:{type:mongoose.Schema.ObjectId, ref:'User'}
 })
 

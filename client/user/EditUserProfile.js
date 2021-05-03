@@ -9,6 +9,7 @@ import Typography from '@material-ui/core/Typography'
 import Icon from '@material-ui/core/Icon'
 import { makeStyles } from '@material-ui/core/styles'
 import { withLoader } from '../util/HOCs';
+import { isIn } from '../util/ArrayHelpers'
 
 const useStyles = makeStyles(theme => ({
   card: {
@@ -56,7 +57,7 @@ export default function EditUserProfile({ signedInUserId, user, onUpdate, updati
     values.email && formData.append('email', values.email)
     values.password && formData.append('password', values.password)
     const adminUsers = values.admin.length != 0 ? values.admin : [signedInUserId];
-    formData.append('admin', adminUsers)
+    formData.append('admin', JSON.stringify(adminUsers))
     //values.photo && formData.append('photo', values.photo)
     onUpdate(user._id, formData, history)
   }
@@ -66,7 +67,7 @@ export default function EditUserProfile({ signedInUserId, user, onUpdate, updati
   }
   //todo - remove temp 2nd condition of if, will not be needed once we reset db as admin will default
   //to the signedInUser
-  if(!user.admin.includes(signedInUserId) && user._id !== signedInUserId){
+  if(!isIn(user.admin, signedInUserId) && user._id !== signedInUserId){
     alert('You do not have permission to edit this user.')
     //todo - redirect to 'from'
     return <Redirect to='/'/>

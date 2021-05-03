@@ -24,29 +24,95 @@ NEXT
 
 5c) DONE show scatter/line chart for all user datasets with their datapoints pn PlayerDashboard
 
--------------------------------------------------
-
 5d) sort sizings so they look good on mobile ie full width
 
+DONE - put clip path onto chart
+
+DONE - develop a resuable chart superDataset() function
+
+DONE - target completion  -added startdate to dataset
+
+DONE - derivedMeaures and rawMeasures
+DONE - editDataset
+DONE - Projections are only calcuated for the latest difficulty measure of each dataset.
+DONE - impl a sectiondata option instead of goalsData.
 ------------------------------------------------------
 
-5e) ADD CALCULATIONS to PlayerDashboard - just stoire them in a file for each dataset
+DOING NOW
+
+make sets (and put into goals) for the stuff me and lewis have done so far -> do one first, then increase nr of ds fro it, check dashboiard works,
+then try other more complex sets
+
+use derivedMeasures to get calculated values from them 
+
+put all user and dataset lists into alphabetical order in reducer, loaded and also later do eg user.datasetsMemberOf
+
+----------------------------
+NEXT
+
+stop order of measures being changed in measures list when they are amended
+change measures to rawMeasures in dataset.model
+
+for overall dataset, have a percenatge change since last datapoint (ie just most recent) so its like a session report
+which compares to last session. provide a filter for only within last day, last week, last month, forever
+(note 1 - later, we will also provide a weeklyMax superDataset option, so this can be used in conjunctoin with the above to provide
+a wek-to-week %change score which updates immediatelky when a new d is entered in teh current week)
+(note 2 - targetCompletion provides an up-to-date value of most recent session w.r.t. start and target date)
 
 
-5f) fix load users bug when page refreshes
+allow dataset datapoints to first be filtered by measure values, before projections and rendering
+note this means that, even when formatted to have a .value key, the ds .values property will 
+still be needed for such filtering purposes, as .values contains the values fro ALL measures
+not just the one that it has been formatted to show.
+even target datapoints will also have a .values property and can have a value for the difficulty meaasure,
+currentDifficultyLevel is determined by most recent datapoints measure value for difficulty.
 
-6. Make group hoem page look good (similar principles as above)
+
+
+editUserProfile, inc add photo
+
+----------------------------------------------------
+ TODO
+
+ User also has option of filtering an individual dataset time series for a particular difficulty index,
+
+
+filter by and group by measure option fro chart. this is after teh dataset measure has 
+been selected, so its separate to the value s
+add dtatapoints bug - when you add datapoints and then immediately go to teh dataset wihtout rereshing, the players name is not there under the datapoints
+
+
+ 20. fix bugs and refactor everything to date.
+a) create dataset sometimes gives admin as [null]
+b) when refreshing page, loadUsers doesnt work - gets stuck
+
+c) load users bug when page refreshes
+
+
+
 
   7. change url to user.username instead of id.
 
-  8. edit option for user profile, inc add photos, and include add videos
+  8. include add videos fro user profile - make it look good
 
-9. styling for medium+ screens -> pss in screen.availWidth to all pages styles like i did in userHome
+  add tiredness factor to datapoints
+
+
+
+  add option to apply a new datapoint to more than 1 player. This allows us to 
+  (a) make a group target
+  (b) make an actual datapoint for a group score eg a test in pairs, or a small group -> the d is added to all players, and the players property
+  shows which players it was with if this is needed for contextual info
+
+
 
 10. make addDatapoint only show for users when they have datasets administered. also check all other edit, add and delete options that they 
 only show fro authorized users (can worry about server auth checking later)
 
 and add tags and subtags to dataset eg fitness -> core / LB /LME / maximal strength
+
+implement tags to datasets in createdataset and dataset.model -> just an array of strings for now,
+    //and just have an array of strings to choose from in a file, no typing and no hierarchy for now.
 
 
 11. schedule component on userhome, done with matchref days, 1 row per match, match day is at teh end of row
@@ -58,38 +124,9 @@ think about targets -> need a way to track what players focus was on a date, and
 progress they made. so they can show managers, ' 2 months ago my target was to improve strength
 and this is what I achieved in that time.'
 
-
-
- 20. fix bugs and refactor everything to date.
-  a) create dataset sometimes gives admin as [null]
- b) when refreshing page, loadUsers doesnt work - gets stuck
-
-
-Goals - user can create a goal, with a date, and assign datasets (with specific values/calculations), and target addDatapoints
-that have been previously created the usual way for that dataset. 
-Under that goal, the dashboard shows all the datasets (with the specified values/calculations) in charts,
-and it also calculates an overall goal completion rate based on proximity to targets.
-
-
 allow multiple players for a dataset and datapoint
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+use d3 rolllup for generting summary values eg superDatasets
 
 
 incorect email or password error handling display - see logError func in CommonActions

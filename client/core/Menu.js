@@ -24,18 +24,18 @@ const useStyles = makeStyles(theme => ({
 
   },
   logo:{
-    [theme.breakpoints.down('md')]: {
-      fontSize:"24px",
+    [theme.breakpoints.down('sm')]: {
+      fontSize:"12px",
     },
     [theme.breakpoints.up('lg')]: {
-      fontSize:"16px",
+      //fontSize:"16px",
     },
 
   },
   homeIcon:{
-    [theme.breakpoints.down('md')]: {
-      height:"50px",
-      width:"50px",
+    [theme.breakpoints.down('sm')]: {
+      height:"20px",
+      //width:"50px",
     },
     [theme.breakpoints.up('lg')]: {
     },
@@ -43,10 +43,10 @@ const useStyles = makeStyles(theme => ({
   },
   menuBtn: {
     [theme.breakpoints.down('md')]: {
-      fontSize:"24px",
+      fontSize:"12px",
     },
     [theme.breakpoints.up('lg')]: {
-      fontSize:"16px",
+      //fontSize:"16px",
     },
     
   }
@@ -60,7 +60,7 @@ const Menu = withRouter(({history, onSignout}) => {
       <Toolbar 
           className={classes.toolbar}>
         <Typography variant="h6" color="inherit" className={classes.logo}>
-          Switchplay (dev)
+          Switchplay
         </Typography>
         <Link to="/">
           <IconButton 

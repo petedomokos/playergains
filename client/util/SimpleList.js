@@ -14,6 +14,7 @@ import Person from '@material-ui/icons/Person'
 import Card from '@material-ui/core/Card'
 import CardActions from '@material-ui/core/CardActions'
 import CardContent from '@material-ui/core/CardContent'
+import { compareAlpha } from "./ArrayHelpers"
 
 
 const useStyles = makeStyles(theme => ({
@@ -36,7 +37,6 @@ const useStyles = makeStyles(theme => ({
     margin: `0 ${theme.spacing(2)}px ${theme.spacing(2)}px ${theme.spacing(2)}px`,
     color: theme.palette.openTitle,
     [theme.breakpoints.down('md')]: {
-      fontSize:"36px"
     }
   },
   listItemWrapper:{
@@ -53,12 +53,12 @@ const useStyles = makeStyles(theme => ({
   },
   listItemTextPrimary:{
     [theme.breakpoints.down('md')]: {
-      fontSize:"24px"
+     // fontSize:"24px"
     }
   },
   listItemTextSecondary:{
     [theme.breakpoints.down('md')]: {
-      fontSize:"18px"
+     // fontSize:"18px"
     }
   }
 }))
@@ -66,9 +66,13 @@ const useStyles = makeStyles(theme => ({
  linkPath - an accessor function to get the 'to' property for each (item,index) pair
 */
 export default function SimpleList({ title, emptyMesg, items, itemActions, actionButtons, primaryText, secondaryText, styles}) {
+  
   const nrOfExtraItemActions = itemActions.other ? itemActions.other.length : 0;
   const stylesProps = {...styles, extraItemButtonsWidth:nrOfExtraItemActions * 40}
   const classes = useStyles(stylesProps);
+  //sort
+  items.sort(compareAlpha)
+  console.log("items", items)
 
   const { ItemIcon, onItemClick, itemLinkPath } = itemActions.main;
 

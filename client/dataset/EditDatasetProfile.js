@@ -9,6 +9,8 @@ import Typography from '@material-ui/core/Typography'
 import Icon from '@material-ui/core/Icon'
 import { makeStyles } from '@material-ui/core/styles'
 import { withLoader } from '../util/HOCs';
+import { isIn } from '../util/ArrayHelpers'
+import CreateDatasetMeasures from './CreateDatasetMeasures'
 
 const useStyles = makeStyles(theme => ({
   card: {
@@ -30,33 +32,65 @@ const useStyles = makeStyles(theme => ({
     marginRight: theme.spacing(1),
     width: 300
   },
+  measuresContainer:{
+    display:"flex",
+    flexDirection:"column",
+    alignItems:'center',
+  },
   submit: {
     margin: 'auto',
     marginBottom: theme.spacing(2)
   }
 }))
 
-export default function EditDatasetProfile({ signedInUserId, dataset, onUpdate, updating, updatingError, history }) {
-  const classes = useStyles()
-  const [values, setValues] = useState({
-    parent: dataset.parent || '',
-    name:dataset.name || '',
-    desc:dataset.desc || '',
-    datasetType: dataset.datasetType || '',
-    //photo: dataset.photo || '',
-    admin:[signedInUserId]
-  })
 
+function EditDatasetProfile({ signedInUserId, dataset, availableMeasures, onUpdate, updating, updatingError, history }) {
+
+  console.log("split empty", "".split(" "))
+  //console.log("EditDatasetProfile", dataset)
+  const classes = useStyles()
+  const initState = {
+    name:dataset.name || '', //must be unique to this user
+    initials:dataset.initials || '', //max 5 chars
+    desc:dataset.desc || '',
+    tags:dataset.tags.join(" "),
+    notes:dataset.notes || '',
+    measures:dataset.measures,
+    calculations:dataset.calculations,
+    admin:dataset.admin
+  }
+  
+  const [values, setValues] = useState(initState);
+  console.log("values", values)
+
+  const formatMeasures = measures => 
+      measures.map(measure => ({
+        ...measure,
+        nr:measure.nr === "none" ? "" : measure.nr,
+        side:measure.side === "none" ? "" : measure.side,
+        unit:measure.unit === "none" ? "" : measure.unit,
+        //new measures will have a temp number id assigned here in client, so need proper id on server
+        _id: typeof measure._id === 'string' ? measure._id : undefined
+      })
+  )
 
   const clickSubmit = () => {
     let formData = new FormData();
-    values.datasetname && formData.append('datasetname', values.datasetname)
-    values.firstname && formData.append('firstname', values.firstname)
-    values.surname && formData.append('surname', values.surname)
-    values.email && formData.append('email', values.email)
-    values.password && formData.append('password', values.password)
-    const adminUsers = values.admin.length != 0 ? values.admin : [signedInUserId];
-    formData.append('admin', adminUsers)
+    formData.append('name', values.name)
+    formData.append('initials', values.initials)
+    formData.append('desc', values.desc)
+    const formattedTags = values.tags.split(" ");
+    formData.append('tags', JSON.stringify(formattedTags))
+    formData.append('notes', values.notes)
+    console.log("measures", values.measures)
+    const formattedMeasures = formatMeasures(values.measures)
+    console.log("formattedmeasures", formattedMeasures)
+    formData.append('measures', JSON.stringify(formatMeasures(values.measures)))
+    formData.append('calculations', JSON.stringify(values.calculations))
+    //may need to map to id
+    //@TODO - check if admin is causing an issue - its just an id but seems to be read as a populated object before its saved,
+    //but only an id after
+    //formData.append('admin', JSON.stringify(values.admin))
     //values.photo && formData.append('photo', values.photo)
     onUpdate(dataset._id, formData, history)
   }
@@ -65,7 +99,28 @@ export default function EditDatasetProfile({ signedInUserId, dataset, onUpdate, 
     setValues({...values, [name]: event.target.value})
   }
 
-  if(!dataset.admin.includes(signedInDatasetId)){
+  const addItemToProperty = key => item =>{
+    setValues(prevState => ({ ...prevState, [key]:[...prevState[key], item] }))
+  }
+
+  const updateItemInProperty = key => (id, propertiesToUpdate) =>{
+    //helper
+    const update = (oldItem, properties) => ({...oldItem, ...properties})
+    //to maintain order, we map each item to itself except the updated one
+    const updatedItems = values[key]
+      .map(item => item._id === id ? update(item, propertiesToUpdate) : item)
+
+    setValues(prevState => ({ ...prevState, [key]: updatedItems }));
+  }
+
+  const removeItemFromProperty = key => item =>{
+    setValues(prevState => ({
+      ...prevState,
+      [key]:prevState[key].filter(it => it._id !== item._id) 
+    }));
+  }
+
+  if(!isIn(dataset.admin, signedInUserId)){
     alert('You do not have permission to edit this dataset.')
     //todo - redirect to 'from'
     return <Redirect to='/'/>
@@ -77,17 +132,25 @@ export default function EditDatasetProfile({ signedInUserId, dataset, onUpdate, 
         <Typography variant="h6" className={classes.title}>
           Edit Profile
         </Typography>
-        <TextField id="datasetname" label="Datasetname" className={classes.textField} value={values.datasetname} onChange={handleChange('datasetname')} margin="normal"/><br/>
-        <TextField id="firstname" label="First name" className={classes.textField} value={values.firstname} onChange={handleChange('firstname')} margin="normal"/><br/>
-        <TextField id="surname" label="Surname" className={classes.textField} value={values.surname} onChange={handleChange('surname')} margin="normal"/><br/>
-        <TextField id="email" type="email" label="Email" className={classes.textField} value={values.email} onChange={handleChange('email')} margin="normal"/><br/>
-        <TextField id="password" type="password" label="Password" className={classes.textField} value={values.password} onChange={handleChange('password')} margin="normal"/>
+        <TextField id="name" label="Name" className={classes.textField} value={values.name} onChange={handleChange('name')} margin="normal"/><br/>
+        <TextField id="initials" label="Initials" className={classes.textField} value={values.initials} onChange={handleChange('initials')} margin="normal"/><br/>
+        <TextField id="desc" label="Description" className={classes.textField} value={values.desc} onChange={handleChange('desc')} margin="normal"/><br/>
+        <TextField id="tags" label="Tags" className={classes.textField} value={values.tags} onChange={handleChange('tags')} margin="normal"/><br/>
+        <TextField id="notes" label="Notes" className={classes.textField} value={values.notes} onChange={handleChange('notes')} margin="normal"/>
         <br/> {
           values.error && (<Typography component="p" color="error">
             <Icon color="error" className={classes.error}>error</Icon>
             {values.error}
           </Typography>)
         }
+        <div className={classes.measuresContainer}>
+          <CreateDatasetMeasures
+              available={availableMeasures} 
+              current={values.measures}
+              add={addItemToProperty("measures")}
+              update={updateItemInProperty("measures")}
+              remove={removeItemFromProperty("measures")} />
+        </div>
       </CardContent>
       <CardActions>
         <Button color="primary" variant="contained" onClick={clickSubmit} className={classes.submit}>Submit</Button>
@@ -107,4 +170,8 @@ EditDatasetProfile.defaultProps = {
   onUpdate:() =>{}
 }
 
+const Loading = <div>Dataset is loading</div>
+
+//load dataset if we dont have deep version
+export default withLoader(EditDatasetProfile, ['dataset.datapoints'], {alwaysRender:false, LoadingPlaceholder:Loading});
 
