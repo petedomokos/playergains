@@ -33,7 +33,8 @@ export const updateDatapoints = (container, ds, scales) =>{
     datapointG.merge(datapointGEnter)
         .attr('transform', d => 'translate('+x(d.date) +',' + y(d.value) +')')
         .select("circle")
-            .attr('fill', d => d.isProjection ? "transparent" : d.isTarget ? "red" : "grey")
+            //darker for current difficulty ds
+            .attr('fill', d => d.isProjection ? "transparent" : d.isTarget ? "red" : d.isCurrentDifficulty ? "#505050" : "#D3D3D3")
             .attr('stroke', d => d.isTarget ? "red" : "grey");
 
 

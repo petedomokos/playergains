@@ -14,14 +14,19 @@ const useStyles = makeStyles((theme) => ({
   title:{
     fontSize:"14px"
   },
-  sectionChart:{
-    [theme.breakpoints.down('md')]: {
-      height:"250px",
-      width:"90vw"
+  charts:{
+    display:"flex",
+    flexWrap:"wrap",
+    width:"92vw",
   },
-  [theme.breakpoints.up('lg')]: {
-      height:"500px",
-      width:"300px"
+  chart:{
+    [theme.breakpoints.down('sm')]: {
+      height:"65vw",
+      flex:"90vw 0 0"
+  },
+  [theme.breakpoints.up('md')]: {
+      height:"300px",
+      flex:"400px 0 0"
   },
   }
 }))
@@ -38,15 +43,17 @@ const PlayerDashboardSection = ({sectionType, data, settings}) => {
        <Typography variant="h6" className={classes.title}>
           {sectionType}: {data.name}
         </Typography>
-      {data.chartsData.map((chartData,i)=>
-        <div className={classes.sectionChart} key={chartData.key}>
-            <PlayerDashboardChartWrapper
-                chartType="timeSeries"
-                data={chartData}
-                settings={settings}
-                />
-        </div>
-      )}
+      <div className={classes.charts}>
+        {data.chartsData.map((chartData,i)=>
+          <div className={classes.chart} key={chartData.key}>
+              <PlayerDashboardChartWrapper
+                  chartType="timeSeries"
+                  data={chartData}
+                  settings={settings}
+                  />
+          </div>
+        )}
+      </div>
     </div>
   )
 }

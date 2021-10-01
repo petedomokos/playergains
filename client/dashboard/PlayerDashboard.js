@@ -26,12 +26,12 @@ const useStyles = makeStyles((theme) => ({
   },
   overallProgress:{
     [theme.breakpoints.down('md')]: {
-        height:"350px",
-        width:"90vw"
+        width:"90vw",
+        height:"350px"
     },
     [theme.breakpoints.up('lg')]: {
+        width:"300px",
         height:"500px",
-        width:"300px"
     },
     //border:'solid',
     //borderColor:"yellow"
@@ -42,8 +42,8 @@ const PlayerDashboard = ({player, datasets}) => {
   const styleProps = { };
   const classes = useStyles();
   const [tags, setTags] = useState([]);
-  console.log("player dashboard---------------------", player)
-  console.log("datasets-------------------", datasets)
+  //console.log("player dashboard---------------------", player)
+  //console.log("datasets-------------------", datasets)
 
   //create data for a dashboard chart
   //todo - remove dataset
@@ -93,8 +93,10 @@ const PlayerDashboard = ({player, datasets}) => {
   }
 
   const datapointValueAccessorForMeasure = (measure) => {
+    //console.log("measure", measure)
       if(measure){
         return d => {
+          //console.log("d", d)
           //note - valueWrapper should always be defined
           const valueWrapper = d.values.find(v => v.measure === measure._id)
           return /*valueWrapper ?*/ valueWrapper.value/* : undefined;*/
@@ -108,6 +110,7 @@ const PlayerDashboard = ({player, datasets}) => {
     //console.log("measure", measure)
     //accessor function to get each d value
     const datapointValue = datapointValueAccessorForMeasure(measure);
+  
     //format ds so d.date is Date and d.value is Number
     const ds = dset.datapoints
     //remove future targets that arent at current difficlty level
@@ -116,7 +119,7 @@ const PlayerDashboard = ({player, datasets}) => {
         date:new Date(d.date),
         value:Number(datapointValue(d))
     }))
-    .filter(d => d.value) //some ds may not have a value for the specified measure
+    .filter(d => typeof d.value === 'number') //some ds may not have a value for the specified measure
 
     ///console.log("ds", ds)
     //DIFFICULTY MEASURE
@@ -137,7 +140,11 @@ const PlayerDashboard = ({player, datasets}) => {
     //helper
     const isPassedTarget = d => d.date.getTime() <= new Date().getTime()
     const dsForChart = ds
-      .filter(d => difficultyValue(d)) //this defaults to 1 if no diff measure on dataset
+      .filter(d => difficultyValue(d))
+      .map(d => ({
+        ...d,
+        isCurrentDifficulty:difficultyValue(d) === currentDifficultyValue
+      })) //this defaults to 1 if no diff measure on dataset
       //remove any future targets that are not at current difficulty level (past ones can stay)
       //@TODO causing error - fix later - for now just only set targets fro current diff level as that is more helpful anyway
       //.filter(d => !d.isTarget || isPassedTarget(d) || difficultyValue(d) === currentDifficultyValue)
@@ -172,12 +179,9 @@ const PlayerDashboard = ({player, datasets}) => {
       desc:goal.desc,
       chartsData:goal.datasetMeasures
         .map(datasetMeasure => {
-          console.log("cgsd", datasetMesasure)
             const { datasetId, measureKey } = datasetMeasure;
             const dataset = datasets.find(dset => dset._id === datasetId);
-            console.log("dataset", dataset)
             const measure = getMeasure(dataset, measureKey)
-            console.log("measure", measure)
             if(!dataset || !measure){ return undefined; }
             return {
                 key:goal.key +"-" +dataset._id + "-" +measure.key,
@@ -196,12 +200,12 @@ const PlayerDashboard = ({player, datasets}) => {
 
   //2. DATASET DATA
   const createDatasetSectionData = (dataset, i) => {
-    console.log("dataset", dataset)
     return{
       key:dataset._id,
       name:dataset.name,
       desc:dataset.desc,
       chartsData:[...dataset.rawMeasures, ...dataset.derivedMeasures]
+        .filter(m => !m.hidden)
         .map(measure => ({
             key:dataset._id + "-" +measure.key,
             name: measure.name, //todo - make measure name fullname in data when we do key - make it a hydrateMeasure function

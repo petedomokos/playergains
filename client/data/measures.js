@@ -1,4 +1,5 @@
 import { addWeeks } from "../util/TimeHelpers"
+import { getGoals, getStartDate } from "./goals";
 
 /*
 some default configurables are put in for some measures. User has option to change when they select measure
@@ -211,20 +212,79 @@ const createMeasure = measureObject => { //.there is a better word than object t
 }
 
 //note - if no tunit, it is worked out from the measures that it is derived from eg speed = m/s
-const derivedMeasures = {
-    //situps
-    "606b2f653eecde47d886479a":[
-        //{name:""", side:"", nr:"", custom:"", unit:"", }
-
-    ],
-    //pressups
-    "606b6aef720202523cc3589d":[
-
-    ],
-    //LevelsShootingGame
-    "...":[
+export const derivedMeasures = {
+    //long jump
+    "608c595b285a17514c8147bc":[
         {
-            name:"Score", side:"", nr:"", custom:"", unit:"%", label:"Score", desc:"",
+            name:"Mean Score", side:"", nr:"", custom:"", unit:"points", label:"Score", desc:"", isMain:true,
+            formula:{
+                type:"mean",
+                of:[
+                    "distance-left",
+                    "distance-right",
+                    "distance-left-lateral",
+                    "distance-right-lateral"
+                ]
+            }
+        }
+    ],
+     //med ball throw
+     "608fffec1871db342cf3d58f":[
+        {
+            name:"Mean Score", side:"", nr:"", custom:"", unit:"points", label:"Score", desc:"", isMain:true,
+            formula:{
+                type:"mean",
+                of:[
+                    "distance-left",
+                    "distance-right",
+                    "distance-chest"
+                ]
+            }
+        }
+    ],
+    //long pass left foot
+    /*"609005fa1871db342cf3d5c0":[
+        {
+            name:"Mean Score", side:"", nr:"", custom:"", unit:"points", label:"Score", desc:"", isMain:true,
+            formula:{
+                type:"mean",
+                of:[
+
+                    //???
+                ]
+            }
+        }
+    ],
+    //long pass left foot
+    "609005fa1871db342cf3d5c0":[
+        {
+            name:"Mean Score", side:"", nr:"", custom:"", unit:"points", label:"Score", desc:"", isMain:true,
+            formula:{
+                type:"mean",
+                of:[
+
+                    //???
+                ]
+            }
+        }
+    ],
+    */
+    //long pass right mixed
+    "60958ece51e4122608e96f16":[
+        {
+            name:"Percentage", side:"", nr:"", custom:"", unit:"%", label:"Score", desc:"", isMain:true,
+            formula:{
+                type:"percentage",
+                //note - val 1 is numerator, val2 is denom
+                of:["score", "attempts"]
+            }
+        }
+    ],
+
+    //Dribble and shot
+    "6090123265f6760a6093a25a":[
+        {
+            name:"Median Score", key:"median", side:"", nr:"", custom:"", unit:"points", label:"Score", desc:"",
             formula:{
                 type:"median",
                 of:[
@@ -234,6 +294,95 @@ const derivedMeasures = {
                 ]
             }
         },
+        {
+            name:"Mean Score", key:"mean", side:"", nr:"", custom:"", unit:"points", label:"Score", desc:"", isMain:true,
+            formula:{
+                type:"mean",
+                of:[
+                    "score-1",
+                    "score-2",
+                    "score-3"
+                ]
+            }
+        }
+    ],
+    //Control and Dribble
+     "6090127165f6760a6093a25e":[
+        {
+            name:"Median Score", key:"median", side:"", nr:"", custom:"", unit:"points", label:"Score", desc:"",
+            formula:{
+                type:"median",
+                of:[
+                    "score-1",
+                    "score-2",
+                    "score-3"
+                ]
+            }
+        },
+        {
+            name:"Mean Score", key:"mean", side:"", nr:"", custom:"", unit:"%", label:"Score", desc:"", isMain:true,
+            formula:{
+                type:"mean",
+                of:[
+                    "score-1",
+                    "score-2",
+                    "score-3"
+                ]
+            }
+        }
+    ],
+    //options
+    "609012a965f6760a6093a262":[
+        {
+            name:"Median Score", key:"median", side:"", nr:"", custom:"", unit:"%", label:"Score", desc:"",
+            formula:{
+                type:"median",
+                of:[
+                    "score-1",
+                    "score-2",
+                    "score-3"
+                ]
+            }
+        },
+        {
+            name:"Mean Score", key:"mean", side:"", nr:"", custom:"", unit:"%", label:"Score", desc:"", isMain:true,
+            formula:{
+                type:"mean",
+                of:[
+                    "score-1",
+                    "score-2",
+                    "score-3"
+                ]
+            }
+        }
+    ],
+    //keep ball 1 v 1 
+    "6090154f65f6760a6093a275":[
+        {
+            name:"Score", key:"score", side:"", nr:"", custom:"", unit:"points", label:"Score", desc:"",
+            formula:{
+                type:"difference",
+                of:[ 
+                    {
+                        type:"sum",
+                        of:[
+                            "score-left-taking-ball",
+                            "score-right-taking-ball",
+                        ]
+                    },
+                    {
+                        type:"sum",
+                        of:[
+                            "score-left-keeping-ball",
+                            "score-right-keeping-ball",
+                        ]
+                    }
+                ]
+            }
+        }
+    ],
+    //game shot %
+    /*"...":[
         {
             name:"Shot Percentage", side:"left", nr:"", custom:"", unit:"%", label:"Shot %", desc:"",
             formula:{
@@ -284,14 +433,48 @@ const derivedMeasures = {
                 ]
             }
         },
-    ]
+    ]*/
 }
 
-export function getDerivedMeasures(datasetId){
-    return [];
-    //get the measures
+export function hydrateDataset(dataset){
+    const derivedMeasures = getDerivedMeasures(dataset);
+    const datapoints = dataset.datapoints.map(d => ({
+        ...d,
+        values:[...d.values, getDerivedValues(d, derivedMeasures)]
+    }));
+    return 
 
-    //add key to each of them
+
+}
+
+
+export function getDerivedMeasures(dataset){
+    const measureSchemas = derivedMeasures[dataset._id];
+    if(!measureSchemas){
+        return [];
+    }
+    return measureSchemas.map(schema => hydrateMeasure(schema));
+}
+
+export function getDerivedValues(datapoint, derivedMeasures=[]){
+    return derivedMeasures.map(derivedMeasure => ({
+        measure:derivedMeasure._id,
+        value:calcDerivedValue(derivedMeasure, datapoint),
+        //fake an id - probably dont need anyway - > @TODO - move to using only key for measures and values in dataviz
+        _id:new Date.getTime() + ""
+    }))
+}
+
+function calcDerivedValue(schema, dataset){
+    switch(schema.formula.type){
+        case "mean":{
+            return 0;
+        }
+        case "median":{
+            return 1;
+        }
+        default: return 0
+    }
 }
 
 export const toCamelCase = str =>{
@@ -328,7 +511,9 @@ export function hydrateMeasure(measure){
     return {
         ...measure,
         key:newKey,
-        name:newName
+        name:newName,
+        //use key for id for derived measures (raw measures have _id set on server)
+        _id:measure._id || newKey
     }
 }
 

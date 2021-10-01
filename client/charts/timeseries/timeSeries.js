@@ -1,6 +1,7 @@
 import { SyncDisabledSharp } from '@material-ui/icons';
 import * as d3 from 'd3';
 import { updateXAxis, updateYAxis, updateClipPath, updateDatapoints, updateDatapointTracks, updateLineToTarget } from "./updateTimeSeriesComponents";
+import { calculateBuffer, domainWithBuffer } from "../ChartHelpers"
 
 function timeSeries(){
     var svg, chartG;
@@ -45,10 +46,13 @@ function timeSeries(){
             //y domain
             //asume no negative values and no mins/maxes on dataset measures yet
 			const yExtent = d3.extent(ds, d => d.value);
-            const yDomain = data.measure.order === "highest is best" ? 
-                [yExtent[0] * 0.8, yExtent[1]* 1.2] : [yExtent[1]* 1.2, yExtent[0] * 0.8];
+            const buffer = calculateBuffer(yExtent, 10)
+            const yDomain = domainWithBuffer(yExtent, buffer)
+            //default chart order is 'highest is best'
+            if(data.measure.order === "lowest is best"){
+                yDomain.reverse();
+            }
             scales.y.domain(yDomain).nice();
-
 			//ranges
             //todo - handle y number order
 			scales.x.range([margin.left, chartWidth + margin.left])//.nice();

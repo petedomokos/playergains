@@ -36,19 +36,25 @@ DONE - derivedMeaures and rawMeasures
 DONE - editDataset
 DONE - Projections are only calcuated for the latest difficulty measure of each dataset.
 DONE - impl a sectiondata option instead of goalsData.
+DONE - Lewis datasets and datapoints
+DONE - hide hidden measures 
+DONE - use derivedMeasures to get calculated values from them 
+DONE -make ds with lower level to current transparent like projections
 ------------------------------------------------------
 
 DOING NOW
 
-make sets (and put into goals) for the stuff me and lewis have done so far -> do one first, then increase nr of ds fro it, check dashboiard works,
-then try other more complex sets
-
-use derivedMeasures to get calculated values from them 
-
-put all user and dataset lists into alphabetical order in reducer, loaded and also later do eg user.datasetsMemberOf
+add a 'show hidden' button to each PlayerDashboard Dataset Section.
+add goals
+add overall completion
+change calctargetCompletion so it uses best score (at target difficulty level) rather than most recent score.
+add sharkskills and t-test datasets
+add datapoints and targets for filmed tests
 
 ----------------------------
 NEXT
+
+allow entering of derived measures fro target ds, insread of raw measures eg options game, should eb able to just enter the median or mean
 
 stop order of measures being changed in measures list when they are amended
 change measures to rawMeasures in dataset.model

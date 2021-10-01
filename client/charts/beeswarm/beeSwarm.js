@@ -1,6 +1,6 @@
-import { SyncDisabledSharp } from '@material-ui/icons';
 import * as d3 from 'd3';
 import {  updateYAxis, updateClipPath, updateBeeSwarmDs } from "./updateBeeSwarmComponents";
+import { calculateBuffer, domainWithBuffer } from "../ChartHelpers";
 
 /*
   const beeSwarmDataMock = {
@@ -64,27 +64,6 @@ function beeSwarm(){
                     .attr('clip-path', "url(#clip)")
 
             updateClipPath(svg, sizes)
-
-            const calculateBuffer = (extent, bufferPercentage) => {
-                const range = Math.abs(extent[1] - extent[0]);
-                if(range !== 0){
-                    return range * bufferPercentage / 100;
-                }
-                //use max value instead
-                const maxValue = Math.max(Math.abs(extent[0]), Math.abs(extent[1]))
-                if(maxValue !== 0){
-                    return maxValue * bufferPercentage;
-                }
-                //default to 20
-                return 20;
-            }
-
-            const domainWithBuffer = (domain, buffer) =>{
-                const lowerBound = Math.min(...domain) - buffer;
-                const upperBound = Math.max(...domain) + buffer;
-                const isIncreasing = domain[0] <= domain[domain.length - 1];
-                return isIncreasing ? [lowerBound, upperBound] : [upperBound, lowerBound];
-            }
 
             //SCALES
             //y domain

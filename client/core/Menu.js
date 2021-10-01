@@ -6,7 +6,7 @@ import Typography from '@material-ui/core/Typography'
 import IconButton from '@material-ui/core/IconButton'
 import HomeIcon from '@material-ui/icons/Home'
 import Button from '@material-ui/core/Button'
-import auth from './../auth/auth-helper'
+import auth from '../auth/auth-helper'
 import {Link, withRouter} from 'react-router-dom'
 
 const isActive = (history, path) => {
@@ -59,7 +59,7 @@ const Menu = withRouter(({history, onSignout}) => {
         position="static" className={classes.root}>
       <Toolbar 
           className={classes.toolbar}>
-        <Typography variant="h6" color="inherit" className={classes.logo}>
+       <Typography variant="h6" color="inherit" className={classes.logo}>
           Switchplay
         </Typography>
         <Link to="/">
@@ -115,6 +115,12 @@ const Menu = withRouter(({history, onSignout}) => {
             </Button>
           </span>)
         }
+        <Link to={"/expression"}>
+              <Button
+                className={classes.menuBtn}
+                style={isActive(history, "/expression")}>expression
+              </Button>
+            </Link>
       </Toolbar>
     </AppBar>
   )

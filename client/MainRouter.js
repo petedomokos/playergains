@@ -16,6 +16,7 @@ import CreateDatapointContainer from './dataset/datapoints/containers/CreateData
 import PrivateRoute from './auth/PrivateRoute'
 import MenuContainer from './core/containers/MenuContainer'
 import auth from './auth/auth-helper'
+import Expression from "./expression/Expression"
 
 const MainRouter = ({userId, loadUser, loadingUser}) => {
   //load user if page is refreshed. MainRouter is under the store so can 
@@ -29,7 +30,6 @@ const MainRouter = ({userId, loadUser, loadingUser}) => {
   
  //we dont use?: because we if there is a loading delay for User, we dont want display to revert to NonUserHome 
  //todo - find a graceful way of handling this potential issue
-
   return (
     <div>
       <MenuContainer/>
@@ -39,6 +39,7 @@ const MainRouter = ({userId, loadUser, loadingUser}) => {
             :
             <Route exact path="/" component={NonUserHome}/>
           }
+          <Route path="/expression" component={Expression}/>
           <Route path="/signup" component={CreateUserContainer}/>
           <Route path="/signin" component={SigninContainer}/>
           <PrivateRoute path="/user/edit/:userId" component={EditUserProfileContainer}/>

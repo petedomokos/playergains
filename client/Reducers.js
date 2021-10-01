@@ -3,8 +3,8 @@ import _ from 'lodash'
 import * as cloneDeep from 'lodash/cloneDeep'
 import { isIn, isNotIn, isSame, filterUniqueById, filterUniqueByProperty } from './util/ArrayHelpers'
 import { InitialState } from './InitialState'
-import { getDerivedMeasures, hydrateMeasure } from "./data/measures";
-import { getGoals, getStartDate } from "./data/goals";
+import { getGoals } from "./data/goals";
+import { hydrateDataset } from "./data/datasets";
 //HELPERS
 
 //STORE
@@ -239,6 +239,8 @@ export const user = (state=InitialState.user, act) =>{
 				return { ...existingVersion, ...datasetMemberOf }
 			})
 
+			//@TODO - put this in a hydrateUser function
+
 			const user = {...act.user, goals: getGoals(act.user._id) }
 
 			return { 
@@ -274,22 +276,10 @@ export const user = (state=InitialState.user, act) =>{
 		}
 
 		case C.LOAD_DATASET:{
-			//start date
-			const startDate = getStartDate(act.dataset);
-			const { admin, datapoints } = act.dataset;
-			const rawMeasures = act.dataset.measures.map(m => hydrateMeasure(m));
-			const derivedMeasures = getDerivedMeasures(act.dataset._id);
 			return { 
 				...state,
 				//dataset is deep, so we will override any existing version
-				loadedDatasets:filterUniqueById([{ 
-						...act.dataset,
-						rawMeasures,
-						derivedMeasures, 
-						startDate 
-					}, 
-					...state.loadedDatasets
-				]),
+				loadedDatasets:filterUniqueById([hydrateDataset(act.dataset), ...state.loadedDatasets]),
 			}
 		}
 		//2. MULTIPLE SHALLOW LOADS -------------------------------------------------------------------------------------
@@ -325,7 +315,6 @@ export const user = (state=InitialState.user, act) =>{
 			}
 		}
 		default:{
-			console.log('default returning state')
 			return state
 		}
 
@@ -348,24 +337,18 @@ export const user = (state=InitialState.user, act) =>{
 		}
 		case C.LOAD_DEEP_DATASETS:{
 			//start date
-			const updatedDatasets = act.datasets.map(dset =>{
-				//get the existing dataset
-				const datasetToUpdate = state.loadedDatasets.find(dset => dset._id === dset._id) || {};
-				//merge new datapoints with any existing (eg from another previously viewed player)
-				const updatedDatapoints = datasetToUpdate.datapoints ? [...datasetToUpdate.datapoints, dset.datapoints] : dset.datapoints;
-				const derivedMeasures = getDerivedMeasures(dset._id);
-				const rawMeasures = dset.measures.map(m => hydrateMeasure(m));
-				const startDate = getStartDate(dset);
-				//overwrite all other properties and add merged datapoints
-				return { 
-					...datasetToUpdate, 
-					...dset, 
-					datapoints:updatedDatapoints,
-					rawMeasures,
-					derivedMeasures,
-					startDate 
-				}
-			})
+			const updatedDatasets = act.datasets
+				.map(dset => hydrateDataset(dset))
+				.map(dset => {
+					//merge new datapoints with any existing (eg from another previously viewed player)
+					const datasetToUpdate = state.loadedDatasets.find(dset => dset._id === dset._id) || {};
+					//these datapoints will already have been hydrated
+					const updatedDatapoints = datasetToUpdate.datapoints ? [...datasetToUpdate.datapoints, dset.datapoints] : dset.datapoints;
+					return { 
+						...dset, 
+						datapoints:updatedDatapoints,
+					}
+			    })
 
 			return { 
 				...state, 
