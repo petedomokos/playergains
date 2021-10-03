@@ -1,6 +1,7 @@
 import * as d3 from 'd3';
 import { calcBoxGenerator } from './calcBoxGenerator'
 import { operationIconsGenerator } from './operationIconsGenerator'
+import { getActiveColState } from "../helpers"
 
 export function calcComponentGenerator(selection){
     //dimensions
@@ -19,7 +20,7 @@ export function calcComponentGenerator(selection){
     let opIconsWidth = 120;
     let opIconsHeight = 40;
 
-    //functions
+    //components
     let calcBox;
     let opIcons;
 
@@ -32,12 +33,11 @@ export function calcComponentGenerator(selection){
     let display = "inline";
 
     //handlers
-    let setOp = () => {};
-
-    const dispatch = d3.dispatch("setState");
+    let selectOp = () => {};
 
     function myCalcComponent(selection){
-        selection.each(function(toolsData){
+        selection.each(function(data){
+            const { opsInfo, state } = data;
             //init
             if(!calcComponentG){
                 //dom
@@ -49,28 +49,27 @@ export function calcComponentGenerator(selection){
 
                 //functions
                 calcBox = calcBoxGenerator();
-                opIcons = operationIconsGenerator()
-                    .selectOp(function(d){
-                        console.log("this", this)
-                        //const d = d3.select(this).attr(id) //how to get nr? could i be passed through from click too?
-                        //console.log("colNr", colNr)
-                        //add colNr and dispatch setState
-                        const updatedCol = {...d, opId};
-                        //const updatedCol = {...state[colNr], opId};
-                        const updatedState = [...colsBefore(colNr, state), updatedCol, colsAfter(colNr, state)];
-                        dispatch.call("setState", this, updatedState)
-                    });
+                opIcons = operationIconsGenerator();
             }
 
             //update
             calcComponentG.attr("display", display)
             //calc box
-            calcBox.width(calcBoxWidth).height(calcBoxHeight)
-            calcBoxG.datum(toolsData).call(calcBox)
+            calcBox
+                .width(calcBoxWidth)
+                .height(calcBoxHeight)
+
+            calcBoxG.datum({opsInfo, state}).call(calcBox)
 
             //opIcons
-            opIcons.width(opIconsWidth).height(opIconsHeight)
-            opIconsG.datum(toolsData).call(opIcons)
+            opIcons
+                .width(opIconsWidth)
+                .height(opIconsHeight)
+                .selectOp(selectOp);
+
+            const _opsInfo = opsInfo.map(d => ({ ...d, isSelected:getActiveColState(state).op?.id === d.id }))
+
+            opIconsG.datum(_opsInfo).call(opIcons)
         })
         return selection;
     }
@@ -95,9 +94,9 @@ export function calcComponentGenerator(selection){
         return myCalcComponent;
     };
     //todo - dispatch event for setop instead so dont have to pass up anddown teh chain all the way to icons
-    myCalcComponent.setOp = function (value) {
-        if (!arguments.length) { return setOp; }
-        setOp = value;
+    myCalcComponent.selectOp = function (value) {
+        if (!arguments.length) { return selectOp; }
+        selectOp = value;
         return myCalcComponent;
     };
     return myCalcComponent;

@@ -12,19 +12,20 @@ export function expressionBoxGenerator(selection){
         //todo - call update
     }
 
-    let backgroundRect;
-    let boxText;
     function myExpressionBox(selection){
         selection.each(function(d,i){
+            //console.log("d",d)
+            //console.log("i",i)
             const boxG = d3.select(this);
-            //enter
+            //ENTER
             if(boxG.select("*").empty()){
-                backgroundRect = boxG
+                //background
+                boxG
                     .append("rect")
                         .attr("fill", "white")
                         .attr("stroke", "grey")
-    
-                boxText = boxG
+                //text
+                boxG
                     .append("text")
                         .attr("dominant-baseline", "middle")
                         .attr("text-anchor", "start")
@@ -32,16 +33,32 @@ export function expressionBoxGenerator(selection){
                         .attr("stroke", "grey")
                         .attr("stroke-width", 0.1)
             }
-            //update
-            backgroundRect
+            //UPDATE
+            //background
+            boxG.select("rect")
                 .attr("width", chartWidth)
                 .attr("height", chartHeight)
-
-            boxText
+            //text
+            boxG.select("text")
                 .attr("transform", "translate(5," + (chartHeight/2) +")")
-                .text(d.selected?.name || (i === 0 ? "Click planet" : "Click op"))
+                .text(boxText(d, i))
 
         })
+        //helper
+        function boxText(d, i){
+            const opName = d.op?.name || "";
+            const planetName = d.selected?.planet.name || "";
+            //property will only be defined if planet is defined
+            const propertyName = d.selected?.property?.name || "";
+            if(opName || planetName){
+                return opName + " " + planetName + " " +propertyName;
+            }
+            //blank defaults
+            if(i === 0){
+                return "Click planet or property"
+            }
+            return "Click operation"
+        }
         return selection;
     }
 
@@ -57,7 +74,8 @@ export function expressionBoxGenerator(selection){
         height = value;
         //updateDimns();
         return myExpressionBox;
-    };
+    }
+    
     return myExpressionBox;
 
     }

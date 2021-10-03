@@ -4,7 +4,7 @@ import * as d3 from 'd3';
     note - downside of merging colG before pasing through here is ts a bit trickier to do update only
     but we can still do it using and else() after the if statement
 */
-export function expressionVisGenerator(selection){
+export function planetGetVisGenerator(selection){
     let width = 130;
     let height = 40;
     let margin =  { bottom:10 };
@@ -15,17 +15,20 @@ export function expressionVisGenerator(selection){
         chartWidth = width;
         //todo - call update
     }
-    function myExpressionVis(selection){        
+    function myGetVis(selection){        
         selection.each(function(d,i){
             const visG = d3.select(this);
             //enter
             if(visG.select("*").empty()){
                 visG
-                    .append("rect")
-                        .attr("width", chartWidth)
-                        .attr("height", chartHeight)
-                        .attr("fill", "#C0C0C0")
-                        .attr("stroke", "grey")
+                    .append("line")
+                        .attr("x1", 0)
+                        .attr("y1", chartHeight/2)
+                        .attr("x2", chartWidth)
+                        .attr("y2", chartHeight/2)
+                        .attr("stroke", "white")
+                        //.attr("fill", "#C0C0C0")
+                        //.attr("stroke", "grey")
 
                 visG
                     .append("text")
@@ -39,25 +42,25 @@ export function expressionVisGenerator(selection){
             //update
             visG.attr("opacity", d.selected? 1 : 0)  
             visG.select("text.count")
-                .text("Count:" +(d.selected ? d.selected.instances.length : 0))
+                .text("Count:" +(d.selected?.planet ? d.selected.planet.instances.length : 0))
 
         })
         return selection;
     }
 
     // api
-    myExpressionVis.width = function (value) {
+    myGetVis.width = function (value) {
         if (!arguments.length) { return width; }
         width = value;
         updateDimns();
-        return myExpressionVis;
+        return myGetVis;
         };
-    myExpressionVis.height = function (value) {
+    myGetVis.height = function (value) {
         if (!arguments.length) { return height; }
         height = value;
         updateDimns();
-        return myExpressionVis;
+        return myGetVis;
     };
-    return myExpressionVis;
+    return myGetVis;
 
     }

@@ -20,13 +20,14 @@ export function operationIconsGenerator(selection){
     let opIconsG;
 
     function myOpIcons(selection){
-        selection.each(function(toolsData){
-            //console.log("calcIcons", toolsData)
+        //console.log("myOPIcon update")
+        selection.each(function(opsData){
+            //console.log("calcIcons", opsData)
             if(!opIconsG){
                 opIconsG = d3.select(this)
             }
             //Bind
-            const iconG = opIconsG.selectAll("g.iconG").data(toolsData)
+            const iconG = opIconsG.selectAll("g.iconG").data(opsData)
             //Enter
             const iconGEnter = iconG.enter()
                 .append("g")
@@ -37,7 +38,7 @@ export function operationIconsGenerator(selection){
             //note - this will become the full name and show on hover just below icon
             iconGEnter.append("text")
                 .attr("dominant-baseline", "hanging")
-                .attr("fill", d.isSelected ? "blue" : "black")
+                .attr("fill", d => d.isSelected ? "blue" : "black")
                 .attr("font-size", 12)
 
             iconGEnter.append("rect")

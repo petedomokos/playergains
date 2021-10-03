@@ -3,25 +3,15 @@ import { update } from 'lodash';
 import { planetsGenerator } from "./planetsGenerator";
 import { expressionGenerator } from "./expression/expressionGenerator";
 import { calcComponentGenerator } from "./calc-component/calcComponentGenerator";
+import { colsBefore, colsAfter } from "./helpers"
 
 /*
 
-step1 (start):
- - it lays out the planets and their properties down the side
- - it opens an entrance box 
- - if user clicks a planet, it fills the box with the planet name, and loads a bar representing the instances, with the count, below.
-
- step 2 (when a planet is in first box):
-  - a second box is rendered
-  - the function names show above
-  - if a func name is clicked, it appears in the new box, and also the calcComponent opens up above the icons
-
 */
 
-//helpers
-const colsBefore = (i, arr) => arr.slice(0, i)
-const colsAfter = (i, arr) => arr.slice(i + 1, arr.length)
 export default function expressionBuilderGenerator() {
+    //type
+    let context;
     // dimensions
     let width = 600;
     let height = 500;
@@ -52,19 +42,26 @@ export default function expressionBuilderGenerator() {
     let expressionG;
 
     //data
+    //Q - DO WE NEED TO STORE DATA AND STATE HERE??
     let planetData;
-    let toolsInfo;
+    let opsInfo;
 
     //state
     let state = [{}]
     let setState = () =>{}
 
+    const dispatch = d3.dispatch("setState");
+
+    //updates
+    //atm , this doesnt update when context changes, so we rely on parent to re-render
+    //which is fine because we are starting again anyway. But no reason why this comp cant auto-update
+    //here just like teh chilren do
     function expressionBuilder(selection) {
         //console.log("expressionBuilder...")
         // expression elements
         selection.each(function (data) {
             planetData = data.planets;
-            toolsInfo = data.toolsInfo;
+            opsInfo = data.opsInfo;
             state = data.expressionState;
             //INIT
             if(!svg){
@@ -100,13 +97,13 @@ export default function expressionBuilderGenerator() {
         planets
             .width(planetsWidth)
             .height(planetsHeight)
-            .onSelect(function(nodeType, id){
-                //for now assume planet
-                //create next column - setting react state triggers an update
-                setState([
-                    {...state[0], selected:planetData.find(p => p.id === id)}, 
-                    {}
-                ])
+            .onSelect(function(planet, property){
+                console.log("onSelect planet...", planet)
+                console.log("onSelect property...", property)
+                //for now, active col is always the last one
+                const colNr = state.length - 1;
+                const updatedCol = {...state[colNr], selected:{planet, property, filter:{desc:"All"} } };
+                setState([...colsBefore(colNr, state), updatedCol, {} ])
             })
 
         planetsG.datum(planetData).call(planets)
@@ -116,15 +113,18 @@ export default function expressionBuilderGenerator() {
             .width(calcComponentWidth)
             .height(calcComponentHeight)
             .display(state[0].selected ? "inline" : "none")
-            .setOp((colNr, opId) => {
-                const updatedCol = {...state[colNr], opId};
-                setState([...colsBefore(colNr, state), updatedCol, colsAfter(colNr, state)])
+            .selectOp((op) => {
+                //console.log("onSelect op",op)
+                //for now, active col is always the last one
+                const colNr = state.length - 1;
+                const updatedCol = {...state[colNr], op};
+                setState([...colsBefore(colNr, state), updatedCol, ...colsAfter(colNr, state)])
             })
-        
-        calcComponentG.datum(toolsInfo).call(calcComponent)
+        calcComponentG.datum({opsInfo, state}).call(calcComponent)
 
         //expression
         expression
+            .context(context)
             .width(expressionWidth)
             .height(expressionHeight)
 
@@ -133,16 +133,21 @@ export default function expressionBuilderGenerator() {
     }     
 
     // api
+    expressionBuilder.context = function (value) {
+        if (!arguments.length) { return context; }
+        context = value;
+        return expressionBuilder;
+    };
     expressionBuilder.width = function (value) {
         if (!arguments.length) { return width; }
         width = value;
-        update();
+        //update();
         return expressionBuilder;
     };
     expressionBuilder.height = function (value) {
         if (!arguments.length) { return height; }
         height = value;
-        update();
+        //update();
         return expressionBuilder;
     };
     //handlers
@@ -150,6 +155,12 @@ export default function expressionBuilderGenerator() {
         if (!arguments.length) { return setState; }
         setState = value;
         return expressionBuilder;
+    };
+    expressionBuilder.on = function () {
+        if (!dispatch) return expressionBuilder;
+        // attach extra arguments
+        const value = dispatch.on.apply(dispatch, arguments);
+        return value === dispatch ? expressionBuilder : value;
     };
     return expressionBuilder;
 }

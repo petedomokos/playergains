@@ -39,7 +39,8 @@ export const returnOptions = [
     {id:"?2", name:"?"}
 ]
 
-export const toolsInfo = [
+export const opsInfo = [
+    { id:"get", name:"Get", icon:{ nodeType:"path", d:filterPathD } },
     { id:"filter", name:"Filter", icon:{ nodeType:"path", d:filterPathD } },
     { id:"groupBy", name:"Group", icon:{ nodeType:"path", d:groupByPathD } },
     { id:"agg", name:"Agg", icon:{ nodeType:"polygon", points:trianglePolygonPoints } },

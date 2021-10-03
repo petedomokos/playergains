@@ -24,10 +24,6 @@ export function planetsGenerator(){
             //.on("drag", planetDragged)
             .on("end", planetDragEnd);
 
-        const propertyDrag = d3.drag()
-            //.on("start", propertyDragStart)
-            //.on("drag", propertyDragged)
-            .on("end", propertyDragEnd);
         selection.each(function(data){
              //Bind
             const planetG = selection.selectAll("g.planet").data(data)
@@ -61,6 +57,10 @@ export function planetsGenerator(){
 
             //PLANET PROPERTY
             planetGEnter.each(function(planetD, i){
+                const propertyDrag = d3.drag()
+                    //.on("start", propertyDragStart)
+                    //.on("drag", propertyDragged)
+                    .on("end", (e,d) => propertyDragEnd(planetD, d));
                 //bind
                 const propertyG = d3.select(this).selectAll("g.property").data(planetD.properties);
                 //enter
@@ -89,12 +89,12 @@ export function planetsGenerator(){
 
         })
 
-        function planetDragEnd(e, d){
+        function planetDragEnd(e, planet){
             //planet becomes selected
-            onSelect("planet", d.id)
+            onSelect(planet)
         }
-        function propertyDragEnd(){
-            
+        function propertyDragEnd(planet, property){
+            onSelect(planet, property)
         }
     }
 
