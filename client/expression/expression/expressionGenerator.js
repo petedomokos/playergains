@@ -6,8 +6,8 @@ import { expressionVisGenerator } from './vis/expressionVisGenerator';
 import { planetHomeVisGenerator } from './vis/planetHomeVisGenerator';
 import { planetGetVisGenerator } from './vis/planetGetVisGenerator';
 import { planetEmptyVisGenerator } from './vis/planetEmptyVisGenerator';
-import { CompassCalibrationSharp, ShowChart } from '@material-ui/icons';
-import { map } from 'lodash';
+
+import { getActiveColState } from '../helpers';
 
 export function expressionGenerator(){
     //dimns
@@ -26,13 +26,18 @@ export function expressionGenerator(){
 
     //components
     let componentContext;
-    let expressionBox;
-    let expressionVis;
+    //let expressionBox; - mut be a sep genertor for each col!
+    //let expressionVis;
+
+    //state
+    let state;
 
     //dom
     let expressionG;
 
     function updateExpressionComponents(){
+        console.log("context", context)
+        console.log("componentContext", componentContext)
         if(context !== componentContext){
             //console.log("rendering new components for context", context)
             if(expressionBox){
@@ -40,7 +45,7 @@ export function expressionGenerator(){
                 expressionG.selectAll("g.box").selectAll("*").remove();
                 expressionG.selectAll("g.vis").selectAll("*").remove();
             }
-            const { selected, op, colNr } = activeColState;
+            const { selected, op, colNr } = getActiveColState(state);
             //for now, only vis is different
             expressionBox = context === "Planet" ? expressionBoxGenerator() : expressionBoxGenerator();
             if(context === "Planet"){
@@ -48,17 +53,12 @@ export function expressionGenerator(){
                     expressionVis = planetHomeVisGenerator();
                 }
                 else if(op){
-                    expressionVis = findOpVisGenerator(op.id)
+                    expressionVis = findOpVisGenerator(op.id);
                 }
                 else{
                     expressionVis = planetEmptyVisGenerator();
                 }
             }
-            /*
-            todo - decide do we make a separate visGenerator for mapping from homee planet eg 1 to 1 and another for many to many map
-            or do we just allow teh generators access to teh wider state and then a map generator can work out what it needs to Show 
-            ..so the key decision is, do teh generators haveaccess to prev col state, or is it restricted to that cols state only
-            */
 
             function findOpVisGenerator(opId){
                 switch(opId){
@@ -68,6 +68,8 @@ export function expressionGenerator(){
                     default:{ return;};
                 }
             }
+
+            console.log("expVis is", expressionVis)
         }
         //set current
         componentContext = context;
@@ -75,26 +77,39 @@ export function expressionGenerator(){
     function expression(selection){
         expressionG = selection;
         //console.log("expressoin state", selection.datum())
-        selection.each(function(data){
-            //components
-            updateExpressionComponents();
+        selection.each(function(stateData){
+            state = stateData;
+            console.log("exp state", state)
+            //add the previous col state to each colState
+            const colStateWithPrev = state.map((col,i) => i === 0 ? col : { ...col, prev:state[i - 1]});
             //BIND
-            const colG = selection.selectAll("g.col").data(data)
+            const colG = selection.selectAll("g.col").data(colStateWithPrev)
 
             //ENTER
             //here we append the g, but after this point .enter will still refer to the pre-entered placeholder nodes
             const colGEnter = colG.enter()
                .append("g")
                .attr("class", "col")
-               .attr("transform", (d,i) => "translate(" +(i * (colWidth + colMargin.right))+",0)")
+               .attr("transform", (d,i) => {
+                    console.log("enter", d)
+                    return "translate(" +(i * (colWidth + colMargin.right))+",0)"
+               })
 
             colGEnter.append("g").attr("class", "box")
             colGEnter.append("g").attr("class", "vis").attr("transform", "translate(0," + (boxHeight) +")")
             //note - if we merge, the indexes will stay as they are from orig sel and sel.enter()
             //os need to select again
             const colGMerged = colG.merge(colGEnter);
-            colGMerged.select("g.box").call(expressionBox.width(boxAndVisWidth).height(boxHeight))
-            colGMerged.select("g.vis").call(expressionVis.width(boxAndVisWidth).height(visHeight))
+            colGMerged
+                .each(function(d,i){
+                    updateExpressionBoxComponent(i);
+                    d3.select(this).select("g.box").call(expressionBox.width(boxAndVisWidth).height(boxHeight))
+                })
+            colGMerged
+                .each(function(d,i){
+                    updateExpressionVisComponent(i);
+                    d3.select(this).select("g.vis").call(expressionVis.width(boxAndVisWidth).height(visHeight))
+                })
 
             //EXIT
             colG.exit().remove();

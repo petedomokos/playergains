@@ -1,5 +1,4 @@
 import * as d3 from 'd3';
-import { update } from 'lodash';
 import { planetsGenerator } from "./planetsGenerator";
 import { expressionGenerator } from "./expression/expressionGenerator";
 import { calcComponentGenerator } from "./calc-component/calcComponentGenerator";
@@ -99,7 +98,7 @@ export default function expressionBuilderGenerator() {
             .height(planetsHeight)
             .onSelect(function(planet, property){
                 console.log("onSelect planet...", planet)
-                console.log("onSelect property...", property)
+                console.log("and property...", property)
                 //for now, active col is always the last one
                 const colNr = state.length - 1;
                 const updatedCol = {...state[colNr], selected:{planet, property, filter:{desc:"All"} } };

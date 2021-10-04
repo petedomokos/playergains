@@ -14,7 +14,7 @@ export function expressionBoxGenerator(selection){
 
     function myExpressionBox(selection){
         selection.each(function(d,i){
-            //console.log("d",d)
+            //console.log("expBox d",d)
             //console.log("i",i)
             const boxG = d3.select(this);
             //ENTER

@@ -17,6 +17,8 @@ export function planetGetVisGenerator(selection){
     }
     function myGetVis(selection){        
         selection.each(function(d,i){
+            console.log("expVis d",d)
+            console.log("i",i)
             const visG = d3.select(this);
             //enter
             if(visG.select("*").empty()){
