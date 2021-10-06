@@ -1,6 +1,8 @@
 import * as d3 from 'd3';
 import { toolForGetGenerator } from "./op-tools/toolForGet"
+import { toolForAggGenerator } from "./op-tools/toolForAgg"
 import { getActiveColState } from "../helpers"
+import { COLOURS } from "../constants"
 
 export function calcBoxGenerator(selection){
     //dimensions
@@ -27,6 +29,7 @@ export function calcBoxGenerator(selection){
     //components
     let opToolId;
     let opTool = () => {};
+    let selectSubtool = () => {};
 
     function updateOpTool(){
         if(selectedOp?.id !== opToolId){
@@ -41,13 +44,14 @@ export function calcBoxGenerator(selection){
                     opTool = toolForGetGenerator();
                     break;
                 }
+                case "agg":{
+                    opTool = toolForAggGenerator()
+                        .selectSubtool(selectSubtool);
+                    break;
+                }
                 /*
                 case "filter":{
                     opTool = toolForFilter();
-                    break;
-                }
-                case "get":{
-                    opTool = toolForGroup();
                     break;
                 }
                 case "get":{
@@ -73,14 +77,14 @@ export function calcBoxGenerator(selection){
     function myCalcBox(selection){
         selection.each(function(data){
             const { opsInfo, state} = data;
-            selectedOp = getActiveColState(state).op;
+            const activeColState = getActiveColState(state);
+            selectedOp = activeColState.op;
             //ENTER
             if(!boxG){
                 boxG = d3.select(this);
                 backgroundRect = boxG.append("rect")
                     .attr("class", "background")
-                    .attr("fill", "white")
-                    .attr("stroke", "grey")
+                    .attr("fill", COLOURS.calc.bg)
 
                 //add the op text in middle far-left
                 opText = boxG.append("text")
@@ -88,7 +92,7 @@ export function calcBoxGenerator(selection){
                     .attr("transform", "translate(5,5)")
                     .attr("dominant-baseline", "hanging")
                     .attr("font-size", "12px")
-                    .attr("fill", "blue")
+                    .attr("fill", COLOURS.calc.op.selected)
                 
                 opToolG = boxG.append("g")
                     .attr("class", "calc")
@@ -114,6 +118,7 @@ export function calcBoxGenerator(selection){
                 .text(selectedOp?.name || "")
 
             //calc
+            //we pass all state through as some tools may need it - todo-  check maybe only need activeCol
             opToolG.datum({state}).call(opTool)
             
         })
@@ -133,6 +138,12 @@ export function calcBoxGenerator(selection){
         //updateDimns();
         return myCalcBox;
     };
+    myCalcBox.selectSubtool = function (value) {
+        if (!arguments.length) { return selectSubtool; }
+        selectSubtool = value;
+        //updateDimns();
+        return myCalcBox;
+    };
     return myCalcBox;
 
-    }
+}

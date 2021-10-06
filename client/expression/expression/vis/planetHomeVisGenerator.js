@@ -1,4 +1,5 @@
 import * as d3 from 'd3';
+import { COLOURS } from "../../constants"
 
 /*
     note - downside of merging colG before pasing through here is ts a bit trickier to do update only
@@ -15,33 +16,40 @@ export function planetHomeVisGenerator(selection){
         chartWidth = width;
         //todo - call update
     }
+
+    //dom
+    //store contents on a separate g that can be removed if op or context changes without affecting the EUE pattern
+    let visContentsG;
     function myHomeVis(selection){        
         selection.each(function(d,i){
             const visG = d3.select(this);
             //enter
             if(visG.select("*").empty()){
-                visG
+                visContentsG = visG.append("g").attr("class", "contents");
+                visContentsG
                     .append("line")
                         .attr("x1", 0)
                         .attr("y1", chartHeight/2)
                         .attr("x2", chartWidth)
                         .attr("y2", chartHeight/2)
-                        .attr("stroke", "white")
+                        .attr("stroke", COLOURS.exp.vis.val)
                         //.attr("fill", "#C0C0C0")
                         //.attr("stroke", "grey")
 
-                visG
+                visContentsG
                     .append("text")
                         .attr("class", "count")
                         .attr("transform", "translate("+(chartWidth - 5) +"," + (chartHeight + 5) +")")
                         .attr("text-anchor", "end")
                         .attr("dominant-baseline", "hanging")
+                        .attr("fill", COLOURS.exp.vis.count)
                         .text("Count:") 
             }
 
             //update
-            visG.attr("opacity", d.selected? 1 : 0)  
-            visG.select("text.count")
+            //note - we dontcheck for d.op because this is set from the start on home col
+            visContentsG.attr("opacity", d.selected ? 1 : 0)  
+            visContentsG.select("text.count")
                 .text("Count:" +(d.selected?.planet ? d.selected.planet.instances.length : 0))
 
         })
@@ -61,6 +69,8 @@ export function planetHomeVisGenerator(selection){
         updateDimns();
         return myHomeVis;
     };
+    myHomeVis.applicableContext = "Planet"
+    myHomeVis.applicableOp = "home"
     return myHomeVis;
 
     }

@@ -34,10 +34,12 @@ export function calcComponentGenerator(selection){
 
     //handlers
     let selectOp = () => {};
+    let selectSubtool = () => {};
 
     function myCalcComponent(selection){
         selection.each(function(data){
             const { opsInfo, state } = data;
+            //console.log("calccomponent state", state)
             //init
             if(!calcComponentG){
                 //dom
@@ -48,7 +50,7 @@ export function calcComponentGenerator(selection){
                     .attr("transform", "translate("+margin.left + "," +(margin.top+calcBoxHeight) +")")
 
                 //functions
-                calcBox = calcBoxGenerator();
+                calcBox = calcBoxGenerator().selectSubtool(selectSubtool);
                 opIcons = operationIconsGenerator();
             }
 
@@ -67,9 +69,9 @@ export function calcComponentGenerator(selection){
                 .height(opIconsHeight)
                 .selectOp(selectOp);
 
-            const _opsInfo = opsInfo.map(d => ({ ...d, isSelected:getActiveColState(state).op?.id === d.id }))
+            const opsData= opsInfo.map(d => ({ ...d, isSelected:getActiveColState(state).op?.id === d.id }))
 
-            opIconsG.datum(_opsInfo).call(opIcons)
+            opIconsG.datum(opsData).call(opIcons)
         })
         return selection;
     }
@@ -97,6 +99,12 @@ export function calcComponentGenerator(selection){
     myCalcComponent.selectOp = function (value) {
         if (!arguments.length) { return selectOp; }
         selectOp = value;
+        return myCalcComponent;
+    };
+    myCalcComponent.selectSubtool = function (value) {
+        if (!arguments.length) { return selectSubtool; }
+        selectSubtool = value;
+        //updateDimns();
         return myCalcComponent;
     };
     return myCalcComponent;

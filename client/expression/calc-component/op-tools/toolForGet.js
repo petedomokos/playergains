@@ -1,5 +1,6 @@
 import * as d3 from 'd3';
 import { getActiveColState } from "../../helpers"
+import { COLOURS } from "../../constants"
 
 export function toolForGetGenerator(selection){
     //dimensions
@@ -16,6 +17,7 @@ export function toolForGetGenerator(selection){
 
     //dom
     let toolG;
+    let instructionText;
     let filterText;
     let planetText;
     let propertyText;
@@ -31,6 +33,14 @@ export function toolForGetGenerator(selection){
             //ENTER
             if(!toolG){
                 toolG = d3.select(this)
+
+                instructionText = toolG.append("text")
+                .attr("class", "instruction")
+                .attr("transform", "translate(30,20)")
+                //.attr("dominant-baseline", "hanging")
+                .attr("text-anchor", "start")
+                .attr("font-size", 10)
+                .attr("fill", COLOURS.instruction)
 
                 //filter text
                 filterText = toolG.append("text")
@@ -49,6 +59,7 @@ export function toolForGetGenerator(selection){
                     .attr("text-anchor", "start")
                     .attr("font-size", 14)
                     //.attr("fill", )
+                
 
                 //filter text
                 propertyText = toolG.append("text")
@@ -62,10 +73,10 @@ export function toolForGetGenerator(selection){
             }
 
             //UPDATE
+            //ins text will become dynamic so we put it here
+            instructionText.text("Click planet or property")
             filterText.text(activeColState.selected?.filter?.desc || "")
-            //selected, the there must be a planet selected
-            planetText.text(activeColState.selected?.planet.name || "Click planet or property")
-            //there may be a property
+            planetText.text(activeColState.selected?.planet.name || "")
             propertyText.text(activeColState.selected?.property?.name || "")
             
         })

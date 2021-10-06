@@ -1,13 +1,12 @@
 import * as d3 from 'd3';
 import { expressionBoxGenerator } from "./expressionBoxGenerator"
-import { expressionVisGenerator } from './vis/expressionVisGenerator';
 
 //import { expressionBoxGenerator } from "./expressionBoxGenerator"
 import { planetHomeVisGenerator } from './vis/planetHomeVisGenerator';
 import { planetGetVisGenerator } from './vis/planetGetVisGenerator';
+import { planetAggVisGenerator } from './vis/planetAggVisGenerator';
 import { planetEmptyVisGenerator } from './vis/planetEmptyVisGenerator';
-
-import { getActiveColState } from '../helpers';
+import { COLOURS } from "../constants"
 
 export function expressionGenerator(){
     //dimns
@@ -15,7 +14,7 @@ export function expressionGenerator(){
     let height = 500;
     const margin = {};
     let colWidth = 140;
-    let colHeight;
+    let colHeight = height;
     const colMargin = { right: 20 }
     let boxAndVisWidth = 130;
     let boxHeight = 50;
@@ -25,9 +24,9 @@ export function expressionGenerator(){
     let context;
 
     //components
-    let componentContext;
-    //let expressionBox; - mut be a sep genertor for each col!
-    //let expressionVis;
+    // must be a sep generator for each col
+    let expressionBoxComponents = {};
+    let expressionVisComponents = {};
 
     //state
     let state;
@@ -35,80 +34,112 @@ export function expressionGenerator(){
     //dom
     let expressionG;
 
-    function updateExpressionComponents(){
-        console.log("context", context)
-        console.log("componentContext", componentContext)
-        if(context !== componentContext){
-            //console.log("rendering new components for context", context)
-            if(expressionBox){
-                //we don't want to remove the gs themselves, as they are managed via the EUE pattern
-                expressionG.selectAll("g.box").selectAll("*").remove();
-                expressionG.selectAll("g.vis").selectAll("*").remove();
-            }
-            const { selected, op, colNr } = getActiveColState(state);
-            //for now, only vis is different
-            expressionBox = context === "Planet" ? expressionBoxGenerator() : expressionBoxGenerator();
-            if(context === "Planet"){
-                if(colNr === 0){
-                    expressionVis = planetHomeVisGenerator();
-                }
-                else if(op){
-                    expressionVis = findOpVisGenerator(op.id);
-                }
-                else{
-                    expressionVis = planetEmptyVisGenerator();
-                }
-            }
-
-            function findOpVisGenerator(opId){
-                switch(opId){
-                    case "get":{
-                        return planetGetVisGenerator();
-                    }
-                    default:{ return;};
-                }
-            }
-
-            console.log("expVis is", expressionVis)
+    function updateExpressionComponents(i){
+        //remove previous
+        if(expressionBoxComponents[i]){
+            //we don't want to remove the gs themselves, as they are managed via the EUE pattern
+            d3.select(this).select("g.box").selectAll("g.contents").remove();
+            d3.select(this).select("g.vis").selectAll("g.contents").remove();
         }
-        //set current
-        componentContext = context;
+        const { op } = state[i];
+        if(context === "Planet"){
+            switch(op?.id){
+                case "home":{
+                    expressionBoxComponents[i] = expressionBoxGenerator(); //for now, boxes are same
+                    expressionVisComponents[i] = planetHomeVisGenerator();
+                    break;
+                }
+                case "get":{
+                    expressionBoxComponents[i] = expressionBoxGenerator(); //for now, boxes are same
+                    expressionVisComponents[i] = planetGetVisGenerator();
+                    break;
+                }
+                case "agg":{
+                    expressionBoxComponents[i] = expressionBoxGenerator(); //for now, boxes are same
+                    expressionVisComponents[i] = planetAggVisGenerator();
+                    break;
+                }
+                //default when no op ie col will be empty
+                default:{
+                    expressionBoxComponents[i] = expressionBoxGenerator(); //for now, boxes are same
+                    expressionVisComponents[i] = planetEmptyVisGenerator();
+                }
+            }
+        }else{
+            //for now its the saem, but this will be the landscape context
+            switch(op?.id){
+                case "home":{
+                    expressionBoxComponents[i] = expressionBoxGenerator(); //for now, boxes are same
+                    expressionVisComponents[i] = planetHomeVisGenerator();
+                    break;
+                }
+                case "get":{
+                    expressionBoxComponents[i] = expressionBoxGenerator(); //for now, boxes are same
+                    expressionVisComponents[i] = planetGetVisGenerator();
+                    break;
+                }
+                //default when no op ie col will be empty
+                default:{
+                    expressionBoxComponents[i] = expressionBoxGenerator(); //for now, boxes are same
+                    expressionVisComponents[i] = planetEmptyVisGenerator();
+                }
+            }
+        }
     }
     function expression(selection){
         expressionG = selection;
+
+        const backgroundRect = expressionG.selectAll("rect.background").data([{width,height}])
+        backgroundRect.enter()
+            .append("rect")
+            .attr("class", "background")
+            .merge(backgroundRect)
+            .attr("width", d => d.width)
+            .attr("height", d => d.height)
+            .attr("fill", COLOURS.exp.bg)
+
         //console.log("expressoin state", selection.datum())
         selection.each(function(stateData){
             state = stateData;
-            console.log("exp state", state)
-            //add the previous col state to each colState
-            const colStateWithPrev = state.map((col,i) => i === 0 ? col : { ...col, prev:state[i - 1]});
+            //console.log("exp state", state)
             //BIND
-            const colG = selection.selectAll("g.col").data(colStateWithPrev)
+            const colG = selection.selectAll("g.col").data(state)
 
             //ENTER
             //here we append the g, but after this point .enter will still refer to the pre-entered placeholder nodes
             const colGEnter = colG.enter()
                .append("g")
-               .attr("class", "col")
-               .attr("transform", (d,i) => {
-                    console.log("enter", d)
-                    return "translate(" +(i * (colWidth + colMargin.right))+",0)"
-               })
+               .attr("class", (d,i) => "col col-"+i)
+               .attr("transform", (d,i) => "translate(" +(i * (colWidth + colMargin.right))+",0)")
+
+            
+            colGEnter.append("rect")
+                .attr("class", "background")
+                .attr("width", colWidth - colMargin.right)
+                .attr("height", colHeight)
+                .attr("fill", COLOURS.exp.col.bg)
 
             colGEnter.append("g").attr("class", "box")
             colGEnter.append("g").attr("class", "vis").attr("transform", "translate(0," + (boxHeight) +")")
             //note - if we merge, the indexes will stay as they are from orig sel and sel.enter()
             //os need to select again
-            const colGMerged = colG.merge(colGEnter);
-            colGMerged
+            colG.merge(colGEnter)
                 .each(function(d,i){
-                    updateExpressionBoxComponent(i);
-                    d3.select(this).select("g.box").call(expressionBox.width(boxAndVisWidth).height(boxHeight))
-                })
-            colGMerged
-                .each(function(d,i){
-                    updateExpressionVisComponent(i);
-                    d3.select(this).select("g.vis").call(expressionVis.width(boxAndVisWidth).height(visHeight))
+                    //update components
+                    //expressionBox and expressionVis are both updated in sync with each other
+                    //@todo - the box will always be rendered, so use that to check for updates instead of vis
+                    //but to do this, we need a different expBox for each context and op
+                    const contextHasChanged = expressionVisComponents[i]?.applicableContext !== context;
+                    const opHasChanged = expressionVisComponents[i]?.applicableOp !== d.op?.id;
+                    if(contextHasChanged || opHasChanged){
+                        updateExpressionComponents.call(this, i)
+                    }
+                    //call components
+                     //todo - height not being passed thru successfully
+                    d3.select(this).select("g.box")
+                        .call(expressionBoxComponents[i].width(boxAndVisWidth).height(boxHeight))
+                    d3.select(this).select("g.vis")
+                        .call(expressionVisComponents[i].width(boxAndVisWidth).height(visHeight))
                 })
 
             //EXIT

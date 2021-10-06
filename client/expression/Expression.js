@@ -4,6 +4,7 @@ import Button from '@material-ui/core/Button'
 import { makeStyles } from '@material-ui/core/styles';
 import expressionBuilderGenerator from "./expressionBuilderGenerator";
 import { getInstances, planetData, opsInfo } from './data';
+import { COLOURS } from "./constants";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -16,8 +17,7 @@ const useStyles = makeStyles((theme) => ({
     margin:"5px",
   },
   svg:{
-      border:"solid",
-      background:"grey",
+      background:COLOURS.svg.bg,
       width:"840px",
       height:"420px",
       padding:"20px" 
@@ -25,14 +25,21 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 const Expression = ({}) => {
-  const initExpState = [{}]
+  const initExpState = [{op:{id:"home",name:"For Each" }}]
   const styleProps = { };
   const classes = useStyles();
   const availableContexts = ["Planet", "Landscape"]
+  //change context
   const [context, setContext] = useState(availableContexts[0])
+  //should be ref as not changing
   const [expressionBuilder, setExpressionBuilder] = useState(undefined)
   const [expressionState, setExpressionState] = useState(initExpState)
-  //console.log("state", expressionState)
+  //console.log("Expression state", expressionState)
+  //embellish the state with the latest updates
+  //const fullState = state.map(colState =>({
+    //...colState,
+    //op:opsInfo.find()
+  //}))
 
   const containerRef = useRef(null);
 

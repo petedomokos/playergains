@@ -1,3 +1,4 @@
+import * as d3 from 'd3';
 import { filterPathD, groupByPathD, trianglePolygonPoints, arrowPathD, equalsPathD } from "./icons";
 
 export const planetData = [
@@ -27,6 +28,13 @@ export const planetData = [
     }
 ]
 
+export function getPropValueType(planetId, propertyId){
+    console.log("planetId", planetId)
+    if(!propertyId || !planetId) { return undefined;}
+    const planet = planetData.find(p => p.id ===planetId);
+    return planet.properties.find(p => p.id === propertyId)?.valueType
+}
+
 export const returnOptions = [
     {id:"total", name:"Total"},
     {id:"min", name:"Min"},
@@ -45,6 +53,15 @@ export const opsInfo = [
     { id:"groupBy", name:"Group", icon:{ nodeType:"path", d:groupByPathD } },
     { id:"agg", name:"Agg", icon:{ nodeType:"polygon", points:trianglePolygonPoints } },
     { id:"map", name:"Map", icon:{ nodeType:"path", d:arrowPathD } },
+]
+
+export const aggSubtools = [
+    {id:"count", name:"Count", f:data => data.length, applicableTo:["all"]},
+    {id:"sum", name:"Sum", f:d3.sum, applicableTo:["Number"]},
+    {id:"min", name:"Min", f:d3.min, applicableTo:["Number", "Date"]},
+    {id:"max", name:"Max", f:d3.max, applicableTo:["Number", "Date"]},
+    {id:"mean", name:"Mean", f:d3.mean, applicableTo:["Number"]},
+    {id:"sd", name:"Std Dev", f:d3.deviation, applicableTo:["Number"]}
 ]
 
 export function getInstances(planetId){

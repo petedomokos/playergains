@@ -1,4 +1,5 @@
 import * as d3 from 'd3';
+import { COLOURS } from "../constants"
 
 export function operationIconsGenerator(selection){
     //dimensions
@@ -20,25 +21,23 @@ export function operationIconsGenerator(selection){
     let opIconsG;
 
     function myOpIcons(selection){
-        //console.log("myOPIcon update")
         selection.each(function(opsData){
-            //console.log("calcIcons", opsData)
+            //console.log("opsData", opsData)
             if(!opIconsG){
                 opIconsG = d3.select(this)
             }
             //Bind
-            const iconG = opIconsG.selectAll("g.iconG").data(opsData)
+            const iconG = opIconsG.selectAll("g.icon").data(opsData, op => op.id)
             //Enter
             const iconGEnter = iconG.enter()
                 .append("g")
                     .attr("class", "icon")
-                    .attr("transform", (d,i) => "translate(" +(i * 50) + ",0)")
-                    .on("click", (e,d) => selectOp(d))
+                    .attr("transform", (d,i) =>"translate(" +(i * 50) + ",0)")
+                    .on("click", (e,d) => selectOp({...d, isSelected:undefined})) //donet send isSelected
 
             //note - this will become the full name and show on hover just below icon
             iconGEnter.append("text")
                 .attr("dominant-baseline", "hanging")
-                .attr("fill", d => d.isSelected ? "blue" : "black")
                 .attr("font-size", 12)
 
             iconGEnter.append("rect")
@@ -50,6 +49,7 @@ export function operationIconsGenerator(selection){
 
             //Update
             iconG.merge(iconGEnter).select("text")
+                .attr("fill", d => d.isSelected ? COLOURS.calc.op.selected : COLOURS.calc.op.nonSelected)
                 .text(d => d.name)
             
         })

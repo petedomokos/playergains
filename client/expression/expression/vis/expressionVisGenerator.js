@@ -17,6 +17,7 @@ export function expressionVisGenerator(selection){
     }
     function myExpressionVis(selection){        
         selection.each(function(d,i){
+            console.log("exp vis", d)
             const visG = d3.select(this);
             //ENTER
             if(visG.select("*").empty()){

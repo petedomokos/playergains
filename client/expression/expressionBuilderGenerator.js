@@ -2,7 +2,8 @@ import * as d3 from 'd3';
 import { planetsGenerator } from "./planetsGenerator";
 import { expressionGenerator } from "./expression/expressionGenerator";
 import { calcComponentGenerator } from "./calc-component/calcComponentGenerator";
-import { colsBefore, colsAfter } from "./helpers"
+import { colsBefore, colsAfter, getActiveColState } from "./helpers";
+import { aggSubtools, getInstances, getPropValueType } from "./data";
 
 /*
 
@@ -61,7 +62,10 @@ export default function expressionBuilderGenerator() {
         selection.each(function (data) {
             planetData = data.planets;
             opsInfo = data.opsInfo;
-            state = data.expressionState;
+            const { expressionState } = data;
+            //add the previous col state to each colState
+            state = expressionState.map((col,i) => i === 0 ? col : { ...col, prev:expressionState[i - 1]});
+            console.log("expBuilder state", state)
             //INIT
             if(!svg){
                 svg = d3.select(this);
@@ -97,11 +101,16 @@ export default function expressionBuilderGenerator() {
             .width(planetsWidth)
             .height(planetsHeight)
             .onSelect(function(planet, property){
+                const activeCol = getActiveColState(state);
+                const { colNr } = activeCol;
                 console.log("onSelect planet...", planet)
                 console.log("and property...", property)
-                //for now, active col is always the last one
-                const colNr = state.length - 1;
-                const updatedCol = {...state[colNr], selected:{planet, property, filter:{desc:"All"} } };
+                const updatedCol = {
+                    ...activeCol, 
+                    selected:{planet, property, filter:{desc:"All"} },
+                    //op is get if no op selected - home op is in 1st col already
+                    op:activeCol.op || opsInfo.find(op => op.id === "get")
+                };
                 setState([...colsBefore(colNr, state), updatedCol, {} ])
             })
 
@@ -112,13 +121,74 @@ export default function expressionBuilderGenerator() {
             .width(calcComponentWidth)
             .height(calcComponentHeight)
             .display(state[0].selected ? "inline" : "none")
+            //@todo - change op to tool, or subtool to subOp
             .selectOp((op) => {
-                //console.log("onSelect op",op)
+                console.log("onSelect op..................",op)
                 //for now, active col is always the last one
-                const colNr = state.length - 1;
-                const updatedCol = {...state[colNr], op};
+                const activeCol = getActiveColState(state);
+                const { colNr, prev } = activeCol;
+                //default subtool if op is agg 
+                let subtool;
+                let res;
+                const { planet, property} = prev.selected;
+                const valueType = getPropValueType(planet.id, property?.id)
+                if(op.id === "agg" && !activeCol.subtool){
+                    if(valueType === "number"){
+                        subtool = aggSubtools.find(t => t.id === "sum")
+                    }
+                    else if(activeCol.prev?.selected?.planet){
+                        subtool = aggSubtools.find(t => t.id === "count")
+                    }else{
+                        subtool = activeCol.subtool;
+                    }
+                    //result
+                    let accessor; 
+                    if(valueType === "Date"){
+                        accessor = x => new Date(x.propertyValues[property.id])
+                    }else if(valueType === "Number"){
+                        x => +x.propertyValues[property.id]
+                    }else if(valueType){
+                        x => x.propertyValues[property.id]
+                    }
+                    const data = getInstances(planet.id);
+                    res = createResult(subtool, data, accessor)
+                }
+                //update state
+                const updatedCol = {...activeCol, op, subtool, res};
                 setState([...colsBefore(colNr, state), updatedCol, ...colsAfter(colNr, state)])
             })
+            .selectSubtool((subtool) => {
+                console.log("onSelect subtool",subtool)
+                //for now, active col is always the last one
+                const activeCol = getActiveColState(state);
+                const { colNr, prev } = activeCol;
+                //result
+                const { planet, property} = prev.selected;
+                const valueType = getPropValueType(planet.id, property?.id)
+                let accessor; 
+                if(valueType === "Date"){
+                    accessor = x => new Date(x.propertyValues[property.id])
+                }else if(valueType === "Number"){
+                    x => +x.propertyValues[property.id]
+                }else if(valueType){
+                    x => x.propertyValues[property.id]
+                }
+                const data = getInstances(prev.selected.planet.id);
+                const res = createResult(subtool, data, accessor)
+                //update state
+                const updatedCol = {...activeCol, subtool, res};
+                setState([...colsBefore(colNr, state), updatedCol, ...colsAfter(colNr, state)])
+            })
+
+        function createResult(tool, data, accessor = x => x){
+            const { name="", f } = tool;
+            return {
+                name,
+                //letter: "b", //must have a running track of letters in top react level above all runs
+                value:f ? f(data) : "None"
+            }
+        }
+
         calcComponentG.datum({opsInfo, state}).call(calcComponent)
 
         //expression

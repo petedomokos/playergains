@@ -1,4 +1,5 @@
 import * as d3 from 'd3';
+import { COLOURS } from "../../constants"
 
 /*
     note - downside of merging colG before pasing through here is ts a bit trickier to do update only
@@ -15,12 +16,17 @@ export function planetEmptyVisGenerator(selection){
         chartWidth = width;
         //todo - call update
     }
+
+    //dom
+    //store contents on a separate g that can be removed if op or context changes without affecting the EUE pattern
+    let visContentsG;
     function myEmptyVis(selection){        
         selection.each(function(d,i){
             const visG = d3.select(this);
             //enter
             if(visG.select("*").empty()){
-                visG
+                visContentsG = visG.append("g").attr("class", "contents");
+                visContentsG
                     .append("line")
                         .attr("x1", 0)
                         .attr("y1", chartHeight/2)
@@ -30,18 +36,19 @@ export function planetEmptyVisGenerator(selection){
                         //.attr("fill", "#C0C0C0")
                         //.attr("stroke", "grey")
 
-                visG
+                visContentsG
                     .append("text")
                         .attr("class", "count")
                         .attr("transform", "translate("+(chartWidth - 5) +"," + (chartHeight + 5) +")")
                         .attr("text-anchor", "end")
                         .attr("dominant-baseline", "hanging")
+                        .attr("fill", COLOURS.exp.vis.count)
                         .text("Count:") 
             }
 
             //update
-            visG.attr("opacity", d.selected? 1 : 0)  
-            visG.select("text.count")
+            visContentsG.attr("opacity", d.selected || d.op ? 1 : 0)   
+            visContentsG.select("text.count")
                 .text("Count:" +(d.selected?.planet ? d.selected.planet.instances.length : 0))
 
         })
@@ -61,6 +68,7 @@ export function planetEmptyVisGenerator(selection){
         updateDimns();
         return myEmptyVis;
     };
+    myEmptyVis.applicableContext = "Planet"
     return myEmptyVis;
 
     }

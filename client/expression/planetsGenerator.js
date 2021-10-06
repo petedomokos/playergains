@@ -1,4 +1,5 @@
 import * as d3 from 'd3';
+import { COLOURS } from "./constants"
 
 export function planetsGenerator(){
     //api vars
@@ -37,13 +38,14 @@ export function planetsGenerator(){
                     .append("rect")
                         .attr("width", planetWidth)
                         .attr("height", planetHeight)
-                        .attr("fill", "aqua")
+                        .attr("fill", COLOURS.planet.bg)
 
             planetGEnter
                 .append("text")
                     .attr("transform", "translate(5,5)")
                     .attr("dominant-baseline", "hanging")
                     .attr("font-size", 14)
+                    .attr("fill", COLOURS.planet.name)
                     .text(d => d.name)
 
             //hitbox
@@ -74,7 +76,7 @@ export function planetsGenerator(){
                         .attr("transform", "translate(5,5)")
                         .attr("dominant-baseline", "hanging")
                         .attr("font-size", 12)
-                        .attr("fill", "green")
+                        .attr("fill", COLOURS.planet.property)
                         .text(d => d.name);
 
                 //hitbox
