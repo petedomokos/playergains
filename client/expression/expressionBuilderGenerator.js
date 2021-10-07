@@ -4,6 +4,7 @@ import { expressionGenerator } from "./expression/expressionGenerator";
 import { calcComponentGenerator } from "./calc-component/calcComponentGenerator";
 import { colsBefore, colsAfter, getActiveColState } from "./helpers";
 import { aggSubtools, getInstances, getPropValueType } from "./data";
+import { DIMNS } from "./constants";
 
 /*
 
@@ -14,20 +15,41 @@ export default function expressionBuilderGenerator() {
     let context;
     // dimensions
     let width = 600;
-    let height = 500;
-    let margin = { left:10, right:10, top:10, bottom:10}
+    let height = 600;
+    let margin = { ...DIMNS.margin, left:0 }
+    let contentsWidth;
+    let contentsHeight;
+
+    let planetsWidth = DIMNS.planets.width;
     let planetsHeight;
-    let planetsWidth = 100;
-    let expressionHeight;
-    let expressionWidth;
-    let expressionMargin = {left:50, right:20, top:10, bottom:10}
-    let calcComponentHeight = 150;
-    let calcComponentWidth;
-    //todo - wire margins etc up to height and width with an update functino
+
+    let expWrapperWidth;
+    let expWrapperHeight = DIMNS.expWrapper.height;
+    const expWrapperMargin = DIMNS.margin;
+    let expWrapperContentsWidth;
+    let expWrapperContentsHeight;
+
+    let calcWidth;
+    let calcHeight;
+
+    let expWidth;
+    let expHeight;
+
     function updateDimns(){
-        planetsHeight = height - margin.top - margin.bottom;
-        expressionHeight = height - margin.top - margin.bottom;
-        expressionWidth = width - planetsWidth;
+        contentsWidth = width - margin.left - margin.right;
+        contentsHeight = height - margin.top - margin.bottom;
+
+        planetsHeight = contentsHeight;
+
+        expWrapperWidth = contentsWidth - planetsWidth;
+        expWrapperHeight = height - margin.left - margin.right;
+        expWrapperContentsWidth = expWrapperWidth- expWrapperMargin.left - expWrapperMargin.right;
+        expWrapperContentsHeight = expWrapperHeight - expWrapperMargin.top - expWrapperMargin.bottom;
+
+        calcWidth = expWrapperContentsWidth;
+        calcHeight = 0.3 * (expWrapperContentsHeight)
+        expWidth = expWrapperContentsWidth;
+        expHeight = 0.7 * (expWrapperContentsHeight)
     };
 
     //functions
@@ -38,8 +60,7 @@ export default function expressionBuilderGenerator() {
     //dom
     let svg;
     let planetsG;
-    let calcComponentG;
-    let expressionG;
+    let expWrapperG;
 
     //data
     //Q - DO WE NEED TO STORE DATA AND STATE HERE??
@@ -62,45 +83,76 @@ export default function expressionBuilderGenerator() {
         selection.each(function (data) {
             planetData = data.planets;
             opsInfo = data.opsInfo;
-            const { expressionState } = data;
+            const { expBuilderState } = data;
+            console.log("expBuilderState", expBuilderState)
             //add the previous col state to each colState
-            state = expressionState.map((col,i) => i === 0 ? col : { ...col, prev:expressionState[i - 1]});
-            console.log("expBuilder state", state)
+            const amendedExpBuilderState = expBuilderState
+                .map(expState => expState
+                    .map((col,i) => i === 0 ? col : { ...col, prev:expState[i - 1]}));
+            
+            //dimensions
+            updateDimns()
+
+            //console.log("state", state)
             //INIT
             if(!svg){
                 svg = d3.select(this);
-                planetsG = svg.append("g").attr("class", "planets")
-                    .attr("transform", "translate(0" +"," + calcComponentHeight +")")
-
-                calcComponentG = svg.append("g").attr("class", "calc-component")
-                    .attr("transform", "translate(" +(planetsWidth +expressionMargin.left) +",0)")
-
-                expressionG = svg.append("g").attr("class", "expression")
-                    .attr("transform", "translate(" +(planetsWidth +expressionMargin.left) +"," + calcComponentHeight +")")
-                    
-                //functions
+                //create child components
                 planets = planetsGenerator();
                 calcComponent = calcComponentGenerator();
                 expression = expressionGenerator();
             }
+            //UPDATE CHILD COMPONENTS
+            updateComponents()
 
-            //UPDATE
-            update()
+            //DOM
+            //PLANETS
+            const planetsG = svg.selectAll("g.planets").data([planetData])
+            planetsG.enter()
+                .append("g")
+                    .attr("class", "planets")
+                    .merge(planetsG)
+                    .attr("transform", "translate("+margin.left +"," + (margin.top + calcHeight) +")")
+                    .call(planets)
+
+            //EXPRESSION-WRAPPERS
+            //bind
+            expWrapperG = svg.selectAll("g.exp-wrapper").data(amendedExpBuilderState);
+            //enter
+            expWrapperG.enter()
+                .append("g")
+                    .attr("class", (d,i) => "exp-wrapper exp-wrapper-"+i)
+                    .each(function(){
+                        d3.select(this).append("g").attr("class", "calc-component")
+                        d3.select(this).append("g").attr("class", "expression")
+                    })
+            //update
+            const expWrapperGMerged = expWrapperG.merge(expWrapperG)
+                .attr("transform", d => "translate(" +(margin.left +planetsWidth) +"," +(margin.top +(i *expWrapperHeight)) +")")
+            
+            expWrapperGMerged.select("g.calc-component")
+                .attr("transform", "translate(" +expWrapperMargin.left +"," +expWrapperMargin.top +")")
+                .datum(d => ({opsInfo, d}))
+                .call(calcComponent)
+            
+            expWrapperGMerged.select("g.expression")
+                .attr("transform", "translate(" +expWrapperMargin.left +"," +(expWrapperMargin.top +calcHeight) +")")
+                .datum(d => d)
+                .call(expression)
+                    
         })
         return selection;
     }
 
-    function update(){
-        //console.log("expBuilder update...")
-        if(!svg){ return ;}
-
-        updateDimns()
-
+    function updateComponents(){
         //planets
         planets
             .width(planetsWidth)
             .height(planetsHeight)
             .onSelect(function(planet, property){
+                //todo - activeCol must also have an exp Number, or a 'run' number
+                //todo - change expressoin to expRun, because some users will want teh excel approach
+                //ie all in one run, so its not neccesarily one expression per run
                 const activeCol = getActiveColState(state);
                 const { colNr } = activeCol;
                 console.log("onSelect planet...", planet)
@@ -114,12 +166,10 @@ export default function expressionBuilderGenerator() {
                 setState([...colsBefore(colNr, state), updatedCol, {} ])
             })
 
-        planetsG.datum(planetData).call(planets)
-
         //calcComponent
         calcComponent
-            .width(calcComponentWidth)
-            .height(calcComponentHeight)
+            .width(calcWidth)
+            .height(calcHeight)
             .display(state[0].selected ? "inline" : "none")
             //@todo - change op to tool, or subtool to subOp
             .selectOp((op) => {
@@ -134,10 +184,10 @@ export default function expressionBuilderGenerator() {
                 const valueType = getPropValueType(planet.id, property?.id)
                 if(op.id === "agg" && !activeCol.subtool){
                     if(valueType === "number"){
-                        subtool = aggSubtools.find(t => t.id === "sum")
+                        subtool = aggSubtools.find(t => t.id === "sum");
                     }
                     else if(activeCol.prev?.selected?.planet){
-                        subtool = aggSubtools.find(t => t.id === "count")
+                        subtool = aggSubtools.find(t => t.id === "count");
                     }else{
                         subtool = activeCol.subtool;
                     }
@@ -189,16 +239,11 @@ export default function expressionBuilderGenerator() {
             }
         }
 
-        calcComponentG.datum({opsInfo, state}).call(calcComponent)
-
         //expression
         expression
             .context(context)
-            .width(expressionWidth)
-            .height(expressionHeight)
-
-        expressionG.datum(state).call(expression)
-
+            .width(expWidth)
+            .height(expHeight);
     }     
 
     // api

@@ -4,7 +4,7 @@ import Button from '@material-ui/core/Button'
 import { makeStyles } from '@material-ui/core/styles';
 import expressionBuilderGenerator from "./expressionBuilderGenerator";
 import { getInstances, planetData, opsInfo } from './data';
-import { COLOURS } from "./constants";
+import { COLOURS, DIMNS } from "./constants";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -18,23 +18,26 @@ const useStyles = makeStyles((theme) => ({
   },
   svg:{
       background:COLOURS.svg.bg,
-      width:"840px",
-      height:"420px",
-      padding:"20px" 
+      //width:"840px",
+      //height:"420px",
+      //margin:"20px" 
   }
 }));
 
 const Expression = ({}) => {
-  const initExpState = [{op:{id:"home",name:"For Each" }}]
+  //each expression starts with 1 block
+  const initExpState = [{op:{id:"home",name:"For Each" }}];
+  //starts with 1 expression
+  const initState = [initExpState]
   const styleProps = { };
   const classes = useStyles();
   const availableContexts = ["Planet", "Landscape"]
   //change context
   const [context, setContext] = useState(availableContexts[0])
   //should be ref as not changing
-  const [expressionBuilder, setExpressionBuilder] = useState(undefined)
-  const [expressionState, setExpressionState] = useState(initExpState)
-  //console.log("Expression state", expressionState)
+  const [expBuilder, setExpBuilder] = useState(undefined)
+  const [expBuilderState, setExpBuilderState] = useState(initState)
+  //console.log("ExpBuilder state", expBuilderState)
   //embellish the state with the latest updates
   //const fullState = state.map(colState =>({
     //...colState,
@@ -43,36 +46,41 @@ const Expression = ({}) => {
 
   const containerRef = useRef(null);
 
+  //dimns
+  const { width } = DIMNS.svg;
+  const height = expBuilderState.length * DIMNS.expWrapper.height;
+  const { margin } = DIMNS;
+
   const onContextUpdate = (context) =>{
-    setExpressionState(initExpState)
+    setExpBuilderState(initState)
     setContext(context)
   }
   //init
   useEffect(() => {
     if(!containerRef.current){return; }
-    setExpressionBuilder(() => expressionBuilderGenerator()
-      .setState(setExpressionState));
+    setExpBuilder(() => expressionBuilderGenerator().setState(setExpBuilderState));
   }, [])
 
   //update data
   useEffect(() => {
      // console.log("2nd uE")
-      if(!containerRef.current || !expressionBuilder){return; }
+      if(!containerRef.current || !expBuilder){return; }
       //console.log("2nd useEff runniung")
       const data = {
         planets:planetData.map(p => ({ ...p, instances:getInstances(p.id) })),
         opsInfo,
-        expressionState
+        expBuilderState
       }
 
-      expressionBuilder
+
+      expBuilder
         .context(context)
-        .width(800)
-        .height(400);
+        .width(width - margin.left - margin.right)
+        .height(height - margin.left - margin.right);
 
-      d3.select(containerRef.current).datum(data).call(expressionBuilder)
+      d3.select(containerRef.current).datum(data).call(expBuilder)
 
-  }, [expressionState, expressionBuilder, context])
+  }, [expBuilderState, expBuilder, context])
 
   return (
     <div className={classes.root} >
@@ -87,7 +95,11 @@ const Expression = ({}) => {
           </Button>
         )}
       </div>
-        <svg className={classes.svg} id="exp1" ref={containerRef}></svg>
+        <svg 
+          className={classes.svg} 
+          width={width} 
+          height={height} 
+          id="exp1" ref={containerRef}></svg>
     </div>
   )
 }

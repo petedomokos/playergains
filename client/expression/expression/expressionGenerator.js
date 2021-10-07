@@ -11,7 +11,7 @@ import { COLOURS } from "../constants"
 export function expressionGenerator(){
     //dimns
     let width = 600;
-    let height = 500;
+    let height = 200;
     const margin = {};
     let colWidth = 140;
     let colHeight = height;
@@ -87,6 +87,7 @@ export function expressionGenerator(){
         }
     }
     function expression(selection){
+        console.log("expression() width", width)
         expressionG = selection;
 
         const backgroundRect = expressionG.selectAll("rect.background").data([{width,height}])

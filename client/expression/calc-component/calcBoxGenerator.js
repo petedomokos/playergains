@@ -2,19 +2,18 @@ import * as d3 from 'd3';
 import { toolForGetGenerator } from "./op-tools/toolForGet"
 import { toolForAggGenerator } from "./op-tools/toolForAgg"
 import { getActiveColState } from "../helpers"
-import { COLOURS } from "../constants"
+import { COLOURS, DIMNS } from "../constants"
 
 export function calcBoxGenerator(selection){
     //dimensions
     let width = 350;
     let height = 100;
-    let margin =  { top: 10, bottom:10, left:10, right:10 };
-    let chartHeight = height - margin.bottom;
-    let chartWidth = width;
+    let margin = DIMNS.margin;
+    let contentsWidth = width;
+    let contentsHeight = height - margin.bottom;
     const updateDimns = () =>{
-        chartHeight = height - margin.bottom;
-        chartWidth = width;
-        //todo - call update
+        contentsWidth = width - margin.left - margin.bottom;
+        contentsHeight = height - margin.top - margin.bottom;
     }
 
     //dom
@@ -111,8 +110,8 @@ export function calcBoxGenerator(selection){
 
             //background
             backgroundRect
-                .attr("width", chartWidth)
-                .attr("height", chartHeight)
+                .attr("width", contentsWidth)
+                .attr("height", contentsHeight)
             //op text
             opText
                 .text(selectedOp?.name || "")

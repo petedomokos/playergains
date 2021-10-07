@@ -2,23 +2,26 @@ import * as d3 from 'd3';
 import { calcBoxGenerator } from './calcBoxGenerator'
 import { operationIconsGenerator } from './operationIconsGenerator'
 import { getActiveColState } from "../helpers"
+import { DIMNS } from "../constants";
 
 export function calcComponentGenerator(selection){
     //dimensions
     let width = 130;
     let height = 40;
-    let margin =  { top: 10, bottom:10, left:100, right:10 };
-    let chartHeight = height - margin.bottom;
-    let chartWidth = width;
+    let margin =  DIMNS.margin;
+    let contentsHeight;
+    let contentsWidth;
     const updateDimns = () =>{
-        chartHeight = height - margin.bottom;
-        chartWidth = width;
+        contentsHeight = height - margin.top - margin.bottom;
+        contentsWidth = width - margin.left - margin.right;
         //todo - call update
     }
-    let calcBoxWidth = 400;
-    let calcBoxHeight = 100;
-    let opIconsWidth = 120;
-    let opIconsHeight = 40;
+
+    let opIconsWidth = width - margin.left - margin.right;
+    //icons height is fixed
+    let opIconsHeight = DIMNS.calc.icons.height;
+    let calcBoxWidth = height - margin.top - margin.bottom - opIconsHeight;
+    let calcBoxHeight = width - margin.left - margin.right;
 
     //components
     let calcBox;
@@ -39,7 +42,6 @@ export function calcComponentGenerator(selection){
     function myCalcComponent(selection){
         selection.each(function(data){
             const { opsInfo, state } = data;
-            //console.log("calccomponent state", state)
             //init
             if(!calcComponentG){
                 //dom

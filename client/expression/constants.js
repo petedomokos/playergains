@@ -1,3 +1,30 @@
+export const DIMNS = {
+    margin:{ left:10, right:10, top:10, bottom:10 },
+    svg:{
+        width:800,
+    },
+    planets:{
+        width:100,
+    },
+    expWrapper:{
+        height:400,
+    },
+    exp:{
+    },
+    calc:{
+        width:400,
+        height:100,
+        icons:{
+            width:120,
+            height:40
+        },
+        box:{
+        }
+    }
+}
+
+
+
 const grey10 = (i) => ["#FFFFFF", "#E8E8E8","#D3D3D3", "#BEBEBE", "#A8A8A8", "#888888", "#696969", "#505050", "#303030", "#000000"][i-1]
 
 export const COLOURS = {

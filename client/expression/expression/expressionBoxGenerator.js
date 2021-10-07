@@ -27,7 +27,7 @@ export function expressionBoxGenerator(selection){
     function myExpressionBox(selection){
         //selection is a single boxG so i always 0
         selection.each(function(d){
-            console.log("expBox d",d)
+            //console.log("expBox d",d)
             const boxG = d3.select(this);
             //ENTER
             if(boxG.select("*").empty()){
@@ -88,7 +88,6 @@ export function expressionBoxGenerator(selection){
         })
         //helpers
         function selectionText(d){
-            console.log("selText", d)
             const planetName = d.selected?.planet.name || "";
             //property will only be defined if planet is defined
             const propertyName = d.selected?.property?.name || "";

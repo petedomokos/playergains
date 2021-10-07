@@ -1,17 +1,16 @@
 import * as d3 from 'd3';
-import { COLOURS } from "../constants"
+import { COLOURS, DIMNS } from "../constants"
 
 export function operationIconsGenerator(selection){
     //dimensions
     let width = 130;
     let height = 40;
-    let margin =  { top: 10, bottom:10, left:0, right:10 };
-    let chartHeight = height - margin.bottom;
-    let chartWidth = width;
+    let margin = { left:5, right:5, top:5, bottom:5 };
+    let contentsWidth = width - margin.left - margin.right;
+    let contentsHeight = height - margin.top - margin.bottom;
     const updateDimns = () =>{
-        chartHeight = height - margin.bottom;
-        chartWidth = width;
-        //todo - call update
+        contentsWidth = width - margin.left - margin.right
+        contentsHeight = height - margin.top - margin.bottom;
     }
 
     //handlers
