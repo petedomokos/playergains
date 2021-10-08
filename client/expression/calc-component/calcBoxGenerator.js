@@ -8,9 +8,9 @@ export function calcBoxGenerator(selection){
     //dimensions
     let width = 350;
     let height = 100;
-    let margin = DIMNS.margin;
-    let contentsWidth = width;
-    let contentsHeight = height - margin.bottom;
+    let margin = { left:DIMNS.calc.children.margin.left, right:5, top:5, bottom:5};
+    let contentsWidth;
+    let contentsHeight;
     const updateDimns = () =>{
         contentsWidth = width - margin.left - margin.bottom;
         contentsHeight = height - margin.top - margin.bottom;
@@ -78,6 +78,8 @@ export function calcBoxGenerator(selection){
             const { opsInfo, state} = data;
             const activeColState = getActiveColState(state);
             selectedOp = activeColState.op;
+
+            updateDimns();
             //ENTER
             if(!boxG){
                 boxG = d3.select(this);
@@ -110,6 +112,7 @@ export function calcBoxGenerator(selection){
 
             //background
             backgroundRect
+                .attr("transform", "translate(" + margin.left + ", " + margin.top + ")")
                 .attr("width", contentsWidth)
                 .attr("height", contentsHeight)
             //op text

@@ -21,12 +21,15 @@ export const DIMNS = {
     calc:{
         width:400,
         height:100, //temp
+        children:{
+            margin:{ left:5 }
+        },
         icons:{
             width:120,
-            height:40
+            height:20
         },
         box:{
-        }
+        },
     },
     chainButtons:{
         height:30,
@@ -87,3 +90,16 @@ export const COLOURS = {
     },
     instruction:grey10(9),
 }
+
+/*
+
+if(selection.select("rect.test").empty()){
+            selection.append("rect")
+                .attr("class", "test")
+                .attr("width", width)
+                .attr("height", height)
+                .attr("fill", "blue")
+                .attr("opacity", 0.6)
+        }
+
+        */

@@ -27,7 +27,7 @@ export function expressionBoxGenerator(selection){
     function myExpressionBox(selection){
         //selection is a single boxG so i always 0
         selection.each(function(d){
-            //console.log("expBox d",d)
+            console.log("expBox d",d)
             const boxG = d3.select(this);
             //ENTER
             if(boxG.select("*").empty()){
@@ -70,14 +70,13 @@ export function expressionBoxGenerator(selection){
             //background
             contentsG.select("rect").attr("width", chartWidth).attr("height", chartHeight)
             //text
+            console.log("d",d)
             contentsG.select("text.instruction")
                 .attr("transform", "translate(+"+(chartWidth/2) +"," + (chartHeight/2) +")")
-                .attr("display", (d.selected || (d.op?.id !== "home") ? "none" : "inline"))
+                .attr("display", (d.selected || (d.op && d.op.id !== "home") ? "none" : "inline"))
                 .text("Click tool, planet or property")
 
             contentsG.select("text.op")
-            //temp remove for 1st col before selection - todo - the first col op shpuld be 
-            //set when user clicks planet, OR the 1st col planet should be already set
                 .attr("display", d.op?.id === "home" && !d.selected ? "none" : "inline")
                 .text(d.op?.name || "")
 

@@ -53,8 +53,8 @@ export default function expressionBuilderGenerator() {
 
     //functions
     let planets;
-    let calcComponent;
-    let expression;
+    let calcComponents = [];
+    let expressions = [];
 
     //dom
     let svg;
@@ -67,7 +67,7 @@ export default function expressionBuilderGenerator() {
     const buttonsInfo = ["New", "Copy", "Del"];
 
     //state
-    let state = [{}]
+    let state;
     let setState = () =>{}
 
     const dispatch = d3.dispatch("setState");
@@ -79,29 +79,34 @@ export default function expressionBuilderGenerator() {
     function expressionBuilder(selection) {
         // expression elements
         selection.each(function (data) {
+            svg = d3.select(this);
             planetData = data.planets;
             opsInfo = data.opsInfo;
             const { expBuilderState, activeChainIndex} = data;
-            console.log("expBuilderState", expBuilderState)
             //add the previous col state to each colState
             const amendedExpBuilderState = expBuilderState
                 .map(expState => expState
-                    .map((col,i) => i === 0 ? col : { ...col, prev:expState[i - 1]}));
+                    .map((col,i) => i === 0 ? col : { ...col, prev:expState[i - 1] }));
+
+            //set state to be the active chain
+            state = amendedExpBuilderState[activeChainIndex];
+            
+            console.log("amendedExpBuilderState", amendedExpBuilderState)
             
             //dimensions
             updateDimns(expBuilderState.length)
 
             //console.log("state", state)
-            //INIT
-            if(!svg){
-                svg = d3.select(this);
+            //INIT COMPONENTS
+            if(!planets) { planets = planetsGenerator(); }
+            expBuilderState.forEach((chainState,i) => {
                 //create child components
-                planets = planetsGenerator();
-                calcComponent = calcComponentGenerator();
-                expression = expressionGenerator();
-            }
+                if(!calcComponents[i]) { calcComponents[i] = calcComponentGenerator(); }
+                if(!expressions[i]) {  expressions[i] = expressionGenerator(); }
+            })
             //UPDATE CHILD COMPONENTS
-            updateComponents()
+            //todo - remove this and do as part of teh selectAll update chain
+            updateComponents(activeChainIndex, amendedExpBuilderState)
 
             //DOM
             //PLANETS
@@ -149,17 +154,23 @@ export default function expressionBuilderGenerator() {
                      const chainHeightsAbove = i * (chainWrapperMargin.top +expAndButtonsHeight +chainWrapperMargin.bottom) + (i > activeChainIndex ? calcHeight : 0)
                     return "translate("+chainWrapperMargin.left +"," +chainHeightsAbove +")"
                 })
-            /*
+
+            //helper - temp
+            const opChosen = colState => colState.op && colState.op.id !== "home"
             chainWrapperGMerged.select("g.calc-component")
-                //.attr("transform", "translate(0,0)")
-                .datum(d => ({opsInfo, d}))
-                .call(calcComponent)
-            */
+                .attr("transform", "translate(0,0)")
+                .attr("display", (d,i) => (activeChainIndex === i && (d[0].selected || opChosen(d[0])) ? "inline" : "none"))
+                .each(function(d,i){
+                    //@todo - remove opsInfo from data make it api so we just pass d here as data
+                    d3.select(this).datum({opsInfo, state:d}).call(calcComponents[i])
+                })
+
            //shift exp down below the calc box if it is active
             chainWrapperGMerged.select("g.expression")
                 .attr("transform", (d,i) => "translate(0," +(i === activeChainIndex ? calcHeight : 0) +")")
-                .datum(d => d)
-                .call(expression)
+                .each(function(d,i){
+                    d3.select(this).datum(d).call(expressions[i])
+                })
 
             //buttons
             chainWrapperGMerged.select("g.buttons")
@@ -205,7 +216,7 @@ export default function expressionBuilderGenerator() {
         return selection;
     }
 
-    function updateComponents(){
+    function updateComponents(activeChainIndex, expBuilderState){
         //planets
         planets
             .width(planetsWidth)
@@ -218,6 +229,8 @@ export default function expressionBuilderGenerator() {
                 const { colNr } = activeCol;
                 console.log("onSelect planet...", planet)
                 console.log("and property...", property)
+                //console.log("state", state)
+                //console.log("activeCol", activeCol)
                 const updatedCol = {
                     ...activeCol, 
                     selected:{planet, property, filter:{desc:"All"} },
@@ -228,31 +241,56 @@ export default function expressionBuilderGenerator() {
             })
 
         //calcComponent
-        calcComponent
-            .width(calcWidth)
-            .height(calcHeight)
-            .display(state[0].selected ? "inline" : "none")
-            //@todo - change op to tool, or subtool to subOp
-            .selectOp((op) => {
-                console.log("onSelect op..................",op)
-                //for now, active col is always the last one
-                const activeCol = getActiveColState(state);
-                const { colNr, prev } = activeCol;
-                //default subtool if op is agg 
-                let subtool;
-                let res;
-                const { planet, property} = prev.selected;
-                const valueType = getPropValueType(planet.id, property?.id)
-                if(op.id === "agg" && !activeCol.subtool){
-                    if(valueType === "number"){
-                        subtool = aggSubtools.find(t => t.id === "sum");
+        calcComponents.forEach((calcComponent,i) => {
+            const chainState = expBuilderState[i]
+            calcComponent
+                .width(calcWidth)
+                .height(calcHeight)
+                //@todo - change op to tool, or subtool to subOp
+                .selectOp((op) => {
+                    console.log("onSelect op..................",op)
+                    //for now, active col is always the last one
+                    const activeCol = getActiveColState(state);
+                    console.log("activeCol", activeCol)
+                    const { colNr, prev } = activeCol;
+                    //default subtool if op is agg 
+                    let subtool;
+                    let res;
+                    const { planet, property} = prev.selected;
+                    const valueType = getPropValueType(planet.id, property?.id)
+                    if(op.id === "agg" && !activeCol.subtool){
+                        if(valueType === "number"){
+                            subtool = aggSubtools.find(t => t.id === "sum");
+                        }
+                        else if(activeCol.prev?.selected?.planet){
+                            subtool = aggSubtools.find(t => t.id === "count");
+                        }else{
+                            subtool = activeCol.subtool;
+                        }
+                        //result
+                        let accessor; 
+                        if(valueType === "Date"){
+                            accessor = x => new Date(x.propertyValues[property.id])
+                        }else if(valueType === "Number"){
+                            x => +x.propertyValues[property.id]
+                        }else if(valueType){
+                            x => x.propertyValues[property.id]
+                        }
+                        const data = getInstances(planet.id);
+                        res = createResult(subtool, data, accessor)
                     }
-                    else if(activeCol.prev?.selected?.planet){
-                        subtool = aggSubtools.find(t => t.id === "count");
-                    }else{
-                        subtool = activeCol.subtool;
-                    }
+                    //update state
+                    const updatedCol = {...activeCol, op, subtool, res};
+                    setState([...elementsBefore(colNr, state), updatedCol, ...elementsAfter(colNr, state)])
+                })
+                .selectSubtool((subtool) => {
+                    console.log("onSelect subtool",subtool)
+                    //for now, active col is always the last one
+                    const activeCol = getActiveColState(state);
+                    const { colNr, prev } = activeCol;
                     //result
+                    const { planet, property} = prev.selected;
+                    const valueType = getPropValueType(planet.id, property?.id)
                     let accessor; 
                     if(valueType === "Date"){
                         accessor = x => new Date(x.propertyValues[property.id])
@@ -261,35 +299,13 @@ export default function expressionBuilderGenerator() {
                     }else if(valueType){
                         x => x.propertyValues[property.id]
                     }
-                    const data = getInstances(planet.id);
-                    res = createResult(subtool, data, accessor)
-                }
-                //update state
-                const updatedCol = {...activeCol, op, subtool, res};
-                setState([...elementsBefore(colNr, state), updatedCol, ...elementsAfter(colNr, state)])
-            })
-            .selectSubtool((subtool) => {
-                console.log("onSelect subtool",subtool)
-                //for now, active col is always the last one
-                const activeCol = getActiveColState(state);
-                const { colNr, prev } = activeCol;
-                //result
-                const { planet, property} = prev.selected;
-                const valueType = getPropValueType(planet.id, property?.id)
-                let accessor; 
-                if(valueType === "Date"){
-                    accessor = x => new Date(x.propertyValues[property.id])
-                }else if(valueType === "Number"){
-                    x => +x.propertyValues[property.id]
-                }else if(valueType){
-                    x => x.propertyValues[property.id]
-                }
-                const data = getInstances(prev.selected.planet.id);
-                const res = createResult(subtool, data, accessor)
-                //update state
-                const updatedCol = {...activeCol, subtool, res};
-                setState([...elementsBefore(colNr, state), updatedCol, ...elementsAfter(colNr, state)])
-            })
+                    const data = getInstances(prev.selected.planet.id);
+                    const res = createResult(subtool, data, accessor)
+                    //update state
+                    const updatedCol = {...activeCol, subtool, res};
+                    setState([...elementsBefore(colNr, state), updatedCol, ...elementsAfter(colNr, state)])
+                })
+        })
 
         function createResult(tool, data, accessor = x => x){
             const { name="", f } = tool;
@@ -301,10 +317,12 @@ export default function expressionBuilderGenerator() {
         }
 
         //expression
-        expression
-            .context(context)
-            .width(expWidth)
-            .height(expHeight);
+        expressions.forEach(expression => {
+            expression
+                .context(context)
+                .width(expWidth)
+                .height(expHeight);
+        })
     }     
 
     // api

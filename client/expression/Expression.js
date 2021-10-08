@@ -38,7 +38,7 @@ const Expression = ({}) => {
   //should be ref as not changing
   const [expBuilder, setExpBuilder] = useState(undefined)
   const [expBuilderState, setExpBuilderState] = useState(initState)
-  const [activeChainIndex, setActiveChainIndex] = useState(0)
+  const [activeChainIndex, setActiveChainIndex] = useState(1)
   //console.log("ExpBuilder state", expBuilderState)
   //embellish the state with the latest updates
   //const fullState = state.map(colState =>({

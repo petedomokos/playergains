@@ -100,6 +100,7 @@ export function expressionGenerator(){
         }
     }
     function expression(selection){
+        console.log("expression", selection.datum())
         expressionG = selection;
 
         updateDimns()
