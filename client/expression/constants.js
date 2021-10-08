@@ -1,25 +1,35 @@
+
+const defaultMargin = { left:10, right:10, top:10, bottom:10 };
 export const DIMNS = {
-    margin:{ left:10, right:10, top:10, bottom:10 },
+    margin:defaultMargin,
     svg:{
         width:800,
+        minHeight:400
+    },
+    expBuilder:{
+        margin:defaultMargin
     },
     planets:{
         width:100,
     },
-    expWrapper:{
-        height:400,
+    chainWrapper:{
+        margin:defaultMargin
     },
     exp:{
+        height:200 //temp
     },
     calc:{
         width:400,
-        height:100,
+        height:100, //temp
         icons:{
             width:120,
             height:40
         },
         box:{
         }
+    },
+    chainButtons:{
+        height:30,
     }
 }
 
@@ -35,6 +45,12 @@ export const COLOURS = {
         bg:"aqua",
         name:grey10(8),
         property:grey10(5)
+    },
+    chainWrapper:{
+        btn:{
+            bg:"transparent",
+            col:grey10(6)
+        }
     },
     exp:{
         bg:grey10(3),

@@ -27,5 +27,5 @@ export function getPrevActiveColState(state){
 
 */
 
-export const colsBefore = (i, arr) => arr.slice(0, i)
-export const colsAfter = (i, arr) => arr.slice(i + 1, arr.length)
+export const elementsBefore = (i, arr) => arr.slice(0, i)
+export const elementsAfter = (i, arr) => arr.slice(i + 1, arr.length)

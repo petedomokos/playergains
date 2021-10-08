@@ -6,19 +6,32 @@ import { planetHomeVisGenerator } from './vis/planetHomeVisGenerator';
 import { planetGetVisGenerator } from './vis/planetGetVisGenerator';
 import { planetAggVisGenerator } from './vis/planetAggVisGenerator';
 import { planetEmptyVisGenerator } from './vis/planetEmptyVisGenerator';
-import { COLOURS } from "../constants"
+import { COLOURS, DIMNS } from "../constants"
 
 export function expressionGenerator(){
     //dimns
     let width = 600;
     let height = 200;
-    const margin = {};
+    //we take of the bottom margin as we already have one from a higher level
+    const margin = { ...DIMNS.margin, bottom:0};
+    let contentsWidth;
+    let contentsHeight;
     let colWidth = 140;
-    let colHeight = height;
-    const colMargin = { right: 20 }
-    let boxAndVisWidth = 130;
-    let boxHeight = 50;
-    let visHeight = 200;
+    let colHeight;
+    const colMargin = { left:10, right: 10, top:10, bottom:0 }
+    const colContentsWidth = colWidth - colMargin.left - colMargin.right
+    let colContentsHeight;
+
+    const boxHeight = 50;
+    let visHeight;
+
+    function updateDimns(){
+        contentsWidth = width - margin.left - margin.right;
+        contentsHeight = height - margin.top - margin.bottom;
+        colHeight = contentsHeight;
+        colContentsHeight = colHeight - colMargin.top - colMargin.bottom;
+        visHeight = colContentsHeight - boxHeight;
+ };
 
     //context
     let context;
@@ -87,8 +100,9 @@ export function expressionGenerator(){
         }
     }
     function expression(selection){
-        console.log("expression() width", width)
         expressionG = selection;
+
+        updateDimns()
 
         const backgroundRect = expressionG.selectAll("rect.background").data([{width,height}])
         backgroundRect.enter()
@@ -111,13 +125,17 @@ export function expressionGenerator(){
             const colGEnter = colG.enter()
                .append("g")
                .attr("class", (d,i) => "col col-"+i)
-               .attr("transform", (d,i) => "translate(" +(i * (colWidth + colMargin.right))+",0)")
+               .attr("transform", (d,i) => {
+                   //shift the initial margin left, then a complete set for each prev col
+                   const deltaX = colMargin.left +i * (colWidth + colMargin.right + colMargin.left);
+                   return "translate(" +deltaX +"," + colMargin.top+")"
+               })
 
             
             colGEnter.append("rect")
                 .attr("class", "background")
-                .attr("width", colWidth - colMargin.right)
-                .attr("height", colHeight)
+                .attr("width", colContentsWidth)
+                .attr("height", colContentsHeight)
                 .attr("fill", COLOURS.exp.col.bg)
 
             colGEnter.append("g").attr("class", "box")
@@ -138,9 +156,9 @@ export function expressionGenerator(){
                     //call components
                      //todo - height not being passed thru successfully
                     d3.select(this).select("g.box")
-                        .call(expressionBoxComponents[i].width(boxAndVisWidth).height(boxHeight))
+                        .call(expressionBoxComponents[i].width(colContentsWidth).height(boxHeight))
                     d3.select(this).select("g.vis")
-                        .call(expressionVisComponents[i].width(boxAndVisWidth).height(visHeight))
+                        .call(expressionVisComponents[i].width(colContentsWidth).height(visHeight))
                 })
 
             //EXIT

@@ -5,6 +5,7 @@ import { makeStyles } from '@material-ui/core/styles';
 import expressionBuilderGenerator from "./expressionBuilderGenerator";
 import { getInstances, planetData, opsInfo } from './data';
 import { COLOURS, DIMNS } from "./constants";
+import { elementsBefore, elementsAfter } from "./helpers";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -26,9 +27,9 @@ const useStyles = makeStyles((theme) => ({
 
 const Expression = ({}) => {
   //each expression starts with 1 block
-  const initExpState = [{op:{id:"home",name:"For Each" }}];
+  const initChainState = [{op:{id:"home",name:"For Each" }}];
   //starts with 1 expression
-  const initState = [initExpState]
+  const initState = [initChainState, initChainState]
   const styleProps = { };
   const classes = useStyles();
   const availableContexts = ["Planet", "Landscape"]
@@ -37,6 +38,7 @@ const Expression = ({}) => {
   //should be ref as not changing
   const [expBuilder, setExpBuilder] = useState(undefined)
   const [expBuilderState, setExpBuilderState] = useState(initState)
+  const [activeChainIndex, setActiveChainIndex] = useState(0)
   //console.log("ExpBuilder state", expBuilderState)
   //embellish the state with the latest updates
   //const fullState = state.map(colState =>({
@@ -48,9 +50,15 @@ const Expression = ({}) => {
 
   //dimns
   const { width } = DIMNS.svg;
-  const height = expBuilderState.length * DIMNS.expWrapper.height;
-  const { margin } = DIMNS;
-
+  const expBuilderMargin = DIMNS.expBuilder.margin;
+  const chainWrapperMargin = DIMNS.chainWrapper.margin;
+  //content is 1 exp per chain, plus 1 calc box for the active chain
+  const expAndButtonsHeight = DIMNS.exp.height + DIMNS.chainButtons.height;
+  const nrOfChains = expBuilderState.length;
+  //there will only be 1 calc box open
+  const expBuilderContentHeight = nrOfChains * (chainWrapperMargin.top + expAndButtonsHeight + chainWrapperMargin.bottom) + DIMNS.calc.height
+  //make sure svg height is at least big enough for planets, and big enough for number of chains required
+  const height = d3.max([DIMNS.svg.minHeight, expBuilderContentHeight + expBuilderMargin.top + expBuilderMargin.bottom]); 
   const onContextUpdate = (context) =>{
     setExpBuilderState(initState)
     setContext(context)
@@ -58,7 +66,11 @@ const Expression = ({}) => {
   //init
   useEffect(() => {
     if(!containerRef.current){return; }
-    setExpBuilder(() => expressionBuilderGenerator().setState(setExpBuilderState));
+    setExpBuilder(() => expressionBuilderGenerator()
+      .setState((updatedChainState => {
+        setExpBuilderState(prevState => ([...elementsBefore(activeChainIndex, prevState), updatedChainState, ...elementsAfter(activeChainIndex, prevState)]))
+      }))
+    )
   }, [])
 
   //update data
@@ -69,14 +81,12 @@ const Expression = ({}) => {
       const data = {
         planets:planetData.map(p => ({ ...p, instances:getInstances(p.id) })),
         opsInfo,
-        expBuilderState
+        expBuilderState,
+        activeChainIndex
       }
 
 
-      expBuilder
-        .context(context)
-        .width(width - margin.left - margin.right)
-        .height(height - margin.left - margin.right);
+      expBuilder.context(context).width(width).height(height);
 
       d3.select(containerRef.current).datum(data).call(expBuilder)
 

@@ -2,9 +2,9 @@ import * as d3 from 'd3';
 import { planetsGenerator } from "./planetsGenerator";
 import { expressionGenerator } from "./expression/expressionGenerator";
 import { calcComponentGenerator } from "./calc-component/calcComponentGenerator";
-import { colsBefore, colsAfter, getActiveColState } from "./helpers";
+import { elementsBefore, elementsAfter, getActiveColState } from "./helpers";
 import { aggSubtools, getInstances, getPropValueType } from "./data";
-import { DIMNS } from "./constants";
+import { COLOURS, DIMNS } from "./constants";
 
 /*
 
@@ -16,40 +16,39 @@ export default function expressionBuilderGenerator() {
     // dimensions
     let width = 600;
     let height = 600;
-    let margin = { ...DIMNS.margin, left:0 }
+    const margin = DIMNS.expBuilder.margin;
     let contentsWidth;
     let contentsHeight;
 
     let planetsWidth = DIMNS.planets.width;
     let planetsHeight;
 
-    let expWrapperWidth;
-    let expWrapperHeight = DIMNS.expWrapper.height;
-    const expWrapperMargin = DIMNS.margin;
-    let expWrapperContentsWidth;
-    let expWrapperContentsHeight;
-
+    let chainWrapperWidth;
+    let chainWrapperContentsWidth;
     let calcWidth;
-    let calcHeight;
-
     let expWidth;
-    let expHeight;
+    let buttonsWidth;
 
-    function updateDimns(){
+    //let chainWrapperFullHeight;
+    //let chainWrapperFullContentsHeight;
+    const calcHeight = DIMNS.calc.height; //100
+    const expHeight = DIMNS.exp.height; //150
+    const buttonsHeight = DIMNS.chainButtons.height; //40
+    const expAndButtonsHeight = expHeight + buttonsHeight;
+
+    const chainWrapperMargin = DIMNS.chainWrapper.margin;
+
+    function updateDimns(nrOfChains){
         contentsWidth = width - margin.left - margin.right;
         contentsHeight = height - margin.top - margin.bottom;
 
         planetsHeight = contentsHeight;
 
-        expWrapperWidth = contentsWidth - planetsWidth;
-        expWrapperHeight = height - margin.left - margin.right;
-        expWrapperContentsWidth = expWrapperWidth- expWrapperMargin.left - expWrapperMargin.right;
-        expWrapperContentsHeight = expWrapperHeight - expWrapperMargin.top - expWrapperMargin.bottom;
-
-        calcWidth = expWrapperContentsWidth;
-        calcHeight = 0.3 * (expWrapperContentsHeight)
-        expWidth = expWrapperContentsWidth;
-        expHeight = 0.7 * (expWrapperContentsHeight)
+        chainWrapperWidth = contentsWidth - planetsWidth;
+        chainWrapperContentsWidth = chainWrapperWidth- chainWrapperMargin.left - chainWrapperMargin.right;
+        calcWidth = chainWrapperContentsWidth;
+        expWidth = chainWrapperContentsWidth;
+        buttonsWidth = chainWrapperContentsWidth;
     };
 
     //functions
@@ -59,13 +58,13 @@ export default function expressionBuilderGenerator() {
 
     //dom
     let svg;
-    let planetsG;
-    let expWrapperG;
+    let chainWrapperG;
 
     //data
     //Q - DO WE NEED TO STORE DATA AND STATE HERE??
     let planetData;
     let opsInfo;
+    const buttonsInfo = ["New", "Copy", "Del"];
 
     //state
     let state = [{}]
@@ -78,12 +77,11 @@ export default function expressionBuilderGenerator() {
     //which is fine because we are starting again anyway. But no reason why this comp cant auto-update
     //here just like teh chilren do
     function expressionBuilder(selection) {
-        //console.log("expressionBuilder...")
         // expression elements
         selection.each(function (data) {
             planetData = data.planets;
             opsInfo = data.opsInfo;
-            const { expBuilderState } = data;
+            const { expBuilderState, activeChainIndex} = data;
             console.log("expBuilderState", expBuilderState)
             //add the previous col state to each colState
             const amendedExpBuilderState = expBuilderState
@@ -91,7 +89,7 @@ export default function expressionBuilderGenerator() {
                     .map((col,i) => i === 0 ? col : { ...col, prev:expState[i - 1]}));
             
             //dimensions
-            updateDimns()
+            updateDimns(expBuilderState.length)
 
             //console.log("state", state)
             //INIT
@@ -116,29 +114,92 @@ export default function expressionBuilderGenerator() {
                     .call(planets)
 
             //EXPRESSION-WRAPPERS
-            //bind
-            expWrapperG = svg.selectAll("g.exp-wrapper").data(amendedExpBuilderState);
-            //enter
-            expWrapperG.enter()
+            const chainWrappersContG = svg.selectAll("g.chain-wrappers-cont").data([expBuilderState])
+            const chainWrappersContGEnter= chainWrappersContG.enter()
                 .append("g")
-                    .attr("class", (d,i) => "exp-wrapper exp-wrapper-"+i)
-                    .each(function(){
+                .attr("class", "chain-wrappers-cont")
+                .attr("transform", "translate(" + (margin.left +planetsWidth) + ", " +margin.top  + ")")
+            
+            const chainWrappersContGMerged = chainWrappersContG.merge(chainWrappersContGEnter)
+
+            //bind
+            chainWrapperG = chainWrappersContGMerged.selectAll("g.chain-wrapper").data(amendedExpBuilderState);
+            //enter
+            const chainWrapperGEnter = chainWrapperG.enter()
+                .append("g")
+                    .attr("class", (d,i) => "chain-wrapper chain-wrapper-"+i)
+                    .each(function(d,i){
                         d3.select(this).append("g").attr("class", "calc-component")
                         d3.select(this).append("g").attr("class", "expression")
+                        const g = d3.select(this).append("g").attr("class", "buttons")
+
+                        //temp
+                        d3.select(this)
+                            .append("rect")
+                            .attr("width", chainWrapperWidth)
+                            .attr("height", activeChainIndex === i ? (calcHeight + expAndButtonsHeight): (expAndButtonsHeight))
+                            .attr("stroke", "black")
+                            .attr("fill", "none")
+                            .attr("opacity", 0.7)
                     })
             //update
-            const expWrapperGMerged = expWrapperG.merge(expWrapperG)
-                .attr("transform", d => "translate(" +(margin.left +planetsWidth) +"," +(margin.top +(i *expWrapperHeight)) +")")
-            
-            expWrapperGMerged.select("g.calc-component")
-                .attr("transform", "translate(" +expWrapperMargin.left +"," +expWrapperMargin.top +")")
+            const chainWrapperGMerged = chainWrapperG.merge(chainWrapperGEnter)
+                .attr("transform", (d,i) => {
+                     //if active chain is before, then the calc box will also be above it, as well as the margins, exp and buttons
+                     const chainHeightsAbove = i * (chainWrapperMargin.top +expAndButtonsHeight +chainWrapperMargin.bottom) + (i > activeChainIndex ? calcHeight : 0)
+                    return "translate("+chainWrapperMargin.left +"," +chainHeightsAbove +")"
+                })
+            /*
+            chainWrapperGMerged.select("g.calc-component")
+                //.attr("transform", "translate(0,0)")
                 .datum(d => ({opsInfo, d}))
                 .call(calcComponent)
-            
-            expWrapperGMerged.select("g.expression")
-                .attr("transform", "translate(" +expWrapperMargin.left +"," +(expWrapperMargin.top +calcHeight) +")")
+            */
+           //shift exp down below the calc box if it is active
+            chainWrapperGMerged.select("g.expression")
+                .attr("transform", (d,i) => "translate(0," +(i === activeChainIndex ? calcHeight : 0) +")")
                 .datum(d => d)
                 .call(expression)
+
+            //buttons
+            chainWrapperGMerged.select("g.buttons")
+                .attr("transform", (d,i) => "translate(0," +(expHeight + (i === activeChainIndex ? calcHeight : 0)) +")")
+                .each(function(){
+                    const buttonsHeight = DIMNS.chainButtons.height;
+                    const buttonWidth = 50;
+                    const buttonHeight = buttonsHeight * 0.8;
+                    const buttonMargin = { left:0, right:5, top:buttonsHeight * 0.1, bottom:buttonsHeight * 0.1}
+                    const buttonG = d3.select(this).selectAll("g.button").data(buttonsInfo, d => d);
+                    const buttonGEnter = buttonG.enter()
+                        .append("g")
+                            .attr("class", "button")
+                            .attr("transform", (d,j) => "translate(" +(j * (buttonWidth + buttonMargin.right)) + "," +buttonMargin.top +")")
+                            .style("cursor", "pointer")
+                            .on("click", (e,d) => onChainButtonClick(d))
+
+                    //note - this will become the full name and show on hover just below icon
+
+                    buttonGEnter.append("rect")
+                        .attr("class", "background")
+                        .attr("width", buttonWidth)
+                        .attr("height", buttonHeight)
+                        .attr("fill", COLOURS.chainWrapper.btn.bg)
+
+                       // why when we put buttonsHeight down do they no longer stay in the chainWrapper?
+
+                    buttonGEnter.append("text")
+                        .attr("transform", "translate("+(buttonWidth/2) + "," +(buttonsHeight/2) +")")
+                        .attr("dominant-baseline", "middle")
+                        .attr("text-anchor", "middle")
+                        .attr("font-size", 12)
+                        .attr("fill", COLOURS.chainWrapper.btn.col)
+                        .text(d => d)
+
+                })
+
+            function onChainButtonClick(d){
+                console.log("clicked", d)
+            }
                     
         })
         return selection;
@@ -163,7 +224,7 @@ export default function expressionBuilderGenerator() {
                     //op is get if no op selected - home op is in 1st col already
                     op:activeCol.op || opsInfo.find(op => op.id === "get")
                 };
-                setState([...colsBefore(colNr, state), updatedCol, {} ])
+                setState([...elementsBefore(colNr, state), updatedCol, {} ])
             })
 
         //calcComponent
@@ -205,7 +266,7 @@ export default function expressionBuilderGenerator() {
                 }
                 //update state
                 const updatedCol = {...activeCol, op, subtool, res};
-                setState([...colsBefore(colNr, state), updatedCol, ...colsAfter(colNr, state)])
+                setState([...elementsBefore(colNr, state), updatedCol, ...elementsAfter(colNr, state)])
             })
             .selectSubtool((subtool) => {
                 console.log("onSelect subtool",subtool)
@@ -227,7 +288,7 @@ export default function expressionBuilderGenerator() {
                 const res = createResult(subtool, data, accessor)
                 //update state
                 const updatedCol = {...activeCol, subtool, res};
-                setState([...colsBefore(colNr, state), updatedCol, ...colsAfter(colNr, state)])
+                setState([...elementsBefore(colNr, state), updatedCol, ...elementsAfter(colNr, state)])
             })
 
         function createResult(tool, data, accessor = x => x){
