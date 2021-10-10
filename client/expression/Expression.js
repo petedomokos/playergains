@@ -4,7 +4,7 @@ import Button from '@material-ui/core/Button'
 import { makeStyles } from '@material-ui/core/styles';
 import expressionBuilderGenerator from "./expressionBuilderGenerator";
 import { getInstances, planetData, opsInfo } from './data';
-import { COLOURS, DIMNS } from "./constants";
+import { INIT_CHAIN_STATE, COLOURS, DIMNS } from "./constants";
 import { elementsBefore, elementsAfter } from "./helpers";
 
 const useStyles = makeStyles((theme) => ({
@@ -26,10 +26,8 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 const Expression = ({}) => {
-  //each expression starts with 1 block
-  const initChainState = [{op:{id:"home",name:"For Each" }}];
   //starts with 1 expression
-  const initState = [initChainState, initChainState]
+  const initState = [INIT_CHAIN_STATE]
   const styleProps = { };
   const classes = useStyles();
   const availableContexts = ["Planet", "Landscape"]
@@ -38,8 +36,8 @@ const Expression = ({}) => {
   //should be ref as not changing
   const [expBuilder, setExpBuilder] = useState(undefined)
   const [expBuilderState, setExpBuilderState] = useState(initState)
-  const [activeChainIndex, setActiveChainIndex] = useState(1)
-  //console.log("ExpBuilder state", expBuilderState)
+  const [activeChainIndex, setActiveChainIndex] = useState(0)
+  console.log("ExpBuilder state", expBuilderState)
   //embellish the state with the latest updates
   //const fullState = state.map(colState =>({
     //...colState,
@@ -66,11 +64,7 @@ const Expression = ({}) => {
   //init
   useEffect(() => {
     if(!containerRef.current){return; }
-    setExpBuilder(() => expressionBuilderGenerator()
-      .setState((updatedChainState => {
-        setExpBuilderState(prevState => ([...elementsBefore(activeChainIndex, prevState), updatedChainState, ...elementsAfter(activeChainIndex, prevState)]))
-      }))
-    )
+    setExpBuilder(() => expressionBuilderGenerator())
   }, [])
 
   //update data
@@ -86,11 +80,34 @@ const Expression = ({}) => {
       }
 
 
-      expBuilder.context(context).width(width).height(height);
+      expBuilder
+        .context(context)
+        .width(width)
+        .height(height)
+        .setState((updatedChainState => {
+            setExpBuilderState(prevState => ([...elementsBefore(activeChainIndex, prevState), updatedChainState, ...elementsAfter(activeChainIndex, prevState)]))
+        }))
+        .addChain(i => {
+            setExpBuilderState(prevState => ([...elementsBefore(i+1, prevState), INIT_CHAIN_STATE, ...elementsAfter(i, prevState)]))
+            setActiveChainIndex(i+1)
+        })
+        .copyChain(i =>{
+            setExpBuilderState(prevState => ([...elementsBefore(i+1, prevState), prevState[i], ...elementsAfter(i, prevState)]))
+            setActiveChainIndex(i+1)
+        })
+        .deleteChain(i => {
+          if(expBuilderState.length !== 1){
+              setExpBuilderState(prevState => ([...elementsBefore(i, prevState), ...elementsAfter(i, prevState)]))
+              setActiveChainIndex((i === 0 ? i : i - 1))
+          }else{
+            //deleting the only chain so must add a new init chain
+            setExpBuilderState(INIT_CHAIN_STATE);
+          }
+        });
 
       d3.select(containerRef.current).datum(data).call(expBuilder)
 
-  }, [expBuilderState, expBuilder, context])
+  }, [expBuilderState, expBuilder, activeChainIndex, context])
 
   return (
     <div className={classes.root} >

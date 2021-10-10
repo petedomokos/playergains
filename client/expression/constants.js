@@ -1,9 +1,12 @@
+export const INIT_CHAIN_STATE = [{op:{id:"home",name:"For Each" }}]
 
 const defaultMargin = { left:10, right:10, top:10, bottom:10 };
+const smallMargin = { left:5, right:5, top:5, bottom:5 };
 export const DIMNS = {
     margin:defaultMargin,
+    smallMargin,
     svg:{
-        width:800,
+        width:1000,
         minHeight:400
     },
     expBuilder:{
@@ -15,9 +18,7 @@ export const DIMNS = {
     chainWrapper:{
         margin:defaultMargin
     },
-    exp:{
-        height:200 //temp
-    },
+    //calc
     calc:{
         width:400,
         height:100, //temp
@@ -31,6 +32,43 @@ export const DIMNS = {
         box:{
         },
     },
+    //exp chain
+    exp:{
+        height:200, //temp
+    },
+    col:{
+        width:160,
+        children:{
+            margin:{ left:0, right:0, top:0, bottom:0 }
+        },
+        vis:{
+            margins:{
+                op:5,
+                val:30
+            },
+            home:{
+                margins:{
+                    val:50
+                }
+            },
+            get:{
+                margins:{
+
+                }
+            },
+            agg:{
+                margins:{
+
+                }
+            },
+            empty:{
+                margins:{
+
+                }
+            }
+        }
+    },
+    //btns
     chainButtons:{
         height:30,
     }
@@ -61,7 +99,10 @@ export const COLOURS = {
             bg:grey10(2)
         },
         box:{
-            bg:grey10(1),
+            bg:{
+                active: grey10(1),
+                inactive: grey10(5)
+            },
             sel:grey10(8)
         },
         vis:{

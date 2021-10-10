@@ -7,7 +7,7 @@ export function planetsGenerator(){
     let height = 200;
     let onSelect = function(){};
     //planet dimns
-    const planetHeight = 80;
+    const planetHeight = 100; //@todo - make dependedn on props
     const planetWidth = 100;
     const planetMarginBottom = 10;
     const planetMarginRight = 10;

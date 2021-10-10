@@ -1,19 +1,18 @@
 import * as d3 from 'd3';
 import { getActiveColState } from "../../helpers"
 import { aggSubtools, getPropValueType } from "../../data"
-import { COLOURS } from "../../constants"
+import { COLOURS, DIMNS } from "../../constants"
 
 export function toolForAggGenerator(selection){
     //dimensions
     let width = 350;
     let height = 100;
-    let margin =  { top: 10, bottom:10, left:10, right:10 };
-    let chartHeight = height - margin.bottom;
-    let chartWidth = width;
+    let margin = DIMNS.smallMargin;
+    let contentsWidth;
+    let contentsHeight;
     const updateDimns = () =>{
-        chartHeight = height - margin.bottom;
-        chartWidth = width;
-        //todo - call update
+        contentsWidth = width - margin.left - margin.right;
+        contentsHeight = height - margin.top - margin.bottom;
     }
 
     //functions
@@ -35,6 +34,7 @@ export function toolForAggGenerator(selection){
             //todo - dont need to pass all of state?
             const { state } = data;
             const activeColState = getActiveColState(state);
+            updateDimns();
             console.log("myAggToolForAgg", activeColState);
             const { planet, property} = activeColState.prev.selected;
             const valueType = getPropValueType(planet.id, property?.id)
@@ -45,14 +45,14 @@ export function toolForAggGenerator(selection){
             toolG = d3.select(this);
         
             const btnWidth = 40;
-            const btnHeight = 30;
+            const btnHeight = 15;
 
             const subtoolsG = toolG.selectAll("g.subtools").data([activeColState])
             subtoolsG.enter()
                 .append("g")
                 .attr("class", "subtools")
                 .merge(subtoolsG)
-                //.attr("transform", "translate(40,40)")
+                .attr("transform", "translate(0,10)")
                 .each(function(){
                     const subtoolG = d3.select(this).selectAll("g.subtool").data(applicableSubtools, d => d.id)
                     const subtoolGMerged = subtoolG.enter()

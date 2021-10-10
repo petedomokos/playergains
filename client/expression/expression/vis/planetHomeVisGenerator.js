@@ -1,5 +1,5 @@
 import * as d3 from 'd3';
-import { COLOURS } from "../../constants"
+import { COLOURS, DIMNS } from "../../constants"
 
 /*
     note - downside of merging colG before pasing through here is ts a bit trickier to do update only
@@ -8,13 +8,12 @@ import { COLOURS } from "../../constants"
 export function planetHomeVisGenerator(selection){
     let width = 130;
     let height = 40;
-    let margin =  { bottom:10 };
-    let chartHeight = height - margin.bottom;
-    let chartWidth = width;
+    let margin =  DIMNS.col.children.margin;
+    let contentsWidth;
+    let contentsHeight;
     const updateDimns = () =>{
-        chartHeight = height - margin.bottom;
-        chartWidth = width;
-        //todo - call update
+        contentsWidth = width - margin.left - margin.right;
+        contentsHeight = height - margin.top - margin.bottom;
     }
 
     //dom
@@ -23,34 +22,27 @@ export function planetHomeVisGenerator(selection){
     function myHomeVis(selection){        
         selection.each(function(d,i){
             const visG = d3.select(this);
+            const visMargins =  { ...DIMNS.col.vis.margins, ...DIMNS.col.vis.home.margins }
             //enter
             if(visG.select("*").empty()){
                 visContentsG = visG.append("g").attr("class", "contents");
                 visContentsG
                     .append("line")
-                        .attr("x1", 0)
-                        .attr("y1", chartHeight/2)
-                        .attr("x2", chartWidth)
-                        .attr("y2", chartHeight/2)
+                        .attr("x1", visMargins.val)
+                        .attr("y1", contentsHeight/2)
+                        .attr("x2", contentsWidth - visMargins.val)
+                        .attr("y2", contentsHeight/2)
                         .attr("stroke", COLOURS.exp.vis.val)
-                        //.attr("fill", "#C0C0C0")
-                        //.attr("stroke", "grey")
+                        .attr("fill", "#C0C0C0")
+                        .attr("stroke", "grey")
 
-                visContentsG
-                    .append("text")
-                        .attr("class", "count")
-                        .attr("transform", "translate("+(chartWidth - 5) +"," + (chartHeight + 5) +")")
-                        .attr("text-anchor", "end")
-                        .attr("dominant-baseline", "hanging")
-                        .attr("fill", COLOURS.exp.vis.count)
-                        .text("Count:") 
             }
 
             //update
             //note - we dontcheck for d.op because this is set from the start on home col
-            visContentsG.attr("opacity", d.selected ? 1 : 0)  
-            visContentsG.select("text.count")
-                .text("Count:" +(d.selected?.planet ? d.selected.planet.instances.length : 0))
+            visContentsG
+                .attr("transform", "translate(+"+margin.left +"," + margin.right +")")
+                .attr("opacity", d.selected ? 1 : 0)  
 
         })
         return selection;

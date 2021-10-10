@@ -7,12 +7,11 @@ export function toolForGetGenerator(selection){
     let width = 350;
     let height = 100;
     let margin =  { top: 10, bottom:10, left:10, right:10 };
-    let chartHeight = height - margin.bottom;
-    let chartWidth = width;
+    let contentsWidth;
+    let contentsHeight;
     const updateDimns = () =>{
-        chartHeight = height - margin.bottom;
-        chartWidth = width;
-        //todo - call update
+        contentsWidth = width - margin.left - margin.right;
+        contentsHeight = height - margin.top - margin.bottom;
     }
 
     //dom
@@ -30,6 +29,8 @@ export function toolForGetGenerator(selection){
         selection.each(function(data){
             const { state } = data;
             const activeColState = getActiveColState(state);
+
+            updateDimns();
             //ENTER
             if(!toolG){
                 toolG = d3.select(this)

@@ -4,7 +4,8 @@ import { expressionGenerator } from "./expression/expressionGenerator";
 import { calcComponentGenerator } from "./calc-component/calcComponentGenerator";
 import { elementsBefore, elementsAfter, getActiveColState } from "./helpers";
 import { aggSubtools, getInstances, getPropValueType } from "./data";
-import { COLOURS, DIMNS } from "./constants";
+import { COLOURS, DIMNS, INIT_CHAIN_STATE } from "./constants";
+import { Work } from '@material-ui/icons';
 
 /*
 
@@ -68,7 +69,10 @@ export default function expressionBuilderGenerator() {
 
     //state
     let state;
-    let setState = () =>{}
+    let setState = () =>{};
+    let addChain = () => {};
+    let copyChain = () => {};
+    let deleteChain = () => {};
 
     const dispatch = d3.dispatch("setState");
 
@@ -83,15 +87,23 @@ export default function expressionBuilderGenerator() {
             planetData = data.planets;
             opsInfo = data.opsInfo;
             const { expBuilderState, activeChainIndex} = data;
+            //@todo - make this editable  - for now its the last one in the chain
+            const activeColIndex = expBuilderState[activeChainIndex].length - 1;
             //add the previous col state to each colState
             const amendedExpBuilderState = expBuilderState
-                .map(expState => expState
-                    .map((col,i) => i === 0 ? col : { ...col, prev:expState[i - 1] }));
+                .map((chainState, i) => chainState
+                    .map((col, j) => ({
+                        ...col,
+                        prev: j === 0 ? chainState[j - 1] : undefined,
+                        isActive:activeChainIndex === i && activeColIndex === j
+
+                    }))
+                );
 
             //set state to be the active chain
             state = amendedExpBuilderState[activeChainIndex];
             
-            console.log("amendedExpBuilderState", amendedExpBuilderState)
+            //console.log("amendedExpBuilderState", amendedExpBuilderState)
             
             //dimensions
             updateDimns(expBuilderState.length)
@@ -117,6 +129,8 @@ export default function expressionBuilderGenerator() {
                     .merge(planetsG)
                     .attr("transform", "translate("+margin.left +"," + (margin.top + calcHeight) +")")
                     .call(planets)
+            //exit
+            planetsG.exit().remove();
 
             //EXPRESSION-WRAPPERS
             const chainWrappersContG = svg.selectAll("g.chain-wrappers-cont").data([expBuilderState])
@@ -126,9 +140,13 @@ export default function expressionBuilderGenerator() {
                 .attr("transform", "translate(" + (margin.left +planetsWidth) + ", " +margin.top  + ")")
             
             const chainWrappersContGMerged = chainWrappersContG.merge(chainWrappersContGEnter)
+            
+            //exit
+            chainWrappersContG.exit().remove();
 
             //bind
             chainWrapperG = chainWrappersContGMerged.selectAll("g.chain-wrapper").data(amendedExpBuilderState);
+            
             //enter
             const chainWrapperGEnter = chainWrapperG.enter()
                 .append("g")
@@ -139,6 +157,7 @@ export default function expressionBuilderGenerator() {
                         const g = d3.select(this).append("g").attr("class", "buttons")
 
                         //temp
+                        /*
                         d3.select(this)
                             .append("rect")
                             .attr("width", chainWrapperWidth)
@@ -146,6 +165,7 @@ export default function expressionBuilderGenerator() {
                             .attr("stroke", "black")
                             .attr("fill", "none")
                             .attr("opacity", 0.7)
+                            */
                     })
             //update
             const chainWrapperGMerged = chainWrapperG.merge(chainWrapperGEnter)
@@ -155,11 +175,9 @@ export default function expressionBuilderGenerator() {
                     return "translate("+chainWrapperMargin.left +"," +chainHeightsAbove +")"
                 })
 
-            //helper - temp
-            const opChosen = colState => colState.op && colState.op.id !== "home"
             chainWrapperGMerged.select("g.calc-component")
                 .attr("transform", "translate(0,0)")
-                .attr("display", (d,i) => (activeChainIndex === i && (d[0].selected || opChosen(d[0])) ? "inline" : "none"))
+                .attr("display", (d,i) => (activeChainIndex === i) ? "inline" : "none")
                 .each(function(d,i){
                     //@todo - remove opsInfo from data make it api so we just pass d here as data
                     d3.select(this).datum({opsInfo, state:d}).call(calcComponents[i])
@@ -175,9 +193,9 @@ export default function expressionBuilderGenerator() {
             //buttons
             chainWrapperGMerged.select("g.buttons")
                 .attr("transform", (d,i) => "translate(0," +(expHeight + (i === activeChainIndex ? calcHeight : 0)) +")")
-                .each(function(){
+                .each(function(chainState, i){
                     const buttonsHeight = DIMNS.chainButtons.height;
-                    const buttonWidth = 50;
+                    const buttonWidth = 30;
                     const buttonHeight = buttonsHeight * 0.8;
                     const buttonMargin = { left:0, right:5, top:buttonsHeight * 0.1, bottom:buttonsHeight * 0.1}
                     const buttonG = d3.select(this).selectAll("g.button").data(buttonsInfo, d => d);
@@ -186,7 +204,7 @@ export default function expressionBuilderGenerator() {
                             .attr("class", "button")
                             .attr("transform", (d,j) => "translate(" +(j * (buttonWidth + buttonMargin.right)) + "," +buttonMargin.top +")")
                             .style("cursor", "pointer")
-                            .on("click", (e,d) => onChainButtonClick(d))
+                            .on("click", (e,d) => onChainButtonClick(d, i))
 
                     //note - this will become the full name and show on hover just below icon
 
@@ -207,9 +225,29 @@ export default function expressionBuilderGenerator() {
                         .text(d => d)
 
                 })
+            
+            //exit - this removes everything to do with this chain
+            chainWrapperG.exit().remove();
 
-            function onChainButtonClick(d){
-                console.log("clicked", d)
+            function onChainButtonClick(d, i){
+                //check index usages throughout - if a chain is added,
+                /*
+                the ones after it will have new index numbers
+                so need to check that they will Work...do they 
+                use indeax numbers anywhere otehr than EUE pattern?
+                also must make sure 2nd param of .data() is set in all EUE usages
+                so not bound by index
+                also what is colNr when is it set and how is it used
+                */
+                if(d === "New"){
+                    addChain(i);
+                }else if(d === "Copy"){
+                    copyChain(i)
+                }else{
+                    deleteChain(i)
+                    calcComponents = [...elementsBefore(i, calcComponents), ...elementsAfter(i, calcComponents)];
+                    expressions = [...elementsBefore(i, expressions), ...elementsAfter(i, expressions)];
+                }
             }
                     
         })
@@ -251,7 +289,7 @@ export default function expressionBuilderGenerator() {
                     console.log("onSelect op..................",op)
                     //for now, active col is always the last one
                     const activeCol = getActiveColState(state);
-                    console.log("activeCol", activeCol)
+                    //console.log("activeCol", activeCol)
                     const { colNr, prev } = activeCol;
                     //default subtool if op is agg 
                     let subtool;
@@ -295,9 +333,9 @@ export default function expressionBuilderGenerator() {
                     if(valueType === "Date"){
                         accessor = x => new Date(x.propertyValues[property.id])
                     }else if(valueType === "Number"){
-                        x => +x.propertyValues[property.id]
+                        accessor = x => +x.propertyValues[property.id]
                     }else if(valueType){
-                        x => x.propertyValues[property.id]
+                        accessor = x => x.propertyValues[property.id]
                     }
                     const data = getInstances(prev.selected.planet.id);
                     const res = createResult(subtool, data, accessor)
@@ -312,12 +350,12 @@ export default function expressionBuilderGenerator() {
             return {
                 name,
                 //letter: "b", //must have a running track of letters in top react level above all runs
-                value:f ? f(data) : "None"
+                value:f ? f(data, accessor) : "None"
             }
         }
 
         //expression
-        expressions.forEach(expression => {
+        expressions.forEach((expression,i) => {
             expression
                 .context(context)
                 .width(expWidth)
@@ -347,6 +385,21 @@ export default function expressionBuilderGenerator() {
     expressionBuilder.setState = function (value) {
         if (!arguments.length) { return setState; }
         setState = value;
+        return expressionBuilder;
+    };
+    expressionBuilder.addChain = function (value) {
+        if (!arguments.length) { return addChain; }
+        addChain = value;
+        return expressionBuilder;
+    };
+    expressionBuilder.copyChain = function (value) {
+        if (!arguments.length) { return copyChain; }
+        copyChain = value;
+        return expressionBuilder;
+    };
+    expressionBuilder.deleteChain = function (value) {
+        if (!arguments.length) { return deleteChain; }
+        deleteChain = value;
         return expressionBuilder;
     };
     expressionBuilder.on = function () {

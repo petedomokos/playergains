@@ -16,13 +16,14 @@ export function expressionGenerator(){
     const margin = { ...DIMNS.margin, bottom:0};
     let contentsWidth;
     let contentsHeight;
-    let colWidth = 140;
+    let colWidth = DIMNS.col.width;
     let colHeight;
-    const colMargin = { left:10, right: 10, top:10, bottom:0 }
+    const colMargin = { left:10, right: 0, top:10, bottom:0 }
     const colContentsWidth = colWidth - colMargin.left - colMargin.right
     let colContentsHeight;
 
     const boxHeight = 50;
+    const countHeight = 30;
     let visHeight;
 
     function updateDimns(){
@@ -30,7 +31,7 @@ export function expressionGenerator(){
         contentsHeight = height - margin.top - margin.bottom;
         colHeight = contentsHeight;
         colContentsHeight = colHeight - colMargin.top - colMargin.bottom;
-        visHeight = colContentsHeight - boxHeight;
+        visHeight = colContentsHeight - boxHeight - countHeight;
  };
 
     //context
@@ -100,7 +101,6 @@ export function expressionGenerator(){
         }
     }
     function expression(selection){
-        console.log("expression", selection.datum())
         expressionG = selection;
 
         updateDimns()
@@ -132,15 +132,22 @@ export function expressionGenerator(){
                    return "translate(" +deltaX +"," + colMargin.top+")"
                })
 
-            
+            //@todo - move to vis
             colGEnter.append("rect")
-                .attr("class", "background")
-                .attr("width", colContentsWidth)
-                .attr("height", colContentsHeight)
+                .attr("class", "col-background")
                 .attr("fill", COLOURS.exp.col.bg)
 
             colGEnter.append("g").attr("class", "box")
             colGEnter.append("g").attr("class", "vis").attr("transform", "translate(0," + (boxHeight) +")")
+            colGEnter
+                .append("text")
+                    .attr("class", "count")
+                    .attr("transform", "translate("+(colContentsWidth - 5) +"," + (boxHeight +visHeight +5) +")")
+                    .attr("text-anchor", "end")
+                    .attr("dominant-baseline", "hanging")
+                    .style("font-size", 12)
+                    .attr("fill", COLOURS.exp.vis.count)
+
             //note - if we merge, the indexes will stay as they are from orig sel and sel.enter()
             //os need to select again
             colG.merge(colGEnter)
@@ -154,12 +161,37 @@ export function expressionGenerator(){
                     if(contextHasChanged || opHasChanged){
                         updateExpressionComponents.call(this, i)
                     }
-                    //call components
+                    //components
+                    //todo - move to vis
+                    d3.select(this).select("rect.col-background")
+                        .attr("x",0)
+                        .attr("y",boxHeight)
+                        .attr("width", colContentsWidth)
+                        .attr("height", visHeight)
+
                      //todo - height not being passed thru successfully
                     d3.select(this).select("g.box")
                         .call(expressionBoxComponents[i].width(colContentsWidth).height(boxHeight))
                     d3.select(this).select("g.vis")
                         .call(expressionVisComponents[i].width(colContentsWidth).height(visHeight))
+
+                    d3.select(this).select("text.count")
+                        .attr("display", d.op?.id === "agg" ? "none" : "inline")
+                        .text("Count:" +(d.selected?.planet ? d.selected.planet.instances.length : 0))
+                })
+
+            //overlay (rendered last so on top)
+            colGEnter.append("rect")
+                .attr("class", "overlay")
+                .attr("width", colWidth)
+                .attr("height", colHeight)
+                .attr("fill", "red")
+                //.on("click", () => { console.log("overlay clicked")})
+                .merge(colG)
+                .attr("display", d => {
+                    console.log("d.........................",d)
+                    return d.isActive ? "none" : "inline";
+                   // why not rendering when not active???????????
                 })
 
             //EXIT

@@ -23,6 +23,9 @@ export const planetData = [
             },
             {
                 name:"LDOS", id:"ldos", valueType:"Date"
+            },
+            {
+                name:"Risk Score", id:"risk", valueType:"Number"
             }
         ]
     }
@@ -60,8 +63,8 @@ export const aggSubtools = [
     {id:"sum", name:"Sum", f:d3.sum, applicableTo:["Number"]},
     {id:"min", name:"Min", f:d3.min, applicableTo:["Number", "Date"]},
     {id:"max", name:"Max", f:d3.max, applicableTo:["Number", "Date"]},
-    {id:"mean", name:"Mean", f:d3.mean, applicableTo:["Number"]},
-    {id:"sd", name:"Std Dev", f:d3.deviation, applicableTo:["Number"]}
+    {id:"mean", name:"Mean", f:(data, g) => d3.mean(data, g).toFixed(2), applicableTo:["Number"]},
+    {id:"sd", name:"Std Dev", f:(data, g) => d3.deviation(data, g).toFixed(2), applicableTo:["Number"]}
 ]
 
 export function getInstances(planetId){
@@ -147,35 +150,40 @@ const deviceInstances = [
         displayName:"dev1", 
         propertyValues:{
             "creationDate":"02/12/2018",
-            "ldos":"27/05/2021"
+            "ldos":"27/05/2021",
+            "risk":"1"
         }
     },
     {
         displayName:"dev2", 
         propertyValues:{
             "creationDate":"21/09/2018",
-            "ldos":"27/09/2021"
+            "ldos":"27/09/2021",
+            "risk":"4"
         }
     },
     {
         displayName:"dev3", 
         propertyValues:{
             "creationDate":"16/01/2018",
-            "ldos":"10/05/2021"
+            "ldos":"10/05/2021",
+            "risk":"5"
         }
     },
     {
         displayName:"dev4", 
         propertyValues:{
             "creationDate":"01/05/2019",
-            "ldos":"16/09/2022"
+            "ldos":"16/09/2022",
+            "risk":"5"
         }
     },
     {
         displayName:"dev5", 
         propertyValues:{
             "creationDate":"14/11/2019",
-            "ldos":"20/12/2022"
+            "ldos":"20/12/2022",
+            "risk":"3"
         }
     },
     

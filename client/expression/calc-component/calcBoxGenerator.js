@@ -90,14 +90,14 @@ export function calcBoxGenerator(selection){
                 //add the op text in middle far-left
                 opText = boxG.append("text")
                     .attr("class", "op")
-                    .attr("transform", "translate(5,5)")
+                    .attr("transform", "translate(10,10)")
                     .attr("dominant-baseline", "hanging")
                     .attr("font-size", "12px")
                     .attr("fill", COLOURS.calc.op.selected)
                 
                 opToolG = boxG.append("g")
                     .attr("class", "calc")
-                    .attr("transform", "translate(20,30)")
+                    .attr("transform", "translate(20,20)")
 
                 //add the filter signifier (eg ALL) in top left
 

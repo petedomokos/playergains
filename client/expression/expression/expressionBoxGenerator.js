@@ -1,5 +1,5 @@
 import * as d3 from 'd3';
-import { COLOURS } from "../constants"
+import { COLOURS, DIMNS } from "../constants"
 
 /*
 We call a diffrent boxGenerator for each boxG
@@ -9,13 +9,12 @@ export function expressionBoxGenerator(selection){
     //todo - work out why heights and widths are not dynamically being upated
     let width = 130;
     let height = 50;
-    let margin =  { bottom:10 };
-    let chartHeight = height - margin.bottom;
-    let chartWidth = width;
+    let margin =  DIMNS.col.children.margin;
+    let contentsHeight;
+    let contentsWidth;
     const updateDimns = () =>{
-        chartHeight = height - margin.bottom;
-        chartWidth = width;
-        //todo - call update
+        contentsWidth = width - margin.left - margin.right;
+        contentsHeight = height - margin.top - margin.bottom;
     }
 
     //dom
@@ -27,7 +26,9 @@ export function expressionBoxGenerator(selection){
     function myExpressionBox(selection){
         //selection is a single boxG so i always 0
         selection.each(function(d){
-            console.log("expBox d",d)
+
+            updateDimns();
+            //console.log("expBox d",d)
             const boxG = d3.select(this);
             //ENTER
             if(boxG.select("*").empty()){
@@ -35,7 +36,7 @@ export function expressionBoxGenerator(selection){
                 //background
                 contentsG
                     .append("rect")
-                        .attr("fill", COLOURS.exp.box.bg)
+                    .attr("class", "background");
                 //text
                 //todo - use EUE as text requirements may change -may need other items eg formula for profit
                 
@@ -67,12 +68,15 @@ export function expressionBoxGenerator(selection){
                     
             }
             //UPDATE
+            //@todo - have another g which translates the left and right margin
             //background
-            contentsG.select("rect").attr("width", chartWidth).attr("height", chartHeight)
+            contentsG.select("rect.background")
+                .attr("transform", "translate(+"+margin.left +"," + margin.right +")")
+                .attr("width", contentsWidth).attr("height", contentsHeight)
+                .attr("fill", d.isActive ? COLOURS.exp.box.bg.active : COLOURS.exp.box.bg.inactive)
             //text
-            console.log("d",d)
             contentsG.select("text.instruction")
-                .attr("transform", "translate(+"+(chartWidth/2) +"," + (chartHeight/2) +")")
+                .attr("transform", "translate(+"+(contentsWidth/2) +"," + (contentsHeight/2) +")")
                 .attr("display", (d.selected || (d.op && d.op.id !== "home") ? "none" : "inline"))
                 .text("Click tool, planet or property")
 
@@ -81,7 +85,7 @@ export function expressionBoxGenerator(selection){
                 .text(d.op?.name || "")
 
             contentsG.select("text.selection")
-                .attr("transform", "translate(+"+(chartWidth/2) +"," + (chartHeight - 10) +")")
+                .attr("transform", "translate(+"+(contentsWidth/2) +"," + (contentsHeight - 10) +")")
                 .text(selectionText(d));
 
         })

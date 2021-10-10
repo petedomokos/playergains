@@ -8,6 +8,17 @@ export function getPrevActiveColState(state){
         { ...state[state.length -2], colNr:state.length - 2 } : undefined;
 }
 
+/*
+todo - replace with
+export function getActiveColState(state){
+    return state[state.length-1];
+}
+
+export function getPrevActiveColState(state){
+    return state[state.length -2 ] ? state[state.length -2] : undefined;
+}
+*/
+
 export function getActiveChainColState(expBuilderState, chainIndex){
     return getActiveColState(expBuilderState[chainIndex])
 }
