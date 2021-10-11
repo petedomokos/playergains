@@ -57,6 +57,7 @@ export function planetAggVisGenerator(selection){
                     .attr("class", "res")
                     .attr("transform", "translate(" +(contentsWidth / 2) +"," +(contentsHeight / 2) +")")
                     .attr("text-anchor", "middle")
+                    .attr("dominant-baseline", "middle")
             
             resGEnter
                 .append("text")
@@ -69,15 +70,15 @@ export function planetAggVisGenerator(selection){
                         return d.res ? name + letterStr +" = " +(value || algExpression || "") : "";
                     })
 
-            const rectWidth = contentsWidth * 0.7
-            const rectHeight = 30;
+            const rectWidth = contentsWidth * 0.5
+            const rectHeight = 20;
 
             resGEnter
                 .append("rect")
                     .attr("class", "background")
                     .attr("height", rectHeight +"px")
                     .attr("y", -rectHeight/2)
-                    .attr("stroke", "black")
+                    .attr("stroke", COLOURS.exp.vis.val)
                     .attr("fill", "transparent")
 
             resG.merge(resGEnter)

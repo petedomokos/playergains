@@ -19,7 +19,7 @@ export function expressionGenerator(){
     let contentsHeight;
     let colWidth = DIMNS.col.width;
     let colHeight;
-    const colMargin = { left:10, right: 0, top:10, bottom:0 }
+    const colMargin = DIMNS.col.margin;
     const colContentsWidth = colWidth - colMargin.left - colMargin.right
     let colContentsHeight;
 
@@ -129,7 +129,9 @@ export function expressionGenerator(){
                .attr("class", (d,i) => "col col-"+i)
                .attr("transform", (d,i) => {
                    //shift the initial margin left, then a complete set for each prev col
-                   const deltaX = colMargin.left +i * (colWidth + colMargin.right + colMargin.left);
+                   //init shift left of 10
+                   const deltaX = 10 + i * (colMargin.left + colWidth + colMargin.right);
+                   console.group("deltaX", deltaX)
                    return "translate(" +deltaX +"," + colMargin.top+")"
                })
 

@@ -2,9 +2,11 @@ export const INIT_CHAIN_STATE = [{op:{id:"home",name:"For Each" }}]
 
 const defaultMargin = { left:10, right:10, top:10, bottom:10 };
 const smallMargin = { left:5, right:5, top:5, bottom:5 };
+const noMargin = { left:0, right:0, top:0, bottom:0 };
 export const DIMNS = {
     margin:defaultMargin,
     smallMargin,
+    noMargin,
     svg:{
         width:1000,
         minHeight:400
@@ -38,6 +40,7 @@ export const DIMNS = {
     },
     col:{
         width:160,
+        margin:{ left:0.25, right:0.25, top:10, bottom:0 },
         children:{
             margin:{ left:0, right:0, top:0, bottom:0 }
         },
