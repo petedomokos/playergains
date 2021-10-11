@@ -7,6 +7,7 @@ import { planetGetVisGenerator } from './vis/planetGetVisGenerator';
 import { planetAggVisGenerator } from './vis/planetAggVisGenerator';
 import { planetEmptyVisGenerator } from './vis/planetEmptyVisGenerator';
 import { COLOURS, DIMNS } from "../constants"
+import { withThemeCreator } from '@material-ui/styles';
 
 export function expressionGenerator(){
     //dimns
@@ -181,7 +182,9 @@ export function expressionGenerator(){
                 })
 
             //overlay (rendered last so on top)
+            /*
             colGEnter.append("rect")
+            get this working - all boxes bvg should be white, and active should be aqua or yellow
                 .attr("class", "overlay")
                 .attr("width", colWidth)
                 .attr("height", colHeight)
@@ -193,6 +196,7 @@ export function expressionGenerator(){
                     return d.isActive ? "none" : "inline";
                    // why not rendering when not active???????????
                 })
+                */
 
             //EXIT
             colG.exit().remove();

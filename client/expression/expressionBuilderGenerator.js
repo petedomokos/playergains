@@ -294,9 +294,10 @@ export default function expressionBuilderGenerator() {
                     //default subtool if op is agg 
                     let subtool;
                     let res;
-                    const { planet, property} = prev.selected;
-                    const valueType = getPropValueType(planet.id, property?.id)
-                    if(op.id === "agg" && !activeCol.subtool){
+                    //todo - deal with case of agg being selected when no prev - it shouldnt be an option
+                    if(op.id === "agg" && prev && !activeCol.subtool){
+                        const { planet, property} = prev.selected; //not defined--------
+                        const valueType = getPropValueType(planet.id, property?.id)
                         if(valueType === "number"){
                             subtool = aggSubtools.find(t => t.id === "sum");
                         }
