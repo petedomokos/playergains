@@ -33,6 +33,7 @@ export function toolForAggGenerator(selection){
         selection.each(function(data){
             //todo - dont need to pass all of state?
             const { state } = data;
+            console.log("state", state)
             const activeColState = getActiveColState(state);
             updateDimns();
             console.log("myAggToolForAgg", activeColState);

@@ -59,7 +59,7 @@ export function planetGetVisGenerator(selection){
                 .attr("class", "instances")
                 .attr("fill", COLOURS.exp.vis.val)
                 .merge(instancesG)
-                .attr("transform", "translate(" +(contentsWidth * 2/5) +", 20)")
+                .attr("transform", "translate(0, 10)")
                 .attr("opacity", d => d.selected ? 1 : 0)
                 .each(function(){
                     const instanceG = d3.select(this).selectAll("g.instance").data(instancesData)
@@ -68,10 +68,16 @@ export function planetGetVisGenerator(selection){
                             .attr("class", "instance")
                             .attr("transform", (d,i) => "translate(0, " +(i * 17.5) + ")")
                     
+                    const ellipseHeight = 0.6 * contentsHeight/instancesData.length;
                     instanceGEnter
-                        .append("text")
-                            .style("font-size", d => d === "..." ? "16px" : "10px")
-                            .text(d => d)
+                        .append("ellipse")
+                            .attr("cx", contentsWidth/2)
+                            .attr("cy", ellipseHeight/2)
+                            .attr("rx", contentsWidth/5)
+                            .attr("ry", (d,i, nodes) => (0.5 * ellipseHeight))
+                            .attr("stroke", COLOURS.exp.vis.val)
+                            .attr("fill", "#C0C0C0")
+                            .attr("stroke", "grey")
 
                 })
 

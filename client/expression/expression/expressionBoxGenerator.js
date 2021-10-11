@@ -28,7 +28,7 @@ export function expressionBoxGenerator(selection){
         selection.each(function(d){
 
             updateDimns();
-            //console.log("expBox d",d)
+            console.log("expBox d",d)
             const boxG = d3.select(this);
             //ENTER
             if(boxG.select("*").empty()){
@@ -53,7 +53,6 @@ export function expressionBoxGenerator(selection){
                     .append("text")
                         .attr("class", "op")
                         .attr("transform", "translate(5,5)")
-                        .attr("fill", COLOURS.calc.op.nonSelected)
                         .attr("font-size", 9)
                         .attr("stroke-width", 0.1)
                         .attr("dominant-baseline", "hanging")
@@ -82,6 +81,7 @@ export function expressionBoxGenerator(selection){
 
             contentsG.select("text.op")
                 .attr("display", d.op?.id === "home" && !d.selected ? "none" : "inline")
+                .attr("fill", d.isActive ? COLOURS.calc.op.selected : COLOURS.calc.op.nonSelected)
                 .text(d.op?.name || "")
 
             contentsG.select("text.selection")

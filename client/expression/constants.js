@@ -101,7 +101,7 @@ export const COLOURS = {
         box:{
             bg:{
                 active: grey10(1),
-                inactive: grey10(5)
+                inactive: grey10(1)
             },
             sel:grey10(8)
         },

@@ -93,10 +93,9 @@ export default function expressionBuilderGenerator() {
             const amendedExpBuilderState = expBuilderState
                 .map((chainState, i) => chainState
                     .map((col, j) => ({
-                        ...col,
-                        prev: j === 0 ? chainState[j - 1] : undefined,
-                        isActive:activeChainIndex === i && activeColIndex === j
-
+                            ...col,
+                            prev: j !== 0 ? chainState[j - 1] : undefined,
+                            isActive:activeChainIndex === i && activeColIndex === j
                     }))
                 );
 

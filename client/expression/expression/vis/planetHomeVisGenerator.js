@@ -27,11 +27,11 @@ export function planetHomeVisGenerator(selection){
             if(visG.select("*").empty()){
                 visContentsG = visG.append("g").attr("class", "contents");
                 visContentsG
-                    .append("line")
-                        .attr("x1", visMargins.val)
-                        .attr("y1", contentsHeight/2)
-                        .attr("x2", contentsWidth - visMargins.val)
-                        .attr("y2", contentsHeight/2)
+                    .append("ellipse")
+                        .attr("cx", contentsWidth/2)
+                        .attr("cy", contentsHeight/2)
+                        .attr("rx", contentsWidth/5)
+                        .attr("ry", (contentsWidth/5)/5)
                         .attr("stroke", COLOURS.exp.vis.val)
                         .attr("fill", "#C0C0C0")
                         .attr("stroke", "grey")
