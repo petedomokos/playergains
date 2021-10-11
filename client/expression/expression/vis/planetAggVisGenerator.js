@@ -69,9 +69,25 @@ export function planetAggVisGenerator(selection){
                         return d.res ? name + letterStr +" = " +(value || algExpression || "") : "";
                     })
 
+            const rectWidth = contentsWidth * 0.7
+            const rectHeight = 30;
+
+            resGEnter
+                .append("rect")
+                    .attr("class", "background")
+                    .attr("height", rectHeight +"px")
+                    .attr("y", -rectHeight/2)
+                    .attr("stroke", "black")
+                    .attr("fill", "transparent")
+
             resG.merge(resGEnter)
-            .attr("transform", "translate(" +(contentsWidth / 2) +"," +(contentsHeight / 2) +")")
+                .attr("transform", "translate(" +(contentsWidth / 2) +"," +(contentsHeight / 2) +")")
                 .attr("opacity", d => d.res ? 1 : 0)
+                .each(function(d,i){
+                    d3.select(this).select("rect.background")
+                        .attr("width", rectWidth)
+                        .attr("x", - rectWidth/2)
+                })
 
         })
         return selection;
