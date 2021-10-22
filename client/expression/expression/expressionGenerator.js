@@ -189,7 +189,6 @@ export function expressionGenerator(){
                 //.on("click", () => { console.log("overlay clicked")})
                 .merge(colG)
                 .attr("display", d => {
-                    console.log("d.........................",d)
                     return d.isActive ? "none" : "inline";
                    // why not rendering when not active???????????
                 })
