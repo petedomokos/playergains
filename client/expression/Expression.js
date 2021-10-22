@@ -69,7 +69,7 @@ const Expression = ({}) => {
 
   //update data
   useEffect(() => {
-     // console.log("2nd uE")
+     //console.log("2nd uE")
       if(!containerRef.current || !expBuilder){return; }
       //console.log("2nd useEff runniung")
       const data = {

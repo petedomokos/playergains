@@ -289,11 +289,12 @@ export default function expressionBuilderGenerator() {
                     console.log("onSelect op..................",op)
                     //for now, active col is always the last one
                     const activeCol = getActiveColState(state);
-                    //console.log("activeCol", activeCol)
+                    console.log("activeCol", activeCol)
                     const { colNr, prev } = activeCol;
                     //default subtool if op is agg 
                     let subtool;
                     let res;
+                    console.log("prev", prev)
                     const { planet, property} = prev.selected;
                     const valueType = getPropValueType(planet.id, property?.id)
                     if(op.id === "agg" && !activeCol.subtool){
