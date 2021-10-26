@@ -2,10 +2,10 @@ import * as d3 from 'd3';
 import { expressionBoxGenerator } from "./expressionBoxGenerator"
 
 //import { expressionBoxGenerator } from "./expressionBoxGenerator"
-import { planetHomeVisGenerator } from './vis/planetHomeVisGenerator';
-import { planetGetVisGenerator } from './vis/planetGetVisGenerator';
-import { planetAggVisGenerator } from './vis/planetAggVisGenerator';
-import { planetEmptyVisGenerator } from './vis/planetEmptyVisGenerator';
+import { homeVisGenerator } from './vis/homeVisGenerator';
+import { selVisGenerator } from './vis/selVisGenerator';
+import { aggVisGenerator } from './vis/aggVisGenerator';
+import { emptyVisGenerator } from './vis/emptyVisGenerator';
 import { COLOURS, DIMNS } from "../constants"
 
 export function expressionGenerator(){
@@ -16,11 +16,11 @@ export function expressionGenerator(){
     const margin = { ...DIMNS.margin, bottom:0};
     let contentsWidth;
     let contentsHeight;
-    let colWidth = DIMNS.col.width;
-    let colHeight;
+    let blockWidth = DIMNS.block.width;
+    let blockHeight;
     const colMargin = { left:10, right: 0, top:10, bottom:0 }
-    const colContentsWidth = colWidth - colMargin.left - colMargin.right
-    let colContentsHeight;
+    const blockContentsWidth = blockWidth - colMargin.left - colMargin.right
+    let blockContentsHeight;
 
     const boxHeight = 50;
     const countHeight = 30;
@@ -29,9 +29,9 @@ export function expressionGenerator(){
     function updateDimns(){
         contentsWidth = width - margin.left - margin.right;
         contentsHeight = height - margin.top - margin.bottom;
-        colHeight = contentsHeight;
-        colContentsHeight = colHeight - colMargin.top - colMargin.bottom;
-        visHeight = colContentsHeight - boxHeight - countHeight;
+        blockHeight = contentsHeight;
+        blockContentsHeight = blockHeight - colMargin.top - colMargin.bottom;
+        visHeight = blockContentsHeight - boxHeight - countHeight;
  };
 
     //context
@@ -40,63 +40,38 @@ export function expressionGenerator(){
     //components
     // must be a sep generator for each col
     let expressionBoxComponents = {};
-    let expressionVisComponents = {};
-
-    //state
-    let state;
+    let visComponents = {};
 
     //dom
     let expressionG;
 
-    function updateExpressionComponents(i){
+    function updateExpressionComponents(d, i){
         //remove previous
         if(expressionBoxComponents[i]){
             //we don't want to remove the gs themselves, as they are managed via the EUE pattern
             d3.select(this).select("g.box").selectAll("g.contents").remove();
             d3.select(this).select("g.vis").selectAll("g.contents").remove();
         }
-        const { op } = state[i];
-        if(context === "Planet"){
-            switch(op?.id){
-                case "home":{
-                    expressionBoxComponents[i] = expressionBoxGenerator(); //for now, boxes are same
-                    expressionVisComponents[i] = planetHomeVisGenerator();
-                    break;
-                }
-                case "get":{
-                    expressionBoxComponents[i] = expressionBoxGenerator(); //for now, boxes are same
-                    expressionVisComponents[i] = planetGetVisGenerator();
-                    break;
-                }
-                case "agg":{
-                    expressionBoxComponents[i] = expressionBoxGenerator(); //for now, boxes are same
-                    expressionVisComponents[i] = planetAggVisGenerator();
-                    break;
-                }
-                //default when no op ie col will be empty
-                default:{
-                    expressionBoxComponents[i] = expressionBoxGenerator(); //for now, boxes are same
-                    expressionVisComponents[i] = planetEmptyVisGenerator();
-                }
+        switch(d.func?.id){
+            case "home-sel":{
+                expressionBoxComponents[i] = expressionBoxGenerator(); //for now, boxes are same
+                visComponents[i] = homeVisGenerator();
+                break;
             }
-        }else{
-            //for now its the saem, but this will be the landscape context
-            switch(op?.id){
-                case "home":{
-                    expressionBoxComponents[i] = expressionBoxGenerator(); //for now, boxes are same
-                    expressionVisComponents[i] = planetHomeVisGenerator();
-                    break;
-                }
-                case "get":{
-                    expressionBoxComponents[i] = expressionBoxGenerator(); //for now, boxes are same
-                    expressionVisComponents[i] = planetGetVisGenerator();
-                    break;
-                }
-                //default when no op ie col will be empty
-                default:{
-                    expressionBoxComponents[i] = expressionBoxGenerator(); //for now, boxes are same
-                    expressionVisComponents[i] = planetEmptyVisGenerator();
-                }
+            case "sel":{
+                expressionBoxComponents[i] = expressionBoxGenerator(); //for now, boxes are same
+                visComponents[i] = selVisGenerator();
+                break;
+            }
+            case "agg":{
+                expressionBoxComponents[i] = expressionBoxGenerator(); //for now, boxes are same
+                visComponents[i] = aggVisGenerator();
+                break;
+            }
+            //default when no op ie col will be empty
+            default:{
+                expressionBoxComponents[i] = expressionBoxGenerator(); //for now, boxes are same
+                visComponents[i] = emptyVisGenerator();
             }
         }
     }
@@ -114,35 +89,32 @@ export function expressionGenerator(){
             .attr("height", d => d.height)
             .attr("fill", COLOURS.exp.bg)
 
-        //console.log("expressoin state", selection.datum())
-        selection.each(function(stateData){
-            state = stateData;
-            //console.log("exp state", state)
+        selection.each(function(chainData){
             //BIND
-            const colG = selection.selectAll("g.col").data(state)
+            const blockG = selection.selectAll("g.block").data(chainData)
 
             //ENTER
             //here we append the g, but after this point .enter will still refer to the pre-entered placeholder nodes
-            const colGEnter = colG.enter()
+            const blockGEnter = blockG.enter()
                .append("g")
-               .attr("class", (d,i) => "col col-"+i)
+               .attr("class", (d,i) => "block block-"+i)
                .attr("transform", (d,i) => {
                    //shift the initial margin left, then a complete set for each prev col
-                   const deltaX = colMargin.left +i * (colWidth + colMargin.right + colMargin.left);
+                   const deltaX = colMargin.left +i * (blockWidth + colMargin.right + colMargin.left);
                    return "translate(" +deltaX +"," + colMargin.top+")"
                })
 
             //@todo - move to vis
-            colGEnter.append("rect")
-                .attr("class", "col-background")
-                .attr("fill", COLOURS.exp.col.bg)
+            blockGEnter.append("rect")
+                .attr("class", "block-background")
+                .attr("fill", COLOURS.exp.block.bg)
 
-            colGEnter.append("g").attr("class", "box")
-            colGEnter.append("g").attr("class", "vis").attr("transform", "translate(0," + (boxHeight) +")")
-            colGEnter
+            blockGEnter.append("g").attr("class", "box")
+            blockGEnter.append("g").attr("class", "vis").attr("transform", "translate(0," + (boxHeight) +")")
+            blockGEnter
                 .append("text")
                     .attr("class", "count")
-                    .attr("transform", "translate("+(colContentsWidth - 5) +"," + (boxHeight +visHeight +5) +")")
+                    .attr("transform", "translate("+(blockContentsWidth - 5) +"," + (boxHeight +visHeight +5) +")")
                     .attr("text-anchor", "end")
                     .attr("dominant-baseline", "hanging")
                     .style("font-size", 12)
@@ -150,51 +122,53 @@ export function expressionGenerator(){
 
             //note - if we merge, the indexes will stay as they are from orig sel and sel.enter()
             //os need to select again
-            colG.merge(colGEnter)
+            blockG.merge(blockGEnter)
                 .each(function(d,i){
                     //update components
-                    //expressionBox and expressionVis are both updated in sync with each other
+                    //expressionBox and vis are both updated in sync with each other
                     //@todo - the box will always be rendered, so use that to check for updates instead of vis
                     //but to do this, we need a different expBox for each context and op
-                    const contextHasChanged = expressionVisComponents[i]?.applicableContext !== context;
-                    const opHasChanged = expressionVisComponents[i]?.applicableOp !== d.op?.id;
-                    if(contextHasChanged || opHasChanged){
-                        updateExpressionComponents.call(this, i)
+                    const contextHasChanged = visComponents[i]?.applicableContext !== context;
+                    const functionHasChanged = visComponents[i]?.funcType !== d.func?.id;
+                    if(contextHasChanged || functionHasChanged){
+                        updateExpressionComponents.call(this, d, i)
                     }
                     //components
                     //todo - move to vis
-                    d3.select(this).select("rect.col-background")
+                    d3.select(this).select("rect.block-background")
                         .attr("x",0)
                         .attr("y",boxHeight)
-                        .attr("width", colContentsWidth)
+                        .attr("width", blockContentsWidth)
                         .attr("height", visHeight)
 
                      //todo - height not being passed thru successfully
                     d3.select(this).select("g.box")
-                        .call(expressionBoxComponents[i].width(colContentsWidth).height(boxHeight))
+                        .call(expressionBoxComponents[i].width(blockContentsWidth).height(boxHeight))
                     d3.select(this).select("g.vis")
-                        .call(expressionVisComponents[i].width(colContentsWidth).height(visHeight))
+                       .call(visComponents[i].width(blockContentsWidth).height(visHeight))
 
                     d3.select(this).select("text.count")
-                        .attr("display", d.op?.id === "agg" ? "none" : "inline")
-                        .text("Count:" +(d.selected?.planet ? d.selected.planet.instances.length : 0))
+                        .attr("display", d.func?.id === "agg" ? "none" : "inline")
+                        .text("Count:" +(d.of?.planet?.instances.length || 0))
                 })
 
             //overlay (rendered last so on top)
-            colGEnter.append("rect")
+            /*
+            blockGEnter.append("rect")
                 .attr("class", "overlay")
-                .attr("width", colWidth)
-                .attr("height", colHeight)
+                .attr("width", blockWidth)
+                .attr("height", blockHeight)
                 .attr("fill", "red")
                 //.on("click", () => { console.log("overlay clicked")})
-                .merge(colG)
+                .merge(blockG)
                 .attr("display", d => {
                     return d.isActive ? "none" : "inline";
                    // why not rendering when not active???????????
                 })
+                */
 
             //EXIT
-            colG.exit().remove();
+            blockG.exit().remove();
 
         })
     }

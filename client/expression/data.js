@@ -19,20 +19,19 @@ export const planetData = [
         id:"devices",
         properties:[
             {
-                name:"Creation Date", id:"creationDate", valueType:"Date"
+                name:"Creation Date", id:"creationDate", valueType:"date"
             },
             {
-                name:"LDOS", id:"ldos", valueType:"Date"
+                name:"LDOS", id:"ldos", valueType:"date"
             },
             {
-                name:"Risk Score", id:"risk", valueType:"Number"
+                name:"Risk Score", id:"risk", valueType:"number"
             }
         ]
     }
 ]
 
 export function getPropValueType(planetId, propertyId){
-    console.log("planetId", planetId)
     if(!propertyId || !planetId) { return undefined;}
     const planet = planetData.find(p => p.id ===planetId);
     return planet.properties.find(p => p.id === propertyId)?.valueType
@@ -50,21 +49,22 @@ export const returnOptions = [
     {id:"?2", name:"?"}
 ]
 
-export const opsInfo = [
-    { id:"get", name:"Get", icon:{ nodeType:"path", d:filterPathD } },
+export const funcs = [
+    { id:"home-sel", name:"Select", icon:{ nodeType:"path", d:arrowPathD } },
+    { id:"sel", name:"Select", icon:{ nodeType:"path", d:arrowPathD } },
     { id:"filter", name:"Filter", icon:{ nodeType:"path", d:filterPathD } },
     { id:"groupBy", name:"Group", icon:{ nodeType:"path", d:groupByPathD } },
-    { id:"agg", name:"Agg", icon:{ nodeType:"polygon", points:trianglePolygonPoints } },
+    { id:"agg", name:"Agg", icon:{ nodeType:"polygon", points:trianglePolygonPoints },
+        subFuncs:[
+            {id:"count", name:"Count", f:data => data.length, applicableTo:["all"]},
+            {id:"sum", name:"Sum", f:d3.sum, applicableTo:["Number"]},
+            {id:"min", name:"Min", f:d3.min, applicableTo:["Number", "Date"]},
+            {id:"max", name:"Max", f:d3.max, applicableTo:["Number", "Date"]},
+            {id:"mean", name:"Mean", f:(data, g) => d3.mean(data, g).toFixed(2), applicableTo:["Number"]},
+            {id:"sd", name:"Std Dev", f:(data, g) => d3.deviation(data, g).toFixed(2), applicableTo:["Number"]}
+        ] 
+    },
     { id:"map", name:"Map", icon:{ nodeType:"path", d:arrowPathD } },
-]
-
-export const aggSubtools = [
-    {id:"count", name:"Count", f:data => data.length, applicableTo:["all"]},
-    {id:"sum", name:"Sum", f:d3.sum, applicableTo:["Number"]},
-    {id:"min", name:"Min", f:d3.min, applicableTo:["Number", "Date"]},
-    {id:"max", name:"Max", f:d3.max, applicableTo:["Number", "Date"]},
-    {id:"mean", name:"Mean", f:(data, g) => d3.mean(data, g).toFixed(2), applicableTo:["Number"]},
-    {id:"sd", name:"Std Dev", f:(data, g) => d3.deviation(data, g).toFixed(2), applicableTo:["Number"]}
 ]
 
 export function getInstances(planetId){
@@ -149,7 +149,7 @@ const deviceInstances = [
     {
         displayName:"dev1", 
         propertyValues:{
-            "creationDate":"02/12/2018",
+            "creationDate":"12/02/2018",
             "ldos":"27/05/2021",
             "risk":"1"
         }
@@ -157,7 +157,7 @@ const deviceInstances = [
     {
         displayName:"dev2", 
         propertyValues:{
-            "creationDate":"21/09/2018",
+            "creationDate":"09/21/2018",
             "ldos":"27/09/2021",
             "risk":"4"
         }
@@ -165,7 +165,7 @@ const deviceInstances = [
     {
         displayName:"dev3", 
         propertyValues:{
-            "creationDate":"16/01/2018",
+            "creationDate":"01/16/2018",
             "ldos":"10/05/2021",
             "risk":"5"
         }
@@ -173,7 +173,7 @@ const deviceInstances = [
     {
         displayName:"dev4", 
         propertyValues:{
-            "creationDate":"01/05/2019",
+            "creationDate":"05/01/2019",
             "ldos":"16/09/2022",
             "risk":"5"
         }
@@ -181,7 +181,7 @@ const deviceInstances = [
     {
         displayName:"dev5", 
         propertyValues:{
-            "creationDate":"14/11/2019",
+            "creationDate":"11/14/2019",
             "ldos":"20/12/2022",
             "risk":"3"
         }

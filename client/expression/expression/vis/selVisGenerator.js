@@ -2,47 +2,45 @@ import * as d3 from 'd3';
 import { COLOURS, DIMNS } from "../../constants";
 
 /*
-    note - downside of merging colG before pasing through here is ts a bit trickier to do update only
+    note - downside of merging blockG before pasing through here is ts a bit trickier to do update only
     but we can still do it using and else() after the if statement
 */
-export function planetGetVisGenerator(selection){
+export function selVisGenerator(selection){
     let width = 130;
     let height = 40;
-    let margin =  DIMNS.col.children.margin;
+    let margin =  DIMNS.block.children.margin;
     let contentsWidth;
     let contentsHeight;
     const updateDimns = () =>{
         contentsWidth = width - margin.left - margin.right;
         contentsHeight = height - margin.top - margin.bottom;
     }
-    function myGetVis(selection){        
-        selection.each(function(colData){
-            const visMargins =  { ...DIMNS.col.vis.margins, ...DIMNS.col.vis.get.margins }
-            //console.log("getViz data", colData)
+    function mySelVis(selection){        
+        selection.each(function(blockData){
+            const visMargins =  { ...DIMNS.block.vis.margins, ...DIMNS.block.vis.get.margins }
+            //console.log("selViz data", blockData)
             //visContentsG 
-            const visContentsG = d3.select(this).selectAll("g.contents").data([colData])
+            const contentsG = d3.select(this).selectAll("g.contents").data([blockData])
             //we call the merged version contents 
-            const contentsG = visContentsG.enter()
+            const contentsGEnter = contentsG.enter()
                 .append("g")
                 .attr("class", "contents")
-                .merge(visContentsG)
-                .attr("opacity", d => d.selected || d.op ? 1 : 0)
+
+            const contentsGMerged = contentsG.merge(contentsGEnter)
             
             //arrows
-            const arrowsG = contentsG.selectAll("g.arrows").data([colData])
+            const arrowsG = contentsGMerged.selectAll("g.arrows").data([blockData])
             arrowsG.enter()
                 .append("g")
                 .attr("class", "arrows")
                 .merge(arrowsG)
-                //.attr("transform", "translate(0," +(contentsHeight/2) +")")
-                .attr("opacity", d => d.op ? 1 : 0)
                 .each(function(){
                     const arrowLine = d3.select(this).selectAll("g.arrow").data(["top", "middle", "bottom"])
                     arrowLine.enter()
                         .append("line")
                             .attr("class", d => d + "-arrow arrow")
-                            .attr("x1", visMargins.op)
-                            .attr("stroke", COLOURS.exp.vis.op)
+                            .attr("x1", visMargins.preIcon)
+                            .attr("stroke", COLOURS.exp.vis.preIcon)
                             .merge(arrowLine)
                             .attr("y1", contentsHeight/2)
                             .attr("x2", contentsWidth/5)
@@ -51,16 +49,17 @@ export function planetGetVisGenerator(selection){
                 })
            
             //instances
-            //const instancesData = ["a1", "a2", "a3", "...", "...", "..."]
             const instancesData = ["val 1", "val 2", "val 3", "...", "..."]
-            const instancesG = contentsG.selectAll("g.instances").data([colData])
+            const instancesG = contentsGMerged.selectAll("g.instances").data([blockData])
             instancesG.enter()
                 .append("g")
                 .attr("class", "instances")
                 .attr("fill", COLOURS.exp.vis.val)
                 .merge(instancesG)
-                .attr("transform", "translate(" +(contentsWidth * 2/5) +", 20)")
-                .attr("opacity", d => d.selected ? 1 : 0)
+                .attr("transform", "translate(0, 10)")
+                //we need this coz user may delete the planet that is selected, 
+                //and in that case we still want sel icons to stay, unless they delete whole block
+                .attr("opacity", d => d.of.planet ? 1 : 0) 
                 .each(function(){
                     const instanceG = d3.select(this).selectAll("g.instance").data(instancesData)
                     const instanceGEnter = instanceG.enter()
@@ -68,33 +67,38 @@ export function planetGetVisGenerator(selection){
                             .attr("class", "instance")
                             .attr("transform", (d,i) => "translate(0, " +(i * 17.5) + ")")
                     
+                    const ellipseHeight = 0.6 * contentsHeight/instancesData.length;
                     instanceGEnter
-                        .append("text")
-                            .style("font-size", d => d === "..." ? "16px" : "10px")
-                            .text(d => d)
+                        .append("ellipse")
+                            .attr("cx", contentsWidth/2)
+                            .attr("cy", ellipseHeight/2)
+                            .attr("rx", contentsWidth/5)
+                            .attr("ry", (d,i, nodes) => (0.5 * ellipseHeight))
+                            .attr("stroke", COLOURS.exp.vis.val)
+                            .attr("fill", "#C0C0C0")
+                            .attr("stroke", "grey")
 
                 })
-
         })
         return selection;
     }
 
     // api
-    myGetVis.width = function (value) {
+    mySelVis.width = function (value) {
         if (!arguments.length) { return width; }
         width = value;
         updateDimns();
-        return myGetVis;
+        return mySelVis;
         };
-    myGetVis.height = function (value) {
+    mySelVis.height = function (value) {
         if (!arguments.length) { return height; }
         height = value;
         updateDimns();
-        return myGetVis;
+        return mySelVis;
     };
-    myGetVis.applicableContext = "Planet"
-    myGetVis.applicableOp = "get"
+    mySelVis.applicableContext = "Planet"
+    mySelVis.funcType = "sel"
     
-    return myGetVis;
+    return mySelVis;
 
     }

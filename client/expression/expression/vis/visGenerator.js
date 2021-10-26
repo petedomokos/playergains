@@ -1,10 +1,10 @@
 import * as d3 from 'd3';
 
 /*
-    note - downside of merging colG before pasing through here is ts a bit trickier to do update only
+    note - downside of merging blockG before pasing through here is ts a bit trickier to do update only
     but we can still do it using and else() after the if statement
 */
-export function expressionVisGenerator(selection){
+export function visGenerator(selection){
     let width = 130;
     let height = 40;
     let margin =  { bottom:10 };
@@ -17,7 +17,7 @@ export function expressionVisGenerator(selection){
     }
     function myExpressionVis(selection){        
         selection.each(function(d,i){
-            console.log("exp vis", d)
+            //console.log("exp vis", d)
             const visG = d3.select(this);
             //ENTER
             if(visG.select("*").empty()){

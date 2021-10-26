@@ -1,8 +1,7 @@
 import * as d3 from 'd3';
-import { getActiveColState } from "../../helpers"
 import { COLOURS } from "../../constants"
 
-export function toolForGetGenerator(selection){
+export function selSettingsGenerator(selection){
     //dimensions
     let width = 350;
     let height = 100;
@@ -15,7 +14,7 @@ export function toolForGetGenerator(selection){
     }
 
     //dom
-    let toolG;
+    let settingsG;
     let instructionText;
     let filterText;
     let planetText;
@@ -25,26 +24,24 @@ export function toolForGetGenerator(selection){
 
     //components
 
-    function myTool(selection){
-        selection.each(function(data){
-            const { state } = data;
-            const activeColState = getActiveColState(state);
-
+    function mySelSettings(selection){
+        selection.each(function(blockData){
+            console.log("sel settings ", blockData)
             updateDimns();
             //ENTER
-            if(!toolG){
-                toolG = d3.select(this)
+            if(!settingsG){
+                settingsG = d3.select(this)
 
-                instructionText = toolG.append("text")
-                .attr("class", "instruction")
-                .attr("transform", "translate(30,20)")
-                //.attr("dominant-baseline", "hanging")
-                .attr("text-anchor", "start")
-                .attr("font-size", 10)
-                .attr("fill", COLOURS.instruction)
+                instructionText = settingsG.append("text")
+                    .attr("class", "instruction")
+                    .attr("transform", "translate(30,20)")
+                    //.attr("dominant-baseline", "hanging")
+                    .attr("text-anchor", "start")
+                    .attr("font-size", 10)
+                    .attr("fill", COLOURS.instruction)
 
                 //filter text
-                filterText = toolG.append("text")
+                filterText = settingsG.append("text")
                     .attr("class", "filter")
                     .attr("transform", "translate(5,10)")
                     //.attr("dominant-baseline", "middle")
@@ -53,7 +50,7 @@ export function toolForGetGenerator(selection){
                     .attr("fill", "red")
 
                 //planet text
-                planetText = toolG.append("text")
+                planetText = settingsG.append("text")
                     .attr("class", "planet")
                     .attr("transform", "translate(30,20)")
                     //.attr("dominant-baseline", "hanging")
@@ -63,7 +60,7 @@ export function toolForGetGenerator(selection){
                 
 
                 //filter text
-                propertyText = toolG.append("text")
+                propertyText = settingsG.append("text")
                     .attr("class", "property")
                     .attr("transform", "translate(90,20)")
                     //.attr("dominant-baseline", "hanging")
@@ -74,29 +71,33 @@ export function toolForGetGenerator(selection){
             }
 
             //UPDATE
+            const { of={} } = blockData;
+            //@todo - deconstruct const { of:{ planet, property, filter } } = blockData
+            console.log("planet", planet)
             //ins text will become dynamic so we put it here
             instructionText.text("Click planet or property")
-            filterText.text(activeColState.selected?.filter?.desc || "")
-            planetText.text(activeColState.selected?.planet.name || "")
-            propertyText.text(activeColState.selected?.property?.name || "")
+            filterText.text(of.filter?.desc || "All")
+            planetText.text(of.planet?.name || "")
+            propertyText.text(of.property?.name || "")
             
         })
         return selection;
     }
 
     // api
-    myTool.width = function (value) {
+    mySelSettings.width = function (value) {
         if (!arguments.length) { return width; }
         width = value;
         //updateDimns();
-        return myTool;
+        return mySelSettings;
         };
-    myTool.height = function (value) {
+    mySelSettings.height = function (value) {
         if (!arguments.length) { return height; }
         height = value;
         //updateDimns();
-        return myTool;
+        return mySelSettings;
     };
-    return myTool;
+    myAgg.funcType = "sel"
+    return mySelSettings;
 
     }

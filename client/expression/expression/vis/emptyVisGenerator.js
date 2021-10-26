@@ -2,10 +2,10 @@ import * as d3 from 'd3';
 import { COLOURS, DIMNS } from "../../constants"
 
 /*
-    note - downside of merging colG before pasing through here is ts a bit trickier to do update only
+    note - downside of merging blockG before pasing through here is ts a bit trickier to do update only
     but we can still do it using and else() after the if statement
 */
-export function planetEmptyVisGenerator(selection){
+export function emptyVisGenerator(selection){
     let width = 130;
     let height = 40;
     let margin =  { bottom:10 };
@@ -23,7 +23,7 @@ export function planetEmptyVisGenerator(selection){
     function myEmptyVis(selection){        
         selection.each(function(d,i){
             const visG = d3.select(this);
-            const visMargins =  { ...DIMNS.col.vis.margins, ...DIMNS.col.vis.empty.margins }
+            const visMargins =  { ...DIMNS.block.vis.margins, ...DIMNS.block.vis.empty.margins }
             //enter
             if(visG.select("*").empty()){
                 visContentsG = visG.append("g").attr("class", "contents");
@@ -59,7 +59,7 @@ export function planetEmptyVisGenerator(selection){
         updateDimns();
         return myEmptyVis;
     };
-    myEmptyVis.applicableContext = "Planet"
+    myEmptyVis.applicableContext = "Planet";
     return myEmptyVis;
 
     }

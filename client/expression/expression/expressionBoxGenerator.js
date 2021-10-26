@@ -9,7 +9,7 @@ export function expressionBoxGenerator(selection){
     //todo - work out why heights and widths are not dynamically being upated
     let width = 130;
     let height = 50;
-    let margin =  DIMNS.col.children.margin;
+    let margin =  DIMNS.block.children.margin;
     let contentsHeight;
     let contentsWidth;
     const updateDimns = () =>{
@@ -53,7 +53,7 @@ export function expressionBoxGenerator(selection){
                     .append("text")
                         .attr("class", "op")
                         .attr("transform", "translate(5,5)")
-                        .attr("fill", COLOURS.calc.op.nonSelected)
+                        .attr("fill", COLOURS.editor.func.nonSelected)
                         .attr("font-size", 9)
                         .attr("stroke-width", 0.1)
                         .attr("dominant-baseline", "hanging")
@@ -114,7 +114,7 @@ export function expressionBoxGenerator(selection){
         return myExpressionBox;
     }
     myExpressionBox.applicableContext = "Planet"
-    myExpressionBox.applicableOp = "get"
+    myExpressionBox.funcType = "get"
     
     return myExpressionBox;
 

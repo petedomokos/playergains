@@ -3,7 +3,7 @@ import * as d3 from 'd3';
 import Button from '@material-ui/core/Button'
 import { makeStyles } from '@material-ui/core/styles';
 import expressionBuilderGenerator from "./expressionBuilderGenerator";
-import { getInstances, planetData, opsInfo } from './data';
+import { getInstances, planetData } from './data';
 import { INIT_CHAIN_STATE, COLOURS, DIMNS } from "./constants";
 import { elementsBefore, elementsAfter } from "./helpers";
 
@@ -37,11 +37,11 @@ const Expression = ({}) => {
   const [expBuilder, setExpBuilder] = useState(undefined)
   const [expBuilderState, setExpBuilderState] = useState(initState)
   const [activeChainIndex, setActiveChainIndex] = useState(0)
-  console.log("ExpBuilder state", expBuilderState)
+  //console.log("ExpBuilder state", expBuilderState)
   //embellish the state with the latest updates
   //const fullState = state.map(colState =>({
-    //...colState,
-    //op:opsInfo.find()
+    //...blockState,
+    //op:funcs.find()
   //}))
 
   const containerRef = useRef(null);
@@ -54,7 +54,7 @@ const Expression = ({}) => {
   const expAndButtonsHeight = DIMNS.exp.height + DIMNS.chainButtons.height;
   const nrOfChains = expBuilderState.length;
   //there will only be 1 calc box open
-  const expBuilderContentHeight = nrOfChains * (chainWrapperMargin.top + expAndButtonsHeight + chainWrapperMargin.bottom) + DIMNS.calc.height
+  const expBuilderContentHeight = nrOfChains * (chainWrapperMargin.top + expAndButtonsHeight + chainWrapperMargin.bottom) + DIMNS.editor.height
   //make sure svg height is at least big enough for planets, and big enough for number of chains required
   const height = d3.max([DIMNS.svg.minHeight, expBuilderContentHeight + expBuilderMargin.top + expBuilderMargin.bottom]); 
   const onContextUpdate = (context) =>{
@@ -74,7 +74,6 @@ const Expression = ({}) => {
       //console.log("2nd useEff runniung")
       const data = {
         planets:planetData.map(p => ({ ...p, instances:getInstances(p.id) })),
-        opsInfo,
         expBuilderState,
         activeChainIndex
       }
