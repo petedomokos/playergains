@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import {Route, Switch} from 'react-router-dom'
 import NonUserHome from './core/NonUserHome'
 import UserHomeContainer from './core/containers/UserHomeContainer'
@@ -22,17 +22,43 @@ const MainRouter = ({userId, loadUser, loadingUser}) => {
   //load user if page is refreshed. MainRouter is under the store so can 
   //trigger re-render once loaded
   const jwt = auth.isAuthenticated();
+
+  const [screenSize, setScreenSize] = useState("m");
   useEffect(() => {
-    if(jwt && !userId && !loadingUser){
-      loadUser(jwt.user._id)
-    }
-  }); 
+      if(jwt && !userId && !loadingUser){
+        loadUser(jwt.user._id)
+      }
+      //menu
+      //console.log("iw", window.innerWidth)
+      //576 - portrait phone, 768 - tablets,992 - laptop, 1200 - desktop or large laptop
+      const newScreenSize = window.innerWidth <= 576 ? "s" : window.innerWidth <= 768 ? "m" : "l";
+      if(newScreenSize !== screenSize){ 
+          setScreenSize(newScreenSize)
+      }
+  });
+  //@todo - use dispatch/store instead
+  useEffect(() => {
+    const handleResize = () => {
+        const newScreenSize = window.innerWidth <= 576 ? "s" : window.innerWidth <= 768 ? "m" : "l";
+        if(newScreenSize !== screenSize){ 
+            setScreenSize(newScreenSize)
+        }
+    };
+    window.addEventListener("resize", handleResize);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
   
  //we dont use?: because we if there is a loading delay for User, we dont want display to revert to NonUserHome 
  //todo - find a graceful way of handling this potential issue
   return (
     <div>
-      <MenuContainer/>
+      {screenSize === "s" || screenSize === "m" ? 
+          <div>burger</div>
+          :
+          <MenuContainer/>
+      }
       {(!jwt || userId) && <Switch>
           {jwt ?
             <Route exact path="/" component={UserHomeContainer}/>
