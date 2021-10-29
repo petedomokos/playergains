@@ -11,26 +11,27 @@ import { COLOURS, DIMNS } from "../constants"
 export function expressionGenerator(){
     //dimns
     let width = 600;
-    let height = 200;
+    let { height } = DIMNS.exp
     //we take of the bottom margin as we already have one from a higher level
     const margin = { ...DIMNS.margin, bottom:0};
     let contentsWidth;
     let contentsHeight;
     let blockWidth = DIMNS.block.width;
     let blockHeight;
-    const colMargin = { left:10, right: 0, top:10, bottom:0 }
-    const blockContentsWidth = blockWidth - colMargin.left - colMargin.right
+    const blockMargin = { ...DIMNS.noMargin, top:10, bottom:10};
+    const initLeftMargin = 10;
+    const blockContentsWidth = blockWidth - blockMargin.left - blockMargin.right
     let blockContentsHeight;
 
-    const boxHeight = 50;
-    const countHeight = 30;
+    const boxHeight = DIMNS.block.box.height;
+    const countHeight = DIMNS.block.count.height;
     let visHeight;
 
     function updateDimns(){
         contentsWidth = width - margin.left - margin.right;
         contentsHeight = height - margin.top - margin.bottom;
         blockHeight = contentsHeight;
-        blockContentsHeight = blockHeight - colMargin.top - colMargin.bottom;
+        blockContentsHeight = blockHeight - blockMargin.top - blockMargin.bottom;
         visHeight = blockContentsHeight - boxHeight - countHeight;
  };
 
@@ -100,8 +101,8 @@ export function expressionGenerator(){
                .attr("class", (d,i) => "block block-"+i)
                .attr("transform", (d,i) => {
                    //shift the initial margin left, then a complete set for each prev col
-                   const deltaX = colMargin.left +i * (blockWidth + colMargin.right + colMargin.left);
-                   return "translate(" +deltaX +"," + colMargin.top+")"
+                   const deltaX = initLeftMargin +i * (blockWidth + blockMargin.right + blockMargin.left);
+                   return "translate(" +deltaX +"," + blockMargin.top+")"
                })
 
             //@todo - move to vis
@@ -111,11 +112,13 @@ export function expressionGenerator(){
 
             blockGEnter.append("g").attr("class", "box")
             blockGEnter.append("g").attr("class", "vis").attr("transform", "translate(0," + (boxHeight) +")")
+
+            //@todo - put count into a bottom section of the expression, so you have box then viz then bottom section
             blockGEnter
                 .append("text")
                     .attr("class", "count")
-                    .attr("transform", "translate("+(blockContentsWidth - 5) +"," + (boxHeight +visHeight +5) +")")
-                    .attr("text-anchor", "end")
+                    .attr("transform", "translate("+(blockContentsWidth * 0.5) +"," + (boxHeight +visHeight +5) +")")
+                    .attr("text-anchor", "middle")
                     .attr("dominant-baseline", "hanging")
                     .style("font-size", 12)
                     .attr("fill", COLOURS.exp.vis.count)
@@ -148,7 +151,7 @@ export function expressionGenerator(){
                        .call(visComponents[i].width(blockContentsWidth).height(visHeight))
 
                     d3.select(this).select("text.count")
-                        .attr("display", d.func?.id === "agg" ? "none" : "inline")
+                        .attr("display", d.func?.id === "sel" ? "inline" : "none")
                         .text("Count:" +(d.of?.planet?.instances.length || 0))
                 })
 

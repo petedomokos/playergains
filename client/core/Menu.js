@@ -8,6 +8,7 @@ import HomeIcon from '@material-ui/icons/Home'
 import Button from '@material-ui/core/Button'
 import auth from '../auth/auth-helper'
 import {Link, withRouter} from 'react-router-dom'
+import { slide as ElasticMenu } from 'react-burger-menu'
 
 const isActive = (history, path) => {
   if (history.location.pathname == path)
@@ -20,8 +21,8 @@ const isActive = (history, path) => {
 const useStyles = makeStyles(theme => ({
   root: {
   },
-  toolbar:{
-
+  items:{
+    //flexDirection:props => ["s", "m"].includes(props.screenSize) ? "column" : "column"
   },
   logo:{
     [theme.breakpoints.down('sm')]: {
@@ -51,14 +52,39 @@ const useStyles = makeStyles(theme => ({
     
   }
 }))
-const Menu = withRouter(({history, onSignout}) => {
-  const classes = useStyles()
+
+const Menu = withRouter(({ history, signingOut, screenSize, onSignout }) => {
+  //const styleProps = { screenSize };
+  const classes = useStyles(/*styleProps*/) 
   const user = auth.isAuthenticated() ? auth.isAuthenticated().user : null;
   return(
-    <AppBar 
-        position="static" className={classes.root}>
-      <Toolbar 
-          className={classes.toolbar}>
+    <>
+      {["s", "m"].includes(screenSize)  ?
+        <ElasticMenu width={150}>
+          <div style={{display:"flex", flexDirection:"column"}}>
+            <MenuItems user={user} history={history} signingOut={signingOut} 
+                                screenSize={screenSize} onSignout={onSignout} classes={classes}/>
+          </div>
+        </ElasticMenu>
+        :
+        <MenuItemsWrapper classes={classes}>
+          <MenuItems user={user} history={history} signingOut={signingOut} 
+                      screenSize={screenSize} onSignout={onSignout} classes={classes} />
+        </MenuItemsWrapper>
+      }
+    </>
+  )
+})
+
+const MenuItemsWrapper = ({ children, classes }) =>
+  <AppBar position="static" className={classes.root}>
+      <Toolbar className={classes.items}>
+          {children}
+      </Toolbar>
+  </AppBar>
+
+const MenuItems = ({ user, history, signingOut, screenSize, onSignout, classes }) =>
+    <>
        <Typography variant="h6" color="inherit" className={classes.logo}>
           Switchplay
         </Typography>
@@ -121,9 +147,6 @@ const Menu = withRouter(({history, onSignout}) => {
                 style={isActive(history, "/expression")}>expression
               </Button>
             </Link>
-      </Toolbar>
-    </AppBar>
-  )
-})
+    </>
 
 export default Menu

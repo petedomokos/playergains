@@ -1,7 +1,7 @@
 import * as d3 from 'd3';
 import { filterPathD, groupByPathD, trianglePolygonPoints, arrowPathD, equalsPathD } from "./icons";
 
-export const planetData = [
+export const planetsData = [
     {
         name:"Sites", 
         id:"sites",
@@ -33,7 +33,7 @@ export const planetData = [
 
 export function getPropValueType(planetId, propertyId){
     if(!propertyId || !planetId) { return undefined;}
-    const planet = planetData.find(p => p.id ===planetId);
+    const planet = planetsData.find(p => p.id ===planetId);
     return planet.properties.find(p => p.id === propertyId)?.valueType
 }
 

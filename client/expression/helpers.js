@@ -56,3 +56,14 @@ export function availableFuncs(funcs, blockData){
 //export function calculateResult(f, data, accessor = x => x){
     //return f(data, accessor);
 //}
+
+
+export function isActive(chainData){
+    return chainData.filter(b => b.isActive).length !== 0;
+}
+
+export function findActiveBlock(expBuilderData){
+    return expBuilderData
+        .find(chain => isActive(chain))
+        .find(block => block.isActive)
+}

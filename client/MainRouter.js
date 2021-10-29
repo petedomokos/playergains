@@ -17,6 +17,8 @@ import PrivateRoute from './auth/PrivateRoute'
 import MenuContainer from './core/containers/MenuContainer'
 import auth from './auth/auth-helper'
 import Expression from "./expression/Expression"
+//styles
+import './assets/styles/main.css'
 
 const MainRouter = ({userId, loadUser, loadingUser}) => {
   //load user if page is refreshed. MainRouter is under the store so can 
@@ -54,11 +56,7 @@ const MainRouter = ({userId, loadUser, loadingUser}) => {
  //todo - find a graceful way of handling this potential issue
   return (
     <div>
-      {screenSize === "s" || screenSize === "m" ? 
-          <div>burger</div>
-          :
-          <MenuContainer/>
-      }
+      <MenuContainer screenSize={screenSize} />
       {(!jwt || userId) && <Switch>
           {jwt ?
             <Route exact path="/" component={UserHomeContainer}/>

@@ -11,6 +11,7 @@ export function selVisGenerator(selection){
     let margin =  DIMNS.block.children.margin;
     let contentsWidth;
     let contentsHeight;
+    //children
     const updateDimns = () =>{
         contentsWidth = width - margin.left - margin.right;
         contentsHeight = height - margin.top - margin.bottom;
@@ -56,18 +57,18 @@ export function selVisGenerator(selection){
                 .attr("class", "instances")
                 .attr("fill", COLOURS.exp.vis.val)
                 .merge(instancesG)
-                .attr("transform", "translate(0, 10)")
                 //we need this coz user may delete the planet that is selected, 
                 //and in that case we still want sel icons to stay, unless they delete whole block
                 .attr("opacity", d => d.of.planet ? 1 : 0) 
                 .each(function(){
+                    const ellipseHeight = 0.8 * contentsHeight/instancesData.length;
+                    const ellipseGap = 0.2 * contentsHeight/instancesData.length;
                     const instanceG = d3.select(this).selectAll("g.instance").data(instancesData)
                     const instanceGEnter = instanceG.enter()
                         .append("g")
                             .attr("class", "instance")
-                            .attr("transform", (d,i) => "translate(0, " +(i * 17.5) + ")")
-                    
-                    const ellipseHeight = 0.6 * contentsHeight/instancesData.length;
+                            .attr("transform", (d,i) => "translate(0, " +(i * (ellipseHeight + ellipseGap)) + ")")
+
                     instanceGEnter
                         .append("ellipse")
                             .attr("cx", contentsWidth/2)
@@ -79,6 +80,7 @@ export function selVisGenerator(selection){
                             .attr("stroke", "grey")
 
                 })
+    
         })
         return selection;
     }

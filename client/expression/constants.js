@@ -3,9 +3,11 @@ export const INIT_CHAIN_STATE = [{type:"home", of:{}}]
 
 const defaultMargin = { left:10, right:10, top:10, bottom:10 };
 const smallMargin = { left:5, right:5, top:5, bottom:5 };
+const noMargin = { left:0, right:0, top:0, bottom:0 };
 export const DIMNS = {
     margin:defaultMargin,
     smallMargin,
+    noMargin,
     svg:{
         width:1000,
         minHeight:400
@@ -38,10 +40,12 @@ export const DIMNS = {
         height:200, //temp
     },
     block:{
-        width:160,
+        width:130,
         children:{
             margin:{ left:0, right:0, top:0, bottom:0 }
         },
+        box: { height: 50 },
+        count: { height : 30 },
         vis:{
             margins:{
                 preIcon:5,
@@ -102,9 +106,12 @@ export const COLOURS = {
         box:{
             bg:{
                 active: grey10(1),
-                inactive: grey10(5)
+                inactive: grey10(2)
             },
-            sel:grey10(8)
+            planet:grey10(10),
+            property:grey10(8),
+            func:grey10(10),
+            pre: grey10(7)
         },
         vis:{
             bg:grey10(1),

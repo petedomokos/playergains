@@ -41,7 +41,9 @@ export function editorGenerator(){
 
     function myEditor(selection){
         //blockData will be undefined if chain not active
-        selection.each(function(blockData={}){
+        selection.each(function(blockData){
+            //handle clase of no active block in chain
+            if(!blockData){ return; }
             //console.log("editor data", blockData)
             //dimensions
             updateDimns()

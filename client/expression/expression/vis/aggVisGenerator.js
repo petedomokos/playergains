@@ -56,7 +56,7 @@ export function aggVisGenerator(selection){
             const resGEnter = resG.enter()
                 .append("g")
                     .attr("class", "res")
-                    .attr("transform", "translate(" +(contentsWidth * 0.3) +"," +(contentsHeight * 0.5) +")")
+                    .attr("transform", "translate(" +(contentsWidth * 0.5) +"," +(contentsHeight * 0.5) +")")
                     .attr("text-anchor", "middle")
                     .attr("dominant-baseline", "middle")
             
@@ -65,16 +65,12 @@ export function aggVisGenerator(selection){
                     .attr("class", "result")
                     .attr("fill", COLOURS.exp.vis.val)
                     .style("font-size", "12px")
+
+            resG.merge(resGEnter).select("text.result")
                     .text(d => {
-                        //console.log("d", d)
                         const res = d.subFunc.f(d.prev.of, x => x.value);
-                        //console.log("res", res)
                         return "= "+(res || "")
                     })
-
-            //resG.merge(resGEnter)
-            //.attr("transform", "translate(" +(contentsWidth / 2) +"," +(contentsHeight / 2) +")")
-                //.attr("opacity", d => d.res ? 1 : 0)
 
         })
         return selection;

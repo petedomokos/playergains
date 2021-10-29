@@ -27,7 +27,6 @@ export function editBoxGenerator(selection){
             //remove everything from editorG, because there is no EUE pattern attached to the g
             editBoxG.select("g.func-settings").selectAll("*").remove();
         }
-        console.log("rendering comp for ", func)
         switch(func?.id){
             case "sel":{
                 funcSettingsComponent = selSettingsGenerator();
@@ -57,17 +56,18 @@ export function editBoxGenerator(selection){
                     .attr("class", "background")
                     .attr("fill", COLOURS.editor.bg)
                 //func description
+                /*
                 editBoxG.append("text")
                     .attr("class", "func-desc")
                     .attr("transform", "translate(10,10)")
                     .attr("dominant-baseline", "hanging")
                     .attr("font-size", "12px")
-                    .attr("fill", COLOURS.editor.func.selected)
+                    .attr("fill", COLOURS.editor.func.selected)*/
                 
                 //func settings
                 editBoxG.append("g")
                     .attr("class", "func-settings")
-                    .attr("transform", "translate(20,20)")
+                    .attr("transform", "translate(20,10)")
             }
 
             //UPDATE
@@ -83,10 +83,9 @@ export function editBoxGenerator(selection){
                 .attr("height", contentsHeight)
 
             //func description
-            editBoxG.select("text.desc").text(blockData.func?.name || "")
+            //editBoxG.select("text.desc").text(blockData.func?.name || "")
 
             //func settings
-            console.log("settingscomp", funcSettingsComponent)
             editBoxG.select("g.func-settings").datum(blockData).call(funcSettingsComponent)
             
         })

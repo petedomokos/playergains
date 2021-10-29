@@ -28,7 +28,7 @@ export function aggSettingsGenerator(selection){
     function myAggSettings(selection){
         selection.each(function(blockData){
             updateDimns();
-            console.log("myAggSettings", blockData);
+            //console.log("myAggSettings", blockData);
             settingsG = d3.select(this);
         
             const btnWidth = 40;
@@ -41,7 +41,6 @@ export function aggSettingsGenerator(selection){
                 .merge(subFuncsG)
                 .attr("transform", "translate(0,10)")
                 .each(function(aggFunc){
-                    console.log("aggFunc", aggFunc)
                     const subFuncG = d3.select(this).selectAll("g.subFunc").data(aggFunc.subFuncs, d => d.id)
                     const subFuncGMerged = subFuncG.enter()
                         .append("g")

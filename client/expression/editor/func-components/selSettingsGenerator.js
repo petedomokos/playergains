@@ -26,7 +26,7 @@ export function selSettingsGenerator(selection){
 
     function mySelSettings(selection){
         selection.each(function(blockData){
-            console.log("sel settings ", blockData)
+            //console.log("sel settings ", blockData)
             updateDimns();
             //ENTER
             if(!settingsG){
@@ -73,7 +73,7 @@ export function selSettingsGenerator(selection){
             //UPDATE
             const { of={} } = blockData;
             //@todo - deconstruct const { of:{ planet, property, filter } } = blockData
-            console.log("planet", planet)
+            //console.log("planet", planet)
             //ins text will become dynamic so we put it here
             instructionText.text("Click planet or property")
             filterText.text(of.filter?.desc || "All")
@@ -97,7 +97,7 @@ export function selSettingsGenerator(selection){
         //updateDimns();
         return mySelSettings;
     };
-    myAgg.funcType = "sel"
+    mySelSettings.funcType = "sel"
     return mySelSettings;
 
     }

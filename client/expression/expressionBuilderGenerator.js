@@ -2,7 +2,7 @@ import * as d3 from 'd3';
 import { planetsGenerator } from "./planetsGenerator";
 import { expressionGenerator } from "./expression/expressionGenerator";
 import { editorGenerator } from "./editor/editorGenerator";
-import { elementsBefore, elementsAfter, getActiveBlockState } from "./helpers";
+import { elementsBefore, elementsAfter, findActiveBlock, isActive } from "./helpers";
 import { funcs, getInstances, getPropValueType } from "./data";
 import { COLOURS, DIMNS, INIT_CHAIN_STATE } from "./constants";
 
@@ -62,60 +62,44 @@ export default function expressionBuilderGenerator() {
 
     //data
     //Q - DO WE NEED TO STORE DATA AND STATE HERE??
-    let planetData;
+    let expBuilderData;
+    let planetsData;
     const buttonsInfo = ["New", "Copy", "Del"];
 
     //state
-    let setState = () =>{};
+    let updateBlock = () =>{};
     let addChain = () => {};
     let copyChain = () => {};
     let deleteChain = () => {};
 
-    const dispatch = d3.dispatch("setState");
-
     //updates
     //atm , this doesnt update when context changes, so we rely on parent to re-render
     //which is fine because we are starting again anyway. But no reason why this comp cant auto-update
-    //here just like teh chilren do
+    //here just like the children do
     function expressionBuilder(selection) {
         // expression elements
         selection.each(function (data) {
             svg = d3.select(this);
-            planetData = data.planets;
-            const { expBuilderState, activeChainIndex } = data;
-            //@todo - make this editable  - for now its the last one in the chain
-            const activeBlockIndex = expBuilderState[activeChainIndex].length - 1;
-            //add the previous block state to each blockState
-            const amendedExpBuilderState = expBuilderState
-                .map((chainState, i) => chainState
-                    .map((block, j) => ({
-                            ...block,
-                            prev: j !== 0 ? chainState[j - 1] : undefined,
-                            isActive:activeChainIndex === i && activeBlockIndex === j,
-                            chainNr:i,
-                            blockNr:j
-                    }))
-                );
-            
-            console.log("amendedExpBuilderState...", amendedExpBuilderState)
+            expBuilderData = data;
+            console.log("expBuilderData...", expBuilderData)
             
             //dimensions
-            updateDimns(expBuilderState.length)
+            updateDimns(expBuilderData.length)
             
             //INIT COMPONENTS
             if(!planets) { planets = planetsGenerator(); }
-            expBuilderState.forEach((chainState,i) => {
+            expBuilderData.forEach((chainState,i) => {
                 //create child components
                 if(!editors[i]) { editors[i] = editorGenerator(); }
                 if(!expressions[i]) {  expressions[i] = expressionGenerator(); }
             })
             //UPDATE CHILD COMPONENTS
             //todo - remove this and do as part of teh selectAll update chain
-            updateComponents(activeChainIndex, amendedExpBuilderState)
+            updateComponents()
 
             //DOM
             //PLANETS
-            const planetsG = svg.selectAll("g.planets").data([planetData])
+            const planetsG = svg.selectAll("g.planets").data([planetsData])
             planetsG.enter()
                 .append("g")
                     .attr("class", "planets")
@@ -126,7 +110,7 @@ export default function expressionBuilderGenerator() {
             planetsG.exit().remove();
 
             //EXPRESSION-WRAPPERS
-            const chainWrappersContG = svg.selectAll("g.chain-wrappers-cont").data([amendedExpBuilderState])
+            const chainWrappersContG = svg.selectAll("g.chain-wrappers-cont").data([expBuilderData])
             const chainWrappersContGEnter= chainWrappersContG.enter()
                 .append("g")
                 .attr("class", "chain-wrappers-cont")
@@ -138,7 +122,7 @@ export default function expressionBuilderGenerator() {
             chainWrappersContG.exit().remove();
 
             //bind
-            chainWrapperG = chainWrappersContGMerged.selectAll("g.chain-wrapper").data(amendedExpBuilderState);
+            chainWrapperG = chainWrappersContGMerged.selectAll("g.chain-wrapper").data(expBuilderData);
             
             //enter
             const chainWrapperGEnter = chainWrapperG.enter()
@@ -153,29 +137,28 @@ export default function expressionBuilderGenerator() {
             const chainWrapperGMerged = chainWrapperG.merge(chainWrapperGEnter)
                 .attr("transform", (d,i) => {
                      //if active chain is before, then the calc box will also be above it, as well as the margins, exp and buttons
-                     const chainHeightsAbove = i * (chainWrapperMargin.top +expAndButtonsHeight +chainWrapperMargin.bottom) + (i > activeChainIndex ? editorHeight : 0)
+                    const chainHeightsAbove = i * (chainWrapperMargin.top +expAndButtonsHeight +chainWrapperMargin.bottom) + isActive(d) ? editorHeight : 0;
                     return "translate("+chainWrapperMargin.left +"," +chainHeightsAbove +")"
                 })
 
             chainWrapperGMerged.select("g.editor")
                 .attr("transform", "translate(0,0)")
-                .attr("display", (d,i) => (activeChainIndex === i) ? "inline" : "none")
-                .each(function(chainData,i){
-                    //@todo - remove funcs from data make it api so we just pass d here as data
-                    d3.select(this).datum(chainData.find(d => d.isActive)).call(editors[i])
+                .attr("display", (d) => isActive(d) ? "inline" : "none")
+                .each(function(d,i){
+                    d3.select(this).datum(d.find(d => d.isActive)).call(editors[i])
                 })
 
             //shift exp down below the calc box if it is active
             chainWrapperGMerged.select("g.expression")
-                .attr("transform", (d,i) => "translate(0," +(i === activeChainIndex ? editorHeight : 0) +")")
+                .attr("transform", (d,i) => "translate(0," +(isActive(d) ? editorHeight : 0) +")")
                 .each(function(d,i){
                     d3.select(this).datum(d).call(expressions[i])
                 })
 
             //buttons
             chainWrapperGMerged.select("g.buttons")
-                .attr("transform", (d,i) => "translate(0," +(expHeight + (i === activeChainIndex ? editorHeight : 0)) +")")
-                .each(function(chainState, i){
+                .attr("transform", (d) => "translate(0," +(expHeight + (isActive(d) ? editorHeight : 0)) +")")
+                .each(function(){
                     const buttonsHeight = DIMNS.chainButtons.height;
                     const buttonWidth = 30;
                     const buttonHeight = buttonsHeight * 0.8;
@@ -236,24 +219,23 @@ export default function expressionBuilderGenerator() {
         return selection;
     }
 
-    function updateComponents(activeChainIndex, amendedExpBuilderState){
-        const activeChainState = amendedExpBuilderState[activeChainIndex]
-        const activeBlock = activeChainState.find(block => block.isActive)
+    function updateComponents(){
         //planets
         planets
             .width(planetsWidth)
             .height(planetsHeight)
             .onSelect(function(planet, property){
+                const activeBlock = findActiveBlock(expBuilderData)
                 const { blockNr, func } = activeBlock;
-                let updatedBlockState;
+                let updatedBlock;
                 if(blockNr === 0){
                     //its the home block
-                    updatedBlockState = {
+                    updatedBlock = {
                         ...activeBlock,
                         func:funcs.find(func => func.id === "home-sel"),
                         //we just take the first instance as it is for the home planet
                         //@todo - allow user to change which instance is used
-                        of:getInstances(planet.id)[0]
+                        of:{planet, instance: getInstances(planet.id)[0]}
                     }
                 }else{
                     //its not the home block
@@ -281,7 +263,7 @@ export default function expressionBuilderGenerator() {
                     dataset.valueType = valueType;
                     //add the dataset to block state as the of property 
                     //(note - of can be a dataset (as here) or a function (with its own 'of') that returns a dataset)
-                    updatedBlockState = {
+                    updatedBlock = {
                         ...activeBlock,
                         //if func is alrady chosem use that, otherwise its a sel
                         func:func || funcs.find(func => func.id === "sel"),
@@ -289,30 +271,25 @@ export default function expressionBuilderGenerator() {
                     };
                 }
                 //update state
-                setState([...elementsBefore(blockNr, activeChainState), updatedBlockState, {} ])
+                updateBlock(updatedBlock, true)
             })
 
         //editor
         editors.forEach((editor,i) => {
-            const chainState = amendedExpBuilderState[i]
-            const activeBlockInChain = chainState.find(block => block.isActive)
-            if(!activeBlockInChain){ return; }
-
             editor
                 .width(editorWidth)
                 .height(editorHeight)
                 .funcs(funcs)
-                //@todo - change op to tool, or subF to subOp
                 .selectFunc((func) => {
-                    console.log("onSelect func..................",func)
-                    const { blockNr, prev } = activeBlockInChain;
+                    const activeBlock = findActiveBlock(expBuilderData)
+                    const { prev } = activeBlock;
                     if(!prev?.of?.planet){
                         //todo - go into func-first mode
                         return;
                     }
                     /*
-                        if prev col has a dataset as its return value, then if op is agg and no dataset selected, we sum the prev block
-                        if prev col has no dataset as its value, we assume its functionFirst, so do f() eg sum()
+                        if prev has a dataset as its of value, then if func is agg and no dataset selected, we sum the prev block
+                        if prev has no dataset as its value, we assume its functionFirst, so do f() eg sum()
                         But before all that, user must choose sum
                     */
                     //set the default subFunc in some cases
@@ -322,17 +299,14 @@ export default function expressionBuilderGenerator() {
                         subFunc = func.subFuncs.find(f => f.id === "sum");
                     }
                     else if(func.id === "agg" && planet){
-                        console.log("func", func)
                         subFunc = func.subFuncs.find(f => f.id === "count");
                     }
                     //update state
-                    const updatedBlock = {...activeBlockInChain, func, subFunc};
-                    setState([...elementsBefore(blockNr, chainState), updatedBlock, ...elementsAfter(blockNr, chainState)])
+                    updateBlock({...activeBlock, func, subFunc}, true);
                 })
                 .selectSubFunc((subFunc) => {
-                    console.log("onSelect subFunc",subFunc)
-                    const updatedBlock = {...activeBlockInChain, subFunc};
-                    setState([...elementsBefore(blockNr, chainState), updatedBlock, ...elementsAfter(blockNr, chainState)])
+                    const activeBlock = findActiveBlock(expBuilderData)
+                    updateBlock({...activeBlock, subFunc});
                 })
         })
 
@@ -363,10 +337,15 @@ export default function expressionBuilderGenerator() {
         //update();
         return expressionBuilder;
     };
+    expressionBuilder.planetsData = function (value) {
+        if (!arguments.length) { return planetsData; }
+        planetsData = value;
+        return expressionBuilder;
+    };
     //handlers
-    expressionBuilder.setState = function (value) {
-        if (!arguments.length) { return setState; }
-        setState = value;
+    expressionBuilder.updateBlock = function (value) {
+        if (!arguments.length) { return updateBlock; }
+        updateBlock = value;
         return expressionBuilder;
     };
     expressionBuilder.addChain = function (value) {

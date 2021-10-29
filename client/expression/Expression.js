@@ -3,7 +3,7 @@ import * as d3 from 'd3';
 import Button from '@material-ui/core/Button'
 import { makeStyles } from '@material-ui/core/styles';
 import expressionBuilderGenerator from "./expressionBuilderGenerator";
-import { getInstances, planetData } from './data';
+import { getInstances, planetsData } from './data';
 import { INIT_CHAIN_STATE, COLOURS, DIMNS } from "./constants";
 import { elementsBefore, elementsAfter } from "./helpers";
 
@@ -12,10 +12,10 @@ const useStyles = makeStyles((theme) => ({
       margin:"10px"
   },
   contextMenu:{
-    margin:"10px"
+      margin:"10px"
   },
   contextBtn:{
-    margin:"5px",
+      margin:"5px",
   },
   svg:{
       background:COLOURS.svg.bg,
@@ -36,13 +36,9 @@ const Expression = ({}) => {
   //should be ref as not changing
   const [expBuilder, setExpBuilder] = useState(undefined)
   const [expBuilderState, setExpBuilderState] = useState(initState)
-  const [activeChainIndex, setActiveChainIndex] = useState(0)
+  //activeBlock described by Pair[chainNr, blockNr]
+  const [activeBlock, setActiveBlock] = useState([0,0])
   //console.log("ExpBuilder state", expBuilderState)
-  //embellish the state with the latest updates
-  //const fullState = state.map(colState =>({
-    //...blockState,
-    //op:funcs.find()
-  //}))
 
   const containerRef = useRef(null);
 
@@ -72,19 +68,35 @@ const Expression = ({}) => {
      //console.log("2nd uE")
       if(!containerRef.current || !expBuilder){return; }
       //console.log("2nd useEff runniung")
-      const data = {
-        planets:planetData.map(p => ({ ...p, instances:getInstances(p.id) })),
-        expBuilderState,
-        activeChainIndex
-      }
-
+      const amendedExpBuilderState = expBuilderState
+          .map((chainState, i) => chainState
+              .map((block, j) => ({
+                      ...block,
+                      prev: j !== 0 ? chainState[j - 1] : undefined,
+                      isActive:activeBlock[0] === i && activeBlock[1] === j,
+                      chainNr:i,
+                      blockNr:j
+              }))
+          );
 
       expBuilder
         .context(context)
         .width(width)
         .height(height)
-        .setState((updatedChainState => {
-            setExpBuilderState(prevState => ([...elementsBefore(activeChainIndex, prevState), updatedChainState, ...elementsAfter(activeChainIndex, prevState)]))
+        .planetsData(planetsData.map(p => ({ ...p, instances:getInstances(p.id) })))
+        .updateBlock(((updatedBlock, requireNewBlock) => {
+            const { chainNr, blockNr } = updatedBlock;
+            setExpBuilderState(prevState => {
+              const chainToUpdate = prevState[chainNr];
+              //replace block in chain
+              const _updatedChain = [...elementsBefore(blockNr, chainToUpdate), updatedBlock, ...elementsAfter(blockNr, chainToUpdate)]
+              const updatedChain = requireNewBlock ? [..._updatedChain, {}] : _updatedChain;
+              //replace chain in state
+              return [...elementsBefore(chainNr, prevState), updatedChain, ...elementsAfter(chainNr, prevState)]
+            })
+            if(requireNewBlock){
+              setActiveBlock([chainNr, blockNr + 1])
+            }
         }))
         .addChain(i => {
             setExpBuilderState(prevState => ([...elementsBefore(i+1, prevState), INIT_CHAIN_STATE, ...elementsAfter(i, prevState)]))
@@ -104,9 +116,9 @@ const Expression = ({}) => {
           }
         });
 
-      d3.select(containerRef.current).datum(data).call(expBuilder)
+      d3.select(containerRef.current).datum(amendedExpBuilderState).call(expBuilder)
 
-  }, [expBuilderState, expBuilder, activeChainIndex, context])
+  }, [expBuilderState, expBuilder, activeBlock, context])
 
   return (
     <div className={classes.root} >
