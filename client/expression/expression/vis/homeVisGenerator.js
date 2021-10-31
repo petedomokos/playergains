@@ -39,7 +39,7 @@ export function homeVisGenerator(selection){
                             //.attr("fill", "black")
                             .attr("text-anchor", "middle")
                             .attr("dominant-baseline", "middle")
-                            .attr("font-size", 10)
+                            .attr("font-size", 9)
                 });
             //upate contents
             contentsG.merge(contentsGEnter)

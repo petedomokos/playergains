@@ -18,7 +18,6 @@ export function selVisGenerator(selection){
     }
     function mySelVis(selection){        
         selection.each(function(blockData){
-            const visMargins =  { ...DIMNS.block.vis.margins, ...DIMNS.block.vis.get.margins }
             //console.log("selViz data", blockData)
             //visContentsG 
             const contentsG = d3.select(this).selectAll("g.vis-contents").data([blockData])
@@ -49,18 +48,46 @@ export function selVisGenerator(selection){
                     const instanceGEnter = instanceG.enter()
                         .append("g")
                             .attr("class", "instance")
-                            .attr("transform", (d,i) => "translate(0, " +(i * (ellipseHeight + ellipseGap)) + ")")
+                            .each(function(d){
+                                //ellipse
+                                d3.select(this)
+                                    .append("ellipse")
+                                        .attr("cx", contentsWidth/2)
+                                        .attr("cy", ellipseHeight/2)
+                                        .attr("rx", contentsWidth/5)
+                                        .attr("ry", 0.5 * ellipseHeight)
+                                        .attr("stroke", COLOURS.exp.vis.val)
+                                        .attr("fill", "#C0C0C0")
+                                        .attr("stroke", "grey")
+                                
+                                //text
+                                d3.select(this)
+                                    .append("text")
+                                        .attr("class", "display-name")
+                                        //.attr("stroke", "black")
+                                        //.attr("fill", "black")
+                                        .attr("text-anchor", "middle")
+                                        .attr("dominant-baseline", "middle")
+                                        .attr("font-size", 9)
 
-                    instanceGEnter
-                        .append("ellipse")
-                            .attr("cx", contentsWidth/2)
-                            .attr("cy", ellipseHeight/2)
-                            .attr("rx", contentsWidth/5)
-                            .attr("ry", (d,i, nodes) => (0.5 * ellipseHeight))
-                            .attr("stroke", COLOURS.exp.vis.val)
-                            .attr("fill", "#C0C0C0")
-                            .attr("stroke", "grey")
+                            })
 
+                    instanceG.merge(instanceGEnter)
+                        .attr("transform", (d,i) => "translate(0, " +(i * (ellipseHeight + ellipseGap)) + ")")
+                        .each(function(d){
+                            //ellipse
+                            d3.select(this).select("ellipse")
+                                .attr("cx", contentsWidth/2)
+                                .attr("cy", ellipseHeight/2)
+                                .attr("rx", contentsWidth/5)
+                                .attr("ry", (d,i, nodes) => (0.5 * ellipseHeight))
+
+                            //text
+                            const { property } = blockData.of;
+                            d3.select(this).select("text.display-name")
+                                .attr("transform", "translate(+"+contentsWidth/2 +"," + ellipseHeight/2 +")")
+                                .text(property ? d.propertyValues[property.id] : d.displayName)
+                        })
                 })
     
         })
