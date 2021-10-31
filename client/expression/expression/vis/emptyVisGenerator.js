@@ -20,12 +20,12 @@ export function emptyVisGenerator(selection){
     //dom
     //store contents on a separate g that can be removed if op or context changes without affecting the EUE pattern
     let visContentsG;
-    function myEmptyVis(selection){        
+    function myEmptyVis(selection){  /*     
         selection.each(function(d,i){
             const visG = d3.select(this);
             const visMargins =  { ...DIMNS.block.vis.margins, ...DIMNS.block.vis.empty.margins }
             //enter
-            if(visG.select("*").empty()){
+            if(visG.select("line").empty()){
                 visContentsG = visG.append("g").attr("class", "contents");
                 visContentsG
                     .append("line")
@@ -40,9 +40,10 @@ export function emptyVisGenerator(selection){
             }
 
             //update
-            visContentsG.attr("opacity", d.selected || d.op ? 1 : 0)   
+            visContentsG.attr("opacity", d.of || d.func ? 1 : 0)   
 
         })
+        */
         return selection;
     }
 

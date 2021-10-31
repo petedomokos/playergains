@@ -38,9 +38,22 @@ export const DIMNS = {
     //exp chain
     exp:{
         height:200, //temp
+        connector:{
+            margin:{
+                horiz:3
+            }
+        }
     },
     block:{
-        width:130,
+        margin: { top: 10, bottom: 10, left: 20, right: 20},
+        width:{
+            default:150,
+            homeSel:150,
+            sel:170,
+            filter:150,
+            agg:100,
+            map:100
+        },
         children:{
             margin:{ left:0, right:0, top:0, bottom:0 }
         },
@@ -99,26 +112,35 @@ export const COLOURS = {
         }
     },
     exp:{
-        bg:grey10(3),
+        bg:grey10(2), //!!!
         block:{
-            bg:grey10(2)
+            bg:grey10(2) //!!!
         },
         box:{
             bg:{
                 active: grey10(1),
                 inactive: grey10(2)
             },
-            planet:grey10(10),
-            property:grey10(8),
-            func:grey10(10),
-            pre: grey10(7)
+            primary:{
+                active:"blue",
+                inactive:grey10(10)
+            },
+            secondary:{
+                active:"blue",
+                inactive:grey10(8)
+            },
+            pre:{
+                active:"blue",
+                inactive:grey10(7)
+            }
         },
         vis:{
             bg:grey10(1),
             val:grey10(7),
             preIcon:grey10(1),
             count:grey10(5)
-        }
+        },
+        connector:grey10(5) //!!!
     },
     editor:{
         bg:grey10(1),

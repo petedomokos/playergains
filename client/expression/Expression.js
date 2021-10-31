@@ -75,9 +75,9 @@ const Expression = ({}) => {
                       prev: j !== 0 ? chainState[j - 1] : undefined,
                       isActive:activeBlock[0] === i && activeBlock[1] === j,
                       chainNr:i,
-                      blockNr:j
+                      blockNr:j,
               }))
-          );
+          )
 
       expBuilder
         .context(context)

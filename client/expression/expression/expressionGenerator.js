@@ -6,34 +6,28 @@ import { homeVisGenerator } from './vis/homeVisGenerator';
 import { selVisGenerator } from './vis/selVisGenerator';
 import { aggVisGenerator } from './vis/aggVisGenerator';
 import { emptyVisGenerator } from './vis/emptyVisGenerator';
+import { connectorsGenerator } from './connectors/connectorsGenerator';
 import { COLOURS, DIMNS } from "../constants"
+import { getVisHeight, getBlockWidth, sumPrevBlockWidths } from "../helpers";
 
 export function expressionGenerator(){
     //dimns
     let width = 600;
     let { height } = DIMNS.exp
     //we take of the bottom margin as we already have one from a higher level
-    const margin = { ...DIMNS.margin, bottom:0};
+    const margin = { ...DIMNS.margin};
     let contentsWidth;
     let contentsHeight;
-    let blockWidth = DIMNS.block.width;
-    let blockHeight;
-    const blockMargin = { ...DIMNS.noMargin, top:10, bottom:10};
-    const initLeftMargin = 10;
-    const blockContentsWidth = blockWidth - blockMargin.left - blockMargin.right
+    const blockMargin = DIMNS.block.margin;
+    const initBlockExtraMarginLeft = 20;
     let blockContentsHeight;
-
     const boxHeight = DIMNS.block.box.height;
-    const countHeight = DIMNS.block.count.height;
-    let visHeight;
 
     function updateDimns(){
         contentsWidth = width - margin.left - margin.right;
         contentsHeight = height - margin.top - margin.bottom;
-        blockHeight = contentsHeight;
-        blockContentsHeight = blockHeight - blockMargin.top - blockMargin.bottom;
-        visHeight = blockContentsHeight - boxHeight - countHeight;
- };
+        blockContentsHeight = contentsHeight - blockMargin.top - blockMargin.bottom;
+    };
 
     //context
     let context;
@@ -42,6 +36,7 @@ export function expressionGenerator(){
     // must be a sep generator for each col
     let expressionBoxComponents = {};
     let visComponents = {};
+    let connectors;
 
     //dom
     let expressionG;
@@ -50,11 +45,11 @@ export function expressionGenerator(){
         //remove previous
         if(expressionBoxComponents[i]){
             //we don't want to remove the gs themselves, as they are managed via the EUE pattern
-            d3.select(this).select("g.box").selectAll("g.contents").remove();
-            d3.select(this).select("g.vis").selectAll("g.contents").remove();
+            d3.select(this).select("g.vis").selectAll("g.vis-contents").remove();
+            d3.select(this).select("g.vis").select("g.box").selectAll("g.box-contents").remove();
         }
         switch(d.func?.id){
-            case "home-sel":{
+            case "homeSel":{
                 expressionBoxComponents[i] = expressionBoxGenerator(); //for now, boxes are same
                 visComponents[i] = homeVisGenerator();
                 break;
@@ -79,80 +74,94 @@ export function expressionGenerator(){
     function expression(selection){
         expressionG = selection;
 
-        updateDimns()
+        updateDimns();
 
-        const backgroundRect = expressionG.selectAll("rect.background").data([{width,height}])
+        if(!connectors){ connectors = connectorsGenerator() };
+
+        const backgroundRect = expressionG.selectAll("rect.background").data([{contentsWidth, contentsHeight}])
         backgroundRect.enter()
             .append("rect")
             .attr("class", "background")
             .merge(backgroundRect)
-            .attr("width", d => d.width)
-            .attr("height", d => d.height)
+            .attr("x", margin.left)
+            .attr("y", margin.top)
+            .attr("width", d => d.contentsWidth)
+            .attr("height", d => d.contentsHeight)
+            //.attr("width", d => d.width)
+            //.attr("height", d => d.height)
             .attr("fill", COLOURS.exp.bg)
 
         selection.each(function(chainData){
-            //BIND
-            const blockG = selection.selectAll("g.block").data(chainData)
 
+
+            //BLOCKS
+            //BIND
+            //@todo - could put in sn2 param of .data() wit a uniqueId of the block,
+            //which we would have to create as it odesnt change if other vlocks are deleted,
+            //so not the saem as blockNr
+            const blockG = selection.selectAll("g.block").data(chainData)
             //ENTER
             //here we append the g, but after this point .enter will still refer to the pre-entered placeholder nodes
-            const blockGEnter = blockG.enter()
-               .append("g")
-               .attr("class", (d,i) => "block block-"+i)
-               .attr("transform", (d,i) => {
-                   //shift the initial margin left, then a complete set for each prev col
-                   const deltaX = initLeftMargin +i * (blockWidth + blockMargin.right + blockMargin.left);
-                   return "translate(" +deltaX +"," + blockMargin.top+")"
-               })
-
-            //@todo - move to vis
-            blockGEnter.append("rect")
-                .attr("class", "block-background")
-                .attr("fill", COLOURS.exp.block.bg)
-
-            blockGEnter.append("g").attr("class", "box")
-            blockGEnter.append("g").attr("class", "vis").attr("transform", "translate(0," + (boxHeight) +")")
-
-            //@todo - put count into a bottom section of the expression, so you have box then viz then bottom section
-            blockGEnter
+            const blockGEnter = blockG.enter().append("g").attr("class", (d,i) => "block block-"+i)
+            blockGEnter.append("rect").attr("class", "block-background").attr("fill", COLOURS.exp.block.bg)
+            //vis
+            const visG = blockGEnter.append("g").attr("class", "vis")
+            //children of vis
+            //box above main vis
+            visG.append("g").attr("class", "box")
+            //count text below main vis
+            visG
                 .append("text")
                     .attr("class", "count")
-                    .attr("transform", "translate("+(blockContentsWidth * 0.5) +"," + (boxHeight +visHeight +5) +")")
                     .attr("text-anchor", "middle")
                     .attr("dominant-baseline", "hanging")
                     .style("font-size", 12)
                     .attr("fill", COLOURS.exp.vis.count)
 
-            //note - if we merge, the indexes will stay as they are from orig sel and sel.enter()
-            //os need to select again
+            //UPDATE
             blockG.merge(blockGEnter)
                 .each(function(d,i){
+                    //dimns
+                    const blockWidth = getBlockWidth(d.func?.id);
+                    const blockContentsWidth = blockWidth - blockMargin.left - blockMargin.right;
+                    //we pass in heightavailable for vis which leaves space for boxes above and below
+                    const availableVisHeight = blockContentsHeight - 2 * boxHeight;
+                    const visHeight = getVisHeight(d, availableVisHeight);
                     //update components
                     //expressionBox and vis are both updated in sync with each other
-                    //@todo - the box will always be rendered, so use that to check for updates instead of vis
-                    //but to do this, we need a different expBox for each context and op
                     const contextHasChanged = visComponents[i]?.applicableContext !== context;
                     const functionHasChanged = visComponents[i]?.funcType !== d.func?.id;
                     if(contextHasChanged || functionHasChanged){
-                        updateExpressionComponents.call(this, d, i)
+                        updateExpressionComponents.call(this, d, i);
                     }
-                    //components
-                    //todo - move to vis
-                    d3.select(this).select("rect.block-background")
-                        .attr("x",0)
-                        .attr("y",boxHeight)
-                        .attr("width", blockContentsWidth)
-                        .attr("height", visHeight)
+                    //update dom
+                    //sumPrevBlcokWidths includes block margins
+                    const dx = margin.left + initBlockExtraMarginLeft + sumPrevBlockWidths(i, chainData);
+                    const dy = margin.top + blockMargin.top;
+                    const blockG = d3.select(this).attr("transform", "translate(" +dx +"," + dy+")")
+                    //background
+                    blockG.select("rect.block-background").attr("width", blockContentsWidth).attr("height", blockContentsHeight)
+                    //vis
+                    blockG.select("g.vis").each(function(d){
+                        const visG = d3.select(this);
+                        //vis - shift to middle then back up to start of vis
+                        visG
+                            .attr("transform", "translate(0," + (blockContentsHeight/2 - visHeight/2) +")")
+                            .call(visComponents[i].width(blockContentsWidth).height(visHeight))
 
-                     //todo - height not being passed thru successfully
-                    d3.select(this).select("g.box")
-                        .call(expressionBoxComponents[i].width(blockContentsWidth).height(boxHeight))
-                    d3.select(this).select("g.vis")
-                       .call(visComponents[i].width(blockContentsWidth).height(visHeight))
+                        //children
+                        //box - shift to middle is visHeightis 0, otherwise it is directly above vis
+                        visG.select("g.box")
+                            .attr("transform", d => "translate(0," + (visHeight === 0 ? -boxHeight/2 : -boxHeight) +")")
+                            .call(expressionBoxComponents[i].width(blockContentsWidth).height(boxHeight))
 
-                    d3.select(this).select("text.count")
-                        .attr("display", d.func?.id === "sel" ? "inline" : "none")
-                        .text("Count:" +(d.of?.planet?.instances.length || 0))
+                        //count
+                        visG.select("text.count")
+                            .attr("transform", "translate("+(blockContentsWidth * 0.5) +"," + (visHeight + 5) +")")
+                            .attr("display", d.func?.id === "sel" ? "inline" : "none")
+                            .text(Array.isArray(d.res) ? "Count: " +d.res?.length : "")
+
+                    })
                 })
 
             //overlay (rendered last so on top)
@@ -160,7 +169,7 @@ export function expressionGenerator(){
             blockGEnter.append("rect")
                 .attr("class", "overlay")
                 .attr("width", blockWidth)
-                .attr("height", blockHeight)
+                .attr("height", contentsHeight)
                 .attr("fill", "red")
                 //.on("click", () => { console.log("overlay clicked")})
                 .merge(blockG)
@@ -172,6 +181,21 @@ export function expressionGenerator(){
 
             //EXIT
             blockG.exit().remove();
+
+            //CONNECTORS
+            //console.log("connectorsData...", connectorData)
+            const connectorsG = selection.selectAll("g.connectors").data([chainData])
+            connectorsG.enter()
+                .append("g")
+                    .attr("class", "connectors")
+                    .attr("transform", () =>{
+                        //we want connectorsG to start at the beginning of the margin between block 0 and 1
+                        const homeBlockContentsWidth = DIMNS.block.width.homeSel - blockMargin.left - blockMargin.right;
+                        const dx = initBlockExtraMarginLeft + margin.left + homeBlockContentsWidth 
+                        return "translate("+dx +"," +(margin.top + blockMargin.top) +")"
+                    })
+                    .merge(connectorsG)
+                    .call(connectors.width(contentsWidth).height(blockContentsHeight))
 
         })
     }

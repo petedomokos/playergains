@@ -2,7 +2,7 @@ import * as d3 from 'd3';
 import { editBoxGenerator } from './editBoxGenerator'
 import { functionIconsGenerator } from './functionIconsGenerator'
 import { DIMNS } from "../constants";
-import { availableFuncs } from "../helpers";
+import { availableFuncs } from "../data";
 
 export function editorGenerator(){
     //dimensions

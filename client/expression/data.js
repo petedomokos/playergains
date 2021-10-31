@@ -50,7 +50,7 @@ export const returnOptions = [
 ]
 
 export const funcs = [
-    { id:"home-sel", name:"Select", icon:{ nodeType:"path", d:arrowPathD } },
+    { id:"homeSel", name:"Select", icon:{ nodeType:"path", d:arrowPathD } },
     { id:"sel", name:"Select", icon:{ nodeType:"path", d:arrowPathD } },
     { id:"filter", name:"Filter", icon:{ nodeType:"path", d:filterPathD } },
     { id:"groupBy", name:"Group", icon:{ nodeType:"path", d:groupByPathD } },
@@ -67,6 +67,42 @@ export const funcs = [
     { id:"map", name:"Map", icon:{ nodeType:"path", d:arrowPathD } },
 ]
 
+export function availableFuncs(funcs, blockData){
+    if(!blockData.prev){
+        return [];
+    }
+    //remove homeSel
+    return funcs.filter(f => f.id !== "homeSel" && f.id !== "sel"); //dont need a select icon
+}
+
+export function areRelated(inst1, inst2){
+    //helper
+    const isAProperty = (keyToTest, instance) =>
+        Object.keys(instance.propertyValues).includes(keyToTest)
+    
+    if(isAProperty(inst1.planetId, inst2)){
+        const values = inst2.propertyValues[inst1.planetId]//.includes(inst1.id))
+        //display name is the uId for each instance
+        if(values.includes(inst1.displayName)){
+            //inst2 has an array property that stores refs to instances of the inst1 planet
+            //AND inst1 is in that array
+            //console.log("true 1")
+            return true;
+        }
+    }
+    if(isAProperty(inst2.planetId, inst1)){
+        const values = inst1.propertyValues[inst2.planetId];
+        if(values.includes(inst2.displayName)){
+            //inst1 has an array property that stores refs to instances of the inst2 planet
+            //AND inst2 is in that array
+            //console.log("true 2")
+            return true;
+        }
+    }
+    //console.log("false")
+    return false;
+}
+
 export function getInstances(planetId){
     switch(planetId){
         case "sites": return siteInstances;
@@ -78,6 +114,7 @@ export function getInstances(planetId){
 
 const siteInstances = [
     {
+        planetId:"sites",
         displayName:"site1", 
         propertyValues:{
             "region":"UK",
@@ -86,6 +123,7 @@ const siteInstances = [
         }
     },
     {
+        planetId:"sites",
         displayName:"site2", 
         propertyValues:{
             "region":"USA",
@@ -94,6 +132,7 @@ const siteInstances = [
         }
     },
     {
+        planetId:"sites",
         displayName:"site3", 
         propertyValues:{
             "region":"UK",
@@ -102,6 +141,7 @@ const siteInstances = [
         }
     },
     {
+        planetId:"sites",
         displayName:"site4", 
         propertyValues:{
             "region":"UK",
@@ -110,6 +150,7 @@ const siteInstances = [
         }
     },
     {
+        planetId:"sites",
         displayName:"site5", 
         propertyValues:{
             "region":"UK",
@@ -118,6 +159,7 @@ const siteInstances = [
         }
     },
     {
+        planetId:"sites",
         displayName:"site6", 
         propertyValues:{
             "region":"USA",
@@ -126,6 +168,7 @@ const siteInstances = [
         }
     },
     {
+        planetId:"sites",
         displayName:"site7", 
         propertyValues:{
             "region":"UK",
@@ -134,6 +177,7 @@ const siteInstances = [
         }
     },
     {
+        planetId:"sites",
         displayName:"site8", 
         propertyValues:{
             "region":"UK",
@@ -147,6 +191,7 @@ const siteInstances = [
 
 const deviceInstances = [
     {
+        planetId:"devices",
         displayName:"dev1", 
         propertyValues:{
             "creationDate":"12/02/2018",
@@ -155,6 +200,7 @@ const deviceInstances = [
         }
     },
     {
+        planetId:"devices",
         displayName:"dev2", 
         propertyValues:{
             "creationDate":"09/21/2018",
@@ -163,6 +209,7 @@ const deviceInstances = [
         }
     },
     {
+        planetId:"devices",
         displayName:"dev3", 
         propertyValues:{
             "creationDate":"01/16/2018",
@@ -171,6 +218,7 @@ const deviceInstances = [
         }
     },
     {
+        planetId:"devices",
         displayName:"dev4", 
         propertyValues:{
             "creationDate":"05/01/2019",
@@ -179,6 +227,7 @@ const deviceInstances = [
         }
     },
     {
+        planetId:"devices",
         displayName:"dev5", 
         propertyValues:{
             "creationDate":"11/14/2019",

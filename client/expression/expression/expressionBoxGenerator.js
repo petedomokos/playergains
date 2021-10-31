@@ -20,7 +20,10 @@ export function expressionBoxGenerator(selection){
     //dom
     //store contents on a separate g that can be removed if op or context changes without affecting the EUE pattern
     let contentsG;
-    let textContentsG;
+    //children
+    let preText;
+    let primaryText;
+    let secondaryText;
 
     //Note: We call a different boxGenerator for each boxG, so i is always 0
     function myExpressionBox(selection){
@@ -33,33 +36,37 @@ export function expressionBoxGenerator(selection){
             const boxG = d3.select(this);
             //ENTER
             if(boxG.select("*").empty()){
-                contentsG = boxG.append("g").attr("class", "contents");
+                contentsG = boxG.append("g").attr("class", "box-contents");
                 //background
                 contentsG
                     .append("rect")
                     .attr("class", "background");
 
                 //text
-                contentsG
+                preText = contentsG
                     .append("text")
                         .attr("class", "pre")
                         .attr("stroke-width", 0.1)
-                        .attr("transform", "translate(5,5)")
+                        //.attr("transform", "translate(5,5)")
+                        .attr("transform", "translate(" +(width/2)+", 5)")
+                        .attr("text-anchor", "start")
                         .attr("text-anchor", "middle")
                         .attr("dominant-baseline", "hanging")
-                        .attr("font-size", 10)
-                        .attr("fill", COLOURS.exp.box.pre)
+                        .attr("font-size", 11)
 
-                contentsG
+                primaryText = contentsG
                     .append("text")
                         .attr("class", "primary")
+                        .attr("dominant-baseline", "middle")
                         .attr("stroke-width", 0.1)
+                        .attr("font-size", 12)
 
-                contentsG
+                secondaryText = contentsG
                     .append("text")
                         .attr("class", "secondary")
+                        .attr("dominant-baseline", "middle")
                         .attr("stroke-width", 0.1)
-                        .attr("font-size", 10)
+                        .attr("font-size", 11)
                         //.attr("dominant-baseline", "text-bottom")
                     
             }
@@ -69,83 +76,80 @@ export function expressionBoxGenerator(selection){
             contentsG.select("rect.background")
                 .attr("transform", "translate(+"+margin.left +"," + margin.right +")")
                 .attr("width", contentsWidth).attr("height", contentsHeight)
-                .attr("fill", isActive ? COLOURS.exp.box.bg.active : COLOURS.exp.box.bg.inactive)
+                //.attr("fill", isActive ? COLOURS.exp.box.bg.active : COLOURS.exp.box.bg.inactive)
+                .attr("fill", "none")
             //text
+            //colours
+            const colours = COLOURS.exp.box;
+            preText.attr("fill", isActive ? colours.pre.active : colours.pre.inactive)
+            secondaryText.attr("fill", isActive ? colours.secondary.active : colours.secondary.inactive)
+            primaryText.attr("fill", isActive ? colours.primary.active : colours.primary.inactive)
+
             //note - if func not defined, then planet/prop is also not defined becuse it would at least be 'sel'
             if(func){
-                if(func.id === "home-sel"){
+                if(func.id === "homeSel"){
                     //show planet in middle
-                    contentsG.select("text.primary")
-                        .attr("transform", "translate(" +(width * 0.5) +"," +(height * 0.5) +")")
+                    primaryText
+                        .attr("transform", "translate(" +(width * 0.5) +"," +(height * 0.65) +")")
                         .attr("text-anchor", "middle")
-                        .attr("font-size", 12)
-                        .attr("fill", COLOURS.exp.box.planet)
                         .text(of.planet.name.slice(0, of.planet.name.length-1))
                     
-                    contentsG.select("text.secondary").attr("opacity", 0)
+                    secondaryText.attr("opacity", 0)
                 }
                 else if(func.id === "sel" && !of.property){
                     //show planet in middle
-                    contentsG.select("text.primary")
-                        .attr("transform", "translate(" +(width * 0.5) +"," +(height * 0.5) +")")
+                    primaryText
+                        .attr("transform", "translate(" + (width * 0.5) +"," + (height * 0.55) +")")
                         .attr("text-anchor", "middle")
-                        .attr("font-size", 12)
-                        .attr("fill", COLOURS.exp.box.planet)
                         .text(of.planet.name)
                     
-                    contentsG.select("text.secondary").attr("opacity", 0)
+                    secondaryText.attr("opacity", 0)
                 }
                 else if(func.id === "sel"){
                     //show planet and property (case of no prop is handled above)
-                    contentsG.select("text.primary")
-                        .attr("transform", "translate(20," +(height * 0.5) +")")
-                        .attr("text-anchor", "start")
-                        .attr("font-size", 14)
-                        .attr("fill", COLOURS.exp.box.planet)
+                    primaryText
+                        .attr("transform", "translate(" +(contentsWidth * 0.5 - 2) + "," + (height * 0.55) +")")
+                        .attr("text-anchor", "end")
                         .text(of.planet.name)
                     
-                    contentsG.select("text.secondary")
-                        .attr("transform", "translate(75," +(height * 0.5) +")")
+                    secondaryText
+                        .attr("transform", "translate(" +(contentsWidth * 0.5 + 2) + "," + (height * 0.565) +")")
                         .attr("text-anchor", "start")
-                        .attr("fill", COLOURS.exp.box.property)
                         .text(of.property.name)
                 }
                 else{
-                    //show func (and no secondary)
-                    contentsG.select("text.primary")
-                        .attr("transform", "translate(" +(width * 0.5) +"," +(height * 0.5) +")")
+                    //show func (and no pre or secondary)
+                    primaryText
+                        .attr("transform", "translate(" + (width * 0.5) +"," + (height * 0.7) +")")
                         .attr("text-anchor", "middle")
-                        .attr("font-size", 12)
-                        .attr("fill", isActive ? COLOURS.editor.func.selected : COLOURS.exp.box.func)
                         .text(subFunc?.name || func.name) //only show func name if no subFunc
                     
-                    contentsG.select("text.secondary").attr("opacity", 0)
+                    secondaryText.attr("opacity", 0)
                 }
             }
             else{
                 //show instruction
-                contentsG.select("text.primary")
+                primaryText
                     .attr("transform", "translate(" +(width * 0.5) +"," +(height * 0.5) +")")
                     .attr("text-anchor", "middle")
-                    .attr("font-size", 12)
-                    .attr("fill", COLOURS.instruction)
+                    .attr("opacity", 0.7)
                     .text("Click something...")
                 
-                contentsG.select("text.secondary").attr("opacity", 0)
+                secondaryText.attr("opacity", 0)
             }
 
             //pre-text
-            if(func?.id === 'home-sel'){
-                contentsG.select("text.pre")
-                    .attr("transform", "translate(5,5)")
+            if(func?.id === 'homeSel'){
+                preText
                     .attr("display", "inline")
-                    .attr("text-anchor", "start")
-                    .attr("dominant-baseline", "hanging")
-                    .attr("font-size", 10)
-                    .attr("fill", COLOURS.instruction)
                     .text("For each")
+
+            }else if(["sel", "filter"].includes(func?.id)){
+                preText
+                    .attr("display", "inline")
+                    .text("All")
             }else{
-                contentsG.select("text.pre").attr("display", "none")
+                preText.attr("display", "none")
             }
 
         })

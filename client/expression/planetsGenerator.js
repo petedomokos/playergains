@@ -27,7 +27,7 @@ export function planetsGenerator(){
 
         selection.each(function(data){
              //Bind
-            const planetG = selection.selectAll("g.planet").data(data)
+            const planetG = selection.selectAll("g.planet").data(data, d => d.id)
             //Enter
             const planetGEnter = planetG.enter()
                 .append("g")
@@ -64,7 +64,7 @@ export function planetsGenerator(){
                     //.on("drag", propertyDragged)
                     .on("end", (e,d) => propertyDragEnd(planetD, d));
                 //bind
-                const propertyG = d3.select(this).selectAll("g.property").data(planetD.properties);
+                const propertyG = d3.select(this).selectAll("g.property").data(planetD.properties, d => d.id);
                 //enter
                 const propertyGEnter = propertyG.enter()
                     .append("g")

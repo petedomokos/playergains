@@ -21,36 +21,18 @@ export function selVisGenerator(selection){
             const visMargins =  { ...DIMNS.block.vis.margins, ...DIMNS.block.vis.get.margins }
             //console.log("selViz data", blockData)
             //visContentsG 
-            const contentsG = d3.select(this).selectAll("g.contents").data([blockData])
+            const contentsG = d3.select(this).selectAll("g.vis-contents").data([blockData])
             //we call the merged version contents 
             const contentsGEnter = contentsG.enter()
                 .append("g")
-                .attr("class", "contents")
+                .attr("class", "vis-contents")
 
             const contentsGMerged = contentsG.merge(contentsGEnter)
-            
-            //arrows
-            const arrowsG = contentsGMerged.selectAll("g.arrows").data([blockData])
-            arrowsG.enter()
-                .append("g")
-                .attr("class", "arrows")
-                .merge(arrowsG)
-                .each(function(){
-                    const arrowLine = d3.select(this).selectAll("g.arrow").data(["top", "middle", "bottom"])
-                    arrowLine.enter()
-                        .append("line")
-                            .attr("class", d => d + "-arrow arrow")
-                            .attr("x1", visMargins.preIcon)
-                            .attr("stroke", COLOURS.exp.vis.preIcon)
-                            .merge(arrowLine)
-                            .attr("y1", contentsHeight/2)
-                            .attr("x2", contentsWidth/5)
-                            .attr("y2", (d,i) =>  (i + 2) * contentsHeight/6) //todo - remove eslint brackets rule
-
-                })
            
             //instances
-            const instancesData = ["val 1", "val 2", "val 3", "...", "..."]
+            //@todo - could give each instancesDatum a uniqueId (not index) that doesnt change
+            //even if previous ones are deleted. This would be 2nd arg of .data
+            const instancesData = blockData.res || [];
             const instancesG = contentsGMerged.selectAll("g.instances").data([blockData])
             instancesG.enter()
                 .append("g")

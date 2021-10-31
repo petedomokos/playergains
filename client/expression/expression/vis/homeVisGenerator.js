@@ -18,34 +18,52 @@ export function homeVisGenerator(selection){
 
     function myHomeVis(selection){        
         selection.each(function(blockData){
-            //console.log("home vis", blockData)
             const visMargins =  { ...DIMNS.block.vis.margins, ...DIMNS.block.vis.home.margins }
             //bind
-            const contentsG = d3.select(this).selectAll("g.contents").data([blockData])
+            const contentsG = d3.select(this).selectAll("g.vis-contents").data([blockData])
             //enter contents
-            const contentsGEnter = contentsG.enter().append("g").attr("class", "contents")
-                .attr("transform", "translate(+"+margin.left +"," + margin.right +")");
+            const contentsGEnter = contentsG.enter().append("g").attr("class", "vis-contents")
+                .attr("transform", "translate(+"+margin.left +"," + margin.right +")")
+                .each(function(d){
+                    //ellipse
+                    d3.select(this)
+                        .append("ellipse")
+                            .attr("stroke", COLOURS.exp.vis.val)
+                            .attr("fill", "#C0C0C0")
+
+                    //text
+                    d3.select(this)
+                        .append("text")
+                            .attr("class", "display-name")
+                           // .attr("stroke", "black")
+                            //.attr("fill", "black")
+                            .attr("text-anchor", "middle")
+                            .attr("dominant-baseline", "middle")
+                            .attr("font-size", 10)
+                });
             //upate contents
-            const contentsGMerged = contentsG.merge(contentsGEnter)
-                .attr("opacity", d => d.of ? 1 : 0)
+            contentsG.merge(contentsGEnter)
+                //.attr("opacity", d => d.res ? 1 : 0)
+
+            //@todo - check we are merging twice here
             
-            //enter line
+            //ellipse
             contentsGEnter
-                .append("ellipse")
-                    .attr("cx", contentsWidth/2)
-                    .attr("cy", contentsHeight/2)
-                    .attr("rx", contentsWidth/5)
-                    .attr("ry", (contentsWidth/5)/5)
-                    .attr("stroke", COLOURS.exp.vis.val)
-                    .attr("fill", "#C0C0C0")
-                    .attr("stroke", "grey")
-
-            //update line  
-            contentsGMerged.select("line")
-                .attr("y1", contentsHeight/2)
-                .attr("x2", contentsWidth - visMargins.val)
-                .attr("y2", contentsHeight/2)
-
+                .merge(contentsG)
+                .each(function(d){
+                    //ellipse
+                    d3.select(this).select("ellipse")
+                        .attr("cx", contentsWidth/2)
+                        .attr("cy", contentsHeight/2)
+                        .attr("rx", 30)
+                        .attr("ry", 10)
+                    
+                    //text
+                    d3.select(this).select("text.display-name")
+                        .attr("transform", "translate(+"+contentsWidth/2 +"," + contentsHeight/2 +")")
+                        .text(d.res?.displayName || "")
+            
+                })
         })
         return selection;
     }
@@ -64,7 +82,7 @@ export function homeVisGenerator(selection){
         return myHomeVis;
     };
     myHomeVis.applicableContext = "Planet"
-    myHomeVis.funcType = "home-sel"
+    myHomeVis.funcType = "homeSel"
     return myHomeVis;
 
     }

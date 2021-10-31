@@ -8,7 +8,7 @@ import { COLOURS, DIMNS } from "../../constants"
 export function aggVisGenerator(selection){
     let width = 130;
     let height = 40;
-    let margin =  { bottom:10 };
+    let margin =  { bottom:0 };
     let contentsHeight = height - margin.bottom;
     let contentsWidth = width;
     const updateDimns = () =>{
@@ -21,35 +21,13 @@ export function aggVisGenerator(selection){
             //console.log("AggVis data", blockData)
             const visMargins =  { ...DIMNS.block.vis.margins, ...DIMNS.block.vis.agg.margins }
             //visContentsG 
-            const visContentsG = d3.select(this).selectAll("g.contents").data([blockData])
+            const visContentsG = d3.select(this).selectAll("g.vis-contents").data([blockData])
             //we call the merged version contents 
             const contentsG = visContentsG.enter()
                 .append("g")
-                .attr("class", "contents")
+                .attr("class", "vis-contents")
                 .merge(visContentsG)
                 //.attr("opacity", d => d.selected || d.op ? 1 : 0)
-            
-            //arrows
-            const arrowsG = contentsG.selectAll("g.arrows").data([blockData])
-            arrowsG.enter()
-                .append("g")
-                .attr("class", "arrows")
-                .merge(arrowsG)
-                //.attr("transform", "translate(0," +(contentsHeight/2) +")")
-                //.attr("opacity", d => d.op ? 1 : 0)
-                .each(function(){
-                    const arrowLine = d3.select(this).selectAll("g.arrow").data(["top", "middle", "bottom"])
-                    arrowLine.enter()
-                        .append("line")
-                            .attr("class", d => d + "-arrow arrow")
-                            .attr("x1", visMargins.preIcon)
-                            .attr("stroke", COLOURS.exp.vis.preIcon)
-                            .merge(arrowLine)
-                            .attr("y1", (d,i) =>  (i + 2) * contentsHeight/6)
-                            .attr("x2", contentsWidth * 0.2)
-                            .attr("y2", contentsHeight * 0.5) //todo - remove eslint brackets rule
-
-                })
            
             //result
             const resG = contentsG.selectAll("g.res").data([blockData])
@@ -64,13 +42,11 @@ export function aggVisGenerator(selection){
                 .append("text")
                     .attr("class", "result")
                     .attr("fill", COLOURS.exp.vis.val)
-                    .style("font-size", "12px")
+                    .style("font-size", "18px")
 
+            //for agg, we know res will be a value
             resG.merge(resGEnter).select("text.result")
-                    .text(d => {
-                        const res = d.subFunc.f(d.prev.of, x => x.value);
-                        return "= "+(res || "")
-                    })
+                    .text(d => "= "+(d.res || ""))
 
         })
         return selection;

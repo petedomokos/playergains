@@ -20,8 +20,8 @@ export function functionIconsGenerator(selection){
     let funcIconsG;
 
     function myFuncIcons(selection){
-        selection.each(function(opsData){
-            //console.log("opsData", opsData)
+        selection.each(function(funcsData){
+            //console.log("funcsData", funcsData)
             if(!funcIconsG){
                 funcIconsG = d3.select(this)
             }
@@ -29,7 +29,7 @@ export function functionIconsGenerator(selection){
             //dimensions
             updateDimns()
             //Bind
-            const iconG = funcIconsG.selectAll("g.icon").data(opsData, op => op.id)
+            const iconG = funcIconsG.selectAll("g.icon").data(funcsData, func => func.id)
             //Enter
             const iconGEnter = iconG.enter()
                 .append("g")
