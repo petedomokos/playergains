@@ -37,9 +37,7 @@ export function functionIconsGenerator(selection){
                     //@todo - put in iconsG so we can aply the margin transfrom just once
                     .attr("transform", (d,i) =>"translate(" +(margin.left +i * 50) + ",0)")
                     .on("click", (e,d) => {
-                        //temp
-                        if(d.id === "get" || d.id === "agg")
-                            selectFunc({...d, isSelected:undefined})
+                        selectFunc({...d, isSelected:undefined})
                     }) //donet send isSelected
 
             //note - this will become the full name and show on hover just below icon

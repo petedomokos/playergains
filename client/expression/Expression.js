@@ -95,9 +95,9 @@ const Expression = ({}) => {
               //replace chain in state
               return [...elementsBefore(chainNr, prevState), updatedChain, ...elementsAfter(chainNr, prevState)]
             })
-            if(requireNewBlock){
+            //if(requireNewBlock){
               setActiveBlock([chainNr, blockNr + 1])
-            }
+            //}
         }))
         .setActiveBlock(setActiveBlock)
         .addChain(i => {

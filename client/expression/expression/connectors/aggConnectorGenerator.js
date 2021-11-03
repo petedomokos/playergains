@@ -17,7 +17,15 @@ export function aggConnectorGenerator(selection){
                     .attr("x1", 0)
                     .attr("stroke", COLOURS.exp.connector)
                     .merge(arrowLine)
-                    .attr("y1", (d,i) =>  (i - 1) * contentsHeight/6)
+                    .attr("y1", (d,i) =>  {
+                        //if prev less than 4, we narrow the arrows
+                        if(data[0].res.length <= 3){
+                            if(i === 0){ return -0.5 * contentsHeight/6;}
+                            if(i === 1){ return 0;}
+                            if(i === 2){ return 0.5 * contentsHeight/6;}
+                        }
+                        return (i - 1) * contentsHeight/6
+                    })
                     .attr("x2", width)
                     .attr("y2", 0)
     

@@ -229,59 +229,81 @@ export default function expressionBuilderGenerator() {
             .height(planetsHeight)
             .onSelect(function(planet, property){
                 const activeBlock = findActiveBlock(expBuilderData)
-                const { blockNr, chainNr, func } = activeBlock;
-                let updatedBlock;
-                if(blockNr === 0){
-                    //its the home block
-                    updatedBlock = {
-                        ...activeBlock,
-                        func:funcs.find(func => func.id === "homeSel"),
-                        //we just take the first instance as it is for the home planet
-                        //@todo - allow user to change which instance is used
-                        of:{planet}
-                    }
+                const { blockNr, func } = activeBlock;
+                if(activeBlock.blockNr === 0){
+                    applyHomeSel(planet, activeBlock)
                 }else{
-                    //its not the home block
-                    const valueType = getPropValueType(planet.id, property?.id);
-                    //helper to get the right value for each instance based on property selected
-                    const calculateValue = (instance, propertyId, valueType) => {
-                        const rawValue = instance.propertyValues[propertyId];
-                        if(valueType === "date"){
-                            return new Date(rawValue)
-                        }
-                        if(valueType === "number"){
-                            return +rawValue
-                        }
-                        return rawValue
+                    //temp - disable ability to change a blocks func
+                    if(func && func.id !== "sel") { 
+                        alert("Changing an existing operation is not implemented yet. Click Next to add a new operation.")
+                        return; 
                     }
-
-                    const dataset = getInstances(planet.id)
-                        .filter(inst => {
-                            return areRelated(inst, expBuilderData[chainNr][0].res)
-                        })
-                        .map(inst => ({
-                            ...inst,
-                            //add the appropriate value if property has been specified.
-                            value:property ? calculateValue(inst, property.id, valueType) : undefined
-                        }))
-                    //attach the planet and property selected to the dataset for reference purposes
-                    dataset.planet = planet;
-                    dataset.property = property;
-                    dataset.valueType = valueType;
-                    //add the dataset to block state as the of property 
-                    //(note - of can be a dataset (as here) or a function (with its own 'of') that returns a dataset)
-                    updatedBlock = {
-                        ...activeBlock,
-                        //if func is alrady chosem use that, otherwise its a sel
-                        func:func || funcs.find(func => func.id === "sel"),
-                        of:dataset
-                    };
+                    applySel(planet, property, activeBlock)
                 }
-                //result for the block (a dataset, or a value, or a dataset of datasets)
-                const res = calculateResult(updatedBlock)
-                //update state
-                updateBlock({...updatedBlock, res}, true)
             })
+        
+        function applyHomeSel(planet, block){
+            const { blockNr, chainNr } = block;
+            //its the home block
+            const updatedBlock = {
+                ...block,
+                func:funcs.find(func => func.id === "homeSel"),
+                //we just take the first instance as it is for the home planet
+                //@todo - allow user to change which instance is used
+                of:{planet}
+            }
+            //result for the block (a dataset, or a value, or a dataset of datasets)
+            const res = calculateResult(updatedBlock)
+            //add new empty block if this is the last one
+            const shouldAddEmptyBlock = blockNr === expBuilderData[chainNr].length - 1;
+            //update state
+            updateBlock({...updatedBlock, res}, shouldAddEmptyBlock)
+        }
+
+        function applySel(planet, property, block){
+            const { blockNr, chainNr, func } = block;
+            const valueType = getPropValueType(planet.id, property?.id);
+            //helper to get the right value for each instance based on property selected
+            const calculateValue = (instance, propertyId, valueType) => {
+                const rawValue = instance.propertyValues[propertyId];
+                if(valueType === "date"){
+                    return new Date(rawValue)
+                }
+                if(valueType === "number"){
+                    return +rawValue
+                }
+                return rawValue
+            }
+
+            const of = getInstances(planet.id)
+                .filter(inst => {
+                    return areRelated(inst, expBuilderData[chainNr][0].res)
+                })
+                .map(inst => ({
+                    ...inst,
+                    //add the appropriate value if property has been specified.
+                    value:property ? calculateValue(inst, property.id, valueType) : undefined
+                }))
+            //attach the planet and property selected to the dataset for reference purposes
+            of.planet = planet;
+            of.property = property;
+            of.valueType = valueType;
+            //add the dataset to block state as the of property 
+            //(note - of can be a dataset (as here) or a function (with its own 'of') that returns a dataset)
+            const updatedBlock = {
+                ...block,
+                //if func is alrady chosen use that, otherwise its a sel
+                func:func || funcs.find(func => func.id === "sel"),
+                of
+            };
+            //result for the block (a dataset, or a value, or a dataset of datasets)
+            const res = calculateResult(updatedBlock)
+            //add new empty block if this is the last one
+            const shouldAddEmptyBlock = blockNr === expBuilderData[chainNr].length - 1;
+            //update state
+            updateBlock({...updatedBlock, res}, shouldAddEmptyBlock)
+
+        }
 
         //editor
         editors.forEach((editor,i) => {
@@ -290,12 +312,27 @@ export default function expressionBuilderGenerator() {
                 .height(editorHeight)
                 .funcs(funcs)
                 .selectFunc((func) => {
-
-                    //@todo - need to update of values and res here too, unless no planet selected
-                    const activeBlock = findActiveBlock(expBuilderData)
-                    const { prev } = activeBlock;
+                    //@todo ?- need to update of values and res here too, unless no planet selected???
+                    const block = findActiveBlock(expBuilderData)
+                    const { chainNr, blockNr, prev } = block;
                     if(!prev?.of?.planet){
                         //todo - go into func-first mode
+                        return;
+                    }
+                    //temp - disable ability to change a blocks func
+                    if(block.func && block.func.id !== func.id) { 
+                        alert("Click Next before applying the next operation. Changing an existing operation is not implemented yet.")
+                        return; 
+                    }
+
+                    //if filter
+                    if(func.id === "filter"){
+                        //note - applySel turns func into a sel func
+                        //@todo - keep the block as active so filters are shown, 
+                        //@todo later maybe - dont display the selection until filters are applied initially
+                        applySel(prev.of.planet, prev.of.property, block);
+
+                        setActiveBlock([chainNr, blockNr])
                         return;
                     }
                     /*
@@ -312,7 +349,7 @@ export default function expressionBuilderGenerator() {
                     else if(func.id === "agg" && planet){
                         subFunc = func.subFuncs.find(f => f.id === "count");
                     }
-                    const updatedBlock = {...activeBlock, func, subFunc};
+                    const updatedBlock = {...block, func, subFunc};
                     //result for the block (a dataset, or a value, or a dataset of datasets)
                     const res = calculateResult(updatedBlock)
                     //update state

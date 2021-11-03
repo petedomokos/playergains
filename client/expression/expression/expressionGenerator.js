@@ -76,11 +76,22 @@ export function expressionGenerator(){
 
         //set handlers 
         expressionBoxComponents[i]
+        /*
             .onFuncClick(function(){
                 //set active block to this
                 setActiveBlock([d.chainNr, d.blockNr])
             })
             .onFiltersClick(function(){
+                //set active block to this
+                setActiveBlock([d.chainNr, d.blockNr])
+            })
+            .onEmptyBlockClick(function(){
+                console.log("hello")
+                //set active block to this
+                setActiveBlock([d.chainNr, d.blockNr])
+            })
+            */
+            .onBlockClick(function(){
                 //set active block to this
                 setActiveBlock([d.chainNr, d.blockNr])
             })

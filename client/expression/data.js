@@ -53,7 +53,7 @@ export const funcs = [
     { id:"homeSel", name:"Select", icon:{ nodeType:"path", d:arrowPathD } },
     { id:"sel", name:"Select", icon:{ nodeType:"path", d:arrowPathD } },
     { id:"filter", name:"Filter", icon:{ nodeType:"path", d:filterPathD } },
-    { id:"groupBy", name:"Group", icon:{ nodeType:"path", d:groupByPathD } },
+    //{ id:"groupBy", name:"Group", icon:{ nodeType:"path", d:groupByPathD } },
     { id:"agg", name:"Agg", icon:{ nodeType:"polygon", points:trianglePolygonPoints },
         subFuncs:[
             {id:"count", name:"Count", f:data => data.length, applicableTo:["all"]},
@@ -64,7 +64,7 @@ export const funcs = [
             {id:"sd", name:"Std Dev", f:(data, g) => d3.deviation(data, g).toFixed(2), applicableTo:["Number"]}
         ] 
     },
-    { id:"map", name:"Map", icon:{ nodeType:"path", d:arrowPathD } },
+    //{ id:"map", name:"Map", icon:{ nodeType:"path", d:arrowPathD } },
 ]
 
 export function availableFuncs(funcs, blockData){

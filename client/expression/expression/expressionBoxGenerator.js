@@ -28,16 +28,19 @@ export function expressionBoxGenerator(selection){
     //handlers
     let onFuncClick = () =>{}
     let onFiltersClick = () =>{}
+    let onEmptyBlockClick = () => {}
+    let onBlockClick = () => {}
 
     //Note: We call a different boxGenerator for each boxG, so i is always 0
     function myExpressionBox(selection){
         //selection is a single boxG so i always 0
         selection.each(function(blockData){
-            const { func, subFunc, of, isActive } = blockData;
+            const { chainNr, blockNr, func, subFunc, of, isActive } = blockData;
 
             updateDimns();
             //console.log("expBox",blockData)
-            const boxG = d3.select(this);
+            const boxG = d3.select(this)
+                .on("click", onBlockClick);
             //ENTER
             if(boxG.select("*").empty()){
                 contentsG = boxG.append("g").attr("class", "box-contents");
@@ -58,7 +61,7 @@ export function expressionBoxGenerator(selection){
                         .attr("dominant-baseline", "hanging")
                         .attr("font-size", 11)
                         .style("cursor", "pointer")
-                        .on("click", onFiltersClick)
+                        //.on("click", onFiltersClick)
 
                 primaryText = contentsG
                     .append("text")
@@ -123,6 +126,7 @@ export function expressionBoxGenerator(selection){
                     secondaryText
                         .attr("transform", "translate(" +(contentsWidth * 0.5 + 2) + "," + (height * 0.565) +")")
                         .attr("text-anchor", "start")
+                        .attr("opacity", 1)
                         .text(of.property.name)
                 }
                 else{
@@ -131,7 +135,7 @@ export function expressionBoxGenerator(selection){
                         .attr("transform", "translate(" + (width * 0.5) +"," + (height * 0.7) +")")
                         .attr("text-anchor", "middle")
                         .text(subFunc?.name || func.name) //only show func name if no subFunc
-                        .on("click", onFuncClick)
+                        //.on("click", onFuncClick)
                     
                     secondaryText.attr("opacity", 0)
                 }
@@ -142,7 +146,9 @@ export function expressionBoxGenerator(selection){
                     .attr("transform", "translate(" +(width * 0.5) +"," +(height * 0.5) +")")
                     .attr("text-anchor", "middle")
                     .attr("opacity", 0.7)
-                    .text("Click something...")
+                    .text("Next...")
+                    //.on("click", onEmptyBlockClick)
+                    //.on("click", () => setActiveBlock([chainNr, blockNr]))
                 
                 secondaryText.attr("opacity", 0)
             }
@@ -160,7 +166,6 @@ export function expressionBoxGenerator(selection){
             }else{
                 preText.attr("display", "none")
             }
-
         })
 
         return selection;
@@ -185,6 +190,16 @@ export function expressionBoxGenerator(selection){
     myExpressionBox.onFiltersClick = function (value) {
         if (!arguments.length) { return onFiltersClick; }
         onFiltersClick = value;
+        return myExpressionBox;
+    }
+    myExpressionBox.onEmptyBlockClick = function (value) {
+        if (!arguments.length) { return onEmptyBlockClick; }
+        onEmptyBlockClick = value;
+        return myExpressionBox;
+    }
+    myExpressionBox.onBlockClick = function (value) {
+        if (!arguments.length) { return onBlockClick; }
+        onBlockClick = value;
         return myExpressionBox;
     }
     myExpressionBox.applicableContext = "Planet"

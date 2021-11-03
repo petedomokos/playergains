@@ -10,16 +10,26 @@ export function selConnectorGenerator(selection){
             //console.log("sel connector", data)
             const contentsHeight = height * 0.6;
 
-            const arrowLine = d3.select(this).selectAll("g.arrow").data(["top", "middle", "bottom"])
+            const prevIsDataset = Array.isArray(data[0].res)
+
+            const arrowLine = d3.select(this).selectAll("line.arrow").data(["top", "middle", "bottom"])
             arrowLine.enter()
                 .append("line")
                     .attr("class", d => d + "-arrow arrow")
                     .attr("x1", 0)
                     .attr("stroke", COLOURS.exp.connector)
                     .merge(arrowLine)
-                    .attr("y1", 0)
+                    .attr("y1", (d,i) => prevIsDataset ? (i - 1) * contentsHeight/6 : 0) //parallel lines if dataset to dataset
                     .attr("x2", width)
-                    .attr("y2", (d,i) =>  (i - 1) * contentsHeight/6) //todo - remove eslint brackets rule
+                    .attr("y2", (d,i) =>  {
+                        if(prevIsDataset && data[1].res.length < data[0].res.length){
+                            //data has been filtered down - top and bottom lines slanted inwards
+                            if(i === 0){ return -0.5 * contentsHeight/6;}
+                            if(i === 1){ return 0;}
+                            if(i === 2){ return 0.5 * contentsHeight/6;}
+                        }
+                        return (i - 1) * contentsHeight/6 //todo - remove eslint brackets rule
+                    })
     
         })
         return selection;

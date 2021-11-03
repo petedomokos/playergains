@@ -11,7 +11,7 @@ export const DIMNS = {
     smallMargin,
     noMargin,
     svg:{
-        width:800,
+        width:850,
         minHeight:600
     },
     expBuilder:{

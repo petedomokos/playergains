@@ -92,7 +92,7 @@ export function homeSel(planet, settings={}){
 //for now, this only processes numbers
 export function sel(of, filters=[]){
     //console.log("calcualting sel res filters", filters)
-    console.log("of", of)
+    //console.log("of", of)
     const applyNextFilter = (next, dataset, remaining) => {
         if(!next){
             return dataset;
@@ -103,7 +103,7 @@ export function sel(of, filters=[]){
     }
     const [firstFilter, ...remainingFilters] = filters;
     const newOf= applyNextFilter(firstFilter, of, remainingFilters)
-    console.log("newOf", newOf)
+    //console.log("newOf", newOf)
     return newOf;
 }
 

@@ -42,8 +42,10 @@ export function selVisGenerator(selection){
                 //and in that case we still want sel icons to stay, unless they delete whole block
                 .attr("opacity", d => d.of.planet ? 1 : 0) 
                 .each(function(){
-                    const ellipseHeight = 0.8 * contentsHeight/instancesData.length;
-                    const ellipseGap = 0.2 * contentsHeight/instancesData.length;
+                    //const ellipseHeight = 0.8 * contentsHeight/instancesData.length;
+                    //const ellipseGap = 0.2 * contentsHeight/instancesData.length;
+                    const ellipseHeight = 12;
+                    const ellipseGap = 2;
                     const instanceG = d3.select(this).selectAll("g.instance").data(instancesData)
                     const instanceGEnter = instanceG.enter()
                         .append("g")
@@ -71,8 +73,16 @@ export function selVisGenerator(selection){
                                         .attr("font-size", 9)
 
                             })
+                    const instancesHeightTotal = instancesData.length * (ellipseHeight + ellipseGap);
+                    const extraMarginSpace = contentsHeight - instancesHeightTotal;
+                    const extraTopMargin = extraMarginSpace/2;
+                    console.log("instances", instancesData)
+                    console.log("instancesHT", instancesHeightTotal)
+                    console.log("contentsh", contentsHeight)
+                    console.log("extra", extraMarginSpace)
+
                     instanceG.merge(instanceGEnter)
-                        .attr("transform", (d,i) => "translate(0, " +(i * (ellipseHeight + ellipseGap)) + ")")
+                        .attr("transform", (d,i) => "translate(0, " +(extraTopMargin +(i * (ellipseHeight + ellipseGap))) + ")")
                         .each(function(d){
                             //ellipse
                             d3.select(this).select("ellipse")
