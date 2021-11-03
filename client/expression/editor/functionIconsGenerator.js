@@ -34,6 +34,7 @@ export function functionIconsGenerator(selection){
             const iconGEnter = iconG.enter()
                 .append("g")
                     .attr("class", "icon")
+                    .merge(iconG)
                     //@todo - put in iconsG so we can aply the margin transfrom just once
                     .attr("transform", (d,i) =>"translate(" +(margin.left +i * 50) + ",0)")
                     .on("click", (e,d) => {
@@ -56,6 +57,8 @@ export function functionIconsGenerator(selection){
             iconG.merge(iconGEnter).select("text")
                 .attr("fill", d => d.isSelected ? COLOURS.editor.func.selected : COLOURS.editor.func.nonSelected)
                 .text(d => d.name)
+
+            iconG.exit().remove();
             
         })
         return selection;

@@ -67,7 +67,18 @@ export function editorGenerator(){
             editBox.width(editBoxWidth).height(editBoxHeight)
             funcIcons.width(funcIconsWidth).height(funcIconsHeight).selectFunc(selectFunc);
             //funcs data
-            const funcsData = availableFuncs(funcs, blockData).map(d => ({ ...d, isSelected:blockData.func?.id === d.id }))
+            //const funcsData = availableFuncs(funcs, blockData).map(d => ({ ...d, isSelected:blockData.func?.id === d.id }))
+            const { func } = blockData;
+            let funcsData;
+            if(!func || func.id === "homeSel"){
+                funcsData = availableFuncs(funcs, blockData).map(d => ({ ...d, isSelected:blockData.func?.id === d.id }))
+            }else{
+                if(func.id == "sel"){
+                    funcsData = [];
+                }else{
+                    funcsData = [{...funcs.find(func => func.id === blockData.func.id), isSelected:true}];
+                }
+            }
 
             //DOM UPDATE
             //editorG

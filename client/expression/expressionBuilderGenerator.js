@@ -316,7 +316,9 @@ export default function expressionBuilderGenerator() {
                     //@todo ?- need to update of values and res here too, unless no planet selected???
                     const block = findActiveBlock(expBuilderData)
                     const { chainNr, blockNr, prev } = block;
-                    if(!prev?.of?.planet){
+                    //if(!prev?.of?.planet){
+                    if(["filter", "agg", "groupby"].includes(func.id) && !Array.isArray(prev?.of)){
+                        alert("You must define your dataset before the operation.");
                         //todo - go into func-first mode
                         return;
                     }
