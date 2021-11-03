@@ -67,13 +67,13 @@ export function functionIconsGenerator(selection){
     myFuncIcons.width = function (value) {
         if (!arguments.length) { return width; }
         width = value;
-        //updateDimns();
+        
         return myFuncIcons;
         };
     myFuncIcons.height = function (value) {
         if (!arguments.length) { return height; }
         height = value;
-        //updateDimns();
+        
         return myFuncIcons;
     };
     myFuncIcons.selectFunc = function (value) {

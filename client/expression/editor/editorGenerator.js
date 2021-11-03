@@ -38,6 +38,7 @@ export function editorGenerator(){
     //handlers
     let selectFunc = () => {};
     let selectSubFunc = () => {};
+    let updateBlock = () => {};
 
     function myEditor(selection){
         //blockData will be undefined if chain not active
@@ -55,7 +56,10 @@ export function editorGenerator(){
                 //icons
                 editorG.append("g").attr("class", "icons")
                 //functions
-                editBox = editBoxGenerator().selectSubFunc(selectSubFunc);
+                editBox = editBoxGenerator()
+                    .selectSubFunc(selectSubFunc)
+                    .updateBlock(updateBlock);
+
                 funcIcons = functionIconsGenerator();
             }
 
@@ -106,6 +110,12 @@ export function editorGenerator(){
     myEditor.selectSubFunc = function (value) {
         if (!arguments.length) { return selectSubFunc; }
         selectSubFunc = value;
+        return myEditor;
+    };
+    myEditor.updateBlock = function (value) {
+        if (!arguments.length) { return updateBlock; }
+        updateBlock = value;
+        
         return myEditor;
     };
     return myEditor;

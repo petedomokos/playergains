@@ -41,6 +41,9 @@ export function expressionGenerator(){
     //dom
     let expressionG;
 
+    //funcs
+    let setActiveBlock = () => {};
+
     function updateExpressionComponents(d, i){
         //remove previous
         if(expressionBoxComponents[i]){
@@ -70,6 +73,17 @@ export function expressionGenerator(){
                 visComponents[i] = emptyVisGenerator();
             }
         }
+
+        //set handlers 
+        expressionBoxComponents[i]
+            .onFuncClick(function(){
+                //set active block to this
+                setActiveBlock([d.chainNr, d.blockNr])
+            })
+            .onFiltersClick(function(){
+                //set active block to this
+                setActiveBlock([d.chainNr, d.blockNr])
+            })
     }
     function expression(selection){
         expressionG = selection;
@@ -213,6 +227,11 @@ export function expressionGenerator(){
     expression.height = function (value) {
         if (!arguments.length) { return height; }
         height = value;
+        return expression;
+    };
+    expression.setActiveBlock = function (value) {
+        if (!arguments.length) { return setActiveBlock; }
+        setActiveBlock = value;
         return expression;
     };
     return expression;

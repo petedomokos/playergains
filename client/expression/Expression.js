@@ -38,6 +38,7 @@ const Expression = ({}) => {
   const [expBuilderState, setExpBuilderState] = useState(initState)
   //activeBlock described by Pair[chainNr, blockNr]
   const [activeBlock, setActiveBlock] = useState([0,0])
+  //console.log("activeBlock", activeBlock)
   //console.log("ExpBuilder state", expBuilderState)
 
   const containerRef = useRef(null);
@@ -98,6 +99,7 @@ const Expression = ({}) => {
               setActiveBlock([chainNr, blockNr + 1])
             }
         }))
+        .setActiveBlock(setActiveBlock)
         .addChain(i => {
             setExpBuilderState(prevState => ([...elementsBefore(i+1, prevState), INIT_CHAIN_STATE, ...elementsAfter(i, prevState)]))
             setActiveChainIndex(i+1)

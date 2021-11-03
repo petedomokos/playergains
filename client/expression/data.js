@@ -19,13 +19,13 @@ export const planetsData = [
         id:"devices",
         properties:[
             {
-                name:"Creation Date", id:"creationDate", valueType:"date"
+                name:"Creation Date", id:"creationDate", valueType:"date", range:[] //2d array
             },
             {
-                name:"LDOS", id:"ldos", valueType:"date"
+                name:"LDOS", id:"ldos", valueType:"date", range:[] //2d array
             },
             {
-                name:"Risk Score", id:"risk", valueType:"number"
+                name:"Risk Score", id:"risk", valueType:"number", options:[1, 2, 3, 4, 5]
             }
         ]
     }
@@ -76,6 +76,8 @@ export function availableFuncs(funcs, blockData){
 }
 
 export function areRelated(inst1, inst2){
+    //if same planet, then are related automatically
+    if(inst1.planetId === inst2.planetId){ return true };
     //helper
     const isAProperty = (keyToTest, instance) =>
         Object.keys(instance.propertyValues).includes(keyToTest)

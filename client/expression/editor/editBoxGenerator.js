@@ -1,4 +1,5 @@
 import * as d3 from 'd3';
+import { emptySettingsGenerator } from "./func-components/emptySettingsGenerator"
 import { selSettingsGenerator } from "./func-components/selSettingsGenerator"
 import { aggSettingsGenerator } from "./func-components/aggSettingsGenerator"
 import { COLOURS, DIMNS } from "../constants"
@@ -18,8 +19,9 @@ export function editBoxGenerator(selection){
     let editBoxG;
 
     //components
-    let funcSettingsComponent = () => {};
+    let funcSettingsComponent;
     let selectSubFunc = () => {};
+    let updateBlock = () => {};
 
     //'this' is funcSettingsComponentG
     function updateFuncSettingsComponent(func){
@@ -28,8 +30,13 @@ export function editBoxGenerator(selection){
             editBoxG.select("g.func-settings").selectAll("*").remove();
         }
         switch(func?.id){
+            case "homeSel":{
+                //@todo - home editor settings
+                funcSettingsComponent = emptySettingsGenerator();
+                break;
+            }
             case "sel":{
-                funcSettingsComponent = selSettingsGenerator();
+                funcSettingsComponent = selSettingsGenerator().updateBlock(updateBlock);
                 break;
             }
             case "agg":{
@@ -38,7 +45,7 @@ export function editBoxGenerator(selection){
             }
             //if no func selected
             default:{
-                funcSettingsComponent = () => {}
+                funcSettingsComponent = emptySettingsGenerator();
             }
         }
     }
@@ -72,7 +79,7 @@ export function editBoxGenerator(selection){
 
             //UPDATE
             //render a new func component if required
-            if(func?.id !== funcSettingsComponent?.funcType){
+            if(!funcSettingsComponent || func?.id !== funcSettingsComponent?.funcType){
                 updateFuncSettingsComponent(func);
             }
 
@@ -86,7 +93,8 @@ export function editBoxGenerator(selection){
             //editBoxG.select("text.desc").text(blockData.func?.name || "")
 
             //func settings
-            editBoxG.select("g.func-settings").datum(blockData).call(funcSettingsComponent)
+            editBoxG.select("g.func-settings").datum(blockData)
+                .call(funcSettingsComponent.width(contentsWidth).height(contentsHeight))
             
         })
         return selection;
@@ -106,6 +114,12 @@ export function editBoxGenerator(selection){
     myEditingBox.selectSubFunc = function (value) {
         if (!arguments.length) { return selectSubFunc; }
         selectSubFunc = value;
+        return myEditingBox;
+    };
+    myEditingBox.updateBlock = function (value) {
+        if (!arguments.length) { return updateBlock; }
+        updateBlock = value;
+        
         return myEditingBox;
     };
     return myEditingBox;

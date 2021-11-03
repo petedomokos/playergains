@@ -71,7 +71,6 @@ export function selVisGenerator(selection){
                                         .attr("font-size", 9)
 
                             })
-
                     instanceG.merge(instanceGEnter)
                         .attr("transform", (d,i) => "translate(0, " +(i * (ellipseHeight + ellipseGap)) + ")")
                         .each(function(d){
@@ -88,6 +87,8 @@ export function selVisGenerator(selection){
                                 .attr("transform", "translate(+"+contentsWidth/2 +"," + ellipseHeight/2 +")")
                                 .text(property ? d.propertyValues[property.id] : d.displayName)
                         })
+
+                    instanceG.exit().remove();
                 })
     
         })

@@ -50,25 +50,27 @@ export function aggSettingsGenerator(selection){
                                 const buttonG = d3.select(this)
                                     .style("cursor", "pointer")
                                     .on("click", (e,d) => selectSubFunc(d));
-                                buttonG.append("rect")
-                                    .attr("width", btnWidth)
-                                    .attr("height", btnHeight);
+                                buttonG
+                                    .append("rect")
+                                        .attr("width", btnWidth)
+                                        .attr("height", btnHeight);
                                 
-                                buttonG.append("text")
-                                    .attr("transform", (d,i) => "translate(" +(btnWidth/2) +"," +(btnHeight/2) +")")
-                                    .attr("dominant-baseline", "middle")
-                                    .attr("text-anchor", "middle")
-                                    .style("font-size", "10px")
-                                    .attr("pointer-events", "none")
-                                    .text(d => d.name)
+                                buttonG
+                                    .append("text")
+                                        .attr("transform", (d,i) => "translate(" +(btnWidth/2) +"," +(btnHeight/2) +")")
+                                        .attr("dominant-baseline", "middle")
+                                        .attr("text-anchor", "middle")
+                                        .style("font-size", "10px")
+                                        .attr("pointer-events", "none")
+                                        .text(d => d.name)
 
                             })
                             .merge(subFuncG)
 
                     subFuncGMerged.select("rect")
-                            .attr("fill", d => d.id === blockData.subFunc?.id ? COLOURS.editor.btn.selected.bg : COLOURS.editor.btn.nonSelected.bg);
+                            .attr("fill", d => d.id === blockData.subFunc?.id ? COLOURS.editor.optionBtn.selected.fill : COLOURS.editor.optionBtn.nonSelected.fill);
                     subFuncGMerged.select("text")
-                            .attr("fill", d => d.id === blockData.subFunc?.id ? COLOURS.editor.btn.selected.block : COLOURS.editor.btn.nonSelected.block)
+                            .attr("fill", d => d.id === blockData.subFunc?.id ? COLOURS.editor.optionBtn.selected.text : COLOURS.editor.optionBtn.nonSelected.text)
 
                     
                     
@@ -84,19 +86,16 @@ export function aggSettingsGenerator(selection){
     myAggSettings.width = function (value) {
         if (!arguments.length) { return width; }
         width = value;
-        //updateDimns();
         return myAggSettings;
         };
     myAggSettings.height = function (value) {
         if (!arguments.length) { return height; }
         height = value;
-        //updateDimns();
         return myAggSettings;
     };
     myAggSettings.selectSubFunc = function (value) {
         if (!arguments.length) { return selectSubFunc; }
         selectSubFunc = value;
-        //updateDimns();
         return myAggSettings;
     };
     myAggSettings.funcType = "agg"

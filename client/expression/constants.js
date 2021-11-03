@@ -1,3 +1,5 @@
+import { grey } from "@material-ui/core/colors";
+
 //export const INIT_CHAIN_STATE = [{op:{id:"home",name:"For Each" }}]
 export const INIT_CHAIN_STATE = [{type:"home", of:{}}]
 
@@ -9,8 +11,8 @@ export const DIMNS = {
     smallMargin,
     noMargin,
     svg:{
-        width:1000,
-        minHeight:400
+        width:800,
+        minHeight:600
     },
     expBuilder:{
         margin:defaultMargin
@@ -23,8 +25,8 @@ export const DIMNS = {
     },
     //editor
     editor:{
-        width:400,
-        height:100, //temp
+        width:550,
+        height:150, //temp
         children:{
             margin:{ left:5 }
         },
@@ -148,15 +150,20 @@ export const COLOURS = {
             selected:"blue",
             nonSelected:grey10(5)
         },
-        btn:{
+        instruction:grey10(8),
+        optionBtn:{
             selected:{
-                bg:"blue",
-                block:grey10(1)
+                fill:"blue",
+                text:grey10(1)
             },
             nonSelected:{
-                bg:grey10(2),
-                block:grey10(6)
+                fill:grey10(2),
+                text:grey10(6)
             }
+        },
+        applyBtn:{
+            fill:grey10(2),
+            text:grey10(8)
         }
     },
     instruction:grey10(9),

@@ -1,6 +1,7 @@
 import * as d3 from 'd3';
 import { getInstances } from "./data";
 import { DIMNS } from "./constants";
+import { SettingsApplications } from '@material-ui/icons';
 
 
 //active block is last block that has a selection, unless only 1 block
@@ -50,6 +51,10 @@ export function getPrevActiveBlockState(state){
 export const elementsBefore = (i, arr) => arr.slice(0, i)
 export const elementsAfter = (i, arr) => arr.slice(i + 1, arr.length)
 
+export const onlyUnique = (value, index, self) => {
+    return self.indexOf(value) === index;
+}
+
 //export function calculateResult(f, data, accessor = x => x){
     //return f(data, accessor);
 //}
@@ -72,7 +77,7 @@ export function calculateResult(blockData){
         //in homeSel case, selection is never from prev
         case "homeSel":{ return homeSel(of.planet, func.settings)};
         //for sel, res will already be the dataset itself
-        case "sel":{ return sel(of, func.settings)};
+        case "sel":{ return sel(of, func.settings?.filters)};
         case "filter":{ return filter(of, func.settings) }
         case "agg":{ return agg(of, subFunc) }
         return undefined;
@@ -84,9 +89,32 @@ export function homeSel(planet, settings={}){
     return getInstances(planet.id)[0]
 }
 
-export function sel(of, settings={}){
-    //@todo - impl settings which can be a filter applied direct to teh dset by clicking on All
-    return of;
+//for now, this only processes numbers
+export function sel(of, filters=[]){
+    //console.log("calcualting sel res filters", filters)
+    console.log("of", of)
+    const applyNextFilter = (next, dataset, remaining) => {
+        if(!next){
+            return dataset;
+        }
+        const filteredDataset = applyFilter(next, dataset);
+        const [newNext, ...newRemaining] = remaining;
+        return applyNextFilter(newNext, filteredDataset, newRemaining);
+    }
+    const [firstFilter, ...remainingFilters] = filters;
+    const newOf= applyNextFilter(firstFilter, of, remainingFilters)
+    console.log("newOf", newOf)
+    return newOf;
+}
+
+function applyFilter(filter, dataset){
+    return dataset.filter(inst => filterIncludes(filter, inst))
+}
+
+//for now, this only works with numbers
+function filterIncludes(filter, inst){
+    //for now, assume it a number
+    return filter.selectedOptions.includes(+inst.propertyValues[filter.propertyId])
 }
 
 export function agg(of, subFunc){

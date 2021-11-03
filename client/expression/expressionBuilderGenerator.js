@@ -68,6 +68,7 @@ export default function expressionBuilderGenerator() {
 
     //state
     let updateBlock = () =>{};
+    let setActiveBlock = () => {};
     let addChain = () => {};
     let copyChain = () => {};
     let deleteChain = () => {};
@@ -137,7 +138,9 @@ export default function expressionBuilderGenerator() {
             const chainWrapperGMerged = chainWrapperG.merge(chainWrapperGEnter)
                 .attr("transform", (d,i) => {
                      //if active chain is before, then the calc box will also be above it, as well as the margins, exp and buttons
-                    const chainHeightsAbove = i * (chainWrapperMargin.top +expAndButtonsHeight +chainWrapperMargin.bottom) + isActive(d) ? editorHeight : 0;
+                    const activeChainNr = findActiveBlock(expBuilderData).chainNr;
+                    const expressionAndButtonsHeight = chainWrapperMargin.top +expAndButtonsHeight +chainWrapperMargin.bottom;
+                    const chainHeightsAbove = i * (expressionAndButtonsHeight) + activeChainNr < i ? editorHeight : 0;
                     return "translate("+chainWrapperMargin.left +"," +chainHeightsAbove +")"
                 })
 
@@ -324,6 +327,9 @@ export default function expressionBuilderGenerator() {
                     //update state
                     updateBlock({...updatedBlock, res});
                 })
+                .updateBlock(updatedBlock =>{
+                    updateBlock({ ...updatedBlock, res:calculateResult(updatedBlock) });
+                })
         })
 
         //expression
@@ -331,7 +337,8 @@ export default function expressionBuilderGenerator() {
             expression
                 .context(context)
                 .width(expWidth)
-                .height(expHeight);
+                .height(expHeight)
+                .setActiveBlock(setActiveBlock);
         })
     }     
 
@@ -362,6 +369,11 @@ export default function expressionBuilderGenerator() {
     expressionBuilder.updateBlock = function (value) {
         if (!arguments.length) { return updateBlock; }
         updateBlock = value;
+        return expressionBuilder;
+    };
+    expressionBuilder.setActiveBlock = function (value) {
+        if (!arguments.length) { return setActiveBlock; }
+        setActiveBlock = value;
         return expressionBuilder;
     };
     expressionBuilder.addChain = function (value) {

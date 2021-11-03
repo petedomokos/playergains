@@ -25,6 +25,10 @@ export function expressionBoxGenerator(selection){
     let primaryText;
     let secondaryText;
 
+    //handlers
+    let onFuncClick = () =>{}
+    let onFiltersClick = () =>{}
+
     //Note: We call a different boxGenerator for each boxG, so i is always 0
     function myExpressionBox(selection){
         //selection is a single boxG so i always 0
@@ -53,6 +57,8 @@ export function expressionBoxGenerator(selection){
                         .attr("text-anchor", "middle")
                         .attr("dominant-baseline", "hanging")
                         .attr("font-size", 11)
+                        .style("cursor", "pointer")
+                        .on("click", onFiltersClick)
 
                 primaryText = contentsG
                     .append("text")
@@ -60,6 +66,7 @@ export function expressionBoxGenerator(selection){
                         .attr("dominant-baseline", "middle")
                         .attr("stroke-width", 0.1)
                         .attr("font-size", 12)
+                        .style("cursor", "pointer")
 
                 secondaryText = contentsG
                     .append("text")
@@ -67,6 +74,7 @@ export function expressionBoxGenerator(selection){
                         .attr("dominant-baseline", "middle")
                         .attr("stroke-width", 0.1)
                         .attr("font-size", 11)
+                        .style("cursor", "pointer")
                         //.attr("dominant-baseline", "text-bottom")
                     
             }
@@ -123,6 +131,7 @@ export function expressionBoxGenerator(selection){
                         .attr("transform", "translate(" + (width * 0.5) +"," + (height * 0.7) +")")
                         .attr("text-anchor", "middle")
                         .text(subFunc?.name || func.name) //only show func name if no subFunc
+                        .on("click", onFuncClick)
                     
                     secondaryText.attr("opacity", 0)
                 }
@@ -147,7 +156,7 @@ export function expressionBoxGenerator(selection){
             }else if(["sel", "filter"].includes(func?.id)){
                 preText
                     .attr("display", "inline")
-                    .text("All")
+                    .text(func?.settings?.filters ? "Filtered" : "All")
             }else{
                 preText.attr("display", "none")
             }
@@ -161,13 +170,21 @@ export function expressionBoxGenerator(selection){
     myExpressionBox.width = function (value) {
         if (!arguments.length) { return width; }
         width = value;
-        //updateDimns();
         return myExpressionBox;
         };
     myExpressionBox.height = function (value) {
         if (!arguments.length) { return height; }
         height = value;
-        //updateDimns();
+        return myExpressionBox;
+    }
+    myExpressionBox.onFuncClick = function (value) {
+        if (!arguments.length) { return onFuncClick; }
+        onFuncClick = value;
+        return myExpressionBox;
+    }
+    myExpressionBox.onFiltersClick = function (value) {
+        if (!arguments.length) { return onFiltersClick; }
+        onFiltersClick = value;
         return myExpressionBox;
     }
     myExpressionBox.applicableContext = "Planet"
