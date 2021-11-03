@@ -40,6 +40,16 @@ export function homeVisGenerator(selection){
                             .attr("text-anchor", "middle")
                             .attr("dominant-baseline", "middle")
                             .attr("font-size", 9)
+
+                    //eg text
+                    d3.select(this)
+                        .append("text")
+                            .attr("class", "eg")
+                            .attr("text-anchor", "end")
+                            .attr("dominant-baseline", "middle")
+                            .attr("font-size", 14)
+                            .attr("fill", COLOURS.exp.vis.pre)
+                            .text("Eg.")
                 });
             //upate contents
             contentsG.merge(contentsGEnter)
@@ -62,6 +72,11 @@ export function homeVisGenerator(selection){
                     d3.select(this).select("text.display-name")
                         .attr("transform", "translate(+"+contentsWidth/2 +"," + contentsHeight/2 +")")
                         .text(d.res?.displayName || "")
+                    
+                    //eg text
+                    d3.select(this).select("text.eg")
+                        .attr("transform", "translate(10," + contentsHeight/2 +")")
+
             
                 })
         })

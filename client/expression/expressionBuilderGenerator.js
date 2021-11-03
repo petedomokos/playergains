@@ -173,6 +173,7 @@ export default function expressionBuilderGenerator() {
                             .attr("transform", (d,j) => "translate(" +(j * (buttonWidth + buttonMargin.right)) + "," +buttonMargin.top +")")
                             .style("cursor", "pointer")
                             .on("click", (e,d) => onChainButtonClick(d, i))
+                            .attr("display", "none")
 
                     //note - this will become the full name and show on hover just below icon
 

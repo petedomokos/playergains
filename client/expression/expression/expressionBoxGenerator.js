@@ -38,14 +38,9 @@ export function expressionBoxGenerator(selection){
             const { chainNr, blockNr, func, subFunc, of, isActive } = blockData;
 
             updateDimns();
-<<<<<<< HEAD
-            console.log("expBox d",d)
-            const boxG = d3.select(this);
-=======
             //console.log("expBox",blockData)
             const boxG = d3.select(this)
                 .on("click", onBlockClick);
->>>>>>> b3db8ce5a020821978530a25efb8796aec0b60a9
             //ENTER
             if(boxG.select("*").empty()){
                 contentsG = boxG.append("g").attr("class", "box-contents");
@@ -70,14 +65,8 @@ export function expressionBoxGenerator(selection){
 
                 primaryText = contentsG
                     .append("text")
-<<<<<<< HEAD
-                        .attr("class", "op")
-                        .attr("transform", "translate(5,5)")
-                        .attr("font-size", 9)
-=======
                         .attr("class", "primary")
                         .attr("dominant-baseline", "middle")
->>>>>>> b3db8ce5a020821978530a25efb8796aec0b60a9
                         .attr("stroke-width", 0.1)
                         .attr("font-size", 12)
                         .style("cursor", "pointer")
@@ -107,12 +96,6 @@ export function expressionBoxGenerator(selection){
             secondaryText.attr("fill", isActive ? colours.secondary.active : colours.secondary.inactive)
             primaryText.attr("fill", isActive ? colours.primary.active : colours.primary.inactive)
 
-<<<<<<< HEAD
-            contentsG.select("text.op")
-                .attr("display", d.op?.id === "home" && !d.selected ? "none" : "inline")
-                .attr("fill", d.isActive ? COLOURS.calc.op.selected : COLOURS.calc.op.nonSelected)
-                .text(d.op?.name || "")
-=======
             //note - if func not defined, then planet/prop is also not defined becuse it would at least be 'sel'
             if(func){
                 if(func.id === "homeSel"){
@@ -169,7 +152,6 @@ export function expressionBoxGenerator(selection){
                 
                 secondaryText.attr("opacity", 0)
             }
->>>>>>> b3db8ce5a020821978530a25efb8796aec0b60a9
 
             //pre-text
             if(func?.id === 'homeSel'){
@@ -180,7 +162,7 @@ export function expressionBoxGenerator(selection){
             }else if(["sel", "filter"].includes(func?.id)){
                 preText
                     .attr("display", "inline")
-                    .text(func?.settings?.filters ? "Filtered" : "All")
+                    .text(func?.settings?.filters ? "Filtered Related" : "All Related")
             }else{
                 preText.attr("display", "none")
             }

@@ -46,11 +46,6 @@ export const DIMNS = {
             }
         }
     },
-<<<<<<< HEAD
-    col:{
-        width:160,
-        margin:{ left:0.25, right:0.25, top:10, bottom:0 },
-=======
     block:{
         margin: { top: 10, bottom: 10, left: 20, right: 20},
         width:{
@@ -61,7 +56,6 @@ export const DIMNS = {
             agg:100,
             map:100
         },
->>>>>>> b3db8ce5a020821978530a25efb8796aec0b60a9
         children:{
             margin:{ left:0, right:0, top:0, bottom:0 }
         },
@@ -127,11 +121,7 @@ export const COLOURS = {
         box:{
             bg:{
                 active: grey10(1),
-<<<<<<< HEAD
-                inactive: grey10(1)
-=======
                 inactive: grey10(2)
->>>>>>> b3db8ce5a020821978530a25efb8796aec0b60a9
             },
             primary:{
                 active:"blue",
@@ -150,7 +140,8 @@ export const COLOURS = {
             bg:grey10(1),
             val:grey10(7),
             preIcon:grey10(1),
-            count:grey10(5)
+            count:grey10(5),
+            pre:grey10(5)
         },
         connector:grey10(5) //!!!
     },
