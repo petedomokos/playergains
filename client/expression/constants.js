@@ -1,4 +1,7 @@
-export const INIT_CHAIN_STATE = [{op:{id:"home",name:"For Each" }}]
+import { grey } from "@material-ui/core/colors";
+
+//export const INIT_CHAIN_STATE = [{op:{id:"home",name:"For Each" }}]
+export const INIT_CHAIN_STATE = [{type:"home", of:{}}]
 
 const defaultMargin = { left:10, right:10, top:10, bottom:10 };
 const smallMargin = { left:5, right:5, top:5, bottom:5 };
@@ -8,8 +11,8 @@ export const DIMNS = {
     smallMargin,
     noMargin,
     svg:{
-        width:1000,
-        minHeight:400
+        width:850,
+        minHeight:600
     },
     expBuilder:{
         margin:defaultMargin
@@ -20,10 +23,10 @@ export const DIMNS = {
     chainWrapper:{
         margin:defaultMargin
     },
-    //calc
-    calc:{
-        width:400,
-        height:100, //temp
+    //editor
+    editor:{
+        width:550,
+        height:150, //temp
         children:{
             margin:{ left:5 }
         },
@@ -37,16 +40,36 @@ export const DIMNS = {
     //exp chain
     exp:{
         height:200, //temp
+        connector:{
+            margin:{
+                horiz:3
+            }
+        }
     },
+<<<<<<< HEAD
     col:{
         width:160,
         margin:{ left:0.25, right:0.25, top:10, bottom:0 },
+=======
+    block:{
+        margin: { top: 10, bottom: 10, left: 20, right: 20},
+        width:{
+            default:150,
+            homeSel:150,
+            sel:170,
+            filter:150,
+            agg:100,
+            map:100
+        },
+>>>>>>> b3db8ce5a020821978530a25efb8796aec0b60a9
         children:{
             margin:{ left:0, right:0, top:0, bottom:0 }
         },
+        box: { height: 50 },
+        count: { height : 30 },
         vis:{
             margins:{
-                op:5,
+                preIcon:5,
                 val:30
             },
             home:{
@@ -93,57 +116,65 @@ export const COLOURS = {
     chainWrapper:{
         btn:{
             bg:"transparent",
-            col:grey10(6)
+            block:grey10(6)
         }
     },
     exp:{
-        bg:grey10(3),
-        col:{
-            bg:grey10(2)
+        bg:grey10(2), //!!!
+        block:{
+            bg:grey10(2) //!!!
         },
         box:{
             bg:{
                 active: grey10(1),
+<<<<<<< HEAD
                 inactive: grey10(1)
+=======
+                inactive: grey10(2)
+>>>>>>> b3db8ce5a020821978530a25efb8796aec0b60a9
             },
-            sel:grey10(8)
+            primary:{
+                active:"blue",
+                inactive:grey10(10)
+            },
+            secondary:{
+                active:"blue",
+                inactive:grey10(8)
+            },
+            pre:{
+                active:"blue",
+                inactive:grey10(7)
+            }
         },
         vis:{
             bg:grey10(1),
             val:grey10(7),
-            op:grey10(1),
+            preIcon:grey10(1),
             count:grey10(5)
-        }
+        },
+        connector:grey10(5) //!!!
     },
-    calc:{
+    editor:{
         bg:grey10(1),
-        op:{
+        func:{
             selected:"blue",
             nonSelected:grey10(5)
         },
-        btn:{
+        instruction:grey10(8),
+        optionBtn:{
             selected:{
-                bg:"blue",
-                col:grey10(1)
+                fill:"blue",
+                text:grey10(1)
             },
             nonSelected:{
-                bg:grey10(2),
-                col:grey10(6)
+                fill:grey10(2),
+                text:grey10(6)
             }
+        },
+        applyBtn:{
+            fill:grey10(2),
+            text:grey10(8)
         }
     },
     instruction:grey10(9),
 }
-
-/*
-
-if(selection.select("rect.test").empty()){
-            selection.append("rect")
-                .attr("class", "test")
-                .attr("width", width)
-                .attr("height", height)
-                .attr("fill", "blue")
-                .attr("opacity", 0.6)
-        }
-
-        */

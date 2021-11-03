@@ -1,11 +1,11 @@
 import * as d3 from 'd3';
 import { COLOURS, DIMNS } from "../constants"
 
-export function operationIconsGenerator(selection){
+export function functionIconsGenerator(selection){
     //dimensions
     let width = 130;
     let height = 40;
-    let margin = { left:DIMNS.calc.children.margin.left, right:5, top:5, bottom:5};
+    let margin = { left:DIMNS.editor.children.margin.left, right:5, top:5, bottom:5};
     let contentsWidth;
     let contentsHeight;
     const updateDimns = () =>{
@@ -14,22 +14,22 @@ export function operationIconsGenerator(selection){
     }
 
     //handlers
-    let selectOp = () => {}
+    let selectFunc = () => {}
 
     //dom
-    let opIconsG;
+    let funcIconsG;
 
-    function myOpIcons(selection){
-        selection.each(function(opsData){
-            //console.log("opsData", opsData)
-            if(!opIconsG){
-                opIconsG = d3.select(this)
+    function myFuncIcons(selection){
+        selection.each(function(funcsData){
+            //console.log("funcsData", funcsData)
+            if(!funcIconsG){
+                funcIconsG = d3.select(this)
             }
 
             //dimensions
             updateDimns()
             //Bind
-            const iconG = opIconsG.selectAll("g.icon").data(opsData, op => op.id)
+            const iconG = funcIconsG.selectAll("g.icon").data(funcsData, func => func.id)
             //Enter
             const iconGEnter = iconG.enter()
                 .append("g")
@@ -37,9 +37,7 @@ export function operationIconsGenerator(selection){
                     //@todo - put in iconsG so we can aply the margin transfrom just once
                     .attr("transform", (d,i) =>"translate(" +(margin.left +i * 50) + ",0)")
                     .on("click", (e,d) => {
-                        //temp
-                        if(d.id === "get" || d.id === "agg")
-                            selectOp({...d, isSelected:undefined})
+                        selectFunc({...d, isSelected:undefined})
                     }) //donet send isSelected
 
             //note - this will become the full name and show on hover just below icon
@@ -56,7 +54,7 @@ export function operationIconsGenerator(selection){
 
             //Update
             iconG.merge(iconGEnter).select("text")
-                .attr("fill", d => d.isSelected ? COLOURS.calc.op.selected : COLOURS.calc.op.nonSelected)
+                .attr("fill", d => d.isSelected ? COLOURS.editor.func.selected : COLOURS.editor.func.nonSelected)
                 .text(d => d.name)
             
         })
@@ -64,23 +62,23 @@ export function operationIconsGenerator(selection){
     }
 
     // api
-    myOpIcons.width = function (value) {
+    myFuncIcons.width = function (value) {
         if (!arguments.length) { return width; }
         width = value;
-        //updateDimns();
-        return myOpIcons;
+        
+        return myFuncIcons;
         };
-    myOpIcons.height = function (value) {
+    myFuncIcons.height = function (value) {
         if (!arguments.length) { return height; }
         height = value;
-        //updateDimns();
-        return myOpIcons;
+        
+        return myFuncIcons;
     };
-    myOpIcons.selectOp = function (value) {
-        if (!arguments.length) { return selectOp; }
-        selectOp = value;
-        return myOpIcons;
+    myFuncIcons.selectFunc = function (value) {
+        if (!arguments.length) { return selectFunc; }
+        selectFunc = value;
+        return myFuncIcons;
     };
-    return myOpIcons;
+    return myFuncIcons;
 
     }

@@ -74,9 +74,9 @@ export function withLoader(ComponentWhenLoaded, propsToCheck=[], options={}){
         }        
         const propsToLoad = propsToCheck.filter(propPath => !checkProp(propPath))
 
-        console.log('Loader propsTocheck', propsToCheck)
-        console.log('Loader propsToload', propsToLoad)
-        console.log('loading?', loading)
+        //console.log('Loader propsTocheck', propsToCheck)
+        //console.log('Loader propsToload', propsToLoad)
+        //console.log('loading?', loading)
         
         //2. ASYNC LOAD PROPS IF MISSING (AFTER RENDER)
         useEffect(() =>{

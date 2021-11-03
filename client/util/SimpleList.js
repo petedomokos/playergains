@@ -72,7 +72,6 @@ export default function SimpleList({ title, emptyMesg, items, itemActions, actio
   const classes = useStyles(stylesProps);
   //sort
   items.sort(compareAlpha)
-  console.log("items", items)
 
   const { ItemIcon, onItemClick, itemLinkPath } = itemActions.main;
 

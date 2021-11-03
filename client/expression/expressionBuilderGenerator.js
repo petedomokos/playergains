@@ -1,11 +1,10 @@
 import * as d3 from 'd3';
 import { planetsGenerator } from "./planetsGenerator";
 import { expressionGenerator } from "./expression/expressionGenerator";
-import { calcComponentGenerator } from "./calc-component/calcComponentGenerator";
-import { elementsBefore, elementsAfter, getActiveColState } from "./helpers";
-import { aggSubtools, getInstances, getPropValueType } from "./data";
+import { editorGenerator } from "./editor/editorGenerator";
+import { elementsBefore, elementsAfter, findActiveBlock, isActive, calculateResult } from "./helpers";
+import { funcs, getInstances, getPropValueType, areRelated  } from "./data";
 import { COLOURS, DIMNS, INIT_CHAIN_STATE } from "./constants";
-import { Work } from '@material-ui/icons';
 
 /*
 
@@ -26,13 +25,13 @@ export default function expressionBuilderGenerator() {
 
     let chainWrapperWidth;
     let chainWrapperContentsWidth;
-    let calcWidth;
+    let editorWidth;
     let expWidth;
     let buttonsWidth;
 
     //let chainWrapperFullHeight;
     //let chainWrapperFullContentsHeight;
-    const calcHeight = DIMNS.calc.height; //100
+    const editorHeight = DIMNS.editor.height; //100
     const expHeight = DIMNS.exp.height; //150
     const buttonsHeight = DIMNS.chainButtons.height; //40
     const expAndButtonsHeight = expHeight + buttonsHeight;
@@ -47,14 +46,14 @@ export default function expressionBuilderGenerator() {
 
         chainWrapperWidth = contentsWidth - planetsWidth;
         chainWrapperContentsWidth = chainWrapperWidth- chainWrapperMargin.left - chainWrapperMargin.right;
-        calcWidth = chainWrapperContentsWidth;
+        editorWidth = chainWrapperContentsWidth;
         expWidth = chainWrapperContentsWidth;
         buttonsWidth = chainWrapperContentsWidth;
     };
 
     //functions
     let planets;
-    let calcComponents = [];
+    let editors = [];
     let expressions = [];
 
     //dom
@@ -63,76 +62,56 @@ export default function expressionBuilderGenerator() {
 
     //data
     //Q - DO WE NEED TO STORE DATA AND STATE HERE??
-    let planetData;
-    let opsInfo;
+    let expBuilderData;
+    let planetsData;
     const buttonsInfo = ["New", "Copy", "Del"];
 
     //state
-    let state;
-    let setState = () =>{};
+    let updateBlock = () =>{};
+    let setActiveBlock = () => {};
     let addChain = () => {};
     let copyChain = () => {};
     let deleteChain = () => {};
 
-    const dispatch = d3.dispatch("setState");
-
     //updates
     //atm , this doesnt update when context changes, so we rely on parent to re-render
     //which is fine because we are starting again anyway. But no reason why this comp cant auto-update
-    //here just like teh chilren do
+    //here just like the children do
     function expressionBuilder(selection) {
         // expression elements
         selection.each(function (data) {
             svg = d3.select(this);
-            planetData = data.planets;
-            opsInfo = data.opsInfo;
-            const { expBuilderState, activeChainIndex} = data;
-            //@todo - make this editable  - for now its the last one in the chain
-            const activeColIndex = expBuilderState[activeChainIndex].length - 1;
-            //add the previous col state to each colState
-            const amendedExpBuilderState = expBuilderState
-                .map((chainState, i) => chainState
-                    .map((col, j) => ({
-                            ...col,
-                            prev: j !== 0 ? chainState[j - 1] : undefined,
-                            isActive:activeChainIndex === i && activeColIndex === j
-                    }))
-                );
-
-            //set state to be the active chain
-            state = amendedExpBuilderState[activeChainIndex];
-            
-            //console.log("amendedExpBuilderState", amendedExpBuilderState)
+            expBuilderData = data;
+            console.log("expBuilderData...", expBuilderData)
             
             //dimensions
-            updateDimns(expBuilderState.length)
-
-            //console.log("state", state)
+            updateDimns(expBuilderData.length)
+            
             //INIT COMPONENTS
             if(!planets) { planets = planetsGenerator(); }
-            expBuilderState.forEach((chainState,i) => {
+            expBuilderData.forEach((chainState,i) => {
                 //create child components
-                if(!calcComponents[i]) { calcComponents[i] = calcComponentGenerator(); }
+                if(!editors[i]) { editors[i] = editorGenerator(); }
                 if(!expressions[i]) {  expressions[i] = expressionGenerator(); }
             })
             //UPDATE CHILD COMPONENTS
             //todo - remove this and do as part of teh selectAll update chain
-            updateComponents(activeChainIndex, amendedExpBuilderState)
+            updateComponents()
 
             //DOM
             //PLANETS
-            const planetsG = svg.selectAll("g.planets").data([planetData])
+            const planetsG = svg.selectAll("g.planets").data([planetsData])
             planetsG.enter()
                 .append("g")
                     .attr("class", "planets")
                     .merge(planetsG)
-                    .attr("transform", "translate("+margin.left +"," + (margin.top + calcHeight) +")")
+                    .attr("transform", "translate("+margin.left +"," + (margin.top + editorHeight) +")")
                     .call(planets)
             //exit
             planetsG.exit().remove();
 
             //EXPRESSION-WRAPPERS
-            const chainWrappersContG = svg.selectAll("g.chain-wrappers-cont").data([expBuilderState])
+            const chainWrappersContG = svg.selectAll("g.chain-wrappers-cont").data([expBuilderData])
             const chainWrappersContGEnter= chainWrappersContG.enter()
                 .append("g")
                 .attr("class", "chain-wrappers-cont")
@@ -144,55 +123,45 @@ export default function expressionBuilderGenerator() {
             chainWrappersContG.exit().remove();
 
             //bind
-            chainWrapperG = chainWrappersContGMerged.selectAll("g.chain-wrapper").data(amendedExpBuilderState);
+            chainWrapperG = chainWrappersContGMerged.selectAll("g.chain-wrapper").data(expBuilderData);
             
             //enter
             const chainWrapperGEnter = chainWrapperG.enter()
                 .append("g")
                     .attr("class", (d,i) => "chain-wrapper chain-wrapper-"+i)
                     .each(function(d,i){
-                        d3.select(this).append("g").attr("class", "calc-component")
+                        d3.select(this).append("g").attr("class", "editor")
                         d3.select(this).append("g").attr("class", "expression")
                         const g = d3.select(this).append("g").attr("class", "buttons")
-
-                        //temp
-                        /*
-                        d3.select(this)
-                            .append("rect")
-                            .attr("width", chainWrapperWidth)
-                            .attr("height", activeChainIndex === i ? (calcHeight + expAndButtonsHeight): (expAndButtonsHeight))
-                            .attr("stroke", "black")
-                            .attr("fill", "none")
-                            .attr("opacity", 0.7)
-                            */
                     })
             //update
             const chainWrapperGMerged = chainWrapperG.merge(chainWrapperGEnter)
                 .attr("transform", (d,i) => {
                      //if active chain is before, then the calc box will also be above it, as well as the margins, exp and buttons
-                     const chainHeightsAbove = i * (chainWrapperMargin.top +expAndButtonsHeight +chainWrapperMargin.bottom) + (i > activeChainIndex ? calcHeight : 0)
+                    const activeChainNr = findActiveBlock(expBuilderData).chainNr;
+                    const expressionAndButtonsHeight = chainWrapperMargin.top +expAndButtonsHeight +chainWrapperMargin.bottom;
+                    const chainHeightsAbove = i * (expressionAndButtonsHeight) + activeChainNr < i ? editorHeight : 0;
                     return "translate("+chainWrapperMargin.left +"," +chainHeightsAbove +")"
                 })
 
-            chainWrapperGMerged.select("g.calc-component")
+            chainWrapperGMerged.select("g.editor")
                 .attr("transform", "translate(0,0)")
-                .attr("display", (d,i) => (activeChainIndex === i) ? "inline" : "none")
+                .attr("display", (d) => isActive(d) ? "inline" : "none")
                 .each(function(d,i){
-                    //@todo - remove opsInfo from data make it api so we just pass d here as data
-                    d3.select(this).datum({opsInfo, state:d}).call(calcComponents[i])
+                    d3.select(this).datum(d.find(d => d.isActive)).call(editors[i])
                 })
 
-           //shift exp down below the calc box if it is active
+            //shift exp down below the calc box if it is active
             chainWrapperGMerged.select("g.expression")
-                .attr("transform", (d,i) => "translate(0," +(i === activeChainIndex ? calcHeight : 0) +")")
+                .attr("transform", (d,i) => "translate(0," +(isActive(d) ? editorHeight : 0) +")")
                 .each(function(d,i){
                     d3.select(this).datum(d).call(expressions[i])
                 })
 
             //buttons
             chainWrapperGMerged.select("g.buttons")
-                .attr("transform", (d,i) => "translate(0," +(expHeight + (i === activeChainIndex ? calcHeight : 0)) +")")
-                .each(function(chainState, i){
+                .attr("transform", (d) => "translate(0," +(expHeight + (isActive(d) ? editorHeight : 0)) +")")
+                .each(function(){
                     const buttonsHeight = DIMNS.chainButtons.height;
                     const buttonWidth = 30;
                     const buttonHeight = buttonsHeight * 0.8;
@@ -220,7 +189,7 @@ export default function expressionBuilderGenerator() {
                         .attr("dominant-baseline", "middle")
                         .attr("text-anchor", "middle")
                         .attr("font-size", 12)
-                        .attr("fill", COLOURS.chainWrapper.btn.col)
+                        .attr("fill", COLOURS.chainWrapper.btn.block)
                         .text(d => d)
 
                 })
@@ -236,7 +205,7 @@ export default function expressionBuilderGenerator() {
                 use indeax numbers anywhere otehr than EUE pattern?
                 also must make sure 2nd param of .data() is set in all EUE usages
                 so not bound by index
-                also what is colNr when is it set and how is it used
+                also what is blockNr when is it set and how is it used
                 */
                 if(d === "New"){
                     addChain(i);
@@ -244,7 +213,7 @@ export default function expressionBuilderGenerator() {
                     copyChain(i)
                 }else{
                     deleteChain(i)
-                    calcComponents = [...elementsBefore(i, calcComponents), ...elementsAfter(i, calcComponents)];
+                    editors = [...elementsBefore(i, editors), ...elementsAfter(i, editors)];
                     expressions = [...elementsBefore(i, expressions), ...elementsAfter(i, expressions)];
                 }
             }
@@ -253,113 +222,160 @@ export default function expressionBuilderGenerator() {
         return selection;
     }
 
-    function updateComponents(activeChainIndex, expBuilderState){
+    function updateComponents(){
         //planets
         planets
             .width(planetsWidth)
             .height(planetsHeight)
             .onSelect(function(planet, property){
-                //todo - activeCol must also have an exp Number, or a 'run' number
-                //todo - change expressoin to expRun, because some users will want teh excel approach
-                //ie all in one run, so its not neccesarily one expression per run
-                const activeCol = getActiveColState(state);
-                const { colNr } = activeCol;
-                console.log("onSelect planet...", planet)
-                console.log("and property...", property)
-                //console.log("state", state)
-                //console.log("activeCol", activeCol)
-                const updatedCol = {
-                    ...activeCol, 
-                    selected:{planet, property, filter:{desc:"All"} },
-                    //op is get if no op selected - home op is in 1st col already
-                    op:activeCol.op || opsInfo.find(op => op.id === "get")
-                };
-                setState([...elementsBefore(colNr, state), updatedCol, {} ])
+                const activeBlock = findActiveBlock(expBuilderData)
+                const { blockNr, func } = activeBlock;
+                if(activeBlock.blockNr === 0){
+                    applyHomeSel(planet, activeBlock)
+                }else{
+                    //temp - disable ability to change a blocks func
+                    if(func && func.id !== "sel") { 
+                        alert("Changing an existing operation is not implemented yet. Click Next to add a new operation.")
+                        return; 
+                    }
+                    applySel(planet, property, activeBlock)
+                }
             })
+        
+        function applyHomeSel(planet, block){
+            const { blockNr, chainNr } = block;
+            //its the home block
+            const updatedBlock = {
+                ...block,
+                func:funcs.find(func => func.id === "homeSel"),
+                //we just take the first instance as it is for the home planet
+                //@todo - allow user to change which instance is used
+                of:{planet}
+            }
+            //result for the block (a dataset, or a value, or a dataset of datasets)
+            const res = calculateResult(updatedBlock)
+            //add new empty block if this is the last one
+            const shouldAddEmptyBlock = blockNr === expBuilderData[chainNr].length - 1;
+            //update state
+            updateBlock({...updatedBlock, res}, shouldAddEmptyBlock)
+        }
 
-        //calcComponent
-        calcComponents.forEach((calcComponent,i) => {
-            const chainState = expBuilderState[i]
-            calcComponent
-                .width(calcWidth)
-                .height(calcHeight)
-                //@todo - change op to tool, or subtool to subOp
-                .selectOp((op) => {
-                    console.log("onSelect op..................",op)
-                    //for now, active col is always the last one
-                    const activeCol = getActiveColState(state);
-                    //console.log("activeCol", activeCol)
-                    const { colNr, prev } = activeCol;
-                    //default subtool if op is agg 
-                    let subtool;
-                    let res;
-                    //todo - deal with case of agg being selected when no prev - it shouldnt be an option
-                    if(op.id === "agg" && prev && !activeCol.subtool){
-                        const { planet, property} = prev.selected; //not defined--------
-                        const valueType = getPropValueType(planet.id, property?.id)
-                        if(valueType === "number"){
-                            subtool = aggSubtools.find(t => t.id === "sum");
-                        }
-                        else if(activeCol.prev?.selected?.planet){
-                            subtool = aggSubtools.find(t => t.id === "count");
-                        }else{
-                            subtool = activeCol.subtool;
-                        }
-                        //result
-                        let accessor; 
-                        if(valueType === "Date"){
-                            accessor = x => new Date(x.propertyValues[property.id])
-                        }else if(valueType === "Number"){
-                            x => +x.propertyValues[property.id]
-                        }else if(valueType){
-                            x => x.propertyValues[property.id]
-                        }
-                        const data = getInstances(planet.id);
-                        res = createResult(subtool, data, accessor)
-                    }
-                    //update state
-                    const updatedCol = {...activeCol, op, subtool, res};
-                    setState([...elementsBefore(colNr, state), updatedCol, ...elementsAfter(colNr, state)])
+        function applySel(planet, property, block){
+            const { blockNr, chainNr, func } = block;
+            const valueType = getPropValueType(planet.id, property?.id);
+            //helper to get the right value for each instance based on property selected
+            const calculateValue = (instance, propertyId, valueType) => {
+                const rawValue = instance.propertyValues[propertyId];
+                if(valueType === "date"){
+                    return new Date(rawValue)
+                }
+                if(valueType === "number"){
+                    return +rawValue
+                }
+                return rawValue
+            }
+
+            const of = getInstances(planet.id)
+                .filter(inst => {
+                    return areRelated(inst, expBuilderData[chainNr][0].res)
                 })
-                .selectSubtool((subtool) => {
-                    console.log("onSelect subtool",subtool)
-                    //for now, active col is always the last one
-                    const activeCol = getActiveColState(state);
-                    const { colNr, prev } = activeCol;
-                    //result
-                    const { planet, property} = prev.selected;
-                    const valueType = getPropValueType(planet.id, property?.id)
-                    let accessor; 
-                    if(valueType === "Date"){
-                        accessor = x => new Date(x.propertyValues[property.id])
-                    }else if(valueType === "Number"){
-                        accessor = x => +x.propertyValues[property.id]
-                    }else if(valueType){
-                        accessor = x => x.propertyValues[property.id]
+                .map(inst => ({
+                    ...inst,
+                    //add the appropriate value if property has been specified.
+                    value:property ? calculateValue(inst, property.id, valueType) : undefined
+                }))
+            //attach the planet and property selected to the dataset for reference purposes
+            of.planet = planet;
+            of.property = property;
+            of.valueType = valueType;
+            //add the dataset to block state as the of property 
+            //(note - of can be a dataset (as here) or a function (with its own 'of') that returns a dataset)
+            const updatedBlock = {
+                ...block,
+                //if func is alrady chosen use that, otherwise its a sel
+                func:func || funcs.find(func => func.id === "sel"),
+                of
+            };
+            //result for the block (a dataset, or a value, or a dataset of datasets)
+            const res = calculateResult(updatedBlock)
+            //add new empty block if this is the last one
+            const shouldAddEmptyBlock = blockNr === expBuilderData[chainNr].length - 1;
+            //update state
+            updateBlock({...updatedBlock, res}, shouldAddEmptyBlock)
+
+        }
+
+        //editor
+        editors.forEach((editor,i) => {
+            editor
+                .width(editorWidth)
+                .height(editorHeight)
+                .funcs(funcs)
+                .selectFunc((func) => {
+                    //@todo ?- need to update of values and res here too, unless no planet selected???
+                    const block = findActiveBlock(expBuilderData)
+                    const { chainNr, blockNr, prev } = block;
+                    if(!prev?.of?.planet){
+                        //todo - go into func-first mode
+                        return;
                     }
-                    const data = getInstances(prev.selected.planet.id);
-                    const res = createResult(subtool, data, accessor)
+                    //temp - disable ability to change a blocks func
+                    if(block.func && block.func.id !== func.id) { 
+                        alert("Click Next before applying the next operation. Changing an existing operation is not implemented yet.")
+                        return; 
+                    }
+
+                    //if filter
+                    if(func.id === "filter"){
+                        //note - applySel turns func into a sel func
+                        //@todo - keep the block as active so filters are shown, 
+                        //@todo later maybe - dont display the selection until filters are applied initially
+                        applySel(prev.of.planet, prev.of.property, block);
+
+                        setActiveBlock([chainNr, blockNr])
+                        return;
+                    }
+                    /*
+                        if prev has a dataset as its of value, then if func is agg and no dataset selected, we sum the prev block
+                        if prev has no dataset as its value, we assume its functionFirst, so do f() eg sum()
+                        But before all that, user must choose sum
+                    */
+                    //set the default subFunc in some cases
+                    let subFunc;
+                    const { planet, valueType } = prev.of;
+                    if(func.id === "agg" && valueType === "number"){
+                        subFunc = func.subFuncs.find(f => f.id === "sum");
+                    }
+                    else if(func.id === "agg" && planet){
+                        subFunc = func.subFuncs.find(f => f.id === "count");
+                    }
+                    const updatedBlock = {...block, func, subFunc};
+                    //result for the block (a dataset, or a value, or a dataset of datasets)
+                    const res = calculateResult(updatedBlock)
                     //update state
-                    const updatedCol = {...activeCol, subtool, res};
-                    setState([...elementsBefore(colNr, state), updatedCol, ...elementsAfter(colNr, state)])
+                    updateBlock({...updatedBlock, res}, true);
+                })
+                .selectSubFunc((subFunc) => {
+                    //@todo - need to update of values and res here too, unless no planet selected
+                    const activeBlock = findActiveBlock(expBuilderData);
+                    const updatedBlock = {...activeBlock, subFunc};
+                    //result for the block (a dataset, or a value, or a dataset of datasets)
+                    const res = calculateResult(updatedBlock)
+                    //update state
+                    updateBlock({...updatedBlock, res});
+                })
+                .updateBlock(updatedBlock =>{
+                    updateBlock({ ...updatedBlock, res:calculateResult(updatedBlock) });
                 })
         })
-
-        function createResult(tool, data, accessor = x => x){
-            const { name="", f } = tool;
-            return {
-                name,
-                //letter: "b", //must have a running track of letters in top react level above all runs
-                value:f ? f(data, accessor) : "None"
-            }
-        }
 
         //expression
         expressions.forEach((expression,i) => {
             expression
                 .context(context)
                 .width(expWidth)
-                .height(expHeight);
+                .height(expHeight)
+                .setActiveBlock(setActiveBlock);
         })
     }     
 
@@ -381,10 +397,20 @@ export default function expressionBuilderGenerator() {
         //update();
         return expressionBuilder;
     };
+    expressionBuilder.planetsData = function (value) {
+        if (!arguments.length) { return planetsData; }
+        planetsData = value;
+        return expressionBuilder;
+    };
     //handlers
-    expressionBuilder.setState = function (value) {
-        if (!arguments.length) { return setState; }
-        setState = value;
+    expressionBuilder.updateBlock = function (value) {
+        if (!arguments.length) { return updateBlock; }
+        updateBlock = value;
+        return expressionBuilder;
+    };
+    expressionBuilder.setActiveBlock = function (value) {
+        if (!arguments.length) { return setActiveBlock; }
+        setActiveBlock = value;
         return expressionBuilder;
     };
     expressionBuilder.addChain = function (value) {

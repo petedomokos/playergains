@@ -2,10 +2,13 @@ import { connect } from 'react-redux'
 import { signout } from '../../actions/AuthActions'
 import Menu from '../Menu'
 
-const mapStateToProps = state => ({
+const mapStateToProps = (state, ownProps) => {
 	//pass signout and signingOut through to Menu from PageTemplateContainer
-	signingOut:state.asyncProcesses.signingOut
-})
+	return{
+		signingOut:state.asyncProcesses.signingOut,
+		screenSize:ownProps.screenSize
+	}
+}
 const mapDispatchToProps = dispatch => ({
 	onSignout(history){
 		dispatch(signout(history))
