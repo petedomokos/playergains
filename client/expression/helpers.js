@@ -60,7 +60,7 @@ export const onlyUnique = (value, index, self) => {
 //}
 
 export function calculateResult(blockData){
-    console.log("calcRes", blockData)
+    //console.log("calcRes", blockData)
     //of is a datset or possibly a value???
     const { func, subFunc, prev={}} = blockData;
     //@todo:  implement 'ofs' within an 'ofs' eg diff(sum(xs), sum(ys))

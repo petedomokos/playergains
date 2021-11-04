@@ -69,8 +69,8 @@ const Expression = ({}) => {
      console.log("2nd uE")
       if(!containerRef.current || !expBuilder){return; }
       //console.log("2nd useEff runniung")
-      const amendedExpBuilderState = expBuilderState
-          .map((chainState, i) => chainState
+      const stateWithIndices = expBuilderState
+          .map((chain, i) => chain
               .map((block, j) => ({
                       ...block,
                       //must add prev after results have been added
@@ -83,17 +83,28 @@ const Expression = ({}) => {
               //but res can only be calculated based on prev res, so must be recursive
               //.map(block => ({ ...block, res:calculateResult(block)}))
           )
+      const stateWithResults = stateWithIndices.map(chain => (chainDataWithResults(chain)))
+      const stateWithResAndPrev = stateWithResults
+        .map((chain, i) => chain
+            .map((block, j) => ({
+                ...block,
+                prev:chain[j-1]
+            }))
+        )
 
-      const dataWithResults = (chainData=[]) => {
+      //helper that adds res to each block
+      function chainDataWithResults(chainData=[]){
+        //recursion
         const addResultToNextBlock = (blockNr, latestData) =>{
-          const nextBlock = latestData.find(blockNr);
+          const nextBlock = latestData.find(block => block.blockNr === blockNr);
           if(!nextBlock){
             return latestData;
           }
-          const res = calculateResult({...latestData[i], prev:latestData[i-1]});
+          const res = calculateResult({...latestData[blockNr], prev:latestData[blockNr - 1]});
           const newData = latestData.map((b,i) => i === blockNr ? {...b, res} : b)
           return addResultToNextBlock(blockNr + 1, newData)
         }
+        //base case
         return addResultToNextBlock(0, chainData)
       }
 
@@ -135,7 +146,7 @@ const Expression = ({}) => {
           }
         });
 
-      d3.select(containerRef.current).datum(amendedExpBuilderState).call(expBuilder)
+      d3.select(containerRef.current).datum(stateWithResAndPrev).call(expBuilder)
 
   }, [expBuilderState, expBuilder, activeBlock, context])
 
