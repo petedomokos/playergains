@@ -5,7 +5,7 @@ import { makeStyles } from '@material-ui/core/styles';
 import expressionBuilderGenerator from "./expressionBuilderGenerator";
 import { getInstances, planetsData } from './data';
 import { INIT_CHAIN_STATE, COLOURS, DIMNS } from "./constants";
-import { elementsBefore, elementsAfter } from "./helpers";
+import { elementsBefore, elementsAfter, calculateResult } from "./helpers";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -66,19 +66,36 @@ const Expression = ({}) => {
 
   //update data
   useEffect(() => {
-     //console.log("2nd uE")
+     console.log("2nd uE")
       if(!containerRef.current || !expBuilder){return; }
       //console.log("2nd useEff runniung")
       const amendedExpBuilderState = expBuilderState
           .map((chainState, i) => chainState
               .map((block, j) => ({
                       ...block,
-                      prev: j !== 0 ? chainState[j - 1] : undefined,
+                      //must add prev after results have been added
+                      //prev: j !== 0 ? chainState[j - 1] : undefined,
                       isActive:activeBlock[0] === i && activeBlock[1] === j,
                       chainNr:i,
                       blockNr:j,
               }))
+              //note - res only really needs to be calculated for blocks after the one thats updated
+              //but res can only be calculated based on prev res, so must be recursive
+              //.map(block => ({ ...block, res:calculateResult(block)}))
           )
+
+      const dataWithResults = (chainData=[]) => {
+        const addResultToNextBlock = (blockNr, latestData) =>{
+          const nextBlock = latestData.find(blockNr);
+          if(!nextBlock){
+            return latestData;
+          }
+          const res = calculateResult({...latestData[i], prev:latestData[i-1]});
+          const newData = latestData.map((b,i) => i === blockNr ? {...b, res} : b)
+          return addResultToNextBlock(blockNr + 1, newData)
+        }
+        return addResultToNextBlock(0, chainData)
+      }
 
       expBuilder
         .context(context)

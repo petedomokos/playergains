@@ -1,6 +1,5 @@
 import * as d3 from 'd3';
 import { COLOURS, DIMNS } from "../../constants"
-//import { calculateResult } from "../../helpers"
 /*
     note - downside of merging blockG before pasing through here is ts a bit trickier to do update only
     but we can still do it using and else() after the if statement
@@ -18,7 +17,7 @@ export function aggVisGenerator(selection){
     }
     function myAggVis(selection){      
         selection.each(function(blockData){
-            //console.log("AggVis data", blockData)
+            console.log("AggVis data", blockData)
             const visMargins =  { ...DIMNS.block.vis.margins, ...DIMNS.block.vis.agg.margins }
             //visContentsG 
             const visContentsG = d3.select(this).selectAll("g.vis-contents").data([blockData])

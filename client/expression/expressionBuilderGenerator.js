@@ -2,7 +2,7 @@ import * as d3 from 'd3';
 import { planetsGenerator } from "./planetsGenerator";
 import { expressionGenerator } from "./expression/expressionGenerator";
 import { editorGenerator } from "./editor/editorGenerator";
-import { elementsBefore, elementsAfter, findActiveBlock, isActive, calculateResult } from "./helpers";
+import { elementsBefore, elementsAfter, findActiveBlock, isActive } from "./helpers";
 import { funcs, getInstances, getPropValueType, areRelated  } from "./data";
 import { COLOURS, DIMNS, INIT_CHAIN_STATE } from "./constants";
 
@@ -253,12 +253,10 @@ export default function expressionBuilderGenerator() {
                 //@todo - allow user to change which instance is used
                 of:{planet}
             }
-            //result for the block (a dataset, or a value, or a dataset of datasets)
-            const res = calculateResult(updatedBlock)
             //add new empty block if this is the last one
             const shouldAddEmptyBlock = blockNr === expBuilderData[chainNr].length - 1;
             //update state
-            updateBlock({...updatedBlock, res}, shouldAddEmptyBlock)
+            updateBlock(updatedBlock, shouldAddEmptyBlock)
         }
 
         function applySel(planet, property, block){
@@ -297,12 +295,10 @@ export default function expressionBuilderGenerator() {
                 func:func || funcs.find(func => func.id === "sel"),
                 of
             };
-            //result for the block (a dataset, or a value, or a dataset of datasets)
-            const res = calculateResult(updatedBlock)
             //add new empty block if this is the last one
             const shouldAddEmptyBlock = blockNr === expBuilderData[chainNr].length - 1;
             //update state
-            updateBlock({...updatedBlock, res}, shouldAddEmptyBlock)
+            updateBlock(updatedBlock, shouldAddEmptyBlock)
 
         }
 
@@ -353,22 +349,21 @@ export default function expressionBuilderGenerator() {
                         subFunc = func.subFuncs.find(f => f.id === "count");
                     }
                     const updatedBlock = {...block, func, subFunc};
-                    //result for the block (a dataset, or a value, or a dataset of datasets)
-                    const res = calculateResult(updatedBlock)
                     //update state
-                    updateBlock({...updatedBlock, res}, true);
+                    updateBlock(updatedBlock, true);
                 })
                 .selectSubFunc((subFunc) => {
                     //@todo - need to update of values and res here too, unless no planet selected
                     const activeBlock = findActiveBlock(expBuilderData);
                     const updatedBlock = {...activeBlock, subFunc};
-                    //result for the block (a dataset, or a value, or a dataset of datasets)
-                    const res = calculateResult(updatedBlock)
                     //update state
-                    updateBlock({...updatedBlock, res});
+                    updateBlock(updatedBlock);
                 })
                 .updateBlock(updatedBlock =>{
-                    updateBlock({ ...updatedBlock, res:calculateResult(updatedBlock) });
+                    const { chainNr, blockNr } = updatedBlock;
+                    //trouble is, res depends on prev, so unless we up[dte all prevs too, we should move res to after the state update
+                    //this makes more sense anyway, do it as part of the data augmentation in Expression
+                    updateBlock({ ...updatedBlock, });
                 })
         })
 

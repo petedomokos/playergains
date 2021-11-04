@@ -60,8 +60,9 @@ export const onlyUnique = (value, index, self) => {
 //}
 
 export function calculateResult(blockData){
+    console.log("calcRes", blockData)
     //of is a datset or possibly a value???
-    const { func, subFunc,prev={}} = blockData;
+    const { func, subFunc, prev={}} = blockData;
     //@todo:  implement 'ofs' within an 'ofs' eg diff(sum(xs), sum(ys))
     //const { planet, property, of } = of;
     //selection is this 'of' or prev 'of'
@@ -79,7 +80,7 @@ export function calculateResult(blockData){
         //for sel, res will already be the dataset itself
         case "sel":{ return sel(of, func.settings?.filters)};
         case "filter":{ return filter(of, func.settings) }
-        case "agg":{ return agg(of, subFunc) }
+        case "agg":{ return agg(prev.res, subFunc) }
         return undefined;
     };
 }
@@ -117,9 +118,10 @@ function filterIncludes(filter, inst){
     return filter.selectedOptions.includes(+inst.propertyValues[filter.propertyId])
 }
 
-export function agg(of, subFunc){
+export function agg(dataset, subFunc){
+    if(!Array.isArray(dataset)) { return undefined; }
     //of has a planet so must be a dataset too
-    return subFunc.f(of, x => x.value);
+    return subFunc.f(dataset, x => x.value);
 }
 
 export function filter(of, settings={}){

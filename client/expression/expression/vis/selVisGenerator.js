@@ -76,10 +76,6 @@ export function selVisGenerator(selection){
                     const instancesHeightTotal = instancesData.length * (ellipseHeight + ellipseGap);
                     const extraMarginSpace = contentsHeight - instancesHeightTotal;
                     const extraTopMargin = extraMarginSpace/2;
-                    console.log("instances", instancesData)
-                    console.log("instancesHT", instancesHeightTotal)
-                    console.log("contentsh", contentsHeight)
-                    console.log("extra", extraMarginSpace)
 
                     instanceG.merge(instanceGEnter)
                         .attr("transform", (d,i) => "translate(0, " +(extraTopMargin +(i * (ellipseHeight + ellipseGap))) + ")")
