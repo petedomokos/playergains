@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { makeStyles } from '@material-ui/core/styles'
 import AppBar from '@material-ui/core/AppBar'
 import Toolbar from '@material-ui/core/Toolbar'
@@ -9,6 +9,7 @@ import Button from '@material-ui/core/Button'
 import auth from '../auth/auth-helper'
 import {Link, withRouter} from 'react-router-dom'
 import { slide as ElasticMenu } from 'react-burger-menu'
+import MenuIcon from '@material-ui/icons/Menu'
 
 const isActive = (history, path) => {
   if (history.location.pathname == path)
@@ -57,15 +58,23 @@ const Menu = withRouter(({ history, signingOut, screenSize, onSignout }) => {
   //const styleProps = { screenSize };
   const classes = useStyles(/*styleProps*/) 
   const user = auth.isAuthenticated() ? auth.isAuthenticated().user : null;
-  return(
+  const [isOpen, setIsOpen] = useState(false)
+   //@todo - remove burger bars, replace with my own so i can take control and make it close 
+  //when  menu item is clicked. 
+  return (
     <>
       {["s", "m"].includes(screenSize)  ?
-        <ElasticMenu width={150}>
-          <div style={{display:"flex", flexDirection:"column"}}>
-            <MenuItems user={user} history={history} signingOut={signingOut} 
-                                screenSize={screenSize} onSignout={onSignout} classes={classes}/>
-          </div>
-        </ElasticMenu>
+        <>
+          {/**<MenuIcon onClick = {() => setIsOpen(true)}
+            style={{ position:"absolute", left:200, top:100, zIndex:1000}}/>*/}
+          <ElasticMenu width={150} isOpen={isOpen}>
+            <div style={{display:"flex", flexDirection:"column"}}  
+                onClick={() => { setIsOpen(false)} }>
+              <MenuItems user={user} history={history} signingOut={signingOut} 
+                                  screenSize={screenSize} onSignout={onSignout} classes={classes}/>
+            </div>
+          </ElasticMenu>
+        </>
         :
         <MenuItemsWrapper classes={classes}>
           <MenuItems user={user} history={history} signingOut={signingOut} 
@@ -146,7 +155,13 @@ const MenuItems = ({ user, history, signingOut, screenSize, onSignout, classes }
                 className={classes.menuBtn}
                 style={isActive(history, "/expression")}>expression
               </Button>
-            </Link>
+        </Link>
+        <Link to={"/games"}>
+          <Button
+            className={classes.menuBtn}
+            style={isActive(history, "/games")}>games
+          </Button>
+        </Link>
     </>
 
 export default Menu

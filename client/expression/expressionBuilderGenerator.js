@@ -12,7 +12,8 @@ import { COLOURS, DIMNS, INIT_CHAIN_STATE } from "./constants";
 
 export default function expressionBuilderGenerator() {
     //type
-    let context;
+    let context = "Planet"
+    let visType = "Concept"
     // dimensions
     let width = 600;
     let height = 600;
@@ -381,6 +382,11 @@ export default function expressionBuilderGenerator() {
     expressionBuilder.context = function (value) {
         if (!arguments.length) { return context; }
         context = value;
+        return expressionBuilder;
+    };
+    expressionBuilder.visType = function (value) {
+        if (!arguments.length) { return visType; }
+        visType = value;
         return expressionBuilder;
     };
     expressionBuilder.width = function (value) {

@@ -1,4 +1,7 @@
-
+body{
+  margin:0;
+  padding:0;
+}
 /*MAIN-BURGER-MENU------------------------------*/
 /* Position and sizing of burger button */
 .bm-burger-button {
@@ -7,6 +10,7 @@
   height: 30px;
   left: 10px;
   top: 10px;
+  /*display:none;*/
 }
 /* Color/shape of burger icon bars */
 .bm-burger-bars{

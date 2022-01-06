@@ -1,23 +1,24 @@
 import React, { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { makeStyles } from '@material-ui/core/styles'
-import Typography from '@material-ui/core/Typography'
 import Button from '@material-ui/core/Button'
 //children
 import UserProfile from '../user/UserProfile'
 import UsersContainer from '../user/containers/UsersContainer'
 import GroupsContainer from '../group/containers/GroupsContainer'
 import DatasetsContainer from '../dataset/containers/DatasetsContainer'
-import { withLoader } from '../util/HOCs';
-//helpers
-import { userProfile } from '../util/ReduxHelpers'
-import { Link } from 'react-router-dom'
+import Journey from "./Journey"
 
 const useStyles = makeStyles((theme) => ({
   root: {
-    margin: theme.spacing(2),
+    //margin: theme.spacing(2),
     display:'flex',
     alignItems:'flex-start', //note - when removing this, it makes item stretch more
     flexDirection:'column'
+  },
+  mainVis:{
+    height:props => props.availHeight - props.topBarHeight,
+    width:props => props.availWidth
   },
   topRow: {
     //padding:`${theme.spacing(3)}px ${theme.spacing(2.5)}px ${theme.spacing(2)}px`,
@@ -52,7 +53,14 @@ const useStyles = makeStyles((theme) => ({
 }))
 
 const UserHome = ({user, loading, loadingError}) => {
-  const styleProps = { availWidth: screen.availWidth, availHeight:screen.availHeight };
+  const topBarHeight = 100;
+  console.log("inner", window.innerHeight)
+  console.log("avail", screen.availHeight)
+  const styleProps = { 
+    availWidth: window.innerWidth, //screen.availWidth, 
+    availHeight:window.innerHeight, //screen.availHeight,
+    topBarHeight
+  };
   const classes = useStyles(styleProps) 
   //for now, keep it simple for page refreshes - until user reloads, dont render the children.
   //note - cant use withRouter in MainRouter as we only want it to load user if signed in
@@ -65,11 +73,14 @@ const UserHome = ({user, loading, loadingError}) => {
     <div className={classes.root}>
       {user._id && 
         <>
+          <div className={classes.mainVis}>
+            <Journey dimns={{screenWidth:styleProps.availWidth, screenHeight:styleProps.availHeight - topBarHeight}}/>
+          </div>
+          {/**
           <div className={classes.topRow} >
               <UserProfile profile={user} />
               <QuickLinks links={quickLinks}/>
           </div>
-
           <div className={classes.lists}>
               <div className={classes.list}>
                 <UsersContainer/>
@@ -79,8 +90,10 @@ const UserHome = ({user, loading, loadingError}) => {
               </div>
               <div className={classes.list}>
                 <DatasetsContainer/>
+              </div>
           </div>
-          </div>
+          **/}
+          
       </>}
     </div>
   )

@@ -144,9 +144,9 @@ export function expressionBoxGenerator(selection){
                 //show instruction
                 primaryText
                     .attr("transform", "translate(" +(width * 0.5) +"," +(height * 0.5) +")")
-                    .attr("text-anchor", "middle")
+                    .attr("text-anchor", blockNr === 0 ? "start" : "middle")
                     .attr("opacity", 0.7)
-                    .text("Next...")
+                    .text(blockNr === 0 ?  "Choose a home planet for your property" : "Next...")
                     //.on("click", onEmptyBlockClick)
                     //.on("click", () => setActiveBlock([chainNr, blockNr]))
                 

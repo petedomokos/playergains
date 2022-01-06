@@ -17,6 +17,7 @@ import PrivateRoute from './auth/PrivateRoute'
 import MenuContainer from './core/containers/MenuContainer'
 import auth from './auth/auth-helper'
 import Expression from "./expression/Expression"
+import Games from "./games/Games"
 //styles
 import './assets/styles/main.css'
 
@@ -56,6 +57,7 @@ const MainRouter = ({userId, loadUser, loadingUser}) => {
  //todo - find a graceful way of handling this potential issue
   return (
     <div>
+      <div style={{background:"red", height:0.05}}></div>
       <MenuContainer screenSize={screenSize} />
       {(!jwt || userId) && <Switch>
           {jwt ?
@@ -64,6 +66,7 @@ const MainRouter = ({userId, loadUser, loadingUser}) => {
             <Route exact path="/" component={NonUserHome}/>
           }
           <Route path="/expression" component={Expression}/>
+          <Route path="/games" component={Games}/>
           <Route path="/signup" component={CreateUserContainer}/>
           <Route path="/signin" component={SigninContainer}/>
           <PrivateRoute path="/user/edit/:userId" component={EditUserProfileContainer}/>

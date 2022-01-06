@@ -154,3 +154,7 @@ export default function CreateUser({ user, creating, error, open, submit, closeD
     </div>
     )
 }
+
+CreateUser.defaultProps = {
+  open:false
+}

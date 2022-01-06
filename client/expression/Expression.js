@@ -31,8 +31,9 @@ const Expression = ({}) => {
   const styleProps = { };
   const classes = useStyles();
   const availableContexts = ["Planet", "Landscape"]
-  //change context
   const [context, setContext] = useState(availableContexts[0])
+  const availableVisTypes = ["Concept", "Example"]
+  const [visType, setVisType] = useState(availableVisTypes[0])
   //should be ref as not changing
   const [expBuilder, setExpBuilder] = useState(undefined)
   const [expBuilderState, setExpBuilderState] = useState(initState)
@@ -110,6 +111,7 @@ const Expression = ({}) => {
 
       expBuilder
         .context(context)
+        .visType(visType)
         .width(width)
         .height(height)
         .planetsData(planetsData.map(p => ({ ...p, instances:getInstances(p.id) })))

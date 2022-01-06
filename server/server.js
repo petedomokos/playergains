@@ -8,7 +8,6 @@ mongoose.connect(config.mongoUri, { useNewUrlParser: true, useCreateIndex: true,
 mongoose.connection.on('error', () => {
   throw new Error(`unable to connect to database: ${config.mongoUri}`)
 })
-
 mongoose.connection.on('open', function (ref) {
   console.log('Connected to mongo server.');
   //trying to get collection nameshnhfngf
