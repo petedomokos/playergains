@@ -1,9 +1,10 @@
 import React, { useEffect, useState, useRef } from 'react'
 import * as d3 from 'd3';
 import { makeStyles } from '@material-ui/core/styles'
-import { getPlanetsData, getStarData } from '../data/planets'
+import { getPlanetsData, getGoalsData, getStarData } from '../data/planets'
 import { findFirstFuturePlanet } from './helpers';
 import journeyGenerator from "./journeyGenerator"
+import { addWeeks } from '../util/TimeHelpers';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -18,16 +19,46 @@ const Journey = ({dimns}) => {
   const containerRef = useRef(null);
   const { screenWidth, screenHeight } = dimns;
   const [journey, setJourney] = useState(undefined)
+  const [data, setData] = useState([]);
+  console.log("data", data)
+
+  //const goals = getGoalsData().map(g => {
+
+  //})
 
   //init
   useEffect(() => {
     if(!containerRef.current){return; }
-    setJourney(() => journeyGenerator())
+
+    const journey = journeyGenerator()
+      .addPlanet((targetDate, yPC) => {
+            const newPlanet = {
+                id:new Date().toString(),
+                targetDate,
+                yPC,
+                //goals
+            }
+            setData(data => [...data, newPlanet])
+      })
+      .updatePlanet((planet) => {
+        setData(data => {
+          //const [planetToUpdate, rest] = data.find(p => p.id === id);
+          const planetToUpdate = data.find(p => p.id === planet.id);
+          console.log("p", planetToUpdate)
+          const rest = data.filter(d => d.id !== planet.id)
+          console.log("rest", rest)
+          const updatedPlanet = { ...data.find(p => p.id === planet.id), ...planet };
+          return [...rest, updatedPlanet]
+        })
+  })
+      
+    setJourney(() => journey)
     
   }, [])
 
   useEffect(() => {
     if(!containerRef.current || !journey){return; }
+    /*
 
     const parsedData = getPlanetsData()
         .map((p,i, planets) => ({
@@ -59,11 +90,11 @@ const Journey = ({dimns}) => {
             //if isOpen has been set, we leave it as it is, otherwise must init
             isOpen:typeof p.isOpen == "boolean" ? p.isOpen : p.id === findFirstFuturePlanet(planets)?.id,
         }))
-        
+        */
 
-    console.log("data", data)
 
     d3.select(containerRef.current)
+      //.datum(data)
       .datum(data)
       .call(journey
         .width(screenWidth)

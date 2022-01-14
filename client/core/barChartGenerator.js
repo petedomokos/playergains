@@ -120,6 +120,7 @@ export default function barChartGenerator() {
                                 .attr("width", barWidth)
                                 .attr("height", barsAreaHeight - yScale(d.pcValue));
 
+                            //@todo - instead, use axis.clamp(true)
                             const projPCValueToShow = d => d3.max([0, d3.min([d.projPCValue, 100])]);
 
                             //projected rect
@@ -129,7 +130,7 @@ export default function barChartGenerator() {
                                 .attr("height", 0)
                                 .transition()
                                 .duration(1000)
-                                    .attr("y", yScale(projPCValueToShow(d)))
+                                    .attr("y", yScale(projPCValueToShow(d))) //@todo - instead, use axis.clamp(true)
                                     .attr("height", barsAreaHeight - yScale((projPCValueToShow(d) - d.pcValue)));
 
                             g.select("text")

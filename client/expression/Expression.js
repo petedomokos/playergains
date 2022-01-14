@@ -5,7 +5,7 @@ import { makeStyles } from '@material-ui/core/styles';
 import expressionBuilderGenerator from "./expressionBuilderGenerator";
 import { getInstances, planetsData } from './data';
 import { INIT_CHAIN_STATE, COLOURS, DIMNS } from "./constants";
-import { elementsBefore, elementsAfter, calculateResult } from "./helpers";
+import { elementsBefore, elementsAfter } from "./helpers";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -31,9 +31,8 @@ const Expression = ({}) => {
   const styleProps = { };
   const classes = useStyles();
   const availableContexts = ["Planet", "Landscape"]
+  //change context
   const [context, setContext] = useState(availableContexts[0])
-  const availableVisTypes = ["Concept", "Example"]
-  const [visType, setVisType] = useState(availableVisTypes[0])
   //should be ref as not changing
   const [expBuilder, setExpBuilder] = useState(undefined)
   const [expBuilderState, setExpBuilderState] = useState(initState)
@@ -67,51 +66,22 @@ const Expression = ({}) => {
 
   //update data
   useEffect(() => {
-     console.log("2nd uE")
+     //console.log("2nd uE")
       if(!containerRef.current || !expBuilder){return; }
       //console.log("2nd useEff runniung")
-      const stateWithIndices = expBuilderState
-          .map((chain, i) => chain
+      const amendedExpBuilderState = expBuilderState
+          .map((chainState, i) => chainState
               .map((block, j) => ({
                       ...block,
-                      //must add prev after results have been added
-                      //prev: j !== 0 ? chainState[j - 1] : undefined,
+                      prev: j !== 0 ? chainState[j - 1] : undefined,
                       isActive:activeBlock[0] === i && activeBlock[1] === j,
                       chainNr:i,
                       blockNr:j,
               }))
-              //note - res only really needs to be calculated for blocks after the one thats updated
-              //but res can only be calculated based on prev res, so must be recursive
-              //.map(block => ({ ...block, res:calculateResult(block)}))
           )
-      const stateWithResults = stateWithIndices.map(chain => (chainDataWithResults(chain)))
-      const stateWithResAndPrev = stateWithResults
-        .map((chain, i) => chain
-            .map((block, j) => ({
-                ...block,
-                prev:chain[j-1]
-            }))
-        )
-
-      //helper that adds res to each block
-      function chainDataWithResults(chainData=[]){
-        //recursion
-        const addResultToNextBlock = (blockNr, latestData) =>{
-          const nextBlock = latestData.find(block => block.blockNr === blockNr);
-          if(!nextBlock){
-            return latestData;
-          }
-          const res = calculateResult({...latestData[blockNr], prev:latestData[blockNr - 1]});
-          const newData = latestData.map((b,i) => i === blockNr ? {...b, res} : b)
-          return addResultToNextBlock(blockNr + 1, newData)
-        }
-        //base case
-        return addResultToNextBlock(0, chainData)
-      }
 
       expBuilder
         .context(context)
-        .visType(visType)
         .width(width)
         .height(height)
         .planetsData(planetsData.map(p => ({ ...p, instances:getInstances(p.id) })))
@@ -148,7 +118,7 @@ const Expression = ({}) => {
           }
         });
 
-      d3.select(containerRef.current).datum(stateWithResAndPrev).call(expBuilder)
+      d3.select(containerRef.current).datum(amendedExpBuilderState).call(expBuilder)
 
   }, [expBuilderState, expBuilder, activeBlock, context])
 

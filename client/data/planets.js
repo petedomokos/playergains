@@ -5,6 +5,11 @@ export function getPlanetsData(userId){
     return planetsData;
 }
 
+export function getGoalsData(userId){
+    //for now, same all users
+    return planetsData[2].goals;
+}
+
 export function getStarData(userId){
     //for now, same all users
     return starData;

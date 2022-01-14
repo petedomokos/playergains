@@ -17,7 +17,7 @@ const useStyles = makeStyles((theme) => ({
     flexDirection:'column'
   },
   mainVis:{
-    height:props => props.availHeight - props.topBarHeight,
+    height:props => props.availHeight,// - props.topBarHeight,
     width:props => props.availWidth
   },
   topRow: {
@@ -54,8 +54,6 @@ const useStyles = makeStyles((theme) => ({
 
 const UserHome = ({user, loading, loadingError}) => {
   const topBarHeight = 100;
-  console.log("inner", window.innerHeight)
-  console.log("avail", screen.availHeight)
   const styleProps = { 
     availWidth: window.innerWidth, //screen.availWidth, 
     availHeight:window.innerHeight, //screen.availHeight,
@@ -74,7 +72,7 @@ const UserHome = ({user, loading, loadingError}) => {
       {user._id && 
         <>
           <div className={classes.mainVis}>
-            <Journey dimns={{screenWidth:styleProps.availWidth, screenHeight:styleProps.availHeight - topBarHeight}}/>
+            <Journey dimns={{screenWidth:styleProps.availWidth, screenHeight:styleProps.availHeight}}/>
           </div>
           {/**
           <div className={classes.topRow} >

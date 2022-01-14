@@ -19,6 +19,8 @@ export const addWeeks = (n, date) => {
 	return new Date(clonedDate.setDate(clonedDate.getDate() + (n * 7)))
 }
 
+export const addYear = (n, date) => addWeeks(n * 52, date);
+
 export const diffInWeeks = (d1, d2) => {
     var t2 = d2.getTime()
     var t1 = d1.getTime()

@@ -1,8 +1,10 @@
 import { ContactsOutlined } from '@material-ui/icons';
 import * as d3 from 'd3';
 import barChartGenerator from "./barChartGenerator";
-import { calcPlanetHeight, calcChartHeight, findFuturePlanets, findFirstFuturePlanet, linearProjValue } from './helpers';
+import { calcPlanetHeight, calcChartHeight, findFuturePlanets, findFirstFuturePlanet, linearProjValue, getTransformation } from './helpers';
 //import { COLOURS, DIMNS } from "./constants";
+import { addWeeks, addYear } from "../util/TimeHelpers"
+import { times } from 'lodash';
 
 /*
 
@@ -10,10 +12,8 @@ import { calcPlanetHeight, calcChartHeight, findFuturePlanets, findFirstFuturePl
 export default function journeyGenerator() {
 
     // dimensions
-    let margin = {
-        svg:{left:0, right:0, top: 0, bottom:0},
-        planet:{left:5, right:5, top: 5, bottom:5},
-    }
+    let margin = {left:0, right:0, top: 0, bottom:0};
+    let planetMargin = {left:5, right:5, top: 5, bottom:5};
     let width = 4000;
     let height = 2600;
     let contentsWidth;
@@ -38,23 +38,27 @@ export default function journeyGenerator() {
     //let planets = planetsGenerator();
 
     function updateDimns(){
-        contentsWidth = width - margin.svg.left - margin.svg.right;
-        contentsHeight = height - margin.svg.top - margin.svg.bottom;
+        contentsWidth = width - margin.left - margin.right;
+        contentsHeight = height - margin.top - margin.bottom;
         canvasWidth = contentsWidth// * 5;
         canvasHeight = contentsHeight * 5; //this should be lrge enough for all planets, and rest can be accesed via pan
 
-        planetWrapperWidth = contentsWidth - TIME_AXIS_WIDTH;
+        planetWrapperWidth = 120;
         //note - planetWrapperHeight depends on whether or not planet is active
         
         planetWidth = planetWrapperWidth;
-        planetContentsWidth = planetWidth - margin.planet.left - margin.planet.right;
-        planetHeight = calcPlanetHeight(height);
-        planetContentsHeight = planetHeight - margin.planet.top - margin.planet.bottom;
+        planetContentsWidth = planetWidth - planetMargin.left - planetMargin.right;
+        planetHeight = 80;//calcPlanetHeight(height);
+        planetContentsHeight = planetHeight - planetMargin.top - planetMargin.bottom;
 
         chartWidth = planetWrapperWidth;
         //we want enough space on screen for two planets and 1 chart
         chartHeight = calcChartHeight(height, planetHeight);
     };
+
+    //api
+    let addPlanet = function(){};
+    let updatePlanet = function(){};
 
     //functions
     let barCharts = {};
@@ -86,7 +90,6 @@ export default function journeyGenerator() {
                     .translateExtent([[0, 0], [canvasWidth, canvasHeight]])
                     .scaleExtent([0.125, 8])
                     .filter((e,d) => {
-                        console.log("e", e)
                         return true//false;
                     })
                     .on("zoom", zoomed)
@@ -99,7 +102,7 @@ export default function journeyGenerator() {
                 contentsG = svg
                     .append("g")
                         .attr("class", "contents")
-                        .attr("transform", "translate(" +margin.svg.left +"," +margin.svg.top +")")
+                        .attr("transform", "translate(" +margin.left +"," +margin.top +")")
                         .call(zoom)
                         .on("wheel.zoom", null)
 
@@ -124,7 +127,61 @@ export default function journeyGenerator() {
                         .attr("fill", "#FAEBD7");
                 
             }
+            //scale
+            const now = new Date();
+            const xExtent = [d3.min(data, d => d.targetDate), d3.max(data, d => d.targetDate)]
+            const timeScale = d3.scaleTime()
+                .domain([addWeeks(-4, now), d3.max([xExtent[1], addYear(1, now)])])
+                .range([0, contentsWidth])
+            //axis
+            const axis = d3.axisBottom()
+                .scale(timeScale)
+                .tickSize(contentsHeight + 6)
+                .tickSize(contentsHeight - 25)
+                //.tickPadding(3);
+            const axisG = svg.selectAll("g.xAxisG").data([1])
 
+            //yscale
+            //no need to invert as y position in this case is distance from top of screen
+            //@todo - add anti-collision force or function
+            const yScale = d3.scaleLinear().domain([0, 100]).range([margin.top, margin.top + contentsHeight])
+
+
+            axisG
+                .enter()
+                .append("g")
+                    .attr("class", "axisG xAxisG")
+                    .each(function(){
+                        d3.select(this)
+                            .style("stroke-width", 0.05)
+                            .style("stroke", "black")
+                            .style("opacity", 0.5);
+                        
+                        d3.select(this).selectAll('text')
+                            .attr('transform', 'translate(15,15) rotate(45) ');
+                    })
+                    .call(axis)
+                    .merge(axisG)
+                    .attr("transform", 'translate(0,' +margin.top +')')
+                    .each(function(){
+                        d3.select(this).select(".domain")
+                            .attr("transform", 'translate(0,' +(contentsHeight - 30) +')')
+                        
+                        //d3.select(this).selectAll("text")
+                            //.attr("transform", 'translate(0,' +(contentsHeight - 30) +')')
+                    });
+
+            //update click listener
+            contentsG.on("click", function(e){
+                console.log("click") this shouldnt be called if planet clicked
+                addPlanet(timeScale.invert(e.clientX - margin.left), yScale.invert(e.clientY - margin.top))
+            })
+
+            const planetDrag = d3.drag()
+                .on("start", planetDragStart)
+                .on("drag", planetDragged)
+                .on("end", planetDragEnd);
+            
             const planetsG = canvasG.selectAll("g.planets").data([1])
             planetsG.enter()
                 .append("g")
@@ -133,38 +190,23 @@ export default function journeyGenerator() {
                 //.attr("transform", "translate("+(canvasWidth/2) +",0)")
                 //.attr("transform", "translate("+(width/2) +"," +margin.top +")")
                 .each(function(){;
-                    const planetWrapperG = d3.select(this).selectAll("g.planet-wrapper").data(data);
-                    planetWrapperG.enter()
+                    const planetG = d3.select(this).selectAll("g.planet").data(data);
+                    planetG.enter()
                         .append("g")
-                        .attr("class", "planet-wrapper")
+                        .attr("class", "planet")
+                        .attr("transform", d => "translate(" +timeScale(d.targetDate) +"," +yScale(d.yPC) +")")
                         .each(function(d,i){
-                            d3.select(this).append("rect")
-                                .attr("width", planetWrapperWidth)
-                                .attr("height", d => planetWrapperHeight(d.isOpen))
-                                .attr("fill", "blue")
-                                .attr("opacity", 0.5)
-
-                            const wrapperContentsG = d3.select(this)
-                                .append("g")
-                                    .attr("class", "contents")
 
                             const ellipseWidth = planetContentsWidth * 0.8;
                             const ellipseHeight = planetContentsHeight * 0.8;
-
-                            const planetG = wrapperContentsG
-                                .append("g")
-                                .attr("class", "planet")
-                            
-                            const planetContentsG = planetG
+                            const planetContentsG = d3.select(this)
                                 .append("g")
                                 .attr("class", "contents")
-                                .attr("transform", "translate("+margin.planet.left +"," +margin.planet.top +")");
+                                //.attr("transform", "translate("+planetMargin.left +"," +planetMargin.top +")");
 
                             //ellipse
                             planetContentsG
                                 .append("ellipse")
-                                    .attr("cx", planetContentsWidth/2)
-                                    .attr("cy", planetContentsHeight/2)
                                     .attr("rx", ellipseWidth/2)
                                     .attr("ry", ellipseHeight/2)
                                     .attr("stroke", "black")
@@ -175,74 +217,47 @@ export default function journeyGenerator() {
                             planetContentsG
                                 .append("text")
                                 .attr("class", "title")
-                                .attr("transform", "translate(" +(planetContentsWidth/2) +"," +(planetContentsHeight/2) +")")
                                 .attr("text-anchor", "middle")
-                                .attr("dominant-baseline", "middle");
-                                
-
-                            //chart
-                            if(d.isOpen){
-                                wrapperContentsG
-                                    .append("g")
-                                        .attr("class", "chart")
-                                        .attr("transform", "translate(0," +planetHeight +")");
-
-                                //set up bar chart
-                                //note - barChart has its own contentsG and margins
-                                barCharts[d.id] = barChartGenerator()
-                                    .width(chartWidth)
-                                    .height(chartHeight);
-                            }
+                                .attr("dominant-baseline", "middle")
+                                .attr("font-size", 9)
+                                .style("pointer-events", "none")
                         
                         })
-                        .merge(planetWrapperG)
-                        .attr("transform", (d,i) => {
-                            const isBelowOpenPlanet = (data.find(p => p.isOpen))?.i < i;
-                            const heightOfPlanetsAbove = i*planetHeight;
-                            const heightAbove = isBelowOpenPlanet ? heightOfPlanetsAbove + chartHeight : heightOfPlanetsAbove;
-                            return "translate(0," +heightAbove +")"
-                        })
-                        .each(function(p,i){
-                            const wrapperContentsG = d3.select(this).select("g.contents")
-                            const planetContentsG = wrapperContentsG.select("g.planet").select("g.contents")
+                        .merge(planetG)
+                        .each(function(d,i){
+                            const planetContentsG = d3.select(this).select("g.contents")
                             //planet text
-                            planetContentsG.select("text").text(p => p.title)
+                            planetContentsG.select("text").text(d.title || "enter name...")
 
-                            //call active bar chart
-                            if(p.isOpen){
-                                //format data
-                                //console.log("d", d)
-                                const barData = p.goals.map(g => {
-                                    //ofr now, assue 1 datasetmeasure per goal
-                                    const measure = g.datasetMeasures[0];
-                                    //for now projValue is hardcoded
-                                    const { startDate, targetDate } = p;
-                                    const { startValue, targetValue } = measure;
-                                    const latestDate = d3.max(measure.datapoints, d => d.date)
-                                    const latestD = measure.datapoints.find(d => d.date === latestDate)
-                                    const { date, value } = latestD;
-                                    const actualchange = value - startValue;
-                                    const targetChange = targetValue - startValue;
-                                    const pcValue = targetChange === 0 ? 100 : +((actualchange / targetChange) * 100).toFixed(2);
-                                    const projValue = linearProjValue(startDate.getTime(), startValue, date.getTime(), value, targetDate.getTime(), 2)
-                                    const projPCChange = projValue - startValue;
-                                    const projPCValue = targetChange === 0 ? 100 : +((projPCChange / targetChange) * 100).toFixed(2);
-                                    return {
-                                        ...g,
-                                        date,
-                                        value,
-                                        pcValue,
-                                        //a linear projection for targetDate value, using a line from start to current
-                                        projValue,
-                                        projPCValue
-                                    }
-                                })
-                                console.log("barData", barData)
-                                wrapperContentsG.select("g.chart").datum(barData).call(barCharts[p.id]);
-                            }
-                        });
+                        })
+                        .call(planetDrag);
                 })
+
+                let wasMoved = false;
+                function planetDragStart(e,d){
+
+                }
+                function planetDragged(e,d){
+                    const { translateX, translateY }= getTransformation(d3.select(this).attr("transform"))
+                    d3.select(this).attr("transform", "translate("+(translateX +e.dx) +"," +(translateY +e.dy) +")")
+                }
+                function planetDragEnd(e, d){
+                    if(!wasMoved){
+                        handlePlanetClick.call(this, e, d)
+                        return;
+                    }
+                    //update state
+                    const { translateX, translateY }= getTransformation(d3.select(this).attr("transform"))
+                    updatePlanet({ ...d, targetDate:timeScale.invert(translateX), yPC:yScale.invert(translateY) });
+                }
+
+                function handlePlanetClick(e,d){
+                    console.log("opening planet form ", d)
+                }
+
+
         })
+
         return selection;
     }     
 
@@ -266,6 +281,20 @@ export default function journeyGenerator() {
         height = value;
         return journey;
     };
+    journey.addPlanet = function (value) {
+        if (!arguments.length) { return addPlanet; }
+        if(typeof value === "function"){
+            addPlanet = value;
+        }
+        return journey;
+    };
+    journey.updatePlanet = function (value) {
+        if (!arguments.length) { return updatePlanet; }
+        if(typeof value === "function"){
+            updatePlanet = value;
+        }
+        return journey;
+    };
     journey.on = function () {
         if (!dispatch) return journey;
         // attach extra arguments
@@ -274,3 +303,57 @@ export default function journeyGenerator() {
     };
     return journey;
 }
+
+
+//bar enter
+//chart
+/*
+if(d.isOpen){
+    wrapperContentsG
+        .append("g")
+            .attr("class", "chart")
+            .attr("transform", "translate(0," +planetHeight +")");
+
+    //set up bar chart
+    //note - barChart has its own contentsG and margins
+    barCharts[d.id] = barChartGenerator()
+        .width(chartWidth)
+        .height(chartHeight);
+}
+*/
+
+//bar update
+//call active bar chart
+/*
+if(p.isOpen){
+    //format data
+    //console.log("d", d)
+    const barData = p.goals.map(g => {
+        //ofr now, assue 1 datasetmeasure per goal
+        const measure = g.datasetMeasures[0];
+        //for now projValue is hardcoded
+        const { startDate, targetDate } = p;
+        const { startValue, targetValue } = measure;
+        const latestDate = d3.max(measure.datapoints, d => d.date)
+        const latestD = measure.datapoints.find(d => d.date === latestDate)
+        const { date, value } = latestD;
+        const actualchange = value - startValue;
+        const targetChange = targetValue - startValue;
+        const pcValue = targetChange === 0 ? 100 : +((actualchange / targetChange) * 100).toFixed(2);
+        const projValue = linearProjValue(startDate.getTime(), startValue, date.getTime(), value, targetDate.getTime(), 2)
+        const projPCChange = projValue - startValue;
+        const projPCValue = targetChange === 0 ? 100 : +((projPCChange / targetChange) * 100).toFixed(2);
+        return {
+            ...g,
+            date,
+            value,
+            pcValue,
+            //a linear projection for targetDate value, using a line from start to current
+            projValue,
+            projPCValue
+        }
+    })
+    console.log("barData", barData)
+    wrapperContentsG.select("g.chart").datum(barData).call(barCharts[p.id]);
+}
+*/

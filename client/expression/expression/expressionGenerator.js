@@ -191,12 +191,7 @@ export function expressionGenerator(){
 
             //overlay (rendered last so on top)
             /*
-<<<<<<< HEAD
-            colGEnter.append("rect")
-            get this working - all boxes bvg should be white, and active should be aqua or yellow
-=======
             blockGEnter.append("rect")
->>>>>>> b3db8ce5a020821978530a25efb8796aec0b60a9
                 .attr("class", "overlay")
                 .attr("width", blockWidth)
                 .attr("height", contentsHeight)
