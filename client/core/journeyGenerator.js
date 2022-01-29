@@ -1,16 +1,17 @@
-import { ContactsOutlined } from '@material-ui/icons';
 import * as d3 from 'd3';
+//import "d3-selection-multi";
 import barChartGenerator from "./barChartGenerator";
 import { calcPlanetHeight, calcChartHeight, findFuturePlanets, findFirstFuturePlanet, linearProjValue, getTransformation } from './helpers';
 //import { COLOURS, DIMNS } from "./constants";
 import { addWeeks, addYear } from "../util/TimeHelpers"
-import { times } from 'lodash';
+import { ellipse } from "./ellipse";
+import { grey10 } from "./constants";
+import { findNearestPlanet, distanceBetweenPoints } from './GeometryHelpers';
 
 /*
 
 */
 export default function journeyGenerator() {
-
     // dimensions
     let margin = {left:0, right:0, top: 0, bottom:0};
     let planetMargin = {left:5, right:5, top: 5, bottom:5};
@@ -59,6 +60,7 @@ export default function journeyGenerator() {
     //api
     let addPlanet = function(){};
     let updatePlanet = function(){};
+    let addLink = function(){};
 
     //functions
     let barCharts = {};
@@ -68,6 +70,8 @@ export default function journeyGenerator() {
     let contentsG;
     let canvasG;
     let canvasRect;
+    
+    const ring = ellipse().className("ring");
 
     function journey(selection) {
         updateDimns();
@@ -133,6 +137,18 @@ export default function journeyGenerator() {
             const timeScale = d3.scaleTime()
                 .domain([addWeeks(-4, now), d3.max([xExtent[1], addYear(1, now)])])
                 .range([0, contentsWidth])
+
+            //yscale
+            //no need to invert as y position in this case is distance from top of screen
+            //@todo - add anti-collision force or function
+            const yScale = d3.scaleLinear().domain([0, 100]).range([margin.top, margin.top + contentsHeight])
+
+            //add x and y to each planet
+            const planetData = data.map(p => ({
+                ...p,
+                x:timeScale(p.targetDate),
+                y: yScale(p.yPC)
+            }))
             //axis
             const axis = d3.axisBottom()
                 .scale(timeScale)
@@ -140,11 +156,6 @@ export default function journeyGenerator() {
                 .tickSize(contentsHeight - 25)
                 //.tickPadding(3);
             const axisG = svg.selectAll("g.xAxisG").data([1])
-
-            //yscale
-            //no need to invert as y position in this case is distance from top of screen
-            //@todo - add anti-collision force or function
-            const yScale = d3.scaleLinear().domain([0, 100]).range([margin.top, margin.top + contentsHeight])
 
 
             axisG
@@ -173,15 +184,18 @@ export default function journeyGenerator() {
 
             //update click listener
             contentsG.on("click", function(e){
-                console.log("click") this shouldnt be called if planet clicked
-                addPlanet(timeScale.invert(e.clientX - margin.left), yScale.invert(e.clientY - margin.top))
+                //this shouldnt be called if planet clicked
+                addPlanet(timeScale.invert(e.offsetX - margin.left), yScale.invert(e.offsetY - margin.top))
             })
 
             const planetDrag = d3.drag()
-                .on("start", planetDragStart)
-                .on("drag", planetDragged)
-                .on("end", planetDragEnd);
-            
+                .on("start", onPlanetDragStart)
+                .on("drag", onPlanetDrag)
+                .on("end", onPlanetDragEnd);
+
+            const rx = planetContentsWidth * 0.8 / 2;
+            const ry = planetContentsHeight * 0.8 / 2;
+
             const planetsG = canvasG.selectAll("g.planets").data([1])
             planetsG.enter()
                 .append("g")
@@ -190,15 +204,14 @@ export default function journeyGenerator() {
                 //.attr("transform", "translate("+(canvasWidth/2) +",0)")
                 //.attr("transform", "translate("+(width/2) +"," +margin.top +")")
                 .each(function(){;
-                    const planetG = d3.select(this).selectAll("g.planet").data(data);
+                    const planetG = d3.select(this).selectAll("g.planet").data(planetData);
                     planetG.enter()
                         .append("g")
                         .attr("class", "planet")
-                        .attr("transform", d => "translate(" +timeScale(d.targetDate) +"," +yScale(d.yPC) +")")
+                        .attr("id", d => "planet-"+d.id)
+                        .attr("transform", d => "translate(" +d.x+"," +d.y +")")
+                        .call(ring)
                         .each(function(d,i){
-
-                            const ellipseWidth = planetContentsWidth * 0.8;
-                            const ellipseHeight = planetContentsHeight * 0.8;
                             const planetContentsG = d3.select(this)
                                 .append("g")
                                 .attr("class", "contents")
@@ -207,11 +220,9 @@ export default function journeyGenerator() {
                             //ellipse
                             planetContentsG
                                 .append("ellipse")
-                                    .attr("rx", ellipseWidth/2)
-                                    .attr("ry", ellipseHeight/2)
-                                    .attr("stroke", "black")
-                                    .attr("fill", "#C0C0C0")
-                                    .attr("stroke", "grey")
+                                    .attr("rx", rx)
+                                    .attr("ry", ry)
+                                    .attr("fill", grey10(5))
                             
                             //text
                             planetContentsG
@@ -230,29 +241,106 @@ export default function journeyGenerator() {
                             planetContentsG.select("text").text(d.title || "enter name...")
 
                         })
-                        .call(planetDrag);
+                        .call(planetDrag)
+                        //@todo - use mask to make it a donut and put on top
+                        .call(ring
+                                .rx(rx * 1.3)
+                                .ry(ry * 1.3)
+                                .fill("transparent")
+                                .stroke("none")
+                                .onDragStart(onRingDragStart)
+                                .onDrag(onRingDrag)
+                                .onDragEnd(onRingDragEnd)
+                                .container("g.contents"));
                 })
 
                 let wasMoved = false;
-                function planetDragStart(e,d){
+                function onPlanetDragStart(e,d){
 
                 }
-                function planetDragged(e,d){
-                    const { translateX, translateY }= getTransformation(d3.select(this).attr("transform"))
-                    d3.select(this).attr("transform", "translate("+(translateX +e.dx) +"," +(translateY +e.dy) +")")
+                function onPlanetDrag(e,d){
+                    d.x += e.dx;
+                    d.y += e.dy;
+                    d3.select(this).attr("transform", "translate("+(d.x) +"," +(d.y) +")")
                 }
-                function planetDragEnd(e, d){
+                function onPlanetDragEnd(e, d){
+                    /*
                     if(!wasMoved){
-                        handlePlanetClick.call(this, e, d)
+                        onPlanetClick.call(planetG.node(), e, d)
                         return;
                     }
+                    */
                     //update state
-                    const { translateX, translateY }= getTransformation(d3.select(this).attr("transform"))
-                    updatePlanet({ ...d, targetDate:timeScale.invert(translateX), yPC:yScale.invert(translateY) });
+                    updatePlanet({ id:d.id, targetDate:timeScale.invert(d.x), yPC:yScale.invert(d.y) });
                 }
 
-                function handlePlanetClick(e,d){
-                    console.log("opening planet form ", d)
+                function onPlanetClick(e,d){
+                    console.log("planet click")
+                }
+
+                //ring
+                let linkPlanets = [];
+                function onRingDragStart(e,d){
+                    console.log("d.id", d.id)
+                    linkPlanets = [d];
+                    const planetG = d3.select("g#planet-"+d.id);
+                    //const ringNr = planetG.selectAll("line").size();
+                    planetG.select("g.contents").select("ellipse")
+                        .attr("stroke", grey10(3))
+                        .attr("stroke-width", 5)
+
+                    console.log("e.x", e.x)
+                    console.log("d.x", d.x)
+                    console.log("d scale", timeScale(d.targetDate))
+                    
+                    planetG.select("g.contents")
+                        .insert("line", ":first-child")
+                            .attr("class", "temp-link")
+                            .attr("x2", e.x - d.x)
+                            .attr("y2", e.y - d.y)
+                            .attr("stroke-width", 1)
+                            .attr("stroke", grey10(3))
+                            .attr("fill", grey10(3));
+
+                }
+
+                function onRingDrag(e,d){
+                    const planetG = d3.select("g#planet-"+d.id);
+                    const line = planetG.select("line.temp-link");
+                    planetG.select("line.temp-link")
+                        .attr("x2", +line.attr("x2") + e.dx)
+                        .attr("y2", +line.attr("y2") + e.dy);
+
+                    //find nearest planet and if dist is below threshold, set planet as target candidate
+                    const LINK_THRESHOLD = 100;
+                    //console.log("planetData", planetData)
+                    //console.log("filterd", planetData.filter(p => p.id !== d.id))
+                    const nearestPlanet = findNearestPlanet(e, planetData.filter(p => p.id !== d.id));
+                    if(distanceBetweenPoints(e, nearestPlanet) <= LINK_THRESHOLD){
+                        linkPlanets = [d, nearestPlanet];
+                        d3.select("g#planet-"+nearestPlanet.id).select("g.contents").select("ellipse")
+                            .attr("stroke", grey10(3))
+                            .attr("stroke-width", 5);
+                    }else{
+                        d3.selectAll("g.planet").selectAll("g.contents").selectAll("ellipse")
+                            .filter(p => p.id !== d.id)
+                            .attr("stroke", grey10(5))
+                    }
+                }
+                
+                function onRingDragEnd(e, d){
+                    const planetG = d3.select("g#planet-"+d.id);
+                    //const ringNr = planetG.selectAll("line").size() - 1;
+                    //remove line
+                    planetG.select("line.temp-link").remove();
+                    //set x2, y2 to centre of nearest planet
+                    //...
+                    if(linkPlanets.length === 2){
+                        const sortedLinks = linkPlanets.sort((a, b) => d3.ascending(a.x, b.x))
+                        console.log("sorted", sortedLinks)
+                        //save link
+                        addLink({ src:sortedLinks[0], targ:sortedLinks[1]})
+                    }
                 }
 
 
@@ -292,6 +380,13 @@ export default function journeyGenerator() {
         if (!arguments.length) { return updatePlanet; }
         if(typeof value === "function"){
             updatePlanet = value;
+        }
+        return journey;
+    };
+    journey.addLink = function (value) {
+        if (!arguments.length) { return addLink; }
+        if(typeof value === "function"){
+            addLink = value;
         }
         return journey;
     };

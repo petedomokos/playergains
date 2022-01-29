@@ -33,24 +33,24 @@ const Journey = ({dimns}) => {
     const journey = journeyGenerator()
       .addPlanet((targetDate, yPC) => {
             const newPlanet = {
-                id:new Date().toString(),
+                id:new Date().toString().replaceAll(" ", "-").replaceAll(":", "-").replaceAll("+", "-").replaceAll("(", "-").replaceAll(")", "-"),
                 targetDate,
-                yPC,
+                yPC
                 //goals
             }
             setData(data => [...data, newPlanet])
       })
-      .updatePlanet((planet) => {
+      .updatePlanet(properties => {
         setData(data => {
-          //const [planetToUpdate, rest] = data.find(p => p.id === id);
-          const planetToUpdate = data.find(p => p.id === planet.id);
-          console.log("p", planetToUpdate)
-          const rest = data.filter(d => d.id !== planet.id)
-          console.log("rest", rest)
-          const updatedPlanet = { ...data.find(p => p.id === planet.id), ...planet };
+          const rest = data.filter(p => p.id !== properties.id);
+          const updatedPlanet = { ...data.find(p => p.id === planet.id), ...properties };
           return [...rest, updatedPlanet]
         })
-  })
+      })
+      .addLink(properties => {
+        console.log("adding link", properties)
+        //setLinkData
+      })
       
     setJourney(() => journey)
     
