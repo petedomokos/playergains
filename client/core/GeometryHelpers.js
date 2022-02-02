@@ -3,14 +3,10 @@
 //import * as d3R from "d3-regression";
 
 export function findNearestPlanet(pt, planets){
-    //console.log("findnearest plnt", pt)
-    //console.log("ptsToCheck", planets)
-    return planets[0];
-
+    //todo - measure it from the edge of ellipse
+    return findNearestPoint(pt, planets)
 }
 export function findNearestPoint(pt, ptsToCheck) {
-    //console.log("findnearest pt", pt)
-    //console.log("ptsToCheck", ptsToCheck)
     const checkNext = (remainingPts, nearestSoFar) => {
         const [next, ...rest] = remainingPts;
         // See if any more points left to check

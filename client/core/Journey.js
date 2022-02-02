@@ -19,8 +19,10 @@ const Journey = ({dimns}) => {
   const containerRef = useRef(null);
   const { screenWidth, screenHeight } = dimns;
   const [journey, setJourney] = useState(undefined)
-  const [data, setData] = useState([]);
-  console.log("data", data)
+  const [planetData, setPlanetData] = useState([]);
+  const [linkData, setLinkData] = useState([])
+  const [nrPlanetsCreated, setNrPlanetsCreated] = useState(0);
+  console.log("planetData", planetData.find(p => p.id === "planet1"))
 
   //const goals = getGoalsData().map(g => {
 
@@ -31,33 +33,39 @@ const Journey = ({dimns}) => {
     if(!containerRef.current){return; }
 
     const journey = journeyGenerator()
-      .addPlanet((targetDate, yPC) => {
-            const newPlanet = {
-                id:new Date().toString().replaceAll(" ", "-").replaceAll(":", "-").replaceAll("+", "-").replaceAll("(", "-").replaceAll(")", "-"),
-                targetDate,
-                yPC
-                //goals
-            }
-            setData(data => [...data, newPlanet])
-      })
-      .updatePlanet(properties => {
-        setData(data => {
-          const rest = data.filter(p => p.id !== properties.id);
-          const updatedPlanet = { ...data.find(p => p.id === planet.id), ...properties };
-          return [...rest, updatedPlanet]
-        })
-      })
-      .addLink(properties => {
-        console.log("adding link", properties)
-        //setLinkData
-      })
-      
     setJourney(() => journey)
     
   }, [])
 
   useEffect(() => {
     if(!containerRef.current || !journey){return; }
+
+    journey
+        .addPlanet((targetDate, yPC) => {
+          const newPlanet = {
+              id:"planet"+ (nrPlanetsCreated + 1),
+              targetDate,
+              yPC
+              //goals
+          }
+          setPlanetData(prevState => [...prevState, newPlanet]);
+          setNrPlanetsCreated(prevState => prevState + 1);
+        })
+        .updatePlanet(props => {
+          setPlanetData(prevState => {
+            const rest = prevState.filter(p => p.id !== props.id);
+            const updatedPlanet = { ...prevState.find(p => p.id === props.id), ...props };
+            return [...rest, updatedPlanet]
+          })
+        })
+        .addLink(props => {
+          console.log("adding link", props)
+          const newLink = {
+            ...props,
+            id:props.src + "-" + props.targ
+          }
+          setLinkData(prevState => ([ ...prevState, newLink]))
+        })
     /*
 
     const parsedData = getPlanetsData()
@@ -95,7 +103,7 @@ const Journey = ({dimns}) => {
 
     d3.select(containerRef.current)
       //.datum(data)
-      .datum(data)
+      .datum({ planetData, linkData })
       .call(journey
         .width(screenWidth)
         .height(screenHeight))

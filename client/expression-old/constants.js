@@ -12,7 +12,7 @@ export const DIMNS = {
     noMargin,
     svg:{
         width:700,
-        height:600
+        minHeight:600
     },
     expBuilder:{
         margin:defaultMargin

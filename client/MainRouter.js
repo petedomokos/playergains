@@ -18,6 +18,7 @@ import MenuContainer from './core/containers/MenuContainer'
 import auth from './auth/auth-helper'
 import Expression from "./expression/Expression"
 import Games from "./games/Games"
+import Journey from "./core/Journey.js"
 //styles
 import './assets/styles/main.css'
 
@@ -59,6 +60,9 @@ const MainRouter = ({userId, loadUser, loadingUser}) => {
     <div>
       <div style={{background:"red", height:0.05}}></div>
       <MenuContainer screenSize={screenSize} />
+      <div>
+          <Journey dimns={{screenWidth:window.innerWidth, screenHeight:window.innerHeight}}/>
+      </div>
       {(!jwt || userId) && <Switch>
           {jwt ?
             <Route exact path="/" component={UserHomeContainer}/>
