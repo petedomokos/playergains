@@ -4,7 +4,8 @@ import { makeStyles } from '@material-ui/core/styles';
 import expressionBuilder from "./expressionBuilder";
 import expressionLayout from "./expressionLayout";
 import { COLOURS, DIMNS } from "./constants";
-import { mockData } from "./mockData"
+import { mockData } from "./mockData";
+import { getInstances, planetsData } from './data';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -48,16 +49,14 @@ const Expression = ({}) => {
   useEffect(() => {
       if(!containerRef.current || !expBuilder){return; }
 
-      const data = layout({nodes, links})
-      console.log("data", data)
-    /*
+      //const data = layout({nodes, links})
+      //console.log("data", data)
       expBuilder
         .width(width)
         .height(height)
-        //.planetsData(planetsData.map(p => ({ ...p, instances:getInstances(p.id) })))
+        .planetsData(planetsData.map(p => ({ ...p, instances:getInstances(p.id) })))
         
       d3.select(containerRef.current).datum(layout({nodes, links})).call(expBuilder)
-      */
 
   }, [nodes, links, expBuilder])
 

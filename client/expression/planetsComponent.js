@@ -1,7 +1,7 @@
 import * as d3 from 'd3';
 import { COLOURS } from "./constants"
 
-export function planetsGenerator(){
+export function planetsComponent(){
     //api vars
     let width = 100;
     let height = 200;

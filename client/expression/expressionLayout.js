@@ -17,9 +17,21 @@ export default function expressionLayout() {
     let data = [];
 
     function update(expressionData = {}) {
-        console.log("update", expressionData)
+        //console.log("update", expressionData)
         if(expressionData.nodes) { nodes = expressionData.nodes }
         if(expressionData.links) { links = expressionData.links }
+
+        //helpers
+        //these replace children and parents with the full up-to-date nodes from the nodes array
+        const getParentNodes = nodes => node => {
+            const fullNode = nodes.find(n => n.id === node.id);
+            return fullNode?.parents?.map(p => nodes.find(n => n.id === p.id))
+        }
+        const getChildNodes = nodes => node => {
+            const fullNode = nodes.find(n => n.id === node.id);
+            //if fullNode has children, get the full children nodes
+            return fullNode?.children?.map(ch => nodes.find(n => n.id === ch.id));
+        }
 
         const nodesData = nodes.map(n => {
             const children = links
@@ -29,31 +41,47 @@ export default function expressionLayout() {
                 .filter(l => l.targ === n.id)
                 .map(l => nodes.find(node => node.id === l.src));
             const parents = parentsArray.length === 0 ? null : parentsArray;
-            
-            //const level1Parents = () => ... does this help us get colnr?
 
             const nodeType = typeof n.data === "number" ? "value" : typeof n.data === "array" ? "dataset" : "func";
 
             return { ...n, children, parents, nodeType }
 
         })
-        .map((n,i, nodesArray) => {
-            //must add depths, height etc to parent and children references
-            const children = n.children?.map(ch => nodesArray.find(n => n.id === ch.id));
-            const parents = n.parents?.map(pa => nodesArray.find(n => n.id === pa.id));
-
-            const depth = calcNodeDepth({ ...n, parents });
-            const height = 0//calcNodeHeight({ ...n, children });
+        //add parents and children references
+        .map((n,i, nodesArray) => ({
+            ...n,
+            children: n.children?.map(ch => nodesArray.find(n => n.id === ch.id)),
+            parents: n.parents?.map(pa => nodesArray.find(n => n.id === pa.id)),
+        }))
+        //add depth and height
+        .map((n, i, nodesArray) => {
+            const depth = calcNodeDepth(n, getParentNodes(nodesArray));
+            const height = calcNodeHeight(n, getChildNodes(nodesArray));
 
             //note - need depth of all parents to calc colnr so needs to be in next map after depth
-            const colNr = 0// calcNodeColNr({ ...n, children, parents});
+            //const colNr = calcNodeColNr(n, nodesArray, getParentNodes(nodesArray));
 
-            const descendants = () => getDescendants({ ...n, children});
-            const ancestors = () => getAncestors({ ...n, parents}, n => n.parents);
-            const leaves = () => getLeaves({ ...n, children})
+            const descendants = () => getDescendants(n, getChildNodes(nodesArray));
+            const ancestors = () => getAncestors(n, getParentNodes(nodesArray));
+            const leaves = () => getLeaves(n, getChildNodes(nodesArray))
 
-            return { ...n, children, parents, colNr, depth, height, descendants, ancestors, leaves }
+            return { ...n, depth, height, descendants, ancestors, leaves }
         })
+        //add colNr
+        .map((n,i, nodesArray) => ({
+                ...n,
+                colNr:calcNodeColNr(n, nodesArray, getParentNodes(nodesArray))
+        }))
+        //add funcs to get deep children and parents
+        .map((n,i, nodesArray) => ({
+            ...n,
+            children: n.children?.map(ch => nodesArray.find(n => n.id === ch.id)),
+            parents: n.parents?.map(pa => nodesArray.find(n => n.id === pa.id)),
+            //deep versions - use these when you want to get children or parents with all their properties
+            //including their own children and parents
+            childNodes: () => getChildNodes(nodesArray),
+            parentNodes: () => getParentNodes(nodesArray)
+        }))
 
         const linksData = links.map(l => ({
             ...l,
@@ -63,7 +91,7 @@ export default function expressionLayout() {
 
         const root = nodesData.find(n => !n.parents)
 
-        return { nodes: nodesData, links: linksData, root }
+        return { nodesData, linksData, root }
     }
 
     function getDescendants(node, childrenFunc = (n) => n.children){
@@ -79,34 +107,35 @@ export default function expressionLayout() {
         return getChildren(node, []);
     }
 
-    function getAncestors(node){
-        return getDescendants(node, n => n.parents)
+    function getAncestors(node, parentsFunc = (n) => n.parents){
+        //we use the getDescendents function but look for parents each time instead of children
+        return getDescendants(node, parentsFunc)
     }
 
-    function getLeaves(node){
-        return getDescendants(node).filter(n => !n.children || n.children.length === 0);
+    function getLeaves(node, childrenFunc = (n) => n.children){
+        //get all descendants then filter for only the leaves
+        return getDescendants(node, childrenFunc)
+            .filter(n => !n.children || n.children.length === 0);
     }
 
     function calcNodeHeight(node, childrenFunc = (n) => n.children){
-        console.log("calcNH", node)
-        const checkChildren = (node, heightSoFar) => {
-            if(!childrenFunc(node) || childrenFunc(node).length === 0){
+        const checkChildren = (n, heightSoFar) => {
+            const children = childrenFunc(n)
+            if(!childrenFunc(n) || childrenFunc(n).length === 0){
                 return heightSoFar;
-            }else{
-                const newHeight = heightSoFar + 1;
-                return node.children.reduce((a, b) => d3.max([checkChildren(a, newHeight), checkChildren(b, newHeight)]), 0)
             }
+            return d3.max(children.map(ch => checkChildren(ch, heightSoFar + 1)));
         }
         return checkChildren(node, 0);
     }
 
-    function calcNodeDepth(node){
-        return calcNodeHeight(node, n => n.parent)
+    function calcNodeDepth(node, parentsFunc = (n) => n.parents){
+        //we use the node height func but look for parents each time instead
+        return calcNodeHeight(node, parentsFunc)
     }
 
     //may not be a whole number
-    function calcNodeColNr(node){
-        console.log("caclNCN", node)
+    function calcNodeColNr(node, nodes, parentsFunc = (n) => n.parents){
         if(node.depth === 0){
             return node.colNr || 0; //root node may have been dragged out of col 0
         }
@@ -117,7 +146,7 @@ export default function expressionLayout() {
             return nodesIdsAtThisDepth.indexOf(node.id);
         }
         //rest of nodes are given an avg of their parent colNrs (unless they have been dragged to a particular spot)
-        return node.colNr || d3.mean(node.parents.map(p => calcNodeColNr(p)))
+        return node.colNr || d3.mean(parentsFunc(node), p => calcNodeColNr(p, nodes, parentsFunc));
     }
 
     // api

@@ -22,7 +22,7 @@ const Journey = ({dimns}) => {
   const [planetData, setPlanetData] = useState([]);
   const [linkData, setLinkData] = useState([])
   const [nrPlanetsCreated, setNrPlanetsCreated] = useState(0);
-  console.log("planetData", planetData.find(p => p.id === "planet1"))
+  //console.log("planetData", planetData.find(p => p.id === "planet1"))
 
   //const goals = getGoalsData().map(g => {
 

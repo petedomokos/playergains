@@ -1,6 +1,9 @@
-
-//import * as d3 from "d3";
-//import * as d3R from "d3-regression";
+export function channelContainsPoint(pt, channel){
+    return channel.startX <= pt.x && pt.x < channel.endX;
+}
+export function channelContainsDate(date, channel){
+    return channel.startDate <= date && date < channel.endDate;
+}
 
 export function findNearestPlanet(pt, planets){
     //todo - measure it from the edge of ellipse
@@ -14,7 +17,9 @@ export function findNearestPoint(pt, ptsToCheck) {
             return nearestSoFar;
         }
         // check if next point is nearer than nearest so far
-        if (!nearestSoFar || distanceBetweenPoints(next, pt) < distanceBetweenPoints(nearestSoFar, pt)) {
+        if (!nearestSoFar || distanceBetweenPoints(pt, next) < distanceBetweenPoints(pt, nearestSoFar)) {
+            //not sure why we dont need to use displayX for each point
+        //if (!nearestSoFar || distanceBetweenPoints(pt, { ...next, x:next.displayX }) < distanceBetweenPoints(pt, { ...nearestSoFar, x: nearestSoFar.displayX} )) {
             // nearest point is now next
             return checkNext(rest, next);
         }

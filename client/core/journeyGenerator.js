@@ -1,12 +1,12 @@
 import * as d3 from 'd3';
 //import "d3-selection-multi";
 import barChartGenerator from "./barChartGenerator";
-import { calcChartHeight, findFuturePlanets, findFirstFuturePlanet, findNearestDate } from './helpers';
+import { calcChartHeight, findFuturePlanets, findFirstFuturePlanet, findNearestDate, getTransformation } from './helpers';
 //import { COLOURS, DIMNS } from "./constants";
 import { addWeeks } from "../util/TimeHelpers"
 import { ellipse } from "./ellipse";
 import { grey10 } from "./constants";
-import { findNearestPlanet, distanceBetweenPoints } from './geometryHelpers';
+import { findNearestPlanet, distanceBetweenPoints, channelContainsPoint, channelContainsDate } from './geometryHelpers';
 import { OPEN_CHANNEL_WIDTH } from './constants';
 import dragEnhancements from './enhancedDragHandler';
 
@@ -128,7 +128,7 @@ export default function journeyGenerator() {
                     .map(p => p.isOpen ? planetHeight + chartHeight : planetHeight))
 
                 const initT = d3.zoomIdentity.translate(initDX, initDY);
-                //@todo - need to understand why we need to apply this to contentsG,
+                // @todo - need to understand why we need to apply this to contentsG,
                 // and why if its canvasG then it jumps back to top when user first scrolls
                 contentsG.call(zoom.transform, initT)
 
@@ -139,309 +139,394 @@ export default function journeyGenerator() {
                         .attr("fill", "#FAEBD7");
                 
             }
-            //scale
-            const now = new Date();
-            const xExtent = [d3.min(planetData, d => d.targetDate), d3.max(planetData, d => d.targetDate)]
-            const timeScale = d3.scaleTime()
-                .domain([addWeeks(-2, now), d3.max([xExtent[1], addWeeks(16, now)])])
-                .range([0, contentsWidth])
 
-            //yscale
-            const yScale = d3.scaleLinear().domain([0, 100]).range([margin.top, margin.top + contentsHeight])
+            //init upate call
+            update();
+            //update
+            function update(){
+                //scale
+                const now = new Date();
+                const xExtent = [d3.min(planetData, d => d.targetDate), d3.max(planetData, d => d.targetDate)]
+                const timeScale = d3.scaleTime()
+                    .domain([addWeeks(-2, now), d3.max([xExtent[1], addWeeks(16, now)])])
+                    .range([0, contentsWidth])
 
-            //DISPLAY
-            //1. axis
-            const axis = d3.axisBottom()
-                .scale(timeScale)
-                .ticks(5)
-                .tickSize(contentsHeight + 6)
-                .tickSize(contentsHeight - 25)
-                //.tickPadding(3);
-            const axisG = svg.selectAll("g.x-axis").data([1])
-            axisG
-                .enter()
-                .append("g")
-                    .attr("class", "axis x-axis x-axis-0")
-                    .each(function(){
-                        d3.select(this)
-                            .style("stroke-width", 0.05)
-                            .style("stroke", "black")
-                            .style("opacity", 0.5);
-                        
-                        d3.select(this).selectAll('text')
-                            .attr('transform', 'translate(15,15) rotate(45) ');
-                    })
-                    .call(axis)
-                    .merge(axisG)
-                    .attr("transform", 'translate(0,' +margin.top +')')
-                    .each(function(){
-                        d3.select(this).select(".domain")
-                            .attr("transform", 'translate(0,' +(contentsHeight - 30) +')')
-                    });
-            if(!channelData){
-                //set initial channelData based on ticks
-                channelData = d3.select("g.x-axis-0").selectAll("g.tick").data();
-            }
+                //yscale
+                const yScale = d3.scaleLinear().domain([0, 100]).range([margin.top, margin.top + contentsHeight])
 
-            //add x and y to each planet
-            const planetLayoutData = planetData.map(p => ({
-                ...p,
-                x:timeScale(p.targetDate),
-                displayX:timeScale(findNearestDate(p.targetDate, channelData)),
-                y: yScale(p.yPC)
-            }))
+                //DISPLAY
+                //1. axis
+                const xAxis = d3.axisBottom()
+                    .scale(timeScale)
+                    .ticks(5)
+                    //.tickSize(contentsHeight + 6)
+                    .tickSize(contentsHeight - 25)
+                    //.tickPadding(3);
 
-            const linkLayoutData = linkData.map(l => ({
-                ...l,
-                src:planetLayoutData.find(p => p.id === l.src),
-                targ:planetLayoutData.find(p => p.id === l.targ)
-            }));
+                const xAxisG = svg.selectAll("g.x-axis").data([1])
+                xAxisG
+                    .enter()
+                    .append("g")
+                        .attr("class", "x-axis x-axis-0")
+                        .each(function(){
+                            d3.select(this)
+                                .style("stroke-width", 0.05)
+                                .style("stroke", "black")
+                                .style("opacity", 0.5);
+                        })
+                        .call(xAxis)
+                        .merge(xAxisG)
+                        .attr("transform", 'translate(0,' +margin.top +')')
+                        .each(function(){
+                            d3.select(this).select(".domain")
+                                .attr("transform", 'translate(0,' +(contentsHeight - 30) +')')
+                        });
 
-            //background drag
+                if(!channelData){
+                    //set initial channelData based on ticks
+                    channelData = d3.select("g.x-axis").selectAll("g.tick")
+                        .data()
+                        .map((date,i) => ({ 
+                            nr:i, 
+                            startDate:date,
+                            isOpen:i === 2 //we want apr to be open
+                        }));
+                }
+                //update axis scales
+                channelData = channelData.map((ch, i) => {
+                    //todo - handle channelData empty
+                    //channel goes up to the next open one, or to the end if none open
+                    const endDate = channelData.find((chan, j) => j > i && chan.isOpen)?.startDate || channelData[channelData.length -1].startDate;
+                    const nrPrevOpenChannels = channelData.filter((chan, j) => j < i && chan.isOpen).length;
+                    const rangeShift = (nrPrevOpenChannels + 1) * OPEN_CHANNEL_WIDTH;
+                    const startX = timeScale(ch.startDate) + nrPrevOpenChannels * OPEN_CHANNEL_WIDTH;
+                    const endX = timeScale(endDate) + rangeShift;
 
-            enhancedDrag
-                .onClick(function(e,d){
-                    console.log("clicked")
-                    const { offsetX, offsetY } = e.sourceEvent;
-                    addPlanet(timeScale.invert(offsetX - margin.left), yScale.invert(offsetY - margin.top))
-                })
-                .onLongpressEnd(function(e,d){
-                    if(!enhancedDrag.wasMoved()){
-                        console.log("longpress click...open channel")
-                        //todo - open channel
-ˆ
+                    return {
+                        ...ch,
+                        endDate,
+                        nrPrevOpenChannels,
+                        rangeShift,
+                        startX,
+                        endX
                     }
                 })
 
-            const drag = d3.drag()
-                .on("start", enhancedDrag(dragStart))
-                .on("drag", enhancedDrag(dragged))
-                .on("end", enhancedDrag(dragEnd));
+                console.log("channelData", channelData)
 
-            function dragStart(e,d){
-                console.log("dS")
-            }
-            function dragged(e,d){
-                console.log("drgd")
-            }
-            function dragEnd(e,d){
-                console.log("dE")
-            }
-            canvasG.call(drag);
-
-            //2. LINKS
-            const linksG = canvasG.selectAll("g.links").data([1])
-            linksG.enter()
-                .append("g")
-                .attr("class", "links")
-                .merge(linksG)
-                .each(function(){;
-                    const linkG = d3.select(this).selectAll("g.link").data(linkLayoutData, l => l.id);
-                    linkG.enter()
-                        .append("g")
-                        .attr("class", "link")
-                        .attr("id", d => "link-"+d.id)
-                        .each(function(d,i){
+                //added an axis per open channel
+                const extraXAxisG = svg.selectAll("g.extra-x-axis").data(channelData.filter(ch => ch.isOpen))
+                extraXAxisG.enter()
+                    .append("g")
+                        .attr("class", (d,i) => "x-axis extra-x-axis extra-x-axis-"+i)
+                        .each(function(){
                             d3.select(this)
-                                .append("line")
-                                .attr("stroke", grey10(5))
+                                .style("stroke-width", 0.05)
+                                .style("stroke", "black")
+                                .style("opacity", 0.5);
                         })
-                        .merge(linkG)
-                        .each(function(d,i){
-                            console.log("link d", d)
-                            d3.select(this).select("line")
-                                .attr("x1", d.src.x)
-                                .attr("y1", d.src.y)
-                                .attr("x2", d.targ.x)
-                                .attr("y2", d.targ.y)
-
-                        })
-                })
-
-            //3. PLANETS
-            const planetDrag = d3.drag()
-                .on("start", onPlanetDragStart)
-                .on("drag", onPlanetDrag)
-                .on("end", onPlanetDragEnd);
-
-            const rx = planetContentsWidth * 0.8 / 2;
-            const ry = planetContentsHeight * 0.8 / 2;
-
-            const planetsG = canvasG.selectAll("g.planets").data([1])
-            planetsG.enter()
-                .append("g")
-                .attr("class", "planets")
-                .merge(planetsG)
-                .each(function(){;
-                    const planetG = d3.select(this).selectAll("g.planet").data(planetLayoutData, p => p.id);
-                    planetG.enter()
-                        .append("g")
-                        .attr("class", "planet")
-                        .attr("id", d => "planet-"+d.id)
-                        .attr("transform", d => {
-                            console.log("d", d)
-                            return "translate("+d.displayX +"," +(d.y) +")"
-                        })
-                        .call(ring)
-                        .each(function(d,i){
-                            const planetContentsG = d3.select(this)
-                                .append("g")
-                                .attr("class", "contents")
-                                //.attr("transform", "translate("+planetMargin.left +"," +planetMargin.top +")");
-
-                            //ellipse
-                            planetContentsG
-                                .append("ellipse")
-                                    .attr("rx", rx)
-                                    .attr("ry", ry)
-                                    .attr("fill", grey10(5))
+                        .call(xAxis)
+                        .merge(extraXAxisG)
+                        .attr("transform", (d,i) => 'translate('+d.rangeShift + "," +margin.top +')')
+                        .each(function(ch,i, nodes){
+                            d3.select(this).select(".domain")
+                                .attr("transform", 'translate(0,' +(contentsHeight - 30) +')')
+                                .attr("d", "M" + ch.startX + ",0H"+ch.endX +(i === nodes.length - 1 ? "V394" : ""));
                             
-                            //text
-                            planetContentsG
-                                .append("text")
-                                .attr("class", "title")
-                                .attr("text-anchor", "middle")
-                                .attr("dominant-baseline", "middle")
-                                .attr("font-size", 9)
-                                .style("pointer-events", "none")
-                        
-                        })
-                        .merge(planetG)
-                        .each(function(d,i){
-                            const planetContentsG = d3.select(this).select("g.contents")
-                            //planet text
-                            planetContentsG.select("text").text(d.title || "enter name...")
+                            //hide all g.tick where transX is less than timeScale(d.date) +d.rangeShift
+                            d3.select(this).selectAll("g.tick")
+                                .attr("display", d => d < ch.startDate|| d > ch.endDate ? "none" : "inline")
 
-                        })
-                        .call(planetDrag)
-                        //@todo - use mask to make it a donut and put on top
-                        .call(ring
-                                .rx(rx * 1.3)
-                                .ry(ry * 1.3)
-                                .fill("transparent")
-                                .stroke("none")
-                                .onDragStart(onRingDragStart)
-                                .onDrag(onRingDrag)
-                                .onDragEnd(onRingDragEnd)
-                                .container("g.contents"));
+                            //if first open channel, hide main x-axis ticks
+                            if(i === 0){
+                                //console.log("ch", ch)
+                                d3.select("g.x-axis-0").selectAll("g.tick")
+                                    .attr("display", d => d >= ch.startDate? "none" : "inline")
+
+                                const mainDomainPath = d3.select("g.x-axis-0").selectAll(".domain")
+                                const startOfD = mainDomainPath.attr("d").split("H")[0];
+                                const prevChannelX = channelData[ch.nr - 1]?.startX || timeScale.range()[0];
+                                mainDomainPath.attr("d", startOfD + "H" + (prevChannelX - timeScale.range()[0]));
+                            }
+                        });
+                const pointChannel = (pt) => channelData.find(ch => channelContainsPoint(pt, ch))
+                const dateChannel = (date) => channelData.find(ch => channelContainsDate(date, ch))
+                const findNearestChannel = date => {
+                    const nearestDate = findNearestDate(date, channelData.map(d => d.startDate))
+                    return channelData.find(ch => ch.startDate === nearestDate)
+                }
+
+                //add x and y to each planet
+                const planetLayoutData = planetData.map(p => {
+                    const channel = findNearestChannel(p.targetDate);
+                    return {
+                        ...p,
+                        channel,
+                        x:channel.startX, //planets positioned on channel start line
+                        y: yScale(p.yPC)
+                    }
                 })
 
-            
+                const linkLayoutData = linkData.map(l => ({
+                    ...l,
+                    src:planetLayoutData.find(p => p.id === l.src),
+                    targ:planetLayoutData.find(p => p.id === l.targ)
+                }));
 
-            let planetWasMoved = true; //for now, always true
-            function onPlanetDragStart(e,d){
-                //console.log("dS d.x", d.id)
-                //d.x will be updated to start from where planet currently is, becaue user will drag it to where they want it
-                d.x = d.displayX;
-            }
-            function onPlanetDrag(e,d){
-                if(!planetWasMoved) { return; }
+                //background drag
 
-                d.x += e.dx;
-                d.y += e.dy;
+                enhancedDrag
+                    .onClick(function(e,d){
+                        const { offsetX, offsetY } = e.sourceEvent;
+                        addPlanet(timeScale.invert(offsetX - margin.left), yScale.invert(offsetY - margin.top))
+                    })
+                    .onLongpressEnd(function(e,d){
+                        if(!enhancedDrag.wasMoved()){
+                            const clickedChannel = channelData.find(ch => channelContainsPoint(e, ch));
+                            console.log("longpress click...open channel",channel)
+                            channelData = channelData.map(ch => ({
+                                ...ch,
+                                isOpen:ch.id === channel.id ? true : ch.isOpen
+                            }))
 
-                //UPDATE DOM
-                //planet
-                d3.select(this).attr("transform", "translate("+(d.x) +"," +(d.y) +")")
-
-                //src links
-                d3.selectAll("g.link")
-                    .filter(l => l.src.id === d.id)
-                    .each(function(l){
-                        l.src.x = d.x;
-                        l.src.y = d.y;
-                        d3.select(this).select("line")
-                            .attr("x1", l.src.x)
-                            .attr("y1", l.src.y)
+                            //todo - open channel
+                            //get planets channel could be d.channel or a helper
+                            //set channel.isOpen to true
+                        }
                     })
 
-                //targ links
-                d3.selectAll("g.link")
-                    .filter(l => l.targ.id === d.id)
-                    .each(function(l){
-                        l.targ.x = d.x;
-                        l.targ.y = d.y;
-                        d3.select(this).select("line")
-                            .attr("x2", l.targ.x)
-                            .attr("y2", l.targ.y)
-                    })
-            }
+                const drag = d3.drag()
+                    .on("start", enhancedDrag(dragStart))
+                    .on("drag", enhancedDrag(dragged))
+                    .on("end", enhancedDrag(dragEnd));
 
-            function onPlanetDragEnd(e, d){
-                d.displayX = timeScale(findNearestDate(timeScale.invert(d.x), channelData));
-                d3.select(this).attr("transform", "translate("+d.displayX +"," +(d.y) +")");
-                /*
-                if(!wasMoved){
-                    onPlanetClick.call(planetG.node(), e, d)
-                    return;
+                function dragStart(e,d){
+                    console.log("dS")
                 }
-                */
-                //update state (displayX is not stored in React state)
-                updatePlanet({ id:d.id, targetDate:timeScale.invert(d.x), yPC:yScale.invert(d.y) });
-            }
+                function dragged(e,d){
+                    console.log("drgd")
+                }
+                function dragEnd(e,d){
+                    console.log("dE")
+                }
+                canvasG.call(drag);
 
-            function onPlanetClick(e,d){
-                console.log("planet click")
-            }
+                //2. LINKS
+                const linksG = canvasG.selectAll("g.links").data([1])
+                linksG.enter()
+                    .append("g")
+                    .attr("class", "links")
+                    .merge(linksG)
+                    .each(function(){;
+                        const linkG = d3.select(this).selectAll("g.link").data(linkLayoutData, l => l.id);
+                        linkG.enter()
+                            .append("g")
+                            .attr("class", "link")
+                            .attr("id", d => "link-"+d.id)
+                            .each(function(d,i){
+                                d3.select(this)
+                                    .append("line")
+                                    .attr("stroke", grey10(5))
+                            })
+                            .merge(linkG)
+                            .each(function(d,i){
+                                d3.select(this).select("line")
+                                    .attr("x1", d.src.x)
+                                    .attr("y1", d.src.y)
+                                    .attr("x2", d.targ.x)
+                                    .attr("y2", d.targ.y)
 
-            //ring
-            let linkPlanets = [];
-            function onRingDragStart(e,d){
-                linkPlanets = [d];
-                const planetG = d3.select("g#planet-"+d.id);
-                //const ringNr = planetG.selectAll("line").size();
-                planetG.select("g.contents").select("ellipse")
-                    .attr("stroke", grey10(3))
-                    .attr("stroke-width", 5)
-                
-                planetG.select("g.contents")
-                    .insert("line", ":first-child")
-                        .attr("class", "temp-link")
-                        .attr("x2", e.sourceEvent.offsetX - d.x)
-                        .attr("y2", e.sourceEvent.offsetY - d.y)
-                        .attr("stroke-width", 1)
-                        .attr("stroke", grey10(3))
-                        .attr("fill", grey10(3));
+                            })
+                    })
 
-            }
+                //3. PLANETS
+                const planetDrag = d3.drag()
+                    .on("start", onPlanetDragStart)
+                    .on("drag", onPlanetDrag)
+                    .on("end", onPlanetDragEnd);
 
-            function onRingDrag(e,d){
-                const planetG = d3.select("g#planet-"+d.id);
-                const line = planetG.select("line.temp-link");
-                planetG.select("line.temp-link")
-                    .attr("x2", +line.attr("x2") + e.dx)
-                    .attr("y2", +line.attr("y2") + e.dy);
+                const rx = planetContentsWidth * 0.8 / 2;
+                const ry = planetContentsHeight * 0.8 / 2;
 
-                //find nearest planet and if dist is below threshold, set planet as target candidate
-                const LINK_THRESHOLD = 100;
-                const availablePlanets = planetLayoutData
-                    .filter(p => p.id !== d.id)
-                    .filter(p => !linkLayoutData.find(l => l.id.includes(d.id) && l.id.includes(p.id)))
+                const planetsG = canvasG.selectAll("g.planets").data([1])
+                planetsG.enter()
+                    .append("g")
+                    .attr("class", "planets")
+                    .merge(planetsG)
+                    .each(function(){;
+                        const planetG = d3.select(this).selectAll("g.planet").data(planetLayoutData, p => p.id);
+                        planetG.enter()
+                            .append("g")
+                            .attr("class", "planet")
+                            .attr("id", d => "planet-"+d.id)
+                            .attr("transform", d => "translate("+d.x +"," +(d.y) +")")
+                            .call(ring)
+                            .each(function(d,i){
+                                d3.select(this)
+                                    .transition()
+                                        .delay(50)
+                                        .duration(200)
+                                        .attr("transform", "translate("+d.x +"," +(d.y) +")");
 
-                const nearestPlanet = findNearestPlanet(e, availablePlanets.filter(p => p.id !== d.id));
-                const linkPlanet = distanceBetweenPoints(e, nearestPlanet) <= LINK_THRESHOLD ? nearestPlanet : undefined;
-                linkPlanets = linkPlanet ? [d, linkPlanet] : [];
-                //console.log("linkPlanets", linkPlanets)
+                                const planetContentsG = d3.select(this)
+                                    .append("g")
+                                    .attr("class", "contents")
 
-                d3.selectAll("g.planet").selectAll("g.contents").selectAll("ellipse")
-                    .attr("stroke", p => p.id === d.id || p.id === linkPlanet?.id ? grey10(3) : grey10(5))
-                    .attr("stroke-width", p => p.id === d.id || p.id === linkPlanet?.id ? 5 : 1);
-            }
+                                //ellipse
+                                planetContentsG
+                                    .append("ellipse")
+                                        .attr("rx", rx)
+                                        .attr("ry", ry)
+                                        .attr("fill", grey10(5))
+                                
+                                //text
+                                planetContentsG
+                                    .append("text")
+                                    .attr("class", "title")
+                                    .attr("text-anchor", "middle")
+                                    .attr("dominant-baseline", "middle")
+                                    .attr("font-size", 9)
+                                    .style("pointer-events", "none")
+                            
+                            })
+                            .merge(planetG)
+                            .each(function(d,i){
+                                const planetContentsG = d3.select(this).select("g.contents")
+                                //planet text
+                                planetContentsG.select("text").text(d.title || "enter name...")
+
+                            })
+                            .call(planetDrag)
+                            //@todo - use mask to make it a donut and put on top
+                            .call(ring
+                                    .rx(rx * 1.3)
+                                    .ry(ry * 1.3)
+                                    .fill("transparent")
+                                    .stroke("none")
+                                    .onDragStart(onRingDragStart)
+                                    .onDrag(onRingDrag)
+                                    .onDragEnd(onRingDragEnd)
+                                    .container("g.contents"));
+                    })
             
-            function onRingDragEnd(e, d){
-                const planetG = d3.select("g#planet-"+d.id);
-                //const ringNr = planetG.selectAll("line").size() - 1;
-                //cleanup dom
-                planetG.select("line.temp-link").remove();
-                d3.selectAll("g.planet").select("g.contents").select("ellipse")
-                    .attr("stroke", grey10(5))
 
-                //set x2, y2 to centre of nearest planet
-                //...
-                if(linkPlanets.length === 2){
-                    const sortedLinks = linkPlanets.sort((a, b) => d3.ascending(a.x, b.x))
-                    //save link
-                    addLink({ src:sortedLinks[0].id, targ:sortedLinks[1].id })
+                let planetWasMoved = true; //for now, always true
+                function onPlanetDragStart(e,d){
+                    //console.log("dS d.x", d.id)
+                    //d.x will be updated to start from where planet currently is, becaue user will drag it to where they want it
+                    d.x = d.x;
+                }
+                function onPlanetDrag(e,d){
+                    if(!planetWasMoved) { return; }
+
+                    d.x += e.dx;
+                    d.y += e.dy;
+
+                    //UPDATE DOM
+                    //planet
+                    d3.select(this).attr("transform", "translate("+(d.x) +"," +(d.y) +")")
+
+                    //src links
+                    d3.selectAll("g.link")
+                        .filter(l => l.src.id === d.id)
+                        .each(function(l){
+                            l.src.x = d.x;
+                            l.src.y = d.y;
+                            d3.select(this).select("line")
+                                .attr("x1", l.src.x)
+                                .attr("y1", l.src.y)
+                        })
+
+                    //targ links
+                    d3.selectAll("g.link")
+                        .filter(l => l.targ.id === d.id)
+                        .each(function(l){
+                            l.targ.x = d.x;
+                            l.targ.y = d.y;
+                            d3.select(this).select("line")
+                                .attr("x2", l.targ.x)
+                                .attr("y2", l.targ.y)
+                        })
+                }
+
+                function onPlanetDragEnd(e, d){
+                    d.x = timeScale(findNearestDate(timeScale.invert(d.x), channelData.map(d => d.date)));
+                    d3.select(this)
+                        .attr("transform", "translate("+d.x +"," +(d.y) +")")
+                        .transition()
+                            .delay(50)
+                            .duration(200)
+                            .attr("transform", "translate("+d.x +"," +(d.y) +")");
+                    /*
+                    if(!wasMoved){
+                        onPlanetClick.call(planetG.node(), e, d)
+                        return;
+                    }
+                    */
+                    //update state (x is not stored in React state)
+                    updatePlanet({ id:d.id, targetDate:timeScale.invert(d.x), yPC:yScale.invert(d.y) });
+                }
+
+                //ring
+                let linkPlanets = [];
+                function onRingDragStart(e,d){
+                    linkPlanets = [d];
+                    const planetG = d3.select("g#planet-"+d.id);
+                    planetG.select("g.contents").select("ellipse")
+                        .attr("stroke", grey10(3))
+                        .attr("stroke-width", 5)
+                    
+                    planetG.select("g.contents")
+                        .insert("line", ":first-child")
+                            .attr("class", "temp-link")
+                            .attr("x1", e.sourceEvent.offsetX - d.x)
+                            .attr("y1", e.sourceEvent.offsetY - d.y)
+                            .attr("x2", e.sourceEvent.offsetX - d.x)
+                            .attr("y2", e.sourceEvent.offsetY - d.y)
+                            .attr("stroke-width", 1)
+                            .attr("stroke", grey10(3))
+                            .attr("fill", grey10(3));
+
+                }
+
+                function onRingDrag(e,d){
+                    const planetG = d3.select("g#planet-"+d.id);
+                    const line = planetG.select("line.temp-link");
+                    planetG.select("line.temp-link")
+                        .attr("x2", +line.attr("x2") + e.dx)
+                        .attr("y2", +line.attr("y2") + e.dy);
+
+                    //find nearest planet and if dist is below threshold, set planet as target candidate
+                    const LINK_THRESHOLD = 100;
+                    const availablePlanets = planetLayoutData
+                        .filter(p => p.id !== d.id)
+                        .filter(p => !linkLayoutData.find(l => l.id.includes(d.id) && l.id.includes(p.id)))
+
+                    const nearestPlanet = findNearestPlanet(e, availablePlanets.filter(p => p.id !== d.id));
+                    const linkPlanet = distanceBetweenPoints(e, nearestPlanet) <= LINK_THRESHOLD ? nearestPlanet : undefined;
+                    linkPlanets = linkPlanet ? [d, linkPlanet] : [];
+                    //console.log("linkPlanets", linkPlanets)
+
+                    d3.selectAll("g.planet").selectAll("g.contents").selectAll("ellipse")
+                        .attr("stroke", p => p.id === d.id || p.id === linkPlanet?.id ? grey10(3) : grey10(5))
+                        .attr("stroke-width", p => p.id === d.id || p.id === linkPlanet?.id ? 5 : 1);
+                }
+                
+                function onRingDragEnd(e, d){
+                    const planetG = d3.select("g#planet-"+d.id);
+                    //const ringNr = planetG.selectAll("line").size() - 1;
+                    //cleanup dom
+                    planetG.select("line.temp-link").remove();
+                    d3.selectAll("g.planet").select("g.contents").select("ellipse")
+                        .attr("stroke", grey10(5))
+
+                    //set x2, y2 to centre of nearest planet
+                    //...
+                    if(linkPlanets.length === 2){
+                        const sortedLinks = linkPlanets.sort((a, b) => d3.ascending(a.x, b.x))
+                        //save link
+                        addLink({ src:sortedLinks[0].id, targ:sortedLinks[1].id })
+                    }
                 }
             }
         })
