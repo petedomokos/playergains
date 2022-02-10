@@ -1,5 +1,7 @@
 import * as d3 from 'd3';
 import { planetsComponent} from "./planetsComponent";
+import nodesComponent from "./nodes";
+import linksComponent from "./links";
 import { DIMNS } from "./constants";
 
 /*
@@ -18,6 +20,9 @@ export default function expressionBuilder() {
     let planetsWidth = DIMNS.planets.width;
     let planetsHeight;
 
+    const nodeWidth = 50;
+    const nodeHeight = 15;
+
     let expWidth;
     //const expHeight = DIMNS.exp.height; //150
 
@@ -29,10 +34,16 @@ export default function expressionBuilder() {
         expWidth = contentsWidth;
     };
 
+    //SCALES
+    //todo - these will be updates and us d3.scaleLinear or scaleOrdinal or scaleThreshold
+    //needs to pick up the closest position from anywhere, so scaleThreshold probablybest but scaleLinear will do
+    const xScale = (colNr) => colNr * 75;
+    const yScale = (nodeHeight) => (3 - nodeHeight) * 50;
+
     //COMPONENTS
     let planets = planetsComponent();
-    //let links = linksComponent();
-    //let nodes = nodesComponent();
+    let links = linksComponent();
+    let nodes = nodesComponent();
 
     function updateComponents(){
         //planets
@@ -40,10 +51,14 @@ export default function expressionBuilder() {
             .width(planetsWidth)
             .height(planetsHeight)
             //.onSelect(function(planet, property){})
-        
-        //nodes
 
         //links
+        links
+            .scales({ x:xScale, y:yScale })
+
+        //nodes
+        nodes
+            .scales({ x:xScale, y:yScale })
     }     
 
     //data
@@ -63,7 +78,7 @@ export default function expressionBuilder() {
         // expression elements
         selection.each(function (data) {
             svg = d3.select(this);
-            //const { nodesData, linksData } = data;
+            const { nodesData, linksData } = data;
             console.log("expBuilderData...", data)
             
             updateDimns();
@@ -81,24 +96,23 @@ export default function expressionBuilder() {
             //exit
             planetsG.exit().remove();
 
-            //NODES
-            /*
-            const nodesG = svg.selectAll("g.nodes").data([nodesData])
-            nodesG.enter()
-                .append("g")
-                .attr("class", "nodes")
-                .merge(nodesG)
-                .call(nodes) 
-
             //LINKS
             const linksG = svg.selectAll("g.links").data([linksData])
             linksG.enter()
                 .append("g")
-                .attr("class", "links")
-                .merge(linksG)
-                .call(links)
-            */
+                    .attr("class", "links")
+                    .merge(linksG)
+                    .attr("transform", "translate("+(margin.left + planetsWidth + 20) +"," + margin.top +")")
+                    .call(links)
 
+            //NODES
+            const nodesG = svg.selectAll("g.nodes").data([nodesData])
+            nodesG.enter()
+                .append("g")
+                    .attr("class", "nodes")
+                    .merge(nodesG)
+                    .attr("transform", "translate("+(margin.left + planetsWidth + 20) +"," + margin.top +")")
+                    .call(nodes) 
        
         })
         return selection;

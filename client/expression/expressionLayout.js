@@ -70,7 +70,9 @@ export default function expressionLayout() {
         //add colNr
         .map((n,i, nodesArray) => ({
                 ...n,
-                colNr:calcNodeColNr(n, nodesArray, getParentNodes(nodesArray))
+                colNr:calcNodeColNr(n, nodesArray, getParentNodes(nodesArray)),
+                displayWidth:50,
+                displayHeight:15
         }))
         //add funcs to get deep children and parents
         .map((n,i, nodesArray) => ({
@@ -143,7 +145,7 @@ export default function expressionLayout() {
             //depth 1 nodes are each placed in new column by the order they appear in
             //if dragged, the order of them in state is changed
             const nodesIdsAtThisDepth = nodes.filter(n => n.depth === node.depth).map(n => n.id);
-            return nodesIdsAtThisDepth.indexOf(node.id);
+            return nodesIdsAtThisDepth.indexOf(node.id) + 1;
         }
         //rest of nodes are given an avg of their parent colNrs (unless they have been dragged to a particular spot)
         return node.colNr || d3.mean(parentsFunc(node), p => calcNodeColNr(p, nodes, parentsFunc));
