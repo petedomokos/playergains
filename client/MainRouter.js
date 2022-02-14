@@ -60,9 +60,9 @@ const MainRouter = ({userId, loadUser, loadingUser}) => {
     <div>
       <div style={{background:"red", height:0.05}}></div>
       <MenuContainer screenSize={screenSize} />
-      {/**<div>
+      <div>
           <Journey dimns={{screenWidth:window.innerWidth, screenHeight:window.innerHeight}}/>
-      </div>*/}
+      </div>
       {(!jwt || userId) && <Switch>
           {jwt ?
             <Route exact path="/" component={UserHomeContainer}/>

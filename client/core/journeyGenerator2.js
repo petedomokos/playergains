@@ -7,7 +7,7 @@ import { addWeeks } from "../util/TimeHelpers"
 import { ellipse } from "./ellipse";
 import { grey10 } from "./constants";
 import { findNearestPlanet, distanceBetweenPoints } from './geometryHelpers';
-import { OPEN_CHANNEL_WIDTH } from './constants';
+import { OPEN_CHANNEL_EXT_WIDTH } from './constants';
 import dragEnhancements from './enhancedDragHandler';
 
 /*
@@ -208,7 +208,7 @@ export default function journeyGenerator() {
                 //todo - handle channelData empty
                 const endDate = channelData.find((chan, j) => j > i && ch.isOpen)?.date || channelData[channelData.length -1].date;
                 const nrPrevOpenChannels = channelData.filter((chan, j) => j < i && chan.isOpen).length;
-                const rangeShift = nrPrevOpenChannels * OPEN_CHANNEL_WIDTH;
+                const rangeShift = nrPrevOpenChannels * OPEN_CHANNEL_EXT_WIDTH;
 
                 return {
                     ...ch,

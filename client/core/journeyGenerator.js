@@ -7,7 +7,7 @@ import { addWeeks } from "../util/TimeHelpers"
 import { ellipse } from "./ellipse";
 import { grey10 } from "./constants";
 import { findNearestPlanet, distanceBetweenPoints, channelContainsPoint, channelContainsDate } from './geometryHelpers';
-import { OPEN_CHANNEL_WIDTH } from './constants';
+import { OPEN_CHANNEL_EXT_WIDTH } from './constants';
 import dragEnhancements from './enhancedDragHandler';
 
 /*
@@ -66,8 +66,8 @@ export default function journeyGenerator() {
     let updatePlanet = function(){};
     let addLink = function(){};
 
-    //data
-    let channelData;
+    //non-persisted non-React state
+    let channelState;
 
     //functions
     let barCharts = {};
@@ -77,6 +77,8 @@ export default function journeyGenerator() {
     let contentsG;
     let canvasG;
     let canvasRect;
+
+    let initAxisRenderDone = false;
     
     const ring = ellipse().className("ring");
 
@@ -180,39 +182,69 @@ export default function journeyGenerator() {
                         .each(function(){
                             d3.select(this).select(".domain")
                                 .attr("transform", 'translate(0,' +(contentsHeight - 30) +')')
-                        });
+                        })
+                        .style("opacity", initAxisRenderDone ? 0.5 : 0) //note - setting style op overrides the attr op that axis sets on it
+                        .transition()
+                        .delay(50)
+                        .duration(200)
+                            .style("opacity", 0.5);;
 
-                if(!channelData){
-                    //set initial channelData based on ticks
-                    channelData = d3.select("g.x-axis").selectAll("g.tick")
-                        .data()
-                        .map((date,i) => ({ 
-                            nr:i, 
-                            startDate:date,
-                            isOpen:i === 2 //we want apr to be open
-                        }));
+                //init set channelState
+                if(!channelState){
+                    const channelDates = d3.select("g.x-axis").selectAll("g.tick").data()
+                    //update axis scales
+                    channelState = channelDates.slice(1).map((date, i) => ({
+                        nr:i,
+                        isOpen:false,
+                        //starts from the previous tick
+                        startDate:channelDates[i],
+                        endDate:date
+                    }))
                 }
-                //update axis scales
-                channelData = channelData.map((ch, i) => {
-                    //todo - handle channelData empty
-                    //channel goes up to the next open one, or to the end if none open
-                    const endDate = channelData.find((chan, j) => j > i && chan.isOpen)?.startDate || channelData[channelData.length -1].startDate;
-                    const nrPrevOpenChannels = channelData.filter((chan, j) => j < i && chan.isOpen).length;
-                    const rangeShift = (nrPrevOpenChannels + 1) * OPEN_CHANNEL_WIDTH;
-                    const startX = timeScale(ch.startDate) + nrPrevOpenChannels * OPEN_CHANNEL_WIDTH;
-                    const endX = timeScale(endDate) + rangeShift;
+                //channelData layout
+                const channelData = channelState.map((ch, i, chArray) => {
+                    const trueStartX = timeScale(ch.startDate);
+                    const trueEndX = timeScale(ch.endDate);
+                    //the channels open are wrong on axis. when nr 1 is open, it shows as nr 0 being open
+                    const nrPrevOpenChannels = chArray.filter((chan, j) => j < i && chan.isOpen).length;
+                    //const rangeShift = nrPrevOpenChannels * OPEN_CHANNEL_EXT_WIDTH + (ch.isOpen ? OPEN_CHANNEL_EXT_WIDTH : 0);
+                    const startX = timeScale(ch.startDate) + nrPrevOpenChannels * OPEN_CHANNEL_EXT_WIDTH;
+                    const closedEndX = timeScale(ch.endDate) + nrPrevOpenChannels * OPEN_CHANNEL_EXT_WIDTH;
+                    const openEndX = closedEndX + OPEN_CHANNEL_EXT_WIDTH;
+                    const endX = ch.isOpen ? openEndX : closedEndX;
+                    const axisRangeShiftWhenOpen = (nrPrevOpenChannels + 1) * OPEN_CHANNEL_EXT_WIDTH;
 
                     return {
                         ...ch,
-                        endDate,
+                        trueStartX,
+                        trueEndX,
                         nrPrevOpenChannels,
-                        rangeShift,
                         startX,
-                        endX
+                        endX,
+                        closedEndX,
+                        openEndX,
+                        closedWidth:closedEndX - startX,
+                        openWidth:openEndX - startX,
+                        width:endX - startX,
+                        axisRangeShiftWhenOpen
                     }
                 })
-
                 console.log("channelData", channelData)
+
+                const trueX = (adjX) => {
+                    const channel = channelData.find(ch => ch.endX >= adjX)
+                    const extraX = adjX - channel.startX;
+                    return channel.startX + ((extraX/channel.width) * channel.closedWidth) - (channel.nrPrevOpenChannels * OPEN_CHANNEL_EXT_WIDTH);
+                }
+                const adjX = (trueX) => {
+                    const channel = channelData.find(ch => ch.trueEndX >= trueX);
+                    //startX already includes any previous shifts for open channels, so we need trueStartX
+                    const trueExtraX = trueX - channel.trueStartX;
+                    const extraXProp = trueExtraX / channel.closedWidth; //channels are closed for ture values
+                    const adjExtraX = extraXProp * channel.width; //cancels out if channel is closed
+                    //we return startX + extra not trueStartX, because we want to incude prev open channel widths
+                    return channel.startX + adjExtraX;
+                }
 
                 //added an axis per open channel
                 const extraXAxisG = svg.selectAll("g.extra-x-axis").data(channelData.filter(ch => ch.isOpen))
@@ -227,45 +259,76 @@ export default function journeyGenerator() {
                         })
                         .call(xAxis)
                         .merge(extraXAxisG)
-                        .attr("transform", (d,i) => 'translate('+d.rangeShift + "," +margin.top +')')
+                        //must shoft axis by all the prev open channel extensions, plus this one
+                        .attr("transform", (d,i) => 'translate('+(d.axisRangeShiftWhenOpen) + "," +margin.top +')')
                         .each(function(ch,i, nodes){
+                            const isLast = !!channelData.find(c => c.nr > ch.nr && c.isOpen)
+                            const lastChannel = channelData[channelData.length - 1]
+                            const axisEndDate = channelData.find(c => c.nr > ch.nr && c.isOpen)?.startDate || lastChannel.endDate;
+                            const axisEndX = channelData.find(c => c.nr > ch.nr && c.isOpen)?.startX || lastChannel.endX;
+                            //note - axis has alreayd been shifted by the open channel widths
+                            const domainShift = ch.endX - ch.axisRangeShiftWhenOpen;
                             d3.select(this).select(".domain")
                                 .attr("transform", 'translate(0,' +(contentsHeight - 30) +')')
-                                .attr("d", "M" + ch.startX + ",0H"+ch.endX +(i === nodes.length - 1 ? "V394" : ""));
+                                .attr("d", "M" + domainShift + ",0H"+axisEndX +(isLast ? "V394" : ""));
                             
+                            //console.log("axis endDate", axisEndDate)
                             //hide all g.tick where transX is less than timeScale(d.date) +d.rangeShift
                             d3.select(this).selectAll("g.tick")
-                                .attr("display", d => d < ch.startDate|| d > ch.endDate ? "none" : "inline")
+                                .attr("display", d => d < ch.endDate || d > axisEndDate ? "none" : "inline")
+
+                            if(i == 0){
+                                //console.log("ch", ch)
+                                //console.log("isLast", isLast)
+                                //if there is a future open channel, this domain runs to far
+                                //it should have openChanelExt width removed, and it shouldnt drop vertically 
+                                //d3.select(this).select(".domain")
+                                    //.style("stroke-width", 3)
+                                    //.style("stroke", "black")
+                            }
+                                
 
                             //if first open channel, hide main x-axis ticks
                             if(i === 0){
                                 //console.log("ch", ch)
                                 d3.select("g.x-axis-0").selectAll("g.tick")
-                                    .attr("display", d => d >= ch.startDate? "none" : "inline")
+                                    .attr("display", d => d >= ch.endDate? "none" : "inline")
 
                                 const mainDomainPath = d3.select("g.x-axis-0").selectAll(".domain")
                                 const startOfD = mainDomainPath.attr("d").split("H")[0];
-                                const prevChannelX = channelData[ch.nr - 1]?.startX || timeScale.range()[0];
-                                mainDomainPath.attr("d", startOfD + "H" + (prevChannelX - timeScale.range()[0]));
+                                mainDomainPath.attr("d", startOfD + "H" + ch.startX);
                             }
-                        });
+                        })
+                        .style("opacity", initAxisRenderDone ? 0.5 : 0) //note - setitng style op overrides the attr op that axis sets on it
+                        .transition()
+                        .delay(50)
+                        .duration(200)
+                            .style("opacity", 0.5);
+
+                initAxisRenderDone = true;
+
+                
                 const pointChannel = (pt) => channelData.find(ch => channelContainsPoint(pt, ch))
                 const dateChannel = (date) => channelData.find(ch => channelContainsDate(date, ch))
-                const findNearestChannel = date => {
-                    const nearestDate = findNearestDate(date, channelData.map(d => d.startDate))
-                    return channelData.find(ch => ch.startDate === nearestDate)
+                const findNearestChannelByEndDate = date => {
+                    const nearestDate = findNearestDate(date, channelData.map(d => d.endDate))
+                    return channelData.find(ch => ch.endDate === nearestDate)
                 }
 
                 //add x and y to each planet
                 const planetLayoutData = planetData.map(p => {
-                    const channel = findNearestChannel(p.targetDate);
+                    //console.log("p targ", p.targetDate)
+                    //todo - findNearestChannel needs to take account of open channels too
+                    const channel = findNearestChannelByEndDate(p.targetDate);
+                    //console.log("nearest", channel)
                     return {
                         ...p,
                         channel,
-                        x:channel.startX, //planets positioned on channel start line
+                        x:channel.endX, //planets positioned on channel end line
                         y: yScale(p.yPC)
                     }
                 })
+                //console.log("planetLData", planetLayoutData)
 
                 const linkLayoutData = linkData.map(l => ({
                     ...l,
@@ -277,21 +340,21 @@ export default function journeyGenerator() {
 
                 enhancedDrag
                     .onClick(function(e,d){
-                        const { offsetX, offsetY } = e.sourceEvent;
-                        addPlanet(timeScale.invert(offsetX - margin.left), yScale.invert(offsetY - margin.top))
+                        addPlanet(timeScale.invert(trueX(e.x)), yScale.invert(e.y))
                     })
-                    .onLongpressEnd(function(e,d){
+                    .onLongpressStart(function(e,d){
                         if(!enhancedDrag.wasMoved()){
-                            const clickedChannel = channelData.find(ch => channelContainsPoint(e, ch));
-                            console.log("longpress click...open channel",channel)
-                            channelData = channelData.map(ch => ({
+                            //longpress toggles isOpen
+                            const { nr, isOpen } = pointChannel(e);
+                            //remove all x-axes, inc the initial one so it's domain is reset
+                            d3.selectAll("g.x-axis").remove();
+                            initAxisRenderDone = false;
+                            //update local channel state
+                            channelState = channelState.map(ch => ({
                                 ...ch,
-                                isOpen:ch.id === channel.id ? true : ch.isOpen
+                                isOpen:ch.nr === nr ? !isOpen : ch.isOpen
                             }))
-
-                            //todo - open channel
-                            //get planets channel could be d.channel or a helper
-                            //set channel.isOpen to true
+                            update();
                         }
                     })
 
@@ -301,13 +364,13 @@ export default function journeyGenerator() {
                     .on("end", enhancedDrag(dragEnd));
 
                 function dragStart(e,d){
-                    console.log("dS")
+                    //console.log("dS")
                 }
                 function dragged(e,d){
-                    console.log("drgd")
+                    //console.log("drgd")
                 }
                 function dragEnd(e,d){
-                    console.log("dE")
+                    //console.log("dE")
                 }
                 canvasG.call(drag);
 
@@ -330,11 +393,20 @@ export default function journeyGenerator() {
                             })
                             .merge(linkG)
                             .each(function(d,i){
-                                d3.select(this).select("line")
-                                    .attr("x1", d.src.x)
-                                    .attr("y1", d.src.y)
-                                    .attr("x2", d.targ.x)
-                                    .attr("y2", d.targ.y)
+                                const line = d3.select(this).select("line")
+                                //first time we use src and targ as start aswell as end
+                                line
+                                    .attr("x1", line.attr("x1") || d.src.x)
+                                    .attr("y1", line.attr("y1") || d.src.y)
+                                    .attr("x2", line.attr("x2") || d.targ.x)
+                                    .attr("y2", line.attr("y2") || d.targ.y)
+                                    .transition()
+                                    .delay(50)
+                                    .duration(200)
+                                        .attr("x1", d.src.x)
+                                        .attr("y1", d.src.y)
+                                        .attr("x2", d.targ.x)
+                                        .attr("y2", d.targ.y)
 
                             })
                     })
@@ -359,15 +431,8 @@ export default function journeyGenerator() {
                             .append("g")
                             .attr("class", "planet")
                             .attr("id", d => "planet-"+d.id)
-                            .attr("transform", d => "translate("+d.x +"," +(d.y) +")")
                             .call(ring)
                             .each(function(d,i){
-                                d3.select(this)
-                                    .transition()
-                                        .delay(50)
-                                        .duration(200)
-                                        .attr("transform", "translate("+d.x +"," +(d.y) +")");
-
                                 const planetContentsG = d3.select(this)
                                     .append("g")
                                     .attr("class", "contents")
@@ -391,7 +456,18 @@ export default function journeyGenerator() {
                             })
                             .merge(planetG)
                             .each(function(d,i){
-                                const planetContentsG = d3.select(this).select("g.contents")
+                                const planetG = d3.select(this);
+                                //transition x from actual to display pos. if it has changed
+                                const { translateX } = getTransformation(planetG.attr("transform"))
+                                //if planet entered, it woont have a current pos so must calculate it
+                                const startXPos = translateX || adjX(timeScale(d.targetDate));
+                                planetG
+                                    .attr("transform", d => "translate("+startXPos +"," +(d.y) +")")
+                                    .transition()
+                                        .delay(50)
+                                        .duration(200)
+                                        .attr("transform", "translate("+d.x +"," +(d.y) +")");
+                                const planetContentsG = planetG.select("g.contents")
                                 //planet text
                                 planetContentsG.select("text").text(d.title || "enter name...")
 
@@ -412,9 +488,7 @@ export default function journeyGenerator() {
 
                 let planetWasMoved = true; //for now, always true
                 function onPlanetDragStart(e,d){
-                    //console.log("dS d.x", d.id)
-                    //d.x will be updated to start from where planet currently is, becaue user will drag it to where they want it
-                    d.x = d.x;
+                    //console.log("p dS d", d)
                 }
                 function onPlanetDrag(e,d){
                     if(!planetWasMoved) { return; }
@@ -450,21 +524,15 @@ export default function journeyGenerator() {
                 }
 
                 function onPlanetDragEnd(e, d){
-                    d.x = timeScale(findNearestDate(timeScale.invert(d.x), channelData.map(d => d.date)));
-                    d3.select(this)
-                        .attr("transform", "translate("+d.x +"," +(d.y) +")")
-                        .transition()
-                            .delay(50)
-                            .duration(200)
-                            .attr("transform", "translate("+d.x +"," +(d.y) +")");
                     /*
                     if(!wasMoved){
                         onPlanetClick.call(planetG.node(), e, d)
                         return;
                     }
                     */
-                    //update state (x is not stored in React state)
-                    updatePlanet({ id:d.id, targetDate:timeScale.invert(d.x), yPC:yScale.invert(d.y) });
+                    //update state
+                    //targetDate must be based on trueX
+                    updatePlanet({ id:d.id, targetDate:timeScale.invert(trueX(d.x)), yPC:yScale.invert(d.y) });
                 }
 
                 //ring

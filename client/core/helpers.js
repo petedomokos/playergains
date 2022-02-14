@@ -24,8 +24,7 @@ export function findFirstFuturePlanet(planetData){
 }
 
 export function findNearestDate(dateToTest, dates){
-    const nearestDiff = d3.min(dates, date => Math.abs(date - dateToTest))
-    return dates.find(date => Math.abs(date - dateToTest) === nearestDiff)
+    return d3.least(dates, date => Math.abs(date - dateToTest))
 }
 
 export function msToMonths(ms){
@@ -44,6 +43,16 @@ export function linearProjValue(x0MS, y0, x1MS, y1, xProjMS, dps){
 }
 
 export function getTransformation(transform) {
+    if(!transform) { 
+        return {
+            translateX:0,
+            translateY:0,
+            scaleX:1,
+            scaleY:1,
+            rotate:0,
+            skew:0
+        } 
+    }
     // Create a dummy g for calculation purposes only. This will never
     // be appended to the DOM and will be discarded once this function 
     // returns.
