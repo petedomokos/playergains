@@ -32,8 +32,8 @@ export default function barChartComponent() {
         updateDimns();
         // expression elements
         selection.each(function (data) {
-            console.log("barChart.....", data);
-            console.log("cw", contentsWidth)
+            //console.log("barChart.....", data);
+            //console.log("cw", contentsWidth)
 
             const contentsG = d3.select(this)
                 .append("g")
@@ -95,7 +95,7 @@ export default function barChartComponent() {
                         .attr("id", d => "bar-"+d.key)
                         .attr("transform", (d,i) => "translate("+(barHozMargin +i * barWrapperWidth) +",0)")
                         .each(function(d,i){
-                            console.log("d...", d)
+                            //console.log("d...", d)
                             //datapoint
                             //for now, assume only 1 datasetMeasure per goal
                             const g = d3.select(this);

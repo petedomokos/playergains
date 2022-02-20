@@ -33,6 +33,10 @@ export default function dragEnhancements() {
     let originalCursor;
     function withEnhancements(cb = () => { }) {
         return function (e, d) {
+            if(e.sourceEvent.type === "wheel"){
+                cb.call(this, e, d);
+                return;
+            }
             if (!isDragEnabled) { return; }
             switch (e.type) {
                 case "start": {
@@ -46,7 +50,7 @@ export default function dragEnhancements() {
                     cb.call(this, e, d);
                     break;
                 }
-                case "drag": {
+                case "drag", "zoom": {
                     if (isMultitouch) {
                         break;
                     }
@@ -87,6 +91,7 @@ export default function dragEnhancements() {
                         onLongpressEnd.call(this, e, d);
                     }
                     if (isClick) {
+                        console.log("isClick")
                         onClick.call(this, e, d);
                     }
 

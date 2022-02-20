@@ -44,7 +44,7 @@ export default function journeyGenerator() {
     const barChartWidth = 100;
     const barChartHeight = 100;
 
-    let enhancedDrag = dragEnhancements();
+    let enhancedZoom = dragEnhancements();
 
     //let planets = planetsGenerator();
 
@@ -74,6 +74,7 @@ export default function journeyGenerator() {
 
     //non-persisted non-React state
     let channelState;
+    let channelData;
 
     //functions
     let barCharts = {};
@@ -92,6 +93,8 @@ export default function journeyGenerator() {
     let yAxisG;
 
     let xAxis;
+
+    const now = new Date();
     
     const ring = ellipse().className("ring");
 
@@ -137,7 +140,6 @@ export default function journeyGenerator() {
                         .attr("fill", "#FAEBD7");
 
                 //scale and axis init
-                const now = new Date();
                 timeScale = d3.scaleTime()
                     //.domain([addWeeks(-2, now), d3.max([xExtent[1], addWeeks(16, now)])])
                     .domain([addWeeks(-2, now), addWeeks(20, now)])
@@ -151,33 +153,6 @@ export default function journeyGenerator() {
                     .tickSize(contentsHeight - 25)
                 
             }
-            
-
-            
-
-            // Zoom configuration
-            let currentZoom = d3.zoomIdentity;
-            const extent = [[0,0],[chartWidth, chartHeight]];
-            
-            const zoom = d3.zoom()
-                //.scaleExtent([1, 3])
-                .extent(extent)
-                .scaleExtent([0.125, 8])
-                .filter((e,d) => {
-                    return true//false;
-                })
-                .on("zoom", function(e){
-                    console.log("zoomed")
-                    // calculate new zoom transform
-                    currentZoom = e.transform
-
-                    // rescale scales and axes
-                    xAxis.scale(currentZoom.rescaleX(timeScale));
-                    updateAxis();
-                })
-
-            svg.call(zoom)
-                //.on("wheel.zoom", null)
 
             function updateAxis(){
                 const xAxisG = svg.selectAll("g.x-axis").data([1])
@@ -193,7 +168,6 @@ export default function journeyGenerator() {
                         })
                         .merge(xAxisG)
                         .call(xAxis)
-                        //.merge(xAxisG)
                         .attr("transform", 'translate(0,' +margin.top +')')
                         .each(function(){
                             d3.select(this).select(".domain")
@@ -207,35 +181,41 @@ export default function journeyGenerator() {
 
             }
 
-            
+            function setChannelState(){
+                //note - state is based on axis, which if zoomed has had its scale updated in zoomed handler
+                const channelDates = d3.select("g.x-axis").selectAll("g.tick").data();
+                const newChannelState = channelDates.slice(1).map((date, i) => ({
+                    nr:i,
+                    isOpen:false,
+                    //starts from the previous tick
+                    startDate:channelDates[i],
+                    endDate:date,
+                    id:idFromDates([channelDates[i], date])
+                }))
 
-            //init upate call
-            update();
-            //update
-            function update(){
-                updateAxis();
+                channelState = newChannelState.map(ch => {
+                    //id is based on start and end dates which dont change as 'now' is constant
+                    const existing = channelState?.find(chan => chan.id === ch.id);
+                    //copy over existing state, nut not nr
+                    return {
+                        ...ch,
+                        isOpen:existing?.isOpen || false
+                    }
+                })
+            }
 
-                //init set channelState
-                if(!channelState){
-                    const channelDates = d3.select("g.x-axis").selectAll("g.tick").data()
-                    //update axis scales
-                    channelState = channelDates.slice(1).map((date, i) => ({
-                        nr:i,
-                        isOpen:false,
-                        //starts from the previous tick
-                        startDate:channelDates[i],
-                        endDate:date
-                    }))
-                }
-                //channelData layout
-                const channelData = channelState.map((ch, i, chArray) => {
-                    const trueStartX = timeScale(ch.startDate);
-                    const trueEndX = timeScale(ch.endDate);
+            function channelLayout(state, scale){
+                //note - although scale pased is the orig scale onot rescaled scale, it still returns correct values
+                // I need to check this with new planets etc, bto quite sure why it works, obv axis has had its scale updated
+                // but if zoomed in or panned, why would teh transfrom not move it. Just need to think it through
+                return state.map((ch, i, chArray) => {
+                    const trueStartX = scale(ch.startDate);
+                    const trueEndX = scale(ch.endDate);
                     //the channels open are wrong on axis. when nr 1 is open, it shows as nr 0 being open
                     const nrPrevOpenChannels = chArray.filter((chan, j) => j < i && chan.isOpen).length;
                     //const rangeShift = nrPrevOpenChannels * OPEN_CHANNEL_EXT_WIDTH + (ch.isOpen ? OPEN_CHANNEL_EXT_WIDTH : 0);
-                    const startX = timeScale(ch.startDate) + nrPrevOpenChannels * OPEN_CHANNEL_EXT_WIDTH;
-                    const closedEndX = timeScale(ch.endDate) + nrPrevOpenChannels * OPEN_CHANNEL_EXT_WIDTH;
+                    const startX = scale(ch.startDate) + nrPrevOpenChannels * OPEN_CHANNEL_EXT_WIDTH;
+                    const closedEndX = scale(ch.endDate) + nrPrevOpenChannels * OPEN_CHANNEL_EXT_WIDTH;
                     const openEndX = closedEndX + OPEN_CHANNEL_EXT_WIDTH;
                     const endX = ch.isOpen ? openEndX : closedEndX;
                     const axisRangeShiftWhenOpen = (nrPrevOpenChannels + 1) * OPEN_CHANNEL_EXT_WIDTH;
@@ -255,23 +235,10 @@ export default function journeyGenerator() {
                         axisRangeShiftWhenOpen
                     }
                 })
-                console.log("channelData", channelData)
+            }
 
-                const trueX = (adjX) => {
-                    const channel = channelData.find(ch => ch.endX >= adjX)
-                    const extraX = adjX - channel.startX;
-                    return channel.startX + ((extraX/channel.width) * channel.closedWidth) - (channel.nrPrevOpenChannels * OPEN_CHANNEL_EXT_WIDTH);
-                }
-                const adjX = (trueX) => {
-                    const channel = channelData.find(ch => ch.trueEndX >= trueX);
-                    //startX already includes any previous shifts for open channels, so we need trueStartX
-                    const trueExtraX = trueX - channel.trueStartX;
-                    const extraXProp = trueExtraX / channel.closedWidth; //channels are closed for ture values
-                    const adjExtraX = extraXProp * channel.width; //cancels out if channel is closed
-                    //we return startX + extra not trueStartX, because we want to incude prev open channel widths
-                    return channel.startX + adjExtraX;
-                }
-
+            function updateExtraAxes(){
+                //based on latest channelData
                 //added an axis per open channel
                 const extraXAxisG = svg.selectAll("g.extra-x-axis").data(channelData.filter(ch => ch.isOpen))
                 extraXAxisG.enter()
@@ -304,13 +271,9 @@ export default function journeyGenerator() {
                                 .attr("display", d => d < ch.endDate || d > axisEndDate ? "none" : "inline")
 
                             if(i == 0){
-                                //console.log("ch", ch)
-                                //console.log("isLast", isLast)
                                 //if there is a future open channel, this domain runs to far
                                 //it should have openChanelExt width removed, and it shouldnt drop vertically 
-                                //d3.select(this).select(".domain")
-                                    //.style("stroke-width", 3)
-                                    //.style("stroke", "black")
+                                //d3.select(this).select(".domain").style("stroke-width", 3).style("stroke", "black")
                             }
                                 
 
@@ -331,15 +294,100 @@ export default function journeyGenerator() {
                         .duration(200)
                             .style("opacity", 0.5);
 
+            }
+
+            function idFromDates(dates){
+                return dates
+                    .map(d => d.getTime() +"")
+                    .join("-")
+            }
+
+            
+
+            //init update call
+            update();
+            //update
+            function update(){
+                updateAxis();
+                //channel state is based on main axis
+                setChannelState();
+                //note - timeScale domain is not affected by zoom, but axis has had teh scale updated so it all works
+                channelData = channelLayout(channelState, timeScale)
+                //console.log("channelData", channelData)
+                updateExtraAxes();
                 initAxisRenderDone = true;
 
-                
+                //helpers
+                const trueX = (adjX) => {
+                    const channel = channelData.find(ch => ch.endX >= adjX)
+                    const extraX = adjX - channel.startX;
+                    return channel.startX + ((extraX/channel.width) * channel.closedWidth) - (channel.nrPrevOpenChannels * OPEN_CHANNEL_EXT_WIDTH);
+                }
+                const adjX = (trueX) => {
+                    const channel = channelData.find(ch => ch.trueEndX >= trueX);
+                    //startX already includes any previous shifts for open channels, so we need trueStartX
+                    const trueExtraX = trueX - channel.trueStartX;
+                    const extraXProp = trueExtraX / channel.closedWidth; //channels are closed for ture values
+                    const adjExtraX = extraXProp * channel.width; //cancels out if channel is closed
+                    //we return startX + extra not trueStartX, because we want to incude prev open channel widths
+                    return channel.startX + adjExtraX;
+                }
                 const pointChannel = (pt) => channelData.find(ch => channelContainsPoint(pt, ch))
                 const dateChannel = (date) => channelData.find(ch => channelContainsDate(date, ch))
                 const findNearestChannelByEndDate = date => {
                     const nearestDate = findNearestDate(date, channelData.map(d => d.endDate))
                     return channelData.find(ch => ch.endDate === nearestDate)
                 }
+
+                // Zoom configuration
+                let currentZoom = d3.zoomIdentity;
+                const extent = [[0,0],[chartWidth, chartHeight]];
+                let wasMoved = false;
+
+                enhancedZoom
+                    .onClick(handleClick)
+                    .onLongpressStart(function(e,d){
+                        if(!enhancedZoom.wasMoved()){
+                            //longpress toggles isOpen
+                            const { nr, isOpen } = pointChannel({ x:e.sourceEvent.layerX, y:e.sourceEvent.layerY });
+                            //remove all x-axes, inc the initial one so it's domain is reset
+                            d3.selectAll("g.x-axis").remove();
+                            initAxisRenderDone = false;
+                            //update local channel state
+                            channelState = channelState.map(ch => ({
+                                ...ch,
+                                isOpen:ch.nr === nr ? !isOpen : ch.isOpen
+                            }))
+                            update();
+                        }
+                    })
+                
+                const zoom = d3.zoom()
+                    //.scaleExtent([1, 3])
+                    .extent(extent)
+                    .scaleExtent([0.125, 8])
+                    .filter((e,d) => {
+                        return true//false;
+                    })
+                    .on("start", enhancedZoom())
+                    .on("zoom", enhancedZoom(function(e){
+                        if(!wasMoved) { wasMoved = true ;}
+                        // calculate new zoom transform
+                        currentZoom = e.transform
+
+                        // rescale scales and axes
+                        xAxis.scale(currentZoom.rescaleX(timeScale));
+                        update();
+                    }))
+                    .on("end", enhancedZoom())
+                
+                //e is not from d3.drag here so use layerX and layerY
+                function handleClick(e){
+                    addPlanet(timeScale.invert(trueX(e.sourceEvent.layerX)), yScale.invert(e.sourceEvent.layerY))
+                }
+
+                svg.call(zoom)
+                //.on("wheel.zoom", null)
 
                 //add x and y to each planet
                 const planetLayoutData = planetData.map(p => {
@@ -369,53 +417,7 @@ export default function journeyGenerator() {
                     const barChartData = barChartLayout({ ...targ, startDate:src.targetDate, goals: mockGoalsData})
                     return { ...l, src, targ, isOpen, x, y, barChartData }
                 });
-                console.log("link data", linkLayoutData)
-
-                //background drag
-
-                enhancedDrag
-                    .onClick(function(e,d){
-                        addPlanet(timeScale.invert(trueX(e.x)), yScale.invert(e.y))
-                    })
-                    .onLongpressStart(function(e,d){
-                        if(!enhancedDrag.wasMoved()){
-                            //longpress toggles isOpen
-                            const { nr, isOpen } = pointChannel(e);
-                            //remove all x-axes, inc the initial one so it's domain is reset
-                            d3.selectAll("g.x-axis").remove();
-                            initAxisRenderDone = false;
-                            //update local channel state
-                            channelState = channelState.map(ch => ({
-                                ...ch,
-                                isOpen:ch.nr === nr ? !isOpen : ch.isOpen
-                            }))
-                            update();
-                        }
-                    })
-
-                const drag = d3.drag()
-                    .on("start", enhancedDrag(dragStart))
-                    .on("drag", enhancedDrag(dragged))
-                    .on("end", enhancedDrag(dragEnd));
-
-                function dragStart(e,d){
-                    //console.log("dS")
-                }
-                function dragged(e,d){
-                    //console.log("drgd")
-                    //programmatic pan
-                    /*
-                    canvasG.transition().duration(2500).call(
-                        zoom.transform,
-                        d3.zoomIdentity.translate(width / 2, height / 2).scale(40).translate(-x, -y)
-                      )
-                      */
-                }
-                function dragEnd(e,d){
-                    //console.log("dE")
-                }
-                //temp - for now, remove drag, but we will put back when programmatci panning is done
-                //canvasG.call(drag);
+                //console.log("link data", linkLayoutData)
 
                 //2. LINKS
                 const linksG = canvasG.selectAll("g.links").data([1])
