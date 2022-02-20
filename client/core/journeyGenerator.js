@@ -1,6 +1,8 @@
 import * as d3 from 'd3';
 //import "d3-selection-multi";
-import barChartGenerator from "./barChartGenerator";
+import { getGoalsData } from '../data/planets'
+import barChartLayout from "./barChartLayout";
+import barChart from "./barChartComponent";
 import { calcChartHeight, findFuturePlanets, findFirstFuturePlanet, findNearestDate, getTransformation } from './helpers';
 //import { COLOURS, DIMNS } from "./constants";
 import { addWeeks } from "../util/TimeHelpers"
@@ -9,11 +11,12 @@ import { grey10 } from "./constants";
 import { findNearestPlanet, distanceBetweenPoints, channelContainsPoint, channelContainsDate } from './geometryHelpers';
 import { OPEN_CHANNEL_EXT_WIDTH } from './constants';
 import dragEnhancements from './enhancedDragHandler';
-
+import { timeMonth, timeWeek } from "d3-time"
 /*
 
 */
 export default function journeyGenerator() {
+    const mockGoalsData = getGoalsData();
     // dimensions
     let margin = {left:0, right:0, top: 0, bottom:0};
     let planetMargin = {left:5, right:5, top: 5, bottom:5};
@@ -37,6 +40,9 @@ export default function journeyGenerator() {
     
     const TIME_AXIS_WIDTH = 50;
     let planetWrapperWidth;
+
+    const barChartWidth = 100;
+    const barChartHeight = 100;
 
     let enhancedDrag = dragEnhancements();
 
@@ -79,6 +85,13 @@ export default function journeyGenerator() {
     let canvasRect;
 
     let initAxisRenderDone = false;
+
+    let timeScale;
+    let xAxisG;
+    let yScale;
+    let yAxisG;
+
+    let xAxis;
     
     const ring = ellipse().className("ring");
 
@@ -90,23 +103,6 @@ export default function journeyGenerator() {
             //console.log("journey", data);
             //init
             if(!svg){
-                //const nrFuturePlanets = data.filter(p => p.targetDate > new Date()).length;
-                //const initDY = -(nrFuturePlanets - 1) * PLANET_WRAPPER_HEIGHT;
-                function zoomed(e){
-                    //only works until a wheel event happens
-                    //if(e.transform.k === 1){
-                        canvasG.attr("transform", e.transform)
-            
-                    //}
-                }
-                
-                const zoom = d3.zoom()
-                    .translateExtent([[0, 0], [canvasWidth, canvasHeight]])
-                    .scaleExtent([0.125, 8])
-                    .filter((e,d) => {
-                        return true//false;
-                    })
-                    .on("zoom", zoomed)
 
                 svg = d3.select(this)
                     .attr("width", width)
@@ -117,54 +113,73 @@ export default function journeyGenerator() {
                     .append("g")
                         .attr("class", "contents")
                         .attr("transform", "translate(" +margin.left +"," +margin.top +")")
-                        .call(zoom)
-                        .on("wheel.zoom", null)
 
                 canvasG = contentsG
                     .append("g")
                     .attr("class", "canvas")
                 
+                /*
                 const initDX = 0//-canvasWidth/2 +width/2;
                 const initDY = -d3.sum(findFuturePlanets(planetData)
                     .filter(p => p.id !== findFirstFuturePlanet(planetData)?.id)
                     .map(p => p.isOpen ? planetHeight + chartHeight : planetHeight))
+                    */
 
-                const initT = d3.zoomIdentity.translate(initDX, initDY);
+                //const initT = d3.zoomIdentity.translate(initDX, initDY);
                 // @todo - need to understand why we need to apply this to contentsG,
                 // and why if its canvasG then it jumps back to top when user first scrolls
-                contentsG.call(zoom.transform, initT)
+                //contentsG.call(zoom.transform, initT)
 
                 canvasRect = canvasG
                     .append("rect")
                         .attr("width", canvasWidth)
                         .attr("height", canvasHeight)
                         .attr("fill", "#FAEBD7");
-                
-            }
 
-            //init upate call
-            update();
-            //update
-            function update(){
-                //scale
+                //scale and axis init
                 const now = new Date();
-                const xExtent = [d3.min(planetData, d => d.targetDate), d3.max(planetData, d => d.targetDate)]
-                const timeScale = d3.scaleTime()
-                    .domain([addWeeks(-2, now), d3.max([xExtent[1], addWeeks(16, now)])])
+                timeScale = d3.scaleTime()
+                    //.domain([addWeeks(-2, now), d3.max([xExtent[1], addWeeks(16, now)])])
+                    .domain([addWeeks(-2, now), addWeeks(20, now)])
                     .range([0, contentsWidth])
 
-                //yscale
-                const yScale = d3.scaleLinear().domain([0, 100]).range([margin.top, margin.top + contentsHeight])
+                yScale = d3.scaleLinear().domain([0, 100]).range([margin.top, margin.top + contentsHeight])
 
-                //DISPLAY
-                //1. axis
-                const xAxis = d3.axisBottom()
+                xAxis = d3.axisBottom()
                     .scale(timeScale)
-                    .ticks(5)
-                    //.tickSize(contentsHeight + 6)
+                    .ticks(timeMonth)
                     .tickSize(contentsHeight - 25)
-                    //.tickPadding(3);
+                
+            }
+            
 
+            
+
+            // Zoom configuration
+            let currentZoom = d3.zoomIdentity;
+            const extent = [[0,0],[chartWidth, chartHeight]];
+            
+            const zoom = d3.zoom()
+                //.scaleExtent([1, 3])
+                .extent(extent)
+                .scaleExtent([0.125, 8])
+                .filter((e,d) => {
+                    return true//false;
+                })
+                .on("zoom", function(e){
+                    console.log("zoomed")
+                    // calculate new zoom transform
+                    currentZoom = e.transform
+
+                    // rescale scales and axes
+                    xAxis.scale(currentZoom.rescaleX(timeScale));
+                    updateAxis();
+                })
+
+            svg.call(zoom)
+                //.on("wheel.zoom", null)
+
+            function updateAxis(){
                 const xAxisG = svg.selectAll("g.x-axis").data([1])
                 xAxisG
                     .enter()
@@ -176,8 +191,9 @@ export default function journeyGenerator() {
                                 .style("stroke", "black")
                                 .style("opacity", 0.5);
                         })
-                        .call(xAxis)
                         .merge(xAxisG)
+                        .call(xAxis)
+                        //.merge(xAxisG)
                         .attr("transform", 'translate(0,' +margin.top +')')
                         .each(function(){
                             d3.select(this).select(".domain")
@@ -188,6 +204,16 @@ export default function journeyGenerator() {
                         .delay(50)
                         .duration(200)
                             .style("opacity", 0.5);;
+
+            }
+
+            
+
+            //init upate call
+            update();
+            //update
+            function update(){
+                updateAxis();
 
                 //init set channelState
                 if(!channelState){
@@ -330,11 +356,20 @@ export default function journeyGenerator() {
                 })
                 //console.log("planetLData", planetLayoutData)
 
-                const linkLayoutData = linkData.map(l => ({
-                    ...l,
-                    src:planetLayoutData.find(p => p.id === l.src),
-                    targ:planetLayoutData.find(p => p.id === l.targ)
-                }));
+                const linkLayoutData = linkData.map(l => {
+                    const src = planetLayoutData.find(p => p.id === l.src);
+                    const targ = planetLayoutData.find(p => p.id === l.targ);
+                    //we want all visible channels to show, even if actual targetDate is not after, so we use x to get channels not dates
+                    const channels = channelData.filter(ch => ch.startX >= src.x && ch.endX <= targ.x);
+                    //const channels = channelData.filter(ch => ch.startDate >= src.targetDate && ch.endDate <= targ.targetDate);
+                    const isOpen = !!channels.find(ch => ch.isOpen);
+                    const x = ((src.x + targ.x)/2) - barChartWidth/2;
+                    const y = ((src.y + targ.y)/2) - barChartHeight/2;
+                    //pass the targ planet, along with mock goals, and the src targetDate as the startDate, to the bar layout
+                    const barChartData = barChartLayout({ ...targ, startDate:src.targetDate, goals: mockGoalsData})
+                    return { ...l, src, targ, isOpen, x, y, barChartData }
+                });
+                console.log("link data", linkLayoutData)
 
                 //background drag
 
@@ -368,11 +403,19 @@ export default function journeyGenerator() {
                 }
                 function dragged(e,d){
                     //console.log("drgd")
+                    //programmatic pan
+                    /*
+                    canvasG.transition().duration(2500).call(
+                        zoom.transform,
+                        d3.zoomIdentity.translate(width / 2, height / 2).scale(40).translate(-x, -y)
+                      )
+                      */
                 }
                 function dragEnd(e,d){
                     //console.log("dE")
                 }
-                canvasG.call(drag);
+                //temp - for now, remove drag, but we will put back when programmatci panning is done
+                //canvasG.call(drag);
 
                 //2. LINKS
                 const linksG = canvasG.selectAll("g.links").data([1])
@@ -389,7 +432,13 @@ export default function journeyGenerator() {
                             .each(function(d,i){
                                 d3.select(this)
                                     .append("line")
-                                    .attr("stroke", grey10(5))
+                                        .attr("stroke", grey10(5))
+                                
+                                barCharts[d.id] = barChart();
+
+                                d3.select(this)
+                                    .append("g")
+                                        .attr("class", "bar-chart")
                             })
                             .merge(linkG)
                             .each(function(d,i){
@@ -408,6 +457,19 @@ export default function journeyGenerator() {
                                         .attr("x2", d.targ.x)
                                         .attr("y2", d.targ.y)
 
+                                /*
+                                about bar charts
+                                - they appear halfway up the link, so if link covers two channels, it will not be in same pos as a chart for a link covering one of the channels
+                                - if any channel that teh link covers is open, then the link chart shows
+                                */
+
+                                d3.select(this).select("g.bar-chart")
+                                    .attr("display", d.isOpen ? "inline" : "none")
+                                    .attr("transform", "translate("+d.x + "," +d.y +")")
+                                    .datum(d.barChartData)
+                                    .call(barCharts[d.id]
+                                        .width(barChartWidth)
+                                        .height(barChartHeight))
                             })
                     })
 
@@ -601,7 +663,11 @@ export default function journeyGenerator() {
 
         return selection;
     }     
-
+    journey.margin = function (value) {
+        if (!arguments.length) { return margin; }
+        margin = { ...margin, ...value};
+        return journey;
+    };
     journey.width = function (value) {
         if (!arguments.length) { return width; }
         width = value;
@@ -664,7 +730,7 @@ if(d.isOpen){
 
     //set up bar chart
     //note - barChart has its own contentsG and margins
-    barCharts[d.id] = barChartGenerator()
+    barCharts[d.id] = barChartComponent()
         .width(chartWidth)
         .height(chartHeight);
 }

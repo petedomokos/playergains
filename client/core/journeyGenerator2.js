@@ -1,6 +1,6 @@
 import * as d3 from 'd3';
 //import "d3-selection-multi";
-import barChartGenerator from "./barChartGenerator";
+import barChartComponent from "./barChartComponent";
 import { calcChartHeight, findFuturePlanets, findFirstFuturePlanet, findNearestDate } from './helpers';
 //import { COLOURS, DIMNS } from "./constants";
 import { addWeeks } from "../util/TimeHelpers"
@@ -562,7 +562,7 @@ if(d.isOpen){
 
     //set up bar chart
     //note - barChart has its own contentsG and margins
-    barCharts[d.id] = barChartGenerator()
+    barCharts[d.id] = barChartComponent()
         .width(chartWidth)
         .height(chartHeight);
 }

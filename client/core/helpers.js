@@ -39,7 +39,7 @@ export function linearProjValue(x0MS, y0, x1MS, y1, xProjMS, dps){
     //the eqn of line must also be shifted so its deltaX not x
     const y = (deltaX) => m * deltaX + y0;
     const deltaX = xProj - x0;
-    return dps ? +y(deltaX).toFixed(dps) : y(deltaX);
+    return dps ? (+y(deltaX)).toFixed(dps) : y(deltaX);
 }
 
 export function getTransformation(transform) {

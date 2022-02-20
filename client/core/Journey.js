@@ -66,6 +66,7 @@ const Journey = ({dimns}) => {
           }
           setLinkData(prevState => ([ ...prevState, newLink]))
         })
+
     /*
 
     const parsedData = getPlanetsData()
@@ -105,15 +106,16 @@ const Journey = ({dimns}) => {
       //.datum(data)
       .datum({ planetData, linkData })
       .call(journey
-        .width(screenWidth)
-        .height(screenHeight))
+        //.margin({left: screenWidth * 0.1, right: screenWidth * 0.1, top: screenHeight * 0.1, bottom:40})
+        .width(screenWidth - 20)
+        .height(screenHeight - 20))
         //.onSetOpenPlanet(setOpenPlanet))
 
   })
 
 
   return (
-    <div className={classes.root}>
+    <div className={classes.root} style={{height: screenHeight, marginTop:10, marginLeft:10}}>
         <svg className={classes.svg} ref={containerRef}></svg>
     </div>
   )

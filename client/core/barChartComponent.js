@@ -1,3 +1,4 @@
+import { ChatRounded } from '@material-ui/icons';
 import * as d3 from 'd3';
 //import { planetsGenerator } from "./planetsGenerator";
 //import {  } from "./helpers";
@@ -6,7 +7,7 @@ import * as d3 from 'd3';
 /*
 
 */
-export default function barChartGenerator() {
+export default function barChartComponent() {
     //console.log("creating bar chart")
     // dimensions
     let width = 600;
@@ -27,10 +28,12 @@ export default function barChartGenerator() {
     //dom
 
     function barChart(selection) {
+        //note - container g is positioned in the middle of where the chart needs to be, so need to base coods off that
         updateDimns();
         // expression elements
         selection.each(function (data) {
             console.log("barChart.....", data);
+            console.log("cw", contentsWidth)
 
             const contentsG = d3.select(this)
                 .append("g")
@@ -41,12 +44,13 @@ export default function barChartGenerator() {
                 .append("rect")
                 .attr("width", contentsWidth)
                 .attr("height", contentsHeight)
-                .attr("fill", "transparent")
+                //.attr("fill", "transparent")
+                .attr("fill", "blue")
 
             //make the chart
             //axis
-            const yAxisWidth = 30;
-            const xAxisHeight = 100;
+            const yAxisWidth = 10;
+            const xAxisHeight = 20;
 
             const barsAreaWidth = contentsWidth - yAxisWidth;
             const barsAreaHeight = contentsHeight - xAxisHeight;
@@ -56,14 +60,25 @@ export default function barChartGenerator() {
             const barHozMargin = barWrapperWidth * 0.2;
             const barWidth = barWrapperWidth * 0.6;
             const barLabelY = barsAreaHeight +10
-            const yScale = d3.scaleLinear().domain([0, 100]).range([barsAreaHeight, 0]);
+            const yScale = d3.scaleLinear().domain([0, 100]).range([barsAreaHeight, margin.top]);
             const yAxis = d3.axisLeft().scale(yScale).ticks(5)
             const yAxisG = contentsG.selectAll("g.y-axis").data([1]);
             yAxisG.enter()
                 .append("g")
                     .attr("class", "axis y-axis")
                     .attr("transform", "translate(" +yAxisWidth +",0)")
-                    .call(yAxis);
+                    .call(yAxis)
+                    .merge(yAxisG)
+                    .each(function(){
+                        d3.select(this)
+                            .style("stroke-width", 0.05)
+                            .style("stroke", "black")
+                            .style("opacity", 0.5);
+                        
+                        d3.select(this).selectAll("text")
+                            .style("font-size", 5)
+                            .style("opacity", 0.5);
+                    });
 
             //bars
             const barsAreaG = contentsG.selectAll("g.bars-area").data([1])
@@ -95,13 +110,12 @@ export default function barChartGenerator() {
                                 .attr("fill", "transparent")
                                 .attr("stroke-width", 0.5)
                                 .attr("stroke", "black");
-
                             
                             g.append("text")
                                 .attr("transform", "translate("+barWidth/2 + "," +barLabelY +") rotate(-45)")
                                 .attr("text-anchor", "end")
                                 .attr("dominant-baseline", "middle")
-                                .attr("font-size", 10);
+                                .attr("font-size", 5);
 
                             g.append("svg:image")
                                 .attr("href", "/tick.svg")
@@ -118,7 +132,7 @@ export default function barChartGenerator() {
                             g.select("rect.bar")
                                 .attr("y", yScale(d.pcValue))
                                 .attr("width", barWidth)
-                                .attr("height", barsAreaHeight - yScale(d.pcValue));
+                                .attr("height", 40)//barsAreaHeight - yScale(d.pcValue));
 
                             //@todo - instead, use axis.clamp(true)
                             const projPCValueToShow = d => d3.max([0, d3.min([d.projPCValue, 100])]);
@@ -131,10 +145,10 @@ export default function barChartGenerator() {
                                 .transition()
                                 .duration(1000)
                                     .attr("y", yScale(projPCValueToShow(d))) //@todo - instead, use axis.clamp(true)
-                                    .attr("height", barsAreaHeight - yScale((projPCValueToShow(d) - d.pcValue)));
+                                    .attr("height", 60)//barsAreaHeight - yScale((projPCValueToShow(d) - d.pcValue)));
 
-                            g.select("text")
-                                .text(d.label);
+                            g.select("text").text("abc")
+                                //.text(d.label);
 
                             const tickWidth = barWidth * 0.33;
                             const tickHeight = tickWidth;
