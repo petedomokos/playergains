@@ -3,7 +3,7 @@ import * as d3 from 'd3';
 import { makeStyles } from '@material-ui/core/styles'
 import { getPlanetsData, getGoalsData, getStarData } from '../data/planets'
 import { findFirstFuturePlanet } from './helpers';
-import journeyGenerator from "./journeyGenerator"
+import journeyComponent from "./journeyComponent"
 import { addWeeks } from '../util/TimeHelpers';
 
 const useStyles = makeStyles((theme) => ({
@@ -32,7 +32,7 @@ const Journey = ({dimns}) => {
   useEffect(() => {
     if(!containerRef.current){return; }
 
-    const journey = journeyGenerator()
+    const journey = journeyComponent()
     setJourney(() => journey)
     
   }, [])

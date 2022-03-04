@@ -15,7 +15,7 @@ import { timeMonth, timeWeek } from "d3-time"
 /*
 
 */
-export default function journeyGenerator() {
+export default function journeyComponent() {
     const mockGoalsData = getGoalsData();
     // dimensions
     let margin = {left:0, right:0, top: 0, bottom:0};
@@ -313,7 +313,7 @@ export default function journeyGenerator() {
                 setChannelState();
                 //note - timeScale domain is not affected by zoom, but axis has had teh scale updated so it all works
                 channelData = channelLayout(channelState, timeScale)
-                //console.log("channelData", channelData)
+                console.log("channelData", channelData)
                 updateExtraAxes();
                 initAxisRenderDone = true;
 
