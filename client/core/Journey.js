@@ -4,7 +4,7 @@ import { makeStyles } from '@material-ui/core/styles'
 import { getPlanetsData, getGoalsData, getStarData } from '../data/planets'
 import { findFirstFuturePlanet } from './helpers';
 import journeyComponent from "./journeyComponent"
-import { addWeeks } from '../util/TimeHelpers';
+import { addMonths, startOfMonth, idFromDates } from '../util/TimeHelpers';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -13,16 +13,38 @@ const useStyles = makeStyles((theme) => ({
   }
 }))
 
+const now = new Date();
+const startOfCurrentMonth = startOfMonth(now)
+const prevMonths = 12;
+const futureMonths = 36;
+
+const numberMonths = prevMonths + futureMonths;
+const initChannels = d3.range(numberMonths)
+  .map(n => n - prevMonths)
+  .map(nr => {
+    const startDate = addMonths(nr, startOfCurrentMonth);
+    const endDate = addMonths(nr + 1, startOfCurrentMonth);
+    return {
+      nr,
+      startDate,
+      endDate,
+      isOpen:false,
+      id:idFromDates([startDate, endDate])
+    }
+  })
+
 const Journey = ({dimns}) => {
   const styleProps = { };
   const classes = useStyles(styleProps) 
   const containerRef = useRef(null);
   const { screenWidth, screenHeight } = dimns;
   const [journey, setJourney] = useState(undefined)
-  const [planetData, setPlanetData] = useState([]);
-  const [linkData, setLinkData] = useState([])
+  //@todo - put into one state object to avoid multiple updates
+  const [planetState, setPlanetState] = useState([]);
+  const [linkState, setLinkState] = useState([]);
+  const [channelState, setChannelState] = useState(initChannels);
   const [nrPlanetsCreated, setNrPlanetsCreated] = useState(0);
-  //console.log("planetData", planetData.find(p => p.id === "planet1"))
+  //console.log("planetState", planetState.find(p => p.id === "planet1"))
 
   //const goals = getGoalsData().map(g => {
 
@@ -48,23 +70,22 @@ const Journey = ({dimns}) => {
               yPC
               //goals
           }
-          setPlanetData(prevState => [...prevState, newPlanet]);
-          setNrPlanetsCreated(prevState => prevState + 1);
+          setPlanetState(prevState => [...prevState, newPlanet]);
+          //setNrPlanetsCreated(prevState => prevState + 1);
         })
         .updatePlanet(props => {
-          setPlanetData(prevState => {
+          setPlanetState(prevState => {
             const rest = prevState.filter(p => p.id !== props.id);
             const updatedPlanet = { ...prevState.find(p => p.id === props.id), ...props };
             return [...rest, updatedPlanet]
           })
         })
         .addLink(props => {
-          console.log("adding link", props)
           const newLink = {
             ...props,
             id:props.src + "-" + props.targ
           }
-          setLinkData(prevState => ([ ...prevState, newLink]))
+          setLinkState(prevState => ([ ...prevState, newLink]))
         })
 
     /*
@@ -101,15 +122,15 @@ const Journey = ({dimns}) => {
         }))
         */
 
-
     d3.select(containerRef.current)
       //.datum(data)
-      .datum({ planetData, linkData })
+      .datum({ planets: planetState, links: linkState, channels: channelState })
       .call(journey
         //.margin({left: screenWidth * 0.1, right: screenWidth * 0.1, top: screenHeight * 0.1, bottom:40})
         .width(screenWidth - 20)
         .height(screenHeight - 20))
         //.onSetOpenPlanet(setOpenPlanet))
+
 
   })
 

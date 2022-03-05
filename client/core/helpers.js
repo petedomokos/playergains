@@ -1,4 +1,5 @@
 import * as d3 from 'd3';
+import { OPEN_CHANNEL_EXT_WIDTH } from './constants';
 
 export function calcPlanetHeight(svgHeight){
     return d3.min([svgHeight * 0.2, 100]);
@@ -84,3 +85,24 @@ export function getTransformation(transform) {
       scaleY: scaleY
     };
   }
+
+export const calcTrueX = (channelsData) => (adjX) => {
+    const channel = channelsData.find(ch => ch.endX >= adjX)
+    const extraX = adjX - channel.startX;
+    return channel.startX + ((extraX/channel.width) * channel.closedWidth) - (channel.nrPrevOpenChannels * OPEN_CHANNEL_EXT_WIDTH);
+}
+export const calcAdjX = (channelsData) => (trueX) => {
+    const channel = channelsData.find(ch => ch.trueEndX >= trueX);
+    //startX already includes any previous shifts for open channels, so we need trueStartX
+    const trueExtraX = trueX - channel.trueStartX;
+    const extraXProp = trueExtraX / channel.closedWidth; //channels are closed for ture values
+    const adjExtraX = extraXProp * channel.width; //cancels out if channel is closed
+    //we return startX + extra not trueStartX, because we want to incude prev open channel widths
+    return channel.startX + adjExtraX;
+}
+export const findPointChannel = (channelsData) => (pt) => channelsData.find(ch => channelContainsPoint(pt, ch))
+export const findDateChannel = (channelsData) => (date) => channelsData.find(ch => channelContainsDate(date, ch))
+export const findNearestChannelByEndDate = (channelsData) => (date) => {
+    const nearestDate = findNearestDate(date, channelsData.map(d => d.endDate))
+    return channelsData.find(ch => ch.endDate === nearestDate)
+}

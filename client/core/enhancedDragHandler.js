@@ -91,7 +91,6 @@ export default function dragEnhancements() {
                         onLongpressEnd.call(this, e, d);
                     }
                     if (isClick) {
-                        console.log("isClick")
                         onClick.call(this, e, d);
                     }
 
