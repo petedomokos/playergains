@@ -32,16 +32,20 @@ export default function linksComponent() {
         contentsHeight = height - margin.top - margin.bottom;
     };
 
+    let timeScale = x => 0;
+    let yScale = x => 0;
+
     let linksData = [];
 
     //functions
     let barCharts = {};
 
-    function links(selection) {
+    function links(selection, options={}) {
+        const { transitionUpdate = true, transitionEnter = false } = options;
         updateDimns();
 
         selection.each(function (data) {
-            //console.log("links", data);
+            console.log("links", data);
             if(data){ linksData = data;}
            
             const linkG = d3.select(this).selectAll("g.link").data(linksData, l => l.id);
@@ -59,36 +63,59 @@ export default function linksComponent() {
                         d3.select(this)
                             .append("g")
                                 .attr("class", "bar-chart")
-                    })
-                    .merge(linkG)
-                    .each(function(d,i){
+
                         const line = d3.select(this).select("line")
                         //first time we use src and targ as start aswell as end
-                        line
-                            .attr("x1", line.attr("x1") || d.src.x)
-                            .attr("y1", line.attr("y1") || d.src.y)
-                            .attr("x2", line.attr("x2") || d.targ.x)
-                            .attr("y2", line.attr("y2") || d.targ.y)
-                            .transition()
-                            .delay(50)
-                            .duration(200)
-                                .attr("x1", d.src.x)
-                                .attr("y1", d.src.y)
-                                .attr("x2", d.targ.x)
-                                .attr("y2", d.targ.y)
-
-                    //about bar charts
-                    //- they appear halfway up the link, so if link covers two channels, it will not be in same pos as a chart for a link covering one of the channels
-                    //- if any channel that teh link covers is open, then the link chart shows
-
-                    d3.select(this).select("g.bar-chart")
-                        .attr("display", d.isOpen ? "inline" : "none")
-                        .attr("transform", "translate("+d.x + "," +d.y +")")
-                        .datum(d.barChartData)
-                        .call(barCharts[d.id]
-                            .width(barChartWidth)
-                            .height(barChartHeight))
-                })
+                        if(transitionEnter){
+                            line
+                                .attr("x1", d => timeScale(d.src.targetDate))
+                                .attr("y1", line.attr("y1") || yScale(d.src.yPC))
+                                .attr("x2", line.attr("x2") || timeScale(d.targ.targetDate))
+                                .attr("y2", line.attr("y2") || yScale(d.targ.yPC))
+                                .transition()
+                                .delay(50)
+                                .duration(200)
+                                    .attr("x1", timeScale(d.src.displayDate))
+                                    .attr("x2", timeScale(d.targ.displayDate))
+                        }else{
+                            line
+                                .attr("x1", d => timeScale(d.src.displayDate))
+                                .attr("y1", line.attr("y1") || yScale(d.src.yPC))
+                                .attr("x2", timeScale(d.targ.displayDate))
+                                .attr("y2", line.attr("y2") || yScale(d.targ.yPC))
+                        }
+                    })
+                    .merge(linkG)
+                    .each(function(d){
+                        //about bar charts
+                        //- they appear halfway up the link, so if link covers two channels, it will not be in same pos as a chart for a link covering one of the channels
+                        //- if any channel that teh link covers is open, then the link chart show
+                        d3.select(this).select("g.bar-chart")
+                            .attr("display", d.isOpen ? "inline" : "none")
+                            .attr("transform", "translate("+timeScale(d.src.displayDate) + "," +yScale(d.src.yPC) +")")
+                            .datum(d.barChartData)
+                            .call(barCharts[d.id]
+                                .width(barChartWidth)
+                                .height(barChartHeight))
+                    })
+            //update only
+            linkG.each(function(d){
+                const line = d3.select(this).select("line")
+                if(transitionUpdate){
+                    line
+                        .transition()
+                        .delay(50)
+                        .duration(200)
+                            .attr("x1", timeScale(d.src.displayDate))
+                            .attr("x2", timeScale(d.targ.displayDate))
+                }else{
+                    line
+                        .attr("x1", timeScale(d.src.displayDate))
+                        .attr("y1", yScale(d.src.yPC))
+                        .attr("x2", timeScale(d.targ.displayDate))
+                        .attr("y2", yScale(d.targ.yPC))
+                }
+            })
         })
         return selection;
     }     
@@ -107,14 +134,14 @@ export default function linksComponent() {
         height = value;
         return links;
     };
-    links.width = function (value) {
-        if (!arguments.length) { return width; }
-        width = value;
+    links.yScale = function (value) {
+        if (!arguments.length) { return yScale; }
+        yScale = value;
         return links;
     };
-    links.height = function (value) {
-        if (!arguments.length) { return height; }
-        height = value;
+    links.timeScale = function (value) {
+        if (!arguments.length) { return timeScale; }
+        timeScale = value;
         return links;
     };
     links.updatePlanet = function (value) {

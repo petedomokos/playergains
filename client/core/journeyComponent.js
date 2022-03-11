@@ -77,6 +77,7 @@ export default function journeyComponent() {
     let addPlanet = function(){};
     let updatePlanet = function(){};
     let addLink = function(){};
+    let updateChannel = function(){};
 
     //functions
     let barCharts = {};
@@ -104,7 +105,8 @@ export default function journeyComponent() {
     function journey(selection) {
         updateDimns();
         selection.each(function (state) {
-            //console.log("journey", state);
+            console.log("state", state.channels)
+            console.log("state", state.channels.filter(ch => ch.isOpen))
             //init svg, contentsG, canvasG, canvasRect, axesG
             if(!svg){ init.call(this);}
 
@@ -126,9 +128,9 @@ export default function journeyComponent() {
 
             //helpers
             const trueX = calcTrueX(channelsData);
+            const pointChannel = findPointChannel(channelsData);
             /*
             const adjX = calcAdjX(channelsData);
-            const pointChannel = findPointChannel(channelsData);
             const dateChannel = findDateChannel(channelsData);
             const nearestChannelByEndDate = findNearestChannelByEndDate(channelsData);
             */
@@ -139,23 +141,24 @@ export default function journeyComponent() {
 
             enhancedZoom
                 .onClick(handleClick)
-                /*
                 .onLongpressStart(function(e,d){
+                    console.log("d", d)
                     if(!enhancedZoom.wasMoved()){
                         //longpress toggles isOpen
-                        const { nr, isOpen } = pointChannel({ x:e.sourceEvent.layerX, y:e.sourceEvent.layerY });
+                        const { id, isOpen } = pointChannel({ x:e.sourceEvent.layerX, y:e.sourceEvent.layerY });
+                        updateChannel({ id, isOpen:!isOpen })
                         //remove all x-axes, inc the initial one so it's domain is reset
-                        d3.selectAll("g.x-axis").remove();
-                        initAxisRenderDone = false;
+                        //d3.selectAll("g.x-axis").remove();
+                        //initAxisRenderDone = false;
                         //update local channel state
-                        channelState = channelState.map(ch => ({
-                            ...ch,
-                            isOpen:ch.nr === nr ? !isOpen : ch.isOpen
-                        }))
-                        update();
+                        //channelState = channelState.map(ch => ({
+                           // ...ch,
+                            //isOpen:ch.nr === nr ? !isOpen : ch.isOpen
+                        //}))
+                        //update();
                     }
                 })
-                */
+
             const zoom = d3.zoom()
                 //.scaleExtent([1, 3])
                 .extent(extent)
@@ -172,6 +175,7 @@ export default function journeyComponent() {
                     axesG.call(axes.scale(zoomedScale));
                     planets.timeScale(zoomedScale)
                     canvasG.selectAll("g.planets").call(planets, { transitionUpdate: false })
+                    canvasG.selectAll("g.links").call(links, { transitionUpdate: false })
                     //update();
                 }))
                 .on("end", enhancedZoom())
@@ -194,12 +198,24 @@ export default function journeyComponent() {
                 .planetsData(planetsData);
             const linksData = myLinksLayout(state.links);
 
+            //for now use this let but shuld use enter/update here
+            //update links component
+            links
+                .yScale(yScale)
+                .timeScale(timeScale)
+            //call links component
             canvasG.selectAll("g.links")
                 .data([linksData])
                 .join("g")
                 .attr("class", "links")
-                .call(links)
-
+                .join(
+                    enter => enter.append("g")
+                        .attr("class", "links")
+                        //first time links component renders, we want entered links to transition
+                        .call(links, { transitionEnter:true }),
+                    update => update
+                        .call(links) //we dont want any newly entered links to transition
+                );
 
             canvasG.selectAll("g.planets")
                 .data([planetsData])
@@ -291,11 +307,12 @@ export default function journeyComponent() {
         }
         return journey;
     };
-    journey.on = function () {
-        if (!dispatch) return journey;
-        // attach extra arguments
-        const value = dispatch.on.apply(dispatch, arguments);
-        return value === dispatch ? journey : value;
+    journey.updateChannel = function (value) {
+        if (!arguments.length) { return updateChannel; }
+        if(typeof value === "function"){
+            updateChannel = value;
+        }
+        return journey;
     };
     return journey;
 }

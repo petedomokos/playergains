@@ -97,7 +97,7 @@ export default function planetsComponent() {
         updateDimns();
         // expression elements
         selection.each(function (data) {
-            console.log("planets", data)
+            //console.log("planets", data)
             if(data){ planetsData = data;}
 
             //3. PLANETS
@@ -246,10 +246,10 @@ export default function planetsComponent() {
                 planetG.select("g.contents")
                     .insert("line", ":first-child")
                         .attr("class", "temp-link")
-                        .attr("x1", e.sourceEvent.offsetX - d.x)
-                        .attr("y1", e.sourceEvent.offsetY - d.y)
-                        .attr("x2", e.sourceEvent.offsetX - d.x)
-                        .attr("y2", e.sourceEvent.offsetY - d.y)
+                        .attr("x1", e.sourceEvent.offsetX - timeScale(d.displayDate))
+                        .attr("y1", e.sourceEvent.offsetY - yScale(d.yPC))
+                        .attr("x2", e.sourceEvent.offsetX - timeScale(d.displayDate))
+                        .attr("y2", e.sourceEvent.offsetY - yScale(d.yPC))
                         .attr("stroke-width", 1)
                         .attr("stroke", grey10(3))
                         .attr("fill", grey10(3));
@@ -265,14 +265,17 @@ export default function planetsComponent() {
 
                 //find nearest planet and if dist is below threshold, set planet as target candidate
                 const LINK_THRESHOLD = 100;
-                const availablePlanets = data
+                const availablePlanets = planetsData
                     .filter(p => p.id !== d.id)
                     .filter(p => !linksData.find(l => l.id.includes(d.id) && l.id.includes(p.id)))
+                    .map(p => ({ ...p, x:timeScale(p.displayDate), y:yScale(p.yPC)}))
 
-                const nearestPlanet = findNearestPlanet(e, availablePlanets.filter(p => p.id !== d.id));
+                const nearestPlanet = findNearestPlanet(e, availablePlanets);
+                //console.log("near", nearestPlanet)
                 const linkPlanet = distanceBetweenPoints(e, nearestPlanet) <= LINK_THRESHOLD ? nearestPlanet : undefined;
+                //const { x, y, ...rest } = linkPlanet
+                //console.log("link", rest)
                 linkPlanets = linkPlanet ? [d, linkPlanet] : [];
-                //console.log("linkPlanets", linkPlanets)
 
                 d3.selectAll("g.planet").selectAll("g.contents").selectAll("ellipse")
                     .attr("stroke", p => p.id === d.id || p.id === linkPlanet?.id ? grey10(3) : grey10(5))
@@ -288,7 +291,7 @@ export default function planetsComponent() {
                     .attr("stroke", grey10(5))
 
                 //set x2, y2 to centre of nearest planet
-                //...
+                //...\
                 if(linkPlanets.length === 2){
                     const sortedLinks = linkPlanets.sort((a, b) => d3.ascending(a.x, b.x))
                     //save link

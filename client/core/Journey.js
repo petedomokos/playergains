@@ -43,9 +43,9 @@ const Journey = ({dimns}) => {
   const [planetState, setPlanetState] = useState([]);
   const [linkState, setLinkState] = useState([]);
   const [channelState, setChannelState] = useState(initChannels);
-  const [nrPlanetsCreated, setNrPlanetsCreated] = useState(0);
+  //const [nrPlanetsCreated, setNrPlanetsCreated] = useState(0);
   //console.log("planetState", planetState.find(p => p.id === "planet1"))
-
+  const nrPlanetsCreated = useRef(0);
   //const goals = getGoalsData().map(g => {
 
   //})
@@ -65,13 +65,14 @@ const Journey = ({dimns}) => {
     journey
         .addPlanet((targetDate, yPC) => {
           const newPlanet = {
-              id:"planet"+ (nrPlanetsCreated + 1),
+              id:"planet"+ (nrPlanetsCreated.current + 1),
               targetDate,
               yPC
               //goals
           }
           setPlanetState(prevState => [...prevState, newPlanet]);
           //setNrPlanetsCreated(prevState => prevState + 1);
+          nrPlanetsCreated.current = nrPlanetsCreated.current + 1;
         })
         .updatePlanet(props => {
           setPlanetState(prevState => {
@@ -86,6 +87,13 @@ const Journey = ({dimns}) => {
             id:props.src + "-" + props.targ
           }
           setLinkState(prevState => ([ ...prevState, newLink]))
+        })
+        .updateChannel(props => {
+          setChannelState(prevState => {
+            const rest = prevState.filter(p => p.id !== props.id);
+            const updatedPlanet = { ...prevState.find(p => p.id === props.id), ...props };
+            return [...rest, updatedPlanet]
+          })
         })
 
     /*

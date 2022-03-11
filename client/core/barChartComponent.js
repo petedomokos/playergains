@@ -1,4 +1,3 @@
-import { ChatRounded } from '@material-ui/icons';
 import * as d3 from 'd3';
 //import { planetsGenerator } from "./planetsGenerator";
 //import {  } from "./helpers";
@@ -18,7 +17,7 @@ export default function barChartComponent() {
 
     //let planets = planetsGenerator();
 
-    function updateDimns(nrOfChains){
+    function updateDimns(){
         contentsWidth = width - margin.left - margin.right;
         contentsHeight = height - margin.top - margin.bottom;
     };
@@ -26,22 +25,32 @@ export default function barChartComponent() {
     //functions
 
     //dom
+    let contentsG;
+    let backgroundG;
 
     function barChart(selection) {
         //note - container g is positioned in the middle of where the chart needs to be, so need to base coods off that
         updateDimns();
         // expression elements
         selection.each(function (data) {
+            if(d3.select(this).select("g").empty()){
+                init.call(this);
+            }
             //console.log("barChart.....", data);
-            //console.log("cw", contentsWidth)
-
-            const contentsG = d3.select(this)
-                .append("g")
-                .attr("class", "contents")
-                .attr("transform", "translate("+margin.left +"," +margin.top +")");
+            function init(){
+                //console.log("barChart init", this);
+                contentsG = d3.select(this)
+                    .append("g")
+                    .attr("class", "contents")
+                
+                backgroundG = contentsG
+                    .append("rect")
+            }
 
             contentsG
-                .append("rect")
+                .attr("transform", "translate("+margin.left +"," +margin.top +")");
+
+            backgroundG
                 .attr("width", contentsWidth)
                 .attr("height", contentsHeight)
                 //.attr("fill", "transparent")
