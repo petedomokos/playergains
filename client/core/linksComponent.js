@@ -45,7 +45,7 @@ export default function linksComponent() {
         updateDimns();
 
         selection.each(function (data) {
-            console.log("links", data);
+            //console.log("links", data);
             if(data){ linksData = data;}
            
             const linkG = d3.select(this).selectAll("g.link").data(linksData, l => l.id);

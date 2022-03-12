@@ -2,9 +2,10 @@ import React, { useEffect, useState, useRef } from 'react'
 import * as d3 from 'd3';
 import { makeStyles } from '@material-ui/core/styles'
 import { getPlanetsData, getGoalsData, getStarData } from '../data/planets'
-import { findFirstFuturePlanet } from './helpers';
+import { findFirstFuturePlanet, updatedState } from './helpers';
 import journeyComponent from "./journeyComponent"
 import { addMonths, startOfMonth, idFromDates } from '../util/TimeHelpers';
+import { channelContainsDate } from './geometryHelpers';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -75,11 +76,7 @@ const Journey = ({dimns}) => {
           nrPlanetsCreated.current = nrPlanetsCreated.current + 1;
         })
         .updatePlanet(props => {
-          setPlanetState(prevState => {
-            const rest = prevState.filter(p => p.id !== props.id);
-            const updatedPlanet = { ...prevState.find(p => p.id === props.id), ...props };
-            return [...rest, updatedPlanet]
-          })
+          setPlanetState(prevState => updatedState(prevState, props))
         })
         .addLink(props => {
           const newLink = {
@@ -89,11 +86,7 @@ const Journey = ({dimns}) => {
           setLinkState(prevState => ([ ...prevState, newLink]))
         })
         .updateChannel(props => {
-          setChannelState(prevState => {
-            const rest = prevState.filter(p => p.id !== props.id);
-            const updatedPlanet = { ...prevState.find(p => p.id === props.id), ...props };
-            return [...rest, updatedPlanet]
-          })
+          setChannelState(prevState => updatedState(prevState, props))
         })
 
     /*

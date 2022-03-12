@@ -1,6 +1,7 @@
 import * as d3 from 'd3';
 //import "d3-selection-multi";
 import channelsLayout from "./channelsLayout";
+import axesLayout from "./axesLayout";
 import linksLayout from "./linksLayout";
 import planetsLayout from "./planetsLayout";
 import axesComponent from "./axesComponent";
@@ -47,6 +48,7 @@ export default function journeyComponent() {
     let enhancedZoom = dragEnhancements();
 
     const myChannelsLayout = channelsLayout();
+    const myAxesLayout = axesLayout();
     const myLinksLayout = linksLayout();
     const myPlanetsLayout = planetsLayout();
 
@@ -98,6 +100,8 @@ export default function journeyComponent() {
 
     let xAxis;
 
+    let currentZoom = d3.zoomIdentity;
+
     const now = new Date();
     
     const ring = ellipse().className("ring");
@@ -105,8 +109,7 @@ export default function journeyComponent() {
     function journey(selection) {
         updateDimns();
         selection.each(function (state) {
-            console.log("state", state.channels)
-            console.log("state", state.channels.filter(ch => ch.isOpen))
+            console.log("openChannels state", state.channels.filter(ch => ch.isOpen))
             //init svg, contentsG, canvasG, canvasRect, axesG
             if(!svg){ init.call(this);}
 
@@ -120,11 +123,16 @@ export default function journeyComponent() {
                 .domain([firstDisplayedChannel.startDate, lastDisplayedChannel.endDate])
                 .range([0, contentsWidth])
 
-            const channelsData = myChannelsLayout.scale(timeScale)(state.channels)
+            const channelsData = myChannelsLayout.scale(timeScale)(displayedChannels)
             //console.log("channelsData...", channelsData);
+            const axesData = myAxesLayout(channelsData);
 
-            axes.scale(timeScale).tickSize(contentsHeight + DEFAULT_D3_TICK_SIZE)
-            axesG.datum(channelsData).call(axes);
+            axes
+                .scale(timeScale)
+                .tickSize(contentsHeight + DEFAULT_D3_TICK_SIZE)
+                //.currentZoom(currentZoom);
+
+            axesG.datum(axesData).call(axes);
 
             //helpers
             const trueX = calcTrueX(channelsData);
@@ -135,14 +143,12 @@ export default function journeyComponent() {
             const nearestChannelByEndDate = findNearestChannelByEndDate(channelsData);
             */
             // Zoom configuration
-            let currentZoom = d3.zoomIdentity;
             const extent = [[0,0],[chartWidth, chartHeight]];
             let wasMoved = false;
 
             enhancedZoom
                 .onClick(handleClick)
                 .onLongpressStart(function(e,d){
-                    console.log("d", d)
                     if(!enhancedZoom.wasMoved()){
                         //longpress toggles isOpen
                         const { id, isOpen } = pointChannel({ x:e.sourceEvent.layerX, y:e.sourceEvent.layerY });
@@ -165,18 +171,20 @@ export default function journeyComponent() {
                 .scaleExtent([0.125, 8])
                 .on("start", enhancedZoom())
                 .on("zoom", enhancedZoom(function(e){
+                    console.log("zoomed")
                     if(!wasMoved) { wasMoved = true ;}
                     // calculate new zoom transform
                     currentZoom = e.transform
-
-                    // rescale scales and axes
-                    //axesG.datum(channelsData).call(axes)
+                    // rescale 
                     const zoomedScale = currentZoom.rescaleX(timeScale);
-                    axesG.call(axes.scale(zoomedScale));
+                    //console.log("zoomedScale", zoomedScale.domain())
+                    //update axis data and component
+                    axes.currentZoom(currentZoom);
+                    //update planets data and component
                     planets.timeScale(zoomedScale)
                     canvasG.selectAll("g.planets").call(planets, { transitionUpdate: false })
+                    //update links component
                     canvasG.selectAll("g.links").call(links, { transitionUpdate: false })
-                    //update();
                 }))
                 .on("end", enhancedZoom())
                 

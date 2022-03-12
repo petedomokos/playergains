@@ -22,110 +22,81 @@ import { parseTransform, shiftTranslate } from './domHelpers';
 */
 export default function axesComponent() {
     let scale = (x) => 0;
-    let xAxis = d3.axisBottom();
+    //let xAxis = d3.axisBottom();
     let tickSize = DEFAULT_D3_TICK_SIZE;
+    let currentZoom = d3.zoomIdentity;
+    //todo - allow name to be passed in so can have x and y axis let axisName = "x";
+    let data = [];
+    let scales = {};
+    let axes = {};
 
-    let axisRendered = false;
-
+    /*
+    todo - axis ticks dont update on zoom - exisitng positions change but new ones arent added
+     links - pos dont update on pan
+    */
     function update(selection) {
-        selection.each(function (data) {
-            xAxis.scale(scale)
-                .ticks(timeMonth)
-                .tickSize(tickSize)
+        selection.each(function (axisData) {
+            data = axisData;
+            //console.log("axes scale domain", scale.domain())
 
-            const xAxisG = d3.select(this).selectAll("g.x-axis").data([1])
-            xAxisG
-                .enter()
+            const axisG = d3.select(this).selectAll("g.axis").data(data, d => d.key)
+            axisG.enter()
                 .append("g")
-                    .attr("class", "x-axis x-axis-0")
-                    .each(function(){
-                        d3.select(this)
-                            .style("stroke-width", 0.05)
-                            .style("stroke", "black")
+                .attr("class", (d) => "axis axis-"+d.key)
+                .each(function(d){
+                    //init scales
+                    scales[d.key] = scale.copy()
+                        .domain([d.startDate, d.endDate])
+                        .range([scale(d.startDate), scale(d.endDate)]);
+                    
+                    //init axes
+                    axes[d.key] = d3.axisBottom()
+                        .ticks(timeMonth)
+                        .tickSize(tickSize)
+                        .scale(scales[d.key]);
+
+                    d3.select(this)
+                        .style("stroke-width", 0.05)
+                        .style("stroke", "black")
+                        .style("opacity", 0)
+                        .transition()
+                        .delay(50)
+                        .duration(200)
                             .style("opacity", 0.5);
-                    })
-                    .merge(xAxisG)
-                    .call(xAxis)
-                    .each(function(){
-                        d3.select(this).selectAll("g.tick").each(function(){
-                            const currTrans = d3.select(this).attr("transform")
-                            d3.select(this)
-                                .attr("transform", shiftTranslate(0, -tickSize + DEFAULT_D3_TICK_SIZE, currTrans))
-                        })
-                    })
-                    .style("opacity", axisRendered ? 0.5 : 0) //note - setting style op overrides the attr op that axis sets on it
-                    .transition()
-                    .delay(50)
-                    .duration(200)
-                        .style("opacity", 0.5);
-            
-            axisRendered = true;
+                })
+                .merge(axisG)
+                .attr("transform", (d,i) => "translate("+d.transX + ",0)")
+                .each(function(d){
+                    scales[d.key]
+                        .domain([d.startDate, d.endDate])
+                        .range([scale(d.startDate), scale(d.endDate)])
+
+                    updateAxis.call(this, d)
+                })
+
+            axisG.exit().remove();
               
         })
 
+    }
+
+    function updateAxis(d){
+        d3.select(this).call(axes[d.key])
+        //ticks
+        d3.select(this).selectAll("g.tick").each(function(){
+            const currTrans = d3.select(this).attr("transform");
+            d3.select(this)
+                .attr("transform", shiftTranslate(0, -tickSize + DEFAULT_D3_TICK_SIZE, currTrans))
+        })
+
+        //update vertical start and end marks
+        //need to store the vert mark pos the first time
         /*
-        function updateExtraAxes(){
-            //based on latest channelData
-            //added an axis per open channel
-            const extraXAxisG = svg.selectAll("g.extra-x-axis").data(channelData.filter(ch => ch.isOpen))
-            extraXAxisG.enter()
-                .append("g")
-                    .attr("class", (d,i) => "x-axis extra-x-axis extra-x-axis-"+i)
-                    .each(function(){
-                        d3.select(this)
-                            .style("stroke-width", 0.05)
-                            .style("stroke", "black")
-                            .style("opacity", 0.5);
-                    })
-                    .call(xAxis)
-                    .merge(extraXAxisG)
-                    //must shoft axis by all the prev open channel extensions, plus this one
-                    .attr("transform", (d,i) => 'translate('+(d.axisRangeShiftWhenOpen) + "," +margin.top +')')
-                    .each(function(ch,i, nodes){
-                        const isLast = !!channelData.find(c => c.nr > ch.nr && c.isOpen)
-                        const lastChannel = channelData[channelData.length - 1]
-                        const axisEndDate = channelData.find(c => c.nr > ch.nr && c.isOpen)?.startDate || lastChannel.endDate;
-                        const axisEndX = channelData.find(c => c.nr > ch.nr && c.isOpen)?.startX || lastChannel.endX;
-                        //note - axis has alreayd been shifted by the open channel widths
-                        const domainShift = ch.endX - ch.axisRangeShiftWhenOpen;
-                        d3.select(this).select(".domain")
-                            .attr("transform", 'translate(0,' +(contentsHeight - 30) +')')
-                            .attr("d", "M" + domainShift + ",0H"+axisEndX +(isLast ? "V394" : ""));
-                        
-                        //console.log("axis endDate", axisEndDate)
-                        //hide all g.tick where transX is less than timeScale(d.date) +d.rangeShift
-                        d3.select(this).selectAll("g.tick")
-                            .attr("display", d => d < ch.endDate || d > axisEndDate ? "none" : "inline")
-
-                        if(i == 0){
-                            //if there is a future open channel, this domain runs to far
-                            //it should have openChanelExt width removed, and it shouldnt drop vertically 
-                            //d3.select(this).select(".domain").style("stroke-width", 3).style("stroke", "black")
-                        }
-                            
-
-                        //if first open channel, hide main x-axis ticks
-                        if(i === 0){
-                            //console.log("ch", ch)
-                            d3.select("g.x-axis-0").selectAll("g.tick")
-                                .attr("display", d => d >= ch.endDate? "none" : "inline")
-
-                            const mainDomainPath = d3.select("g.x-axis-0").selectAll(".domain")
-                            const startOfD = mainDomainPath.attr("d").split("H")[0];
-                            mainDomainPath.attr("d", startOfD + "H" + ch.startX);
-                        }
-                    })
-                    .style("opacity", initAxisRenderDone ? 0.5 : 0) //note - setitng style op overrides the attr op that axis sets on it
-                    .transition()
-                    .delay(50)
-                    .duration(200)
-                        .style("opacity", 0.5);
-
-        }
+        d3.select(this).select(".domain")
+            .attr("d", "M" + domainShift + ",0H"+axisEndX +(isLast ? "V394" : ""));
         */
+    }
 
-        return selection;
-    }     
     update.margin = function (value) {
         if (!arguments.length) { return margin; }
         margin = { ...margin, ...value};
@@ -141,14 +112,37 @@ export default function axesComponent() {
         height = value;
         return update;
     };
+    update.channelsData = function (value) {
+        if (!arguments.length) { return channelsData; }
+        channelsData = value;
+        return update;
+    };
     update.scale = function (value) {
         if (!arguments.length) { return scale; }
         scale = value;
+        //data.forEach(d => {
+            //scales[d.id].range([scale(d.startDate), scale(d.endDate)])
+        //});
         return update;
     };
     update.tickSize = function (value) {
         if (!arguments.length) { return tickSize; }
         tickSize = value;
+        return update;
+    };
+    update.currentZoom = function (value) {
+        if (!arguments.length) { return currentZoom; }
+        currentZoom = value;
+        d3.selectAll("g.axis").each(function(d){
+            if(!scales[d.key]) { return; }
+            const zoomedScale = currentZoom.rescaleX(scales[d.key])
+            if(d.key !== "main"){
+                console.log("scale", scales[d.key].domain())
+                console.log("zoomedScale", zoomedScale.domain())
+            }
+            axes[d.key].scale(zoomedScale)
+            updateAxis.call(this, d)
+        })
         return update;
     };
     return update;

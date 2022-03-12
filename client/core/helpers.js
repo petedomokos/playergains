@@ -107,3 +107,11 @@ export const findNearestChannelByEndDate = (channelsData) => (date) => {
     const nearestDate = findNearestDate(date, channelsData.map(d => d.endDate))
     return channelsData.find(ch => ch.endDate === nearestDate)
 }
+
+export function updatedState(prevState, props){
+    const updated = { ...prevState.find(ch => ch.id === props.id), ...props };
+    const rest = prevState.filter(ch => ch.id !== props.id);
+    const before = rest.filter(ch => ch.nr < updated.nr);
+    const after = rest.filter(ch => ch.nr > updated.nr);
+    return [...before, updated, ...after];
+}

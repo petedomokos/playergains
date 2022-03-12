@@ -4,15 +4,17 @@ export default function channelsLayout(){
     let scale = x => 0;
 
     let state;
+
     function update(data){
+        scale(new Date())
         //note - although scale pased is the orig scale onot rescaled scale, it still returns correct values
         // I need to check this with new planets etc, bto quite sure why it works, obv axis has had its scale updated
         // but if zoomed in or panned, why would teh transfrom not move it. Just need to think it through
-        return data.map((ch, i, chArray) => {
+        return data.map((ch, i) => {
             const trueStartX = scale(ch.startDate);
             const trueEndX = scale(ch.endDate);
             //the channels open are wrong on axis. when nr 1 is open, it shows as nr 0 being open
-            const nrPrevOpenChannels = chArray.filter((chan, j) => j < i && chan.isOpen).length;
+            const nrPrevOpenChannels = data.filter((chan, j) => j < i && chan.isOpen).length;
             //const rangeShift = nrPrevOpenChannels * OPEN_CHANNEL_EXT_WIDTH + (ch.isOpen ? OPEN_CHANNEL_EXT_WIDTH : 0);
             const startX = scale(ch.startDate) + nrPrevOpenChannels * OPEN_CHANNEL_EXT_WIDTH;
             const closedEndX = scale(ch.endDate) + nrPrevOpenChannels * OPEN_CHANNEL_EXT_WIDTH;
