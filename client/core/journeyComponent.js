@@ -118,7 +118,7 @@ export default function journeyComponent() {
             const displayedChannels = state.channels.filter(ch => ch.nr >= -1 && ch.nr <= 3)
             const firstDisplayedChannel = displayedChannels[0];
             const lastDisplayedChannel = displayedChannels[displayedChannels.length -1];
-            
+
             const nrDisplayedMonths = displayedChannels.length;
             const widthPerMonth = contentsWidth / nrDisplayedMonths;
             const domain = [
@@ -135,12 +135,14 @@ export default function journeyComponent() {
                 //.domain([firstDisplayedChannel.startDate, lastDisplayedChannel.endDate])
                 //.range([0, contentsWidth])
 
+            const zoomedScale = currentZoom.rescaleX(timeScale);
+
             const channelsData = myChannelsLayout.scale(timeScale)(displayedChannels)
             //console.log("channelsData...", channelsData);
             const axesData = myAxesLayout(channelsData);
-
             axes
-                .scale(timeScale)
+                .scale(zoomedScale)
+                //.scale(timeScale)
                 .tickSize(contentsHeight + DEFAULT_D3_TICK_SIZE)
                 //.currentZoom(currentZoom);
 
@@ -188,7 +190,10 @@ export default function journeyComponent() {
                     currentZoom = e.transform
                     // rescale 
                     const zoomedScale = currentZoom.rescaleX(timeScale);
-                    axesG.call(axes.scale(zoomedScale))
+                    const axesData = myAxesLayout.currentZoom(currentZoom)(channelsData);
+                    axesG.datum(axesData)
+                        .call(axes
+                            .scale(zoomedScale))
                     //console.log("zoomedScale", zoomedScale.domain())
                     //update axis data and component
                     //axes.currentZoom(currentZoom);

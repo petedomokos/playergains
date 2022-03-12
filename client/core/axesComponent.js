@@ -59,9 +59,11 @@ export default function axesComponent() {
 
                 })
                 .merge(axisG)
-                .attr("transform", (d,i) => "translate("+d.transX + "," +(i * -20) +")")
-                //.attr("transform", (d,i) => "translate("+d.transX + ",0)")
+                //.attr("transform", (d,i) => "translate("+d.transX + "," +(i * -20) +")")
+                .attr("transform", (d,i) => "translate("+d.transX + ",0)")
                 .each(function(d, i){
+                    console.log("update", d.key)
+                    console.log("domain", scale.domain())
                     const isFirstAxis = i === 0;
                     const isLastAxis = i === data.length - 1;
                     d3.select(this).call(axes[d.key].scale(scale))
@@ -85,6 +87,8 @@ export default function axesComponent() {
                         d3.select(this)
                             .attr("transform", shiftTranslate(0, -tickSize + DEFAULT_D3_TICK_SIZE, currTrans))
                     })
+
+                    d3.select(this).select("path.domain").attr("display", "none")
     
                 })
 
