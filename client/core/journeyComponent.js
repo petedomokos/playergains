@@ -10,7 +10,7 @@ import planetsComponent from "./planetsComponent";
 import { calcChartHeight, findFuturePlanets, findFirstFuturePlanet, findNearestDate, getTransformation,
     calcTrueX, calcAdjX, findPointChannel, findDateChannel, findNearestChannelByEndDate } from './helpers';
 //import { COLOURS, DIMNS } from "./constants";
-import { addMonths } from "../util/TimeHelpers"
+import { addMonths, addWeeks } from "../util/TimeHelpers"
 import { ellipse } from "./ellipse";
 import { grey10, DEFAULT_D3_TICK_SIZE } from "./constants";
 import { findNearestPlanet, distanceBetweenPoints, channelContainsPoint, channelContainsDate } from './geometryHelpers';
@@ -118,10 +118,22 @@ export default function journeyComponent() {
             const displayedChannels = state.channels.filter(ch => ch.nr >= -1 && ch.nr <= 3)
             const firstDisplayedChannel = displayedChannels[0];
             const lastDisplayedChannel = displayedChannels[displayedChannels.length -1];
-
+            
+            const nrDisplayedMonths = displayedChannels.length;
+            const widthPerMonth = contentsWidth / nrDisplayedMonths;
+            const domain = [
+                addWeeks(-52, firstDisplayedChannel.startDate),
+                lastDisplayedChannel.endDate
+            ]
+            const range = [
+                -widthPerMonth * 12,
+                contentsWidth
+            ]
             timeScale = d3.scaleTime()
-                .domain([firstDisplayedChannel.startDate, lastDisplayedChannel.endDate])
-                .range([0, contentsWidth])
+                .domain(domain)
+                .range(range)
+                //.domain([firstDisplayedChannel.startDate, lastDisplayedChannel.endDate])
+                //.range([0, contentsWidth])
 
             const channelsData = myChannelsLayout.scale(timeScale)(displayedChannels)
             //console.log("channelsData...", channelsData);
@@ -171,15 +183,15 @@ export default function journeyComponent() {
                 .scaleExtent([0.125, 8])
                 .on("start", enhancedZoom())
                 .on("zoom", enhancedZoom(function(e){
-                    console.log("zoomed")
                     if(!wasMoved) { wasMoved = true ;}
                     // calculate new zoom transform
                     currentZoom = e.transform
                     // rescale 
                     const zoomedScale = currentZoom.rescaleX(timeScale);
+                    axesG.call(axes.scale(zoomedScale))
                     //console.log("zoomedScale", zoomedScale.domain())
                     //update axis data and component
-                    axes.currentZoom(currentZoom);
+                    //axes.currentZoom(currentZoom);
                     //update planets data and component
                     planets.timeScale(zoomedScale)
                     canvasG.selectAll("g.planets").call(planets, { transitionUpdate: false })

@@ -27,7 +27,6 @@ export default function axesComponent() {
     let currentZoom = d3.zoomIdentity;
     //todo - allow name to be passed in so can have x and y axis let axisName = "x";
     let data = [];
-    let scales = {};
     let axes = {};
 
     /*
@@ -44,16 +43,10 @@ export default function axesComponent() {
                 .append("g")
                 .attr("class", (d) => "axis axis-"+d.key)
                 .each(function(d){
-                    //init scales
-                    scales[d.key] = scale.copy()
-                        .domain([d.startDate, d.endDate])
-                        .range([scale(d.startDate), scale(d.endDate)]);
-                    
                     //init axes
                     axes[d.key] = d3.axisBottom()
                         .ticks(timeMonth)
-                        .tickSize(tickSize)
-                        .scale(scales[d.key]);
+                        .tickSize(tickSize);
 
                     d3.select(this)
                         .style("stroke-width", 0.05)
@@ -63,38 +56,42 @@ export default function axesComponent() {
                         .delay(50)
                         .duration(200)
                             .style("opacity", 0.5);
+
                 })
                 .merge(axisG)
-                .attr("transform", (d,i) => "translate("+d.transX + ",0)")
-                .each(function(d){
-                    scales[d.key]
-                        .domain([d.startDate, d.endDate])
-                        .range([scale(d.startDate), scale(d.endDate)])
-
-                    updateAxis.call(this, d)
+                .attr("transform", (d,i) => "translate("+d.transX + "," +(i * -20) +")")
+                //.attr("transform", (d,i) => "translate("+d.transX + ",0)")
+                .each(function(d, i){
+                    const isFirstAxis = i === 0;
+                    const isLastAxis = i === data.length - 1;
+                    d3.select(this).call(axes[d.key].scale(scale))
+                    d3.select(this).selectAll("g.tick")
+                    .attr("display", tickD => {
+                        //if there is another d then go up 
+                        //console.log("tick d", d)
+                        //if its the last axis, then remove the <= condition
+                        if(isFirstAxis){
+                            return tickD <= d.endDate ? "inline" : "none";
+                        }
+                        //if its the first axis, remove the >= conditon
+                        if(isLastAxis){
+                            return tickD >= d.startDate ? "inline" : "none";
+                        }
+                        //if its a middle axis, only show the between ticks
+                        return tickD >= d.startDate && tickD <= d.endDate ? "inline" : "none";
+                    })
+                    .each(function(){
+                        const currTrans = d3.select(this).attr("transform");
+                        d3.select(this)
+                            .attr("transform", shiftTranslate(0, -tickSize + DEFAULT_D3_TICK_SIZE, currTrans))
+                    })
+    
                 })
 
             axisG.exit().remove();
               
         })
 
-    }
-
-    function updateAxis(d){
-        d3.select(this).call(axes[d.key])
-        //ticks
-        d3.select(this).selectAll("g.tick").each(function(){
-            const currTrans = d3.select(this).attr("transform");
-            d3.select(this)
-                .attr("transform", shiftTranslate(0, -tickSize + DEFAULT_D3_TICK_SIZE, currTrans))
-        })
-
-        //update vertical start and end marks
-        //need to store the vert mark pos the first time
-        /*
-        d3.select(this).select(".domain")
-            .attr("d", "M" + domainShift + ",0H"+axisEndX +(isLast ? "V394" : ""));
-        */
     }
 
     update.margin = function (value) {
@@ -133,6 +130,7 @@ export default function axesComponent() {
     update.currentZoom = function (value) {
         if (!arguments.length) { return currentZoom; }
         currentZoom = value;
+        /*
         d3.selectAll("g.axis").each(function(d){
             if(!scales[d.key]) { return; }
             const zoomedScale = currentZoom.rescaleX(scales[d.key])
@@ -143,6 +141,7 @@ export default function axesComponent() {
             axes[d.key].scale(zoomedScale)
             updateAxis.call(this, d)
         })
+        */
         return update;
     };
     return update;
