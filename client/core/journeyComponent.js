@@ -153,11 +153,7 @@ export default function journeyComponent() {
             // Zoom configuration
             const extent = [[0,0],[chartWidth, chartHeight]];
             enhancedZoom
-                .onClick(function(e,d){
-                    const chan = pointChannel({ x:e.sourceEvent.layerX, y:e.sourceEvent.layerY });
-                    console.log("chan", chan)
-                    handleClick.call(this, e, d);
-                })
+                .onClick(handleClick)
                 .onLongpressStart(function(e,d){
                     if(!enhancedZoom.wasMoved()){
                         //longpress toggles isOpen
@@ -218,6 +214,8 @@ export default function journeyComponent() {
 
             //planets
             planets
+                .width(planetWidth)
+                .height(planetHeight)
                 .channelsData(channelsData)
                 .linksData(linksData)
                 .yScale(yScale)

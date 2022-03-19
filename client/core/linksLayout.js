@@ -1,3 +1,4 @@
+import * as d3 from 'd3';
 import barChartLayout from "./barChartLayout";
 import { getGoalsData } from '../data/planets';
 
@@ -6,6 +7,8 @@ export default function linkslayout(){
     //const barChartHeight = 100; 
     //move bar dimns to linksCompo
     const mockGoalsData = getGoalsData();
+
+    let currentZoom = d3.zoomIdentity;
 
     let channelsData = [];
     let planetsData = [];
@@ -33,6 +36,11 @@ export default function linkslayout(){
     update.planetsData = function (value) {
         if (!arguments.length) { return planetsData; }
         planetsData = value;
+        return update;
+    };
+    update.currentZoom = function (value) {
+        if (!arguments.length) { return currentZoom; }
+        currentZoom = value;
         return update;
     };
 

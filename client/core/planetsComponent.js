@@ -15,51 +15,17 @@ import { timeMonth, timeWeek } from "d3-time"
 */
 export default function planetsComponent() {
     // dimensions
-    let margin = {left:0, right:0, top: 0, bottom:0};
-    let planetMargin = {left:5, right:5, top: 5, bottom:5};
-    let width = 4000;
-    let height = 2600;
+    let margin = {left:5, right:5, top: 5, bottom:5};
+    let width = 60;
+    let height = 60;
     let contentsWidth;
     let contentsHeight;
-    //canvas will be a lot bigger than the contentsWidth and contentsHeight
-    // of svg container, and can be panned/zoomed
-    let canvasWidth;
-    let canvasHeight;
-
-    let planetWidth;
-    let planetHeight;
-    let planetContentsWidth;
-    let planetContentsHeight;
-
-    let chartWidth;
-    let chartHeight;
-    const planetWrapperHeight = isOpen => isOpen ? planetHeight + chartHeight : planetHeight;
-    
-    const TIME_AXIS_WIDTH = 50;
-    let planetWrapperWidth;
-
-    const barChartWidth = 100;
-    const barChartHeight = 100;
 
     let enhancedZoom = dragEnhancements();
 
     function updateDimns(){
         contentsWidth = width - margin.left - margin.right;
         contentsHeight = height - margin.top - margin.bottom;
-        canvasWidth = contentsWidth// * 5;
-        canvasHeight = contentsHeight * 5; //this should be lrge enough for all planets, and rest can be accesed via pan
-
-        planetWrapperWidth = 120;
-        //note - planetWrapperHeight depends on whether or not planet is active
-        
-        planetWidth = planetWrapperWidth;
-        planetContentsWidth = planetWidth - planetMargin.left - planetMargin.right;
-        planetHeight = 80;//calcPlanetHeight(height);
-        planetContentsHeight = planetHeight - planetMargin.top - planetMargin.bottom;
-
-        chartWidth = planetWrapperWidth;
-        //we want enough space on screen for two planets and 1 chart
-        chartHeight = calcChartHeight(height, planetHeight);
     };
 
     let timeScale = x => 0;
@@ -87,8 +53,6 @@ export default function planetsComponent() {
     let addPlanet = function(){};
     let updatePlanet = function(){};
     let addLink = function(){};
-
-    const now = new Date();
     
     const ring = ellipse().className("ring");
 
@@ -106,9 +70,6 @@ export default function planetsComponent() {
                 .on("drag", onPlanetDrag)
                 .on("end", onPlanetDragEnd);
 
-            const rx = planetContentsWidth * 0.8 / 2;
-            const ry = planetContentsHeight * 0.8 / 2;
-
             const planetG = d3.select(this).selectAll("g.planet").data(planetsData, p => p.id);
             planetG.enter()
                 .append("g")
@@ -116,19 +77,19 @@ export default function planetsComponent() {
                 .attr("id", d => "planet-"+d.id)
                 .call(ring)
                 .each(function(d,i){
-                    const planetContentsG = d3.select(this)
+                    //ENTER
+                    const contentsG = d3.select(this)
                         .append("g")
                         .attr("class", "contents")
 
                     //ellipse
-                    planetContentsG
+                    contentsG
                         .append("ellipse")
-                            .attr("rx", rx)
-                            .attr("ry", ry)
+                            .attr("class", "core")
                             .attr("fill", grey10(5))
                     
                     //text
-                    planetContentsG
+                    contentsG
                         .append("text")
                         .attr("class", "title")
                         .attr("text-anchor", "middle")
@@ -138,25 +99,33 @@ export default function planetsComponent() {
                 
                 })
                 .each(function(d,i){
-                    const planetG = d3.select(this);
-                    planetG
+                    //ENTER - transition position
+                    d3.select(this)
                         .attr("transform", d => "translate("+adjX(timeScale(d.targetDate)) +"," +yScale(d.yPC) +")")
+                        //.attr("transform", d => "translate("+adjX(timeScale(d.targetDate)) +"," +yScale(d.yPC) +")")
                         .transition()
                             .delay(50)
                             .duration(200)
-                            .attr("transform", "translate("+timeScale(d.displayDate) +"," +yScale(d.yPC) +")");
-
-                    const planetContentsG = planetG.select("g.contents")
-                    //planet text
-                    planetContentsG.select("text").text(d.title || "enter name...")
+                            .attr("transform", "translate("+d.x +"," +yScale(d.yPC) +")");
+                            //.attr("transform", "translate("+timeScale(d.displayDate) +"," +yScale(d.yPC) +")");
 
                 })
                 .merge(planetG)
+                .each(function(d){
+                    //ENTER AND UPDATE
+                    const contentsG = d3.select(this).select("g.contents")
+                    //ellipse
+                    contentsG.select("ellipse.core")
+                        .attr("rx", d.rx(contentsWidth) || 50)
+                        .attr("ry", d.ry(contentsHeight) || 50)
+                    //text
+                    contentsG.select("text").text(d.title || "enter name...")
+                })
                 .call(planetDrag)
                 //@todo - use mask to make it a donut and put on top
                 .call(ring
-                        .rx(rx * 1.3)
-                        .ry(ry * 1.3)
+                        .rx(d => d.rx(contentsWidth) * 1.3)
+                        .ry(d => d.ry(contentsWidth) * 1.3)
                         .fill("transparent")
                         .stroke("none")
                         .onDragStart(onRingDragStart)
@@ -164,20 +133,22 @@ export default function planetsComponent() {
                         .onDragEnd(onRingDragEnd)
                         .container("g.contents"));
             
-            //update only
+            //UPDATE ONLY - transition position
             planetG.each(function(d){
                 const planetG = d3.select(this);
                 if(transitionUpdate){
+                    console.log("planet update with trans")
                     const { translateX } = getTransformation(planetG.attr("transform"));
                     planetG
                         .attr("transform", d => "translate("+translateX +"," +yScale(d.yPC) +")")
                         .transition()
                             .delay(50)
                             .duration(200)
-                            .attr("transform", "translate("+timeScale(d.displayDate) +"," +yScale(d.yPC) +")");
+                            .attr("transform", "translate("+d.x +"," +yScale(d.yPC) +")");
                 }else{
+                    console.log("planet update no trans")
                     planetG
-                        .attr("transform", "translate("+timeScale(d.displayDate) +"," +yScale(d.yPC) +")");
+                        .attr("transform", "translate("+d.x +"," +yScale(d.yPC) +")");
                 }
             })
             
@@ -186,7 +157,6 @@ export default function planetsComponent() {
             let newX;
             let newY;
             function onPlanetDragStart(e,d){
-                //console.log("p dS d", d)
                 newX = timeScale(d.displayDate);
                 newY = yScale(d.yPC)
             }

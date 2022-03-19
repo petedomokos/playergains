@@ -11,8 +11,8 @@ export function ellipse(selection, dispatch) {
     let wasMoved = false;
 
     let className = "";
-    let rx = 50;
-    let ry = 50;
+    let rx = d => d.rx || 50;
+    let ry = d => d.ry || 50;
     let fill = "#000000";
     let stroke = "#000000";
     let opacity = 1;
@@ -42,8 +42,8 @@ export function ellipse(selection, dispatch) {
             }
             //update
             g.select("ellipse" +(className ? "."+className : "."))
-                .attr("rx", rx)
-                .attr("ry", ry)
+                .attr("rx", rx(d))
+                .attr("ry", ry(d))
                 .attr("fill", fill)
                 .attr("stroke", stroke)
                 .attr("opacity", opacity)
@@ -65,12 +65,12 @@ export function ellipse(selection, dispatch) {
     };
     update.rx = function (value) {
         if (!arguments.length) { return rx; }
-        if(typeof value === "number") { rx = value;}
+        rx = value;
         return update;
     };
     update.ry = function (value) {
         if (!arguments.length) { return ry; }
-        if(typeof value === "number") { ry = value;}
+        ry = value;
         return update;
     };
     update.fill = function (value) {
