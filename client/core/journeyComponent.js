@@ -104,15 +104,10 @@ export default function journeyComponent() {
             if(!svg){
                 //enter
                 init.call(this);
-                update({
-                    planets:{ transitionUpdate: true },
-                    links:{ transitionEnter: true }
-                })
+                update()
             }else{
                 //update
-                update({
-                    planets:{ transitionUpdate: true  }
-                })
+                update({ planets:{ transitionUpdate: true  }, links:{ transitionUpdate: true  } })
             }
         })
 
@@ -197,8 +192,6 @@ export default function journeyComponent() {
                 .planetsData(planetsData);
             const linksData = myLinksLayout(state.links);
 
-            /*
-
             //links
             links
                 .yScale(yScale)
@@ -210,7 +203,6 @@ export default function journeyComponent() {
                 .join("g")
                 .attr("class", "links")
                 .call(links, options.links)
-                */
 
             //planets
             planets

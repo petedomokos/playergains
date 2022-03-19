@@ -86,7 +86,7 @@ const Journey = ({dimns}) => {
           setLinkState(prevState => ([ ...prevState, newLink]))
         })
         .updateChannel(props => {
-          setChannelState(prevState => updatedState(prevState, props))
+          setChannelState(prevState => updatedState(prevState, props, (other, updated) => other.nr < updated.nr))
         })
 
     /*

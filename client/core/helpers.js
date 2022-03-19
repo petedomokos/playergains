@@ -102,8 +102,6 @@ export const calcAdjX = (channelsData) => (trueX) => {
     return channel.startX + adjExtraX;
 }
 export const findPointChannel = (channelsData) => (pt) => {
-    console.log("fPC pt", pt)
-    console.log("fPC channelsData", channelsData)
     return channelsData.find(ch => channelContainsPoint(pt, ch))
 }
 export const findDateChannel = (channelsData) => (date) => channelsData.find(ch => channelContainsDate(date, ch))
@@ -112,10 +110,17 @@ export const findNearestChannelByEndDate = (channelsData) => (date) => {
     return channelsData.find(ch => ch.endDate === nearestDate)
 }
 
-export function updatedState(prevState, props){
+export function updatedState(prevState, props, orderComparator){
     const updated = { ...prevState.find(ch => ch.id === props.id), ...props };
     const rest = prevState.filter(ch => ch.id !== props.id);
-    const before = rest.filter(ch => ch.nr < updated.nr);
-    const after = rest.filter(ch => ch.nr > updated.nr);
-    return [...before, updated, ...after];
+    if(orderComparator){
+        //ordered
+        const before = rest.filter(ch => orderComparator(ch, updated));
+        const after = rest.filter(ch => !orderComparator(ch, updated));
+        const newState = [...before, updated, ...after];
+        return newState;
+
+    }
+    //unordered
+    return [updated, ...rest];
 }

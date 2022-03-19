@@ -17,20 +17,8 @@ import { timeMonth, timeWeek } from "d3-time"
 */
 export default function linksComponent() {
     // dimensions
-    let margin = {left:0, right:0, top: 0, bottom:0};
-    let width = 4000;
-    let height = 2600;
-    let contentsWidth;
-    let contentsHeight;
-
-
     const barChartWidth = 100;
     const barChartHeight = 100;
-
-    function updateDimns(){
-        contentsWidth = width - margin.left - margin.right;
-        contentsHeight = height - margin.top - margin.bottom;
-    };
 
     let timeScale = x => 0;
     let yScale = x => 0;
@@ -42,7 +30,6 @@ export default function linksComponent() {
 
     function links(selection, options={}) {
         const { transitionEnter, transitionUpdate } = options;
-        updateDimns();
 
         selection.each(function (data) {
             //console.log("links", data);
@@ -64,26 +51,11 @@ export default function linksComponent() {
                             .append("g")
                                 .attr("class", "bar-chart")
 
-                        const line = d3.select(this).select("line")
-                        //first time we use src and targ as start aswell as end
-                        if(transitionEnter){
-                            line
-                                .attr("x1", d => timeScale(d.src.targetDate))
-                                .attr("y1", line.attr("y1") || yScale(d.src.yPC))
-                                .attr("x2", line.attr("x2") || timeScale(d.targ.targetDate))
-                                .attr("y2", line.attr("y2") || yScale(d.targ.yPC))
-                                .transition()
-                                .delay(50)
-                                .duration(200)
-                                    .attr("x1", timeScale(d.src.displayDate))
-                                    .attr("x2", timeScale(d.targ.displayDate))
-                        }else{
-                            line
-                                .attr("x1", d => timeScale(d.src.displayDate))
-                                .attr("y1", line.attr("y1") || yScale(d.src.yPC))
-                                .attr("x2", timeScale(d.targ.displayDate))
-                                .attr("y2", line.attr("y2") || yScale(d.targ.yPC))
-                        }
+                        d3.select(this).select("line")
+                            .attr("x1", d.src.x)
+                            .attr("y1", d.src.y)
+                            .attr("x2", d.targ.x)
+                            .attr("y2", d.targ.y)
                     })
                     .merge(linkG)
                     .each(function(d){
@@ -106,34 +78,21 @@ export default function linksComponent() {
                         .transition()
                         .delay(50)
                         .duration(200)
-                            .attr("x1", timeScale(d.src.displayDate))
-                            .attr("x2", timeScale(d.targ.displayDate))
+                            .attr("x1", d.src.x)
+                            .attr("y1", d.src.y)
+                            .attr("x2", d.targ.x)
+                            .attr("y2", d.targ.y)
                 }else{
                     line
-                        .attr("x1", timeScale(d.src.displayDate))
-                        .attr("y1", yScale(d.src.yPC))
-                        .attr("x2", timeScale(d.targ.displayDate))
-                        .attr("y2", yScale(d.targ.yPC))
+                        .attr("x1", d.src.x)
+                        .attr("y1", d.src.y)
+                        .attr("x2", d.targ.x)
+                        .attr("y2", d.targ.y)
                 }
             })
         })
         return selection;
     }     
-    links.margin = function (value) {
-        if (!arguments.length) { return margin; }
-        margin = { ...margin, ...value};
-        return links;
-    };
-    links.width = function (value) {
-        if (!arguments.length) { return width; }
-        width = value;
-        return links;
-    };
-    links.height = function (value) {
-        if (!arguments.length) { return height; }
-        height = value;
-        return links;
-    };
     links.yScale = function (value) {
         if (!arguments.length) { return yScale; }
         yScale = value;

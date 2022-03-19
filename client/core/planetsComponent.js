@@ -137,7 +137,6 @@ export default function planetsComponent() {
             planetG.each(function(d){
                 const planetG = d3.select(this);
                 if(transitionUpdate){
-                    console.log("planet update with trans")
                     const { translateX } = getTransformation(planetG.attr("transform"));
                     planetG
                         .attr("transform", d => "translate("+translateX +"," +yScale(d.yPC) +")")
@@ -146,7 +145,6 @@ export default function planetsComponent() {
                             .duration(200)
                             .attr("transform", "translate("+d.x +"," +yScale(d.yPC) +")");
                 }else{
-                    console.log("planet update no trans")
                     planetG
                         .attr("transform", "translate("+d.x +"," +yScale(d.yPC) +")");
                 }

@@ -24,7 +24,13 @@ export default function linkslayout(){
             //const y = ((src.y + targ.y)/2) - barChartHeight/2;
             //pass the targ planet, along with mock goals, and the src targetDate as the startDate, to the bar layout
             const barChartData = barChartLayout({ ...targ, startDate:src.targetDate, goals: mockGoalsData})
-            return { ...l, src, targ, isOpen, /*x, y,*/ barChartData }
+            return { 
+                ...l, 
+                src, 
+                targ, 
+                isOpen, 
+                barChartData 
+            }
         });
     }
 
