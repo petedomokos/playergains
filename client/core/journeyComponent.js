@@ -183,11 +183,13 @@ export default function journeyComponent() {
             //.on("wheel.zoom", null)
 
             myPlanetsLayout
+                .currentZoom(currentZoom)
                 .yScale(yScale)
                 .channelsData(channelsData);
             const planetsData = myPlanetsLayout(state.planets);
 
             myLinksLayout
+                .currentZoom(currentZoom)
                 .channelsData(channelsData)
                 .planetsData(planetsData);
             const linksData = myLinksLayout(state.links);
@@ -211,7 +213,7 @@ export default function journeyComponent() {
                 .channelsData(channelsData)
                 .linksData(linksData)
                 .yScale(yScale)
-                //.timeScale(timeScale)
+                .fontSize(currentZoom.k * 9)
                 .timeScale(zoomedScale)
                 .addLink(addLink)
                 .updatePlanet(updatePlanet)

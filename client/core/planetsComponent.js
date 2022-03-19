@@ -20,6 +20,7 @@ export default function planetsComponent() {
     let height = 60;
     let contentsWidth;
     let contentsHeight;
+    let fontSize = 9;
 
     let enhancedZoom = dragEnhancements();
 
@@ -94,7 +95,6 @@ export default function planetsComponent() {
                         .attr("class", "title")
                         .attr("text-anchor", "middle")
                         .attr("dominant-baseline", "middle")
-                        .attr("font-size", 9)
                         .style("pointer-events", "none")
                 
                 })
@@ -115,11 +115,14 @@ export default function planetsComponent() {
                     //ENTER AND UPDATE
                     const contentsG = d3.select(this).select("g.contents")
                     //ellipse
+                    console.log("rx", d.rx(contentsWidth))
                     contentsG.select("ellipse.core")
                         .attr("rx", d.rx(contentsWidth) || 50)
                         .attr("ry", d.ry(contentsHeight) || 50)
                     //text
-                    contentsG.select("text").text(d.title || "enter name...")
+                    contentsG.select("text")
+                        .attr("font-size", fontSize)
+                        .text(d.title || "enter name...")
                 })
                 .call(planetDrag)
                 //@todo - use mask to make it a donut and put on top
@@ -298,6 +301,11 @@ export default function planetsComponent() {
     planets.yScale = function (value) {
         if (!arguments.length) { return yScale; }
         yScale = value;
+        return planets;
+    };
+    planets.fontSize = function (value) {
+        if (!arguments.length) { return fontSize; }
+        fontSize = value;
         return planets;
     };
     planets.timeScale = function (value) {
