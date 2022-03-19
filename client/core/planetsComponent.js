@@ -93,7 +93,7 @@ export default function planetsComponent() {
     const ring = ellipse().className("ring");
 
     function planets(selection, options={}) {
-        const { transitionUpdate = true } = options;
+        const { transitionEnter, transitionUpdate } = options;
         updateDimns();
         // expression elements
         selection.each(function (data) {

@@ -2,9 +2,6 @@ import { OPEN_CHANNEL_EXT_WIDTH } from './constants';
 import * as d3 from 'd3';
 
 export default function axesLayout(){
-
-    let currentZoom = d3.zoomIdentity;
-
     //note channels are the visible channels on screen
     function update(channels){
         const openChannels = channels.filter(ch => ch.isOpen);
@@ -30,7 +27,7 @@ export default function axesLayout(){
                 startDate:ch.endDate,
                 endDate:nextOpenChannel(ch)?.startDate || lastChannel.endDate,
                 //each prev open ch crates a horiz shift, and so does this one
-                transX:(ch.nrPrevOpenChannels + 1) * OPEN_CHANNEL_EXT_WIDTH * currentZoom.k,
+                transX:(ch.nrPrevOpenChannels + 1) * ch.scaledExtWidth,
                 showStartVerticalMark:false,
                 showEndVerticalMark:isLastAxis(ch),
             }
@@ -39,12 +36,6 @@ export default function axesLayout(){
         return [firstAxisDatum, ...otherAxesData];
 
     }
-
-    update.currentZoom = function (value) {
-        if (!arguments.length) { return currentZoom; }
-        currentZoom = value;
-        return update;
-    };
 
     return update;
 }

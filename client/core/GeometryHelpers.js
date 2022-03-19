@@ -1,4 +1,6 @@
 export function channelContainsPoint(pt, channel){
+    //console.log("ccp pt", channel)
+    //console.log("contains?", channel.startX <= pt.x && pt.x < channel.endX)
     return channel.startX <= pt.x && pt.x < channel.endX;
 }
 export function channelContainsDate(date, channel){

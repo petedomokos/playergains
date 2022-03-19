@@ -41,7 +41,7 @@ export default function linksComponent() {
     let barCharts = {};
 
     function links(selection, options={}) {
-        const { transitionUpdate = true, transitionEnter = false } = options;
+        const { transitionEnter, transitionUpdate } = options;
         updateDimns();
 
         selection.each(function (data) {

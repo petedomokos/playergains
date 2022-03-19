@@ -101,7 +101,11 @@ export const calcAdjX = (channelsData) => (trueX) => {
     //we return startX + extra not trueStartX, because we want to incude prev open channel widths
     return channel.startX + adjExtraX;
 }
-export const findPointChannel = (channelsData) => (pt) => channelsData.find(ch => channelContainsPoint(pt, ch))
+export const findPointChannel = (channelsData) => (pt) => {
+    console.log("fPC pt", pt)
+    console.log("fPC channelsData", channelsData)
+    return channelsData.find(ch => channelContainsPoint(pt, ch))
+}
 export const findDateChannel = (channelsData) => (date) => channelsData.find(ch => channelContainsDate(date, ch))
 export const findNearestChannelByEndDate = (channelsData) => (date) => {
     const nearestDate = findNearestDate(date, channelsData.map(d => d.endDate))

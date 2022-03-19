@@ -16,6 +16,7 @@ import { grey10, DEFAULT_D3_TICK_SIZE } from "./constants";
 import { findNearestPlanet, distanceBetweenPoints, channelContainsPoint, channelContainsDate } from './geometryHelpers';
 import dragEnhancements from './enhancedDragHandler';
 import { timeMonth, timeWeek } from "d3-time"
+import { update } from 'lodash';
 
 /*
 
@@ -81,9 +82,6 @@ export default function journeyComponent() {
     let addLink = function(){};
     let updateChannel = function(){};
 
-    //functions
-    let barCharts = {};
-
     //dom
     let svg;
     let contentsG;
@@ -91,91 +89,86 @@ export default function journeyComponent() {
     let canvasG;
     let canvasRect;
 
-    let initAxisRenderDone = false;
+    let state;
 
     let timeScale;
-    let xAxisG;
     let yScale;
-    let yAxisG;
-
-    let xAxis;
 
     let currentZoom = d3.zoomIdentity;
-
-    const now = new Date();
-    
-    const ring = ellipse().className("ring");
+    let channelsData;
 
     function journey(selection) {
         updateDimns();
-        selection.each(function (state) {
-            console.log("openChannels state", state.channels.filter(ch => ch.isOpen))
-            //init svg, contentsG, canvasG, canvasRect, axesG
-            if(!svg){ init.call(this);}
+        selection.each(function (journeyState) {
+            state = journeyState;
+            if(!svg){
+                //enter
+                init.call(this);
+                update({
+                    planets:{ transitionUpdate: true },
+                    links:{ transitionEnter: true }
+                })
+            }else{
+                //update
+                update({
+                    planets:{ transitionUpdate: true  }
+                })
+            }
+        })
 
+        function update(options={}){
+            //console.log("update currentZoom", currentZoom)
             yScale = d3.scaleLinear().domain([0, 100]).range([margin.top, margin.top + contentsHeight])
 
-            const displayedChannels = state.channels.filter(ch => ch.nr >= -1 && ch.nr <= 3)
-            const firstDisplayedChannel = displayedChannels[0];
-            const lastDisplayedChannel = displayedChannels[displayedChannels.length -1];
-
-            const nrDisplayedMonths = displayedChannels.length;
+            //start by showing 5 channels, from channel -1 to channel 3
+            const startDisplayedChannelNr = -1;
+            const endDisplayedChannelNr = 3;
+            const nrDisplayedMonths = endDisplayedChannelNr - startDisplayedChannelNr + 1; //add 1 for channel 0
             const widthPerMonth = contentsWidth / nrDisplayedMonths;
+
             const domain = [
-                addWeeks(-52, firstDisplayedChannel.startDate),
-                lastDisplayedChannel.endDate
+                addWeeks(-52, state.channels.find(ch => ch.nr === startDisplayedChannelNr).startDate),
+                state.channels.find(ch => ch.nr === endDisplayedChannelNr).endDate
             ]
             const range = [
                 -widthPerMonth * 12,
                 contentsWidth
             ]
-            timeScale = d3.scaleTime()
-                .domain(domain)
-                .range(range)
-                //.domain([firstDisplayedChannel.startDate, lastDisplayedChannel.endDate])
-                //.range([0, contentsWidth])
+            timeScale = d3.scaleTime().domain(domain).range(range)
 
             const zoomedScale = currentZoom.rescaleX(timeScale);
 
-            const channelsData = myChannelsLayout.scale(timeScale)(displayedChannels)
-            //console.log("channelsData...", channelsData);
-            const axesData = myAxesLayout(channelsData);
+            myChannelsLayout.scale(zoomedScale).currentZoom(currentZoom).contentsWidth(contentsWidth);
+            channelsData = myChannelsLayout(state.channels);
+
+            const axesData = myAxesLayout(channelsData.filter(ch => ch.isDisplayed));
             axes
                 .scale(zoomedScale)
-                //.scale(timeScale)
                 .tickSize(contentsHeight + DEFAULT_D3_TICK_SIZE)
-                //.currentZoom(currentZoom);
 
             axesG.datum(axesData).call(axes);
 
             //helpers
-            const trueX = calcTrueX(channelsData);
-            const pointChannel = findPointChannel(channelsData);
-            /*
-            const adjX = calcAdjX(channelsData);
-            const dateChannel = findDateChannel(channelsData);
-            const nearestChannelByEndDate = findNearestChannelByEndDate(channelsData);
-            */
+            const { trueX, pointChannel }= channelsData;
             // Zoom configuration
             const extent = [[0,0],[chartWidth, chartHeight]];
-            let wasMoved = false;
-
             enhancedZoom
-                .onClick(handleClick)
+                .onClick(function(e,d){
+                    const chan = pointChannel({ x:e.sourceEvent.layerX, y:e.sourceEvent.layerY });
+                    console.log("chan", chan)
+                    handleClick.call(this, e, d);
+                })
                 .onLongpressStart(function(e,d){
                     if(!enhancedZoom.wasMoved()){
                         //longpress toggles isOpen
-                        const { id, isOpen } = pointChannel({ x:e.sourceEvent.layerX, y:e.sourceEvent.layerY });
+                        const chan = pointChannel({ x:e.sourceEvent.layerX, y:e.sourceEvent.layerY });
+                        //console.log("chan", chan)
+                        if(!chan){ return; }
+                        const { id, isOpen } = chan;
+                        //console.log("channel....", chan)
+                        //there must be a diff between this code and the udate code above, or the way axis is updwted, because in zoomed state
+                        //sometimes the opening of c channel is only corrected on state update
                         updateChannel({ id, isOpen:!isOpen })
-                        //remove all x-axes, inc the initial one so it's domain is reset
-                        //d3.selectAll("g.x-axis").remove();
-                        //initAxisRenderDone = false;
-                        //update local channel state
-                        //channelState = channelState.map(ch => ({
-                           // ...ch,
-                            //isOpen:ch.nr === nr ? !isOpen : ch.isOpen
-                        //}))
-                        //update();
                     }
                 })
 
@@ -185,23 +178,8 @@ export default function journeyComponent() {
                 .scaleExtent([0.125, 8])
                 .on("start", enhancedZoom())
                 .on("zoom", enhancedZoom(function(e){
-                    if(!wasMoved) { wasMoved = true ;}
-                    // calculate new zoom transform
                     currentZoom = e.transform
-                    // rescale 
-                    const zoomedScale = currentZoom.rescaleX(timeScale);
-                    const axesData = myAxesLayout.currentZoom(currentZoom)(channelsData);
-                    axesG.datum(axesData)
-                        .call(axes
-                            .scale(zoomedScale))
-                    //console.log("zoomedScale", zoomedScale.domain())
-                    //update axis data and component
-                    //axes.currentZoom(currentZoom);
-                    //update planets data and component
-                    planets.timeScale(zoomedScale)
-                    canvasG.selectAll("g.planets").call(planets, { transitionUpdate: false })
-                    //update links component
-                    canvasG.selectAll("g.links").call(links, { transitionUpdate: false })
+                    update();
                 }))
                 .on("end", enhancedZoom())
                 
@@ -223,38 +201,38 @@ export default function journeyComponent() {
                 .planetsData(planetsData);
             const linksData = myLinksLayout(state.links);
 
-            //for now use this let but shuld use enter/update here
-            //update links component
+            /*
+
+            //links
             links
                 .yScale(yScale)
-                .timeScale(timeScale)
-            //call links component
+                //.timeScale(timeScale)
+                .timeScale(zoomedScale)
+
             canvasG.selectAll("g.links")
                 .data([linksData])
                 .join("g")
                 .attr("class", "links")
-                .join(
-                    enter => enter.append("g")
-                        .attr("class", "links")
-                        //first time links component renders, we want entered links to transition
-                        .call(links, { transitionEnter:true }),
-                    update => update
-                        .call(links) //we dont want any newly entered links to transition
-                );
+                .call(links, options.links)
+                */
+
+            //planets
+            planets
+                .channelsData(channelsData)
+                .linksData(linksData)
+                .yScale(yScale)
+                //.timeScale(timeScale)
+                .timeScale(zoomedScale)
+                .addLink(addLink)
+                .updatePlanet(updatePlanet)
 
             canvasG.selectAll("g.planets")
                 .data([planetsData])
                 .join("g")
                 .attr("class", "planets")
-                .call(planets
-                    .channelsData(channelsData)
-                    .linksData(linksData)
-                    .yScale(yScale)
-                    .timeScale(timeScale)
-                    .addLink(addLink)
-                    .updatePlanet(updatePlanet))
+                .call(planets, options.planets)
 
-        })
+        }
 
         function init(){
             svg = d3.select(this)
