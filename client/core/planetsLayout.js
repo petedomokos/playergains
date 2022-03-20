@@ -18,7 +18,6 @@ export default function planetsLayout(){
     }
 
     function update(data){
-        console.log("k", currentZoom.k)
         return data.map(p => {
             //todo - findNearestChannel needs to take account of open channels too
             const channel = nearestChannelByEndDate(p.targetDate);

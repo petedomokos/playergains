@@ -131,14 +131,15 @@ export default function journeyComponent() {
             ]
             timeScale = d3.scaleTime().domain(domain).range(range)
 
-            const zoomedScale = currentZoom.rescaleX(timeScale);
+            const zoomedTimeScale = currentZoom.rescaleX(timeScale);
+            const zoomedYScale = currentZoom.rescaleY(yScale);
 
-            myChannelsLayout.scale(zoomedScale).currentZoom(currentZoom).contentsWidth(contentsWidth);
+            myChannelsLayout.scale(zoomedTimeScale).currentZoom(currentZoom).contentsWidth(contentsWidth);
             channelsData = myChannelsLayout(state.channels);
 
             const axesData = myAxesLayout(channelsData.filter(ch => ch.isDisplayed));
             axes
-                .scale(zoomedScale)
+                .scale(zoomedTimeScale)
                 .tickSize(contentsHeight + DEFAULT_D3_TICK_SIZE)
 
             axesG.datum(axesData).call(axes);
@@ -176,7 +177,8 @@ export default function journeyComponent() {
                 
             //e is not from d3.drag here so use layerX and layerY
             function handleClick(e){
-                addPlanet(timeScale.invert(trueX(e.sourceEvent.layerX)), yScale.invert(e.sourceEvent.layerY))
+                //addPlanet(timeScale.invert(trueX(e.sourceEvent.layerX)), yScale.invert(e.sourceEvent.layerY))
+                addPlanet(zoomedTimeScale.invert(trueX(e.sourceEvent.layerX)), zoomedYScale.invert(e.sourceEvent.layerY))
             }
 
             svg.call(zoom)
@@ -184,7 +186,7 @@ export default function journeyComponent() {
 
             myPlanetsLayout
                 .currentZoom(currentZoom)
-                .yScale(yScale)
+                .yScale(zoomedYScale)
                 .channelsData(channelsData);
             const planetsData = myPlanetsLayout(state.planets);
 
@@ -196,9 +198,10 @@ export default function journeyComponent() {
 
             //links
             links
-                .yScale(yScale)
+                .yScale(zoomedYScale)
                 //.timeScale(timeScale)
-                .timeScale(zoomedScale)
+                .timeScale(zoomedTimeScale)
+                .strokeWidth(currentZoom.k * 1)
 
             canvasG.selectAll("g.links")
                 .data([linksData])
@@ -212,9 +215,9 @@ export default function journeyComponent() {
                 .height(planetHeight)
                 .channelsData(channelsData)
                 .linksData(linksData)
-                .yScale(yScale)
+                .yScale(zoomedYScale)
                 .fontSize(currentZoom.k * 9)
-                .timeScale(zoomedScale)
+                .timeScale(zoomedTimeScale)
                 .addLink(addLink)
                 .updatePlanet(updatePlanet)
 

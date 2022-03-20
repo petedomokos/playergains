@@ -22,6 +22,7 @@ export default function linksComponent() {
 
     let timeScale = x => 0;
     let yScale = x => 0;
+    let strokeWidth = 1;
 
     let linksData = [];
 
@@ -41,6 +42,7 @@ export default function linksComponent() {
                     .attr("class", "link")
                     .attr("id", d => "link-"+d.id)
                     .each(function(d,i){
+                        //ENTER
                         d3.select(this)
                             .append("line")
                                 .attr("stroke", grey10(5))
@@ -59,6 +61,11 @@ export default function linksComponent() {
                     })
                     .merge(linkG)
                     .each(function(d){
+                        //ENTER AND UPDATE
+                        //lines
+                        d3.select(this).select("line")
+                            .attr("stroke-width", strokeWidth)
+
                         //about bar charts
                         //- they appear halfway up the link, so if link covers two channels, it will not be in same pos as a chart for a link covering one of the channels
                         //- if any channel that teh link covers is open, then the link chart show
@@ -101,6 +108,11 @@ export default function linksComponent() {
     links.timeScale = function (value) {
         if (!arguments.length) { return timeScale; }
         timeScale = value;
+        return links;
+    };
+    links.strokeWidth = function (value) {
+        if (!arguments.length) { return strokeWidth; }
+        strokeWidth = value;
         return links;
     };
     links.updatePlanet = function (value) {

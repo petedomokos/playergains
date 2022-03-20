@@ -115,7 +115,6 @@ export default function planetsComponent() {
                     //ENTER AND UPDATE
                     const contentsG = d3.select(this).select("g.contents")
                     //ellipse
-                    console.log("rx", d.rx(contentsWidth))
                     contentsG.select("ellipse.core")
                         .attr("rx", d.rx(contentsWidth) || 50)
                         .attr("ry", d.ry(contentsHeight) || 50)
