@@ -112,6 +112,7 @@ export default function journeyComponent() {
         })
 
         function update(options={}){
+            const { k } = currentZoom;
             //console.log("update currentZoom", currentZoom)
             yScale = d3.scaleLinear().domain([0, 100]).range([margin.top, margin.top + contentsHeight])
 
@@ -145,7 +146,7 @@ export default function journeyComponent() {
             axesG.datum(axesData).call(axes);
 
             //helpers
-            const { trueX, pointChannel }= channelsData;
+            const { trueX, pointChannel } = channelsData;
             // Zoom configuration
             const extent = [[0,0],[chartWidth, chartHeight]];
             enhancedZoom
@@ -201,7 +202,11 @@ export default function journeyComponent() {
                 .yScale(zoomedYScale)
                 //.timeScale(timeScale)
                 .timeScale(zoomedTimeScale)
-                .strokeWidth(currentZoom.k * 1)
+                .strokeWidth(k * 1)
+                .barChartSettings({
+                    width:70 * k,
+                    height:70 * k
+                })
 
             canvasG.selectAll("g.links")
                 .data([linksData])
@@ -216,8 +221,25 @@ export default function journeyComponent() {
                 .channelsData(channelsData)
                 .linksData(linksData)
                 .yScale(zoomedYScale)
-                .fontSize(currentZoom.k * 9)
+                .fontSize(k * 9)
                 .timeScale(zoomedTimeScale)
+                .onDragStart(function(e,d){
+
+                })
+                .onDrag(function(e , d){
+                    /*
+                        todo - store state in this comp, update that and from there update planets and links except dragHandlers
+                        as that would intefere with drag. Then at end, update the react state,as it needs persisting at that stage
+                        so state in this component is always up-to-date, but react state is only at end of drags
+                    */
+                    //update link component
+                    //const newLinksData = 
+                    links.onPlanetDrag.call(this, e, d);
+                })
+                .onDragEnd(function(e , d){
+                    //targetDate must be based on trueX
+                    updatePlanet({ id:d.id, targetDate:timeScale.invert(trueX(d.x)), yPC:yScale.invert(d.y) });
+                })
                 .addLink(addLink)
                 .updatePlanet(updatePlanet)
 

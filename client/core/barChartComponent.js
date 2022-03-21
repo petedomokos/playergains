@@ -11,7 +11,7 @@ export default function barChartComponent() {
     // dimensions
     let width = 600;
     let height = 600;
-    const margin = {left:10, right:10, top:10, bottom:10}
+    const margin = {left:0, right:0, top:0, bottom:0}
     let contentsWidth;
     let contentsHeight;
 
@@ -55,6 +55,8 @@ export default function barChartComponent() {
                 .attr("height", contentsHeight)
                 //.attr("fill", "transparent")
                 .attr("fill", "blue")
+
+            /*
 
             //make the chart
             //axis
@@ -175,6 +177,7 @@ export default function barChartComponent() {
                             
                         })
                 })
+                */
 
 
 

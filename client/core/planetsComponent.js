@@ -22,8 +22,6 @@ export default function planetsComponent() {
     let contentsHeight;
     let fontSize = 9;
 
-    let enhancedZoom = dragEnhancements();
-
     function updateDimns(){
         contentsWidth = width - margin.left - margin.right;
         contentsHeight = height - margin.top - margin.bottom;
@@ -35,15 +33,20 @@ export default function planetsComponent() {
     let planetsData = [];
     let linksData = [];
     let channelsData;
-    let trueX = x => x;
+    //let trueX = x => x;
     let adjX = x => x;
     let pointChannel = () => {};
     let dateChannel = () => {};
     let nearestChannelByEndDate = () => {};
 
+    //handlers
+    let onDragStart = function() {};
+    let onDrag = function() {};
+    let onDragEnd = function() {};
+
     function updateChannelsData(newChannelsData){
         channelsData = newChannelsData;
-        trueX = calcTrueX(channelsData);
+        //trueX = calcTrueX(channelsData);
         adjX = calcAdjX(channelsData);
         pointChannel = findPointChannel(channelsData);
         dateChannel = findDateChannel(channelsData);
@@ -101,12 +104,12 @@ export default function planetsComponent() {
                 .each(function(d,i){
                     //ENTER - transition position
                     d3.select(this)
-                        .attr("transform", d => "translate("+adjX(timeScale(d.targetDate)) +"," +yScale(d.yPC) +")")
+                        .attr("transform", d => "translate("+adjX(timeScale(d.targetDate)) +"," +d.y +")")
                         //.attr("transform", d => "translate("+adjX(timeScale(d.targetDate)) +"," +yScale(d.yPC) +")")
                         .transition()
                             .delay(50)
                             .duration(200)
-                            .attr("transform", "translate("+d.x +"," +yScale(d.yPC) +")");
+                            .attr("transform", "translate("+d.x +"," +d.y +")");
                             //.attr("transform", "translate("+timeScale(d.displayDate) +"," +yScale(d.yPC) +")");
 
                 })
@@ -141,67 +144,43 @@ export default function planetsComponent() {
                 if(transitionUpdate){
                     const { translateX } = getTransformation(planetG.attr("transform"));
                     planetG
-                        .attr("transform", d => "translate("+translateX +"," +yScale(d.yPC) +")")
+                        .attr("transform", d => "translate("+translateX +"," +d.y +")")
                         .transition()
                             .delay(50)
                             .duration(200)
-                            .attr("transform", "translate("+d.x +"," +yScale(d.yPC) +")");
+                            .attr("transform", "translate("+d.x +"," +d.y +")");
                 }else{
                     planetG
-                        .attr("transform", "translate("+d.x +"," +yScale(d.yPC) +")");
+                        .attr("transform", "translate("+d.x +"," +d.y +")");
                 }
             })
             
 
             let planetWasMoved = true; //for now, always true
-            let newX;
-            let newY;
-            function onPlanetDragStart(e,d){
-                newX = timeScale(d.displayDate);
-                newY = yScale(d.yPC)
+            function onPlanetDragStart(e , d){
+                onDragStart.call(this, e, d)
             }
-            function onPlanetDrag(e,d){
+            function onPlanetDrag(e , d){
                 if(!planetWasMoved) { return; }
-                newX += e.dx;
-                newY += e.dy;
-                //d.x += e.dx;
-                //d.y += e.dy;
+                d.x += e.dx;
+                d.y += e.dy
+
                 //UPDATE DOM
                 //planet
-                //d3.select(this).attr("transform", "translate("+(d.x) +"," +(d.y) +")")
-                d3.select(this).attr("transform", "translate("+newX +"," +newY +")")
+                d3.select(this).attr("transform", "translate("+(d.x) +"," +(d.y) +")");
 
-                //src links
-                d3.selectAll("g.link")
-                    .filter(l => l.src.id === d.id)
-                    .each(function(l){
-                        l.src.x = newX;
-                        l.src.y = newY;
-                        d3.select(this).select("line")
-                            .attr("x1", l.src.x)
-                            .attr("y1", l.src.y)
-                    })
+                onDrag.call(this, e, d)
 
-                //targ links
-                d3.selectAll("g.link")
-                    .filter(l => l.targ.id === d.id)
-                    .each(function(l){
-                        l.targ.x = newX;
-                        l.targ.y = newY;
-                        d3.select(this).select("line")
-                            .attr("x2", l.targ.x)
-                            .attr("y2", l.targ.y)
-                    })
             }
 
+            //note: newX and Y should be stored as d.x and d.y
             function onPlanetDragEnd(e, d){
                 //if(!wasMoved){
                     //onPlanetClick.call(planetG.node(), e, d)
                     //return;
                 //}
-                //update state
-                //targetDate must be based on trueX
-                updatePlanet({ id:d.id, targetDate:timeScale.invert(trueX(newX)), yPC:yScale.invert(newY) });
+
+                onDragEnd.call(this, e, d);
             }
 
             //ring
@@ -312,6 +291,28 @@ export default function planetsComponent() {
         timeScale = value;
         return planets;
     };
+    planets.onDragStart = function (value) {
+        if (!arguments.length) { return onDragStart; }
+        if(typeof value === "function"){
+            onDragStart = value;
+        }
+        return planets;
+    };
+    planets.onDrag = function (value) {
+        if (!arguments.length) { return onDrag; }
+        if(typeof value === "function"){
+            onDrag = value;
+        }
+        return planets;
+    };
+    planets.onDragEnd = function (value) {
+        if (!arguments.length) { return onDragEnd; }
+        if(typeof value === "function"){
+            onDragEnd = value;
+        }
+        return planets;
+    };
+
     planets.addPlanet = function (value) {
         if (!arguments.length) { return addPlanet; }
         if(typeof value === "function"){
