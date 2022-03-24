@@ -88,7 +88,6 @@ export default function linksComponent() {
 
                         //fade in and out bar chart
                         if(d.isOpen && barChartG.attr("opacity") === "0"){
-                            console.log("fade in bar")
                             barChartG
                                 .transition()
                                 .delay(100)

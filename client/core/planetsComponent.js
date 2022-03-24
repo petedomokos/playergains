@@ -168,15 +168,7 @@ export default function planetsComponent() {
                 //obv need to tidy up teh way trueX is added in planetslayout too
                 //but first look at why link line
                 //becomes short and what happens to bar charts
-
-                //const targetDateNonAdj= timeScale.invert(d.x) //todo - incl adjX
-                //console.log("targNonAdj", targetDateNonAdj)
-                //this seems wrong, it suddenly jumps up, causing channel to switch up etc
-                //const targetDate = timeScale.invert(adjX(d.x))
-                //console.log("DRAG targetDate", targetDate)
                 const targetDate = timeScale.invert(d.channel.trueX(d.x))
-                //console.log("trueX", d.channel.trueX(d.x))
-                //console.log("targ", targetDate)
                 const yPC = yScale.invert(d.y)
 
                 //UPDATE DOM

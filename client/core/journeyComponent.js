@@ -63,12 +63,12 @@ export default function journeyComponent() {
         canvasWidth = contentsWidth// * 5;
         canvasHeight = contentsHeight * 5; //this should be lrge enough for all planets, and rest can be accesed via pan
 
-        planetWrapperWidth = 120;
+        planetWrapperWidth = 105;
         //note - planetWrapperHeight depends on whether or not planet is active
         
         planetWidth = planetWrapperWidth;
         planetContentsWidth = planetWidth - planetMargin.left - planetMargin.right;
-        planetHeight = 80;//calcPlanetHeight(height);
+        planetHeight = 65;//calcPlanetHeight(height);
         planetContentsHeight = planetHeight - planetMargin.top - planetMargin.bottom;
 
         chartWidth = planetWrapperWidth;
@@ -206,7 +206,7 @@ export default function journeyComponent() {
                 .strokeWidth(k * 1)
                 .barChartSettings({
                     width:70 * k,
-                    height:70 * k
+                    height:30 * k
                 })
 
             canvasG.selectAll("g.links")
@@ -244,7 +244,8 @@ export default function journeyComponent() {
                 })
                 .onDragEnd(function(e , d){
                     //targetDate must be based on trueX
-                    updatePlanet({ id:d.id, targetDate:timeScale.invert(trueX(d.x)), yPC:yScale.invert(d.y) });
+                    //updatePlanet({ id:d.id, targetDate:timeScale.invert(trueX(d.x)), yPC:yScale.invert(d.y) });
+                    updatePlanet({ id:d.id, targetDate:zoomedTimeScale.invert(trueX(d.x)), yPC:zoomedYScale.invert(d.y) });
                 })
                 .addLink(addLink)
                 .updatePlanet(updatePlanet)
