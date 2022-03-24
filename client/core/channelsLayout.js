@@ -13,7 +13,7 @@ export default function channelsLayout(){
         //note - although scale pased is the orig scale onot rescaled scale, it still returns correct values
         // I need to check this with new planets etc, bto quite sure why it works, obv axis has had its scale updated
         // but if zoomed in or panned, why would teh transfrom not move it. Just need to think it through
-        const channelsData = data.map((ch, i) => {
+        const _channelsData = data.map((ch, i) => {
             const trueStartX = scale(ch.startDate);
             const trueEndX = scale(ch.endDate);
             //the channels open are wrong on axis. when nr 1 is open, it shows as nr 0 being open
@@ -23,7 +23,7 @@ export default function channelsLayout(){
             const closedEndX = scale(ch.endDate) + nrPrevOpenChannels * scaledExtWidth;
             const openEndX = closedEndX + scaledExtWidth;
             const endX = ch.isOpen ? openEndX : closedEndX;
-            const axisRangeShiftWhenOpen = (nrPrevOpenChannels + 1) * scaledExtWidth;
+            const axisRangeShift = ch.isOpen ? (nrPrevOpenChannels + 1) * scaledExtWidth : nrPrevOpenChannels * scaledExtWidth;
             const isDisplayed = trueStartX >= 0 && trueEndX <= contentsWidth;
 
             return {
@@ -39,7 +39,7 @@ export default function channelsLayout(){
                 openWidth:openEndX - startX,
                 width:endX - startX,
                 scaledExtWidth,
-                axisRangeShiftWhenOpen,
+                axisRangeShift,
                 isDisplayed,
             }
         })
@@ -55,6 +55,8 @@ export default function channelsLayout(){
             //reduces x too much and thinks you are in `mar-Apr when you click apr-may (when mar-apr is open)
             return channel.startX + ((extraX/channel.width) * channel.closedWidth) - (channel.nrPrevOpenChannels * OPEN_CHANNEL_EXT_WIDTH);
         }
+
+        const channelsData = _channelsData.map(c => ({ ...c, trueX:_trueX}))
 
         const channelContainsPoint = (pt, chan) => chan.startX <= pt.x && pt.x < chan.endX;
         const channelContainsDate = (date, channel) => channel.startDate <= date && date < channel.endDate;

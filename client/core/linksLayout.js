@@ -17,9 +17,10 @@ export default function linkslayout(){
             const src = planetsData.find(p => p.id === l.src);
             const targ = planetsData.find(p => p.id === l.targ);
             //we want all visible channels to show, even if actual targetDate is not after, so we use x to get channels not dates
-            const channels = channelsData.filter(ch => ch.startX >= src.x && ch.endX <= targ.x);
-            //const channels = channelData.filter(ch => ch.startDate >= src.targetDate && ch.endDate <= targ.targetDate);
+            //include teh src and targ channels, plus any in between
+            const channels = channelsData.filter(ch => src.channel.nr === ch.nr || targ.channel.nr === ch.nr || ch.startX >= src.x && ch.endX <= targ.x);
             const isOpen = !!channels.find(ch => ch.isOpen);
+            //@todo - bug - centre jumps up when dragging from one channel into another if its open
             const centre = [
                 ((src.x + targ.x)/2),// - barChartWidth/2,
                 ((src.y + targ.y)/2),// - barChartHeight/2

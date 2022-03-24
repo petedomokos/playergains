@@ -2,6 +2,7 @@ import * as d3 from 'd3';
 import { findNearestChannelByEndDate } from "./helpers";
 
 export default function planetsLayout(){
+    let timeScale = x => 0;
     let yScale = x => 0;
     let currentZoom = d3.zoomIdentity;
 
@@ -21,18 +22,37 @@ export default function planetsLayout(){
         return data.map(p => {
             //todo - findNearestChannel needs to take account of open channels too
             const channel = nearestChannelByEndDate(p.targetDate);
+            const { axisRangeShift } = channel;
+            //on drag , targetX jumps up
+            //targetX should be the same as the d.x in planetDrag, not trueX
+            //problem - nrPtrevOpenChannels doesnt include itself when it is open
+            //but we have already stored that
+            const targetX = timeScale(p.targetDate) + axisRangeShift;
+            //const targetX = timeScale(p.targetDate) + nrPrevOpenChannels * scaledExtWidth;
+            if(p.id === "planet2"){
+                //console.log("channel", channel)
+                //console.log("nropen", nrPrevOpenChannels)
+                //console.log("scaledextwidth", scaledExtWidth)
+                //console.log("layout targetX", targetX)
+                //console.log("targetDate........", p.targetDate)
+            }
             return {
                 ...p,
                 channel,
-                displayDate:channel.endDate,
-                x:channel.endX, //planets positioned on channel end line
+                displayDate:p.unaligned ? p.targetDate : channel.endDate,
+                x:p.unaligned ? targetX : channel.endX, //planets positioned on channel end line
                 y: yScale(p.yPC),
+                targetX,
                 rx:(contentsWidth) => currentZoom.k * contentsWidth * 0.8 / 2,
                 ry:(contentsHeight) => currentZoom.k * contentsHeight * 0.8 / 2
             }
         })
     }
-
+    update.timeScale = function (value) {
+        if (!arguments.length) { return timeScale; }
+        timeScale = value;
+        return update;
+    };
     update.yScale = function (value) {
         if (!arguments.length) { return yScale; }
         yScale = value;

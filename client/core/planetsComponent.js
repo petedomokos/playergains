@@ -163,13 +163,27 @@ export default function planetsComponent() {
             function onPlanetDrag(e , d){
                 if(!planetWasMoved) { return; }
                 d.x += e.dx;
-                d.y += e.dy
+                d.y += e.dy;
+
+                //obv need to tidy up teh way trueX is added in planetslayout too
+                //but first look at why link line
+                //becomes short and what happens to bar charts
+
+                //const targetDateNonAdj= timeScale.invert(d.x) //todo - incl adjX
+                //console.log("targNonAdj", targetDateNonAdj)
+                //this seems wrong, it suddenly jumps up, causing channel to switch up etc
+                //const targetDate = timeScale.invert(adjX(d.x))
+                //console.log("DRAG targetDate", targetDate)
+                const targetDate = timeScale.invert(d.channel.trueX(d.x))
+                //console.log("trueX", d.channel.trueX(d.x))
+                //console.log("targ", targetDate)
+                const yPC = yScale.invert(d.y)
 
                 //UPDATE DOM
                 //planet
                 d3.select(this).attr("transform", "translate("+(d.x) +"," +(d.y) +")");
 
-                onDrag.call(this, e, d)
+                onDrag.call(this, e, { ...d, targetDate, yPC, unaligned:true })
 
             }
 

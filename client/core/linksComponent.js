@@ -36,7 +36,7 @@ export default function linksComponent() {
         const { transitionEnter, transitionUpdate } = options;
 
         selection.each(function (data) {
-            console.log("links", data);
+            //console.log("links", data);
             if(data){ linksData = data;}
            
             const linkG = d3.select(this).selectAll("g.link").data(linksData, l => l.id);
@@ -66,6 +66,7 @@ export default function linksComponent() {
                     .merge(linkG)
                     .each(function(d){
                         //ENTER AND UPDATE
+                        //console.log("centre x", d.centre[0])
                         //lines
                         d3.select(this).select("line")
                             .attr("stroke-width", strokeWidth)
@@ -74,8 +75,10 @@ export default function linksComponent() {
                         //- they appear halfway up the link, so if link covers two channels, it will not be in same pos as a chart for a link covering one of the channels
                         //- if any channel that teh link covers is open, then the link chart show
                         const barChartG = d3.select(this).select("g.bar-chart");
+                        const barCentre = d.centre[0] - barChartSettings.width/2;
+                        //console.log("barCentre", barCentre)
                         barChartG
-                            .attr("display", d.isOpen ? "inline" : "none")
+                            //.attr("display", d.isOpen ? "inline" : "none")
                             .datum(d.barChartData)
                             .call(barCharts[d.id]
                                 .width(barChartSettings.width)
@@ -85,6 +88,7 @@ export default function linksComponent() {
 
                         //fade in and out bar chart
                         if(d.isOpen && barChartG.attr("opacity") === "0"){
+                            console.log("fade in bar")
                             barChartG
                                 .transition()
                                 .delay(100)
@@ -92,10 +96,11 @@ export default function linksComponent() {
                                 .attr("opacity", 1)
                         }
                         if(!d.isOpen && barChartG.attr("opacity") === "1"){
+                            //@todo - put transition back but mak eit synced with close channel transition so it doesnt jump
                             barChartG
-                                .transition()
-                                .delay(100)
-                                .duration(400)
+                                //.transition()
+                                //.delay(100)
+                                //.duration(400)
                                 .attr("opacity", 0)
                         }
 

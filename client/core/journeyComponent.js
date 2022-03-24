@@ -187,6 +187,7 @@ export default function journeyComponent() {
 
             myPlanetsLayout
                 .currentZoom(currentZoom)
+                .timeScale(zoomedTimeScale)
                 .yScale(zoomedYScale)
                 .channelsData(channelsData);
             const planetsData = myPlanetsLayout(state.planets);
@@ -220,21 +221,26 @@ export default function journeyComponent() {
                 .height(planetHeight)
                 .channelsData(channelsData)
                 .linksData(linksData)
+                .timeScale(zoomedTimeScale)
                 .yScale(zoomedYScale)
                 .fontSize(k * 9)
-                .timeScale(zoomedTimeScale)
                 .onDragStart(function(e,d){
 
                 })
                 .onDrag(function(e , d){
-                    /*
-                        todo - store state in this comp, update that and from there update planets and links except dragHandlers
-                        as that would intefere with drag. Then at end, update the react state,as it needs persisting at that stage
-                        so state in this component is always up-to-date, but react state is only at end of drags
-                    */
-                    //update link component
-                    //const newLinksData = 
-                    links.onPlanetDrag.call(this, e, d);
+                    //console.log("DRAG.......")
+                    //links layout needs updated planet position and targetDate
+                    state.planets = state.planets.map(p => { return p.id === d.id ? d : p });
+                    const newPlanetsData = myPlanetsLayout(state.planets);
+                    myLinksLayout.planetsData(newPlanetsData);
+                    const newLinksData = myLinksLayout(state.links);
+                    canvasG.selectAll("g.links")
+                        .data([newLinksData])
+                        .join("g")
+                        .attr("class", "links")
+                        .call(links) //no transitions
+
+                    //links.onPlanetDrag.call(this, e, d);
                 })
                 .onDragEnd(function(e , d){
                     //targetDate must be based on trueX
