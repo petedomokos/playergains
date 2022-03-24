@@ -12,7 +12,7 @@ import { calcChartHeight, findFuturePlanets, findFirstFuturePlanet, findNearestD
 //import { COLOURS, DIMNS } from "./constants";
 import { addMonths, addWeeks } from "../util/TimeHelpers"
 import { ellipse } from "./ellipse";
-import { grey10, DEFAULT_D3_TICK_SIZE } from "./constants";
+import { grey10, DEFAULT_D3_TICK_SIZE, FILLS } from "./constants";
 import { findNearestPlanet, distanceBetweenPoints, channelContainsPoint, channelContainsDate } from './geometryHelpers';
 import dragEnhancements from './enhancedDragHandler';
 import { timeMonth, timeWeek } from "d3-time"
@@ -273,11 +273,11 @@ export default function journeyComponent() {
                 .append("g")
                     .attr("class", "canvas")
 
-            canvasRect = canvasG
+            canvasRect = canvasG 
                 .append("rect")
                     .attr("width", canvasWidth)
                     .attr("height", canvasHeight)
-                    .attr("fill", "#FAEBD7");
+                    .attr("fill", FILLS?.canvas || "#FAEBD7");
 
             axesG = contentsG
                 .append("g")

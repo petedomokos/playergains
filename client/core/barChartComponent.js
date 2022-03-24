@@ -1,7 +1,7 @@
 import * as d3 from 'd3';
 //import { planetsGenerator } from "./planetsGenerator";
 //import {  } from "./helpers";
-//import { COLOURS, DIMNS } from "./constants";
+import { FILLS } from "./constants";
 
 /*
 
@@ -53,8 +53,8 @@ export default function barChartComponent() {
             backgroundG
                 .attr("width", contentsWidth)
                 .attr("height", contentsHeight)
-                //.attr("fill", "transparent")
-                .attr("fill", "blue")
+                .attr("fill", FILLS?.canvas || "white")
+                .attr("stroke", "blue")
 
             /*
 

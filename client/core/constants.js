@@ -2,3 +2,6 @@ export const grey10 = (i) => ["#FFFFFF", "#E8E8E8","#D3D3D3", "#BEBEBE", "#A8A8A
 
 export const OPEN_CHANNEL_EXT_WIDTH = 100;
 export const DEFAULT_D3_TICK_SIZE = 6;
+export const FILLS = {
+    canvas:"#FAEBD7"
+}
