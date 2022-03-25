@@ -75,8 +75,6 @@ export default function linksComponent() {
                         //- they appear halfway up the link, so if link covers two channels, it will not be in same pos as a chart for a link covering one of the channels
                         //- if any channel that teh link covers is open, then the link chart show
                         const barChartG = d3.select(this).select("g.bar-chart");
-                        const barCentre = d.centre[0] - barChartSettings.width/2;
-                        //console.log("barCentre", barCentre)
                         barChartG
                             //.attr("display", d.isOpen ? "inline" : "none")
                             .datum(d.barChartData)

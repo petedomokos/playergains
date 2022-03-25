@@ -37,10 +37,18 @@ export function linearProjValue(x0MS, y0, x1MS, y1, xProjMS, dps){
     const x0 = msToMonths(x0MS);
     const x1 = msToMonths(x1MS);
     const xProj = msToMonths(xProjMS);
+    /*
+    console.log("linearprojvalue...")
+    console.log("x0", x0)
+    console.log("x1", x1)
+    console.log("y0", y0)
+    console.log("y1", y1)
+    */
     const m = (y1 - y0) / (x1 - x0);
     //the eqn of line must also be shifted so its deltaX not x
     const y = (deltaX) => m * deltaX + y0;
     const deltaX = xProj - x0;
+    //console.log("returning...", dps ? (+y(deltaX)).toFixed(dps) : y(deltaX))
     return dps ? (+y(deltaX)).toFixed(dps) : y(deltaX);
 }
 

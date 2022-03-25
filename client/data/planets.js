@@ -118,9 +118,9 @@ const planetsData = [
                         //datapoints will be added here when got from server, embellishing each with a date and value property
                         //for now. put in mock
                         datapoints:[ 
-                            {date:"2021-10-09", value:"15"},
-                            {date:"2021-10-25", value:"18"},
-                            {date:"2021-11-07", value:"20"}
+                            {date:"2021-10-09", value:"9"},
+                            {date:"2021-10-25", value:"10"},
+                            {date:"2021-11-07", value:"10"}
                         ],
                     } 
                 ]
@@ -148,7 +148,7 @@ const planetsData = [
                         datapoints:[ 
                             {date:"2021-10-09", value:"16"},
                             {date:"2021-10-25", value:"17"},
-                            {date:"2021-11-07", value:"20"}
+                            {date:"2021-11-07", value:"23"}
                         ],
                     } 
                 ]
@@ -176,7 +176,7 @@ const planetsData = [
                         datapoints:[ 
                             {date:"2021-10-09", value:"19"},
                             {date:"2021-10-25", value:"21"},
-                            {date:"2021-11-07", value:"24"}
+                            {date:"2021-11-07", value:"22"}
                         ],
                     } 
                 ]
@@ -202,9 +202,9 @@ const planetsData = [
                         //datapoints will be added here when got from server, embellishing each with a date and value property
                         //for now. put in mock
                         datapoints:[ 
-                            {date:"2021-10-09", value:"11"},
-                            {date:"2021-10-25", value:"13"},
-                            {date:"2021-11-07", value:"19"}
+                            {date:"2021-10-09", value:"8"},
+                            {date:"2021-10-25", value:"7"},
+                            {date:"2021-11-07", value:"9"}
                         ],
                     } 
                 ]

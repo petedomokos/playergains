@@ -8,16 +8,25 @@ import { FILLS } from "./constants";
 */
 export default function barChartComponent() {
     //console.log("creating bar chart")
+    let showValAxis = false;
     // dimensions
     let width = 600;
     let height = 600;
-    const margin = {left:0, right:0, top:0, bottom:0}
+    const valAxisExtraEndSpaceRequired = showValAxis ? 5 : 0;
+    let margin;
+
     let contentsWidth;
     let contentsHeight;
 
     //let planets = planetsGenerator();
 
     function updateDimns(){
+        margin = margin = {
+            left:width * 0.05, 
+            right:d3.max([valAxisExtraEndSpaceRequired, width * 0.05]), 
+            top:height * 0.05, 
+            bottom:height * 0.05
+        }
         contentsWidth = width - margin.left - margin.right;
         contentsHeight = height - margin.top - margin.bottom;
     };
@@ -26,7 +35,8 @@ export default function barChartComponent() {
 
     //dom
     let contentsG;
-    let backgroundG;
+    let backgroundRect;
+    let contentsBackgroundRect;
 
     function barChart(selection) {
         //note - container g is positioned in the middle of where the chart needs to be, so need to base coods off that
@@ -39,47 +49,56 @@ export default function barChartComponent() {
             //console.log("barChart.....", data);
             function init(){
                 //console.log("barChart init", this);
+
+                backgroundRect = d3.select(this)
+                    .append("rect")
+                        .attr("class", "border")
+                        .attr("width", width)
+                        .attr("height", height)
+                        .attr("fill", FILLS?.canvas || "white")
+                        .attr("stroke", "none")// "red")
+                        .attr("stroke-width", 0.3)
+                
                 contentsG = d3.select(this)
                     .append("g")
                     .attr("class", "contents")
                 
-                backgroundG = contentsG
+                contentsBackgroundRect = contentsG
                     .append("rect")
+                        .attr("fill", "transparent")
+                        .attr("stroke", "blue")
+                        .attr("stroke-width", 0.3)
+                        .attr("display", "none")
+
             }
 
-            contentsG
-                .attr("transform", "translate("+margin.left +"," +margin.top +")");
-
-            backgroundG
-                .attr("width", contentsWidth)
-                .attr("height", contentsHeight)
-                .attr("fill", FILLS?.canvas || "white")
-                .attr("stroke", "blue")
-
-            /*
+            backgroundRect.attr("width", width).attr("height", height)
+            contentsG.attr("transform", "translate("+margin.left +"," +margin.top +")");
+            contentsBackgroundRect.attr("width", contentsWidth).attr("height", contentsHeight)
 
             //make the chart
             //axis
-            const yAxisWidth = 10;
-            const xAxisHeight = 20;
+            const valAxisHeight = showValAxis ? 15 : 0;
+            const catAxisWidth = 10;
 
-            const barsAreaWidth = contentsWidth - yAxisWidth;
-            const barsAreaHeight = contentsHeight - xAxisHeight;
+            const barsAreaWidth = contentsWidth - catAxisWidth;
+            const barsAreaHeight = contentsHeight - valAxisHeight;
 
-            const barWrapperWidth = barsAreaWidth/data.length;
-            //left and right margin
-            const barHozMargin = barWrapperWidth * 0.2;
-            const barWidth = barWrapperWidth * 0.6;
-            const barLabelY = barsAreaHeight +10
-            const yScale = d3.scaleLinear().domain([0, 100]).range([barsAreaHeight, margin.top]);
-            const yAxis = d3.axisLeft().scale(yScale).ticks(5)
-            const yAxisG = contentsG.selectAll("g.y-axis").data([1]);
-            yAxisG.enter()
+            //flipped coz horizonatl bar chart
+            const barWrapperWidth = barsAreaHeight/data.length;
+            const barSpacing = barWrapperWidth * 0.4;
+            const barWidth = barWrapperWidth - barSpacing; 
+            //const barTextX = barsAreaWidth+10
+            const valScale = d3.scaleLinear().domain([0, 100]).range([margin.left, barsAreaWidth]);
+
+            const valAxis = d3.axisBottom().scale(valScale).ticks(5)
+            const valAxisG = contentsG.selectAll("g.val-axis").data(showValAxis ? [1] : []);
+            valAxisG.enter()
                 .append("g")
-                    .attr("class", "axis y-axis")
-                    .attr("transform", "translate(" +yAxisWidth +",0)")
-                    .call(yAxis)
-                    .merge(yAxisG)
+                    .attr("class", "axis val-axis")
+                    .attr("transform", "translate("+(margin.left +catAxisWidth) +"," +(contentsHeight - valAxisHeight)+")")
+                    .call(valAxis)
+                    .merge(valAxisG)
                     .each(function(){
                         d3.select(this)
                             .style("stroke-width", 0.05)
@@ -90,21 +109,34 @@ export default function barChartComponent() {
                             .style("font-size", 5)
                             .style("opacity", 0.5);
                     });
+            valAxisG.exit().remove();
 
             //bars
             const barsAreaG = contentsG.selectAll("g.bars-area").data([1])
             barsAreaG.enter()
                 .append("g")
                 .attr("class", "bars-area")
-                .merge(barsAreaG)
-                .attr("transform", "translate("+yAxisWidth +",0)")
                 .each(function(){
+                    d3.select(this)
+                        .append("rect")
+                            .attr("class", "bars-border")
+                            .attr("fill", "transparent")
+                            .attr("stroke", "grey")
+                            .attr("stroke-width", 0.1)
+                            .attr("opacity", 0.6)
+                })
+                .merge(barsAreaG)
+                .attr("transform", "translate("+catAxisWidth +",0)")
+                .each(function(){
+                    d3.select(this).select("rect.bars-border")
+                        .attr("width", barsAreaWidth)
+                        .attr("height", barsAreaHeight)
+
                     const barG = d3.select(this).selectAll("g.bar").data(data)
                     barG.enter()
                         .append("g")
                         .attr("class", "bar")
                         .attr("id", d => "bar-"+d.key)
-                        .attr("transform", (d,i) => "translate("+(barHozMargin +i * barWrapperWidth) +",0)")
                         .each(function(d,i){
                             //console.log("d...", d)
                             //datapoint
@@ -118,22 +150,26 @@ export default function barChartComponent() {
                             //projected rect
                             g.append("rect")
                                 .attr("class", "proj-bar")
-                                .attr("fill", "transparent")
-                                .attr("stroke-width", 0.5)
-                                .attr("stroke", "black");
-                            
+                                .attr("fill", "blue")
+                                .attr("opacity", 0.1);
+                            /*
                             g.append("text")
-                                .attr("transform", "translate("+barWidth/2 + "," +barLabelY +") rotate(-45)")
+                                .attr("transform", "translate("+barTextX  +"," +barWidth/2 +") rotate(-45)")
                                 .attr("text-anchor", "end")
                                 .attr("dominant-baseline", "middle")
-                                .attr("font-size", 5);
+                                .attr("font-size", 5)
+                                .attr("display", "none");
+                            */
 
+                            /*
                             g.append("svg:image")
                                 .attr("href", "/tick.svg")
                                 .attr("class", "tick");
+                            */
                             
                         })
                         .merge(barG)
+                        .attr("transform", (d,i) => "translate(0, "+((barSpacing/2) +i * barWrapperWidth) +")")
                         .each(function(d,i){
                             //console.log("d...", d)
                             //datapoint
@@ -141,26 +177,28 @@ export default function barChartComponent() {
                             const g = d3.select(this);
                             //actual rect
                             g.select("rect.bar")
-                                .attr("y", yScale(d.pcValue))
-                                .attr("width", barWidth)
-                                .attr("height", 40)//barsAreaHeight - yScale(d.pcValue));
+                                //.attr("y", valScale(d.pcValue))
+                                .attr("width", valScale(d.pcValue))
+                                .attr("height", barWidth)
 
                             //@todo - instead, use axis.clamp(true)
-                            const projPCValueToShow = d => d3.max([0, d3.min([d.projPCValue, 100])]);
+                            const clamp = projValue => d3.max([0, d3.min([projValue, 100])]);
 
                             //projected rect
                             g.select("rect.proj-bar")
-                                .attr("width", barWidth)
-                                .attr("y", yScale(d.pcValue))
-                                .attr("height", 0)
+                                .attr("height", barWidth)
+                                .attr("x", valScale(d.pcValue))
+                                .attr("width", 0)
                                 .transition()
                                 .duration(1000)
-                                    .attr("y", yScale(projPCValueToShow(d))) //@todo - instead, use axis.clamp(true)
-                                    .attr("height", 60)//barsAreaHeight - yScale((projPCValueToShow(d) - d.pcValue)));
+                                    //.attr("x", valScale(projPCValueToShow(d))) //@todo - instead, use axis.clamp(true)
+                                    .attr("width", d3.max([valScale(clamp(d.projPCValue)) - valScale(d.pcValue), 0]));
 
-                            g.select("text").text("abc")
+                            //g.select("text").text("abc")
                                 //.text(d.label);
 
+                            /*
+                            
                             const tickWidth = barWidth * 0.33;
                             const tickHeight = tickWidth;
                             g.select(".tick")
@@ -174,13 +212,11 @@ export default function barChartComponent() {
                                 .delay(1000)
                                 .duration(300)
                                     .attr("opacity", 1);
+
+                                    */
                             
                         })
                 })
-                */
-
-
-
 
         })
         return selection;
