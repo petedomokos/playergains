@@ -45,7 +45,8 @@ const Journey = ({dimns}) => {
   const [linkState, setLinkState] = useState([]);
   const [channelState, setChannelState] = useState(initChannels);
   //const [nrPlanetsCreated, setNrPlanetsCreated] = useState(0);
-  //console.log("planetState", planetState.find(p => p.id === "planet1"))
+  //console.log("planetState", planetState)
+  //console.log("linkState", linkState)
   const nrPlanetsCreated = useRef(0);
   //const goals = getGoalsData().map(g => {
 
@@ -77,6 +78,11 @@ const Journey = ({dimns}) => {
         })
         .updatePlanet(props => {
           setPlanetState(prevState => updatedState(prevState, props))
+        })
+        .deletePlanet(id => {
+          //must delete link first, but when state is put together this wont matter
+          setLinkState(prevState => prevState.filter(l => l.src !== id && l.targ !== id));
+          setPlanetState(prevState => prevState.filter(p => p.id !== id));
         })
         .addLink(props => {
           const newLink = {

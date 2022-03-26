@@ -15,6 +15,7 @@ export default function dragEnhancements() {
     let alwaysCallDrag = true;
 
     // handlers api
+    let beforeAll = function () {};
     let onLongpressStart;
     let onLongpressDragged;
     let onLongpressEnd;
@@ -33,6 +34,7 @@ export default function dragEnhancements() {
     let originalCursor;
     function withEnhancements(cb = () => { }) {
         return function (e, d) {
+            beforeAll.call(this, e, d);
             if(e.sourceEvent.type === "wheel"){
                 cb.call(this, e, d);
                 return;
@@ -50,7 +52,8 @@ export default function dragEnhancements() {
                     cb.call(this, e, d);
                     break;
                 }
-                case "drag", "zoom": {
+                case "drag":
+                case "zoom": {
                     if (isMultitouch) {
                         break;
                     }
@@ -90,16 +93,12 @@ export default function dragEnhancements() {
                     if (isLongpress && onLongpressEnd) {
                         onLongpressEnd.call(this, e, d);
                     }
-                    if (isClick) {
-                        onClick.call(this, e, d);
-                    }
+                    if (isClick) { onClick.call(this, e, d); }
 
                     cb.call(this, e, d);
 
                     // internal clean up
-                    if (longpressTimer) {
-                        clearLongpressTimer();
-                    }
+                    if (longpressTimer) { clearLongpressTimer(); }
                     resetFlags();
                     break;
                 }
@@ -155,6 +154,11 @@ export default function dragEnhancements() {
     withEnhancements.alwaysCallDrag = function (value) {
         if (!arguments.length) { return alwaysCallDrag; }
         alwaysCallDrag = value;
+        return withEnhancements;
+    };
+    withEnhancements.beforeAll = function (func) {
+        if (!arguments.length) { return beforeAll; }
+        beforeAll = func;
         return withEnhancements;
     };
     withEnhancements.onLongpressStart = function (func, settings) {

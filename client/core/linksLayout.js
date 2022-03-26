@@ -13,13 +13,23 @@ export default function linkslayout(){
     let channelsData = [];
     let planetsData = [];
     function update(data){
-        return data.map(l => {
+        return data.map((l,i) => {
             const src = planetsData.find(p => p.id === l.src);
             const targ = planetsData.find(p => p.id === l.targ);
             //we want all visible channels to show, even if actual targetDate is not after, so we use x to get channels not dates
             //include teh src and targ channels, plus any in between
-            const channels = channelsData.filter(ch => src.channel.nr === ch.nr || targ.channel.nr === ch.nr || ch.startX >= src.x && ch.endX <= targ.x);
+            //const channels = channelsData.filter(ch => src.channel.nr === ch.nr || targ.channel.nr === ch.nr || ch.startX >= src.x && ch.endX <= targ.x);
+            //const channels = channelsData.filter(ch => ch.startX >= src.channel.startX && ch.endX <= targ.channel.endX);
+            const channels = channelsData.filter(ch => src.channel.endX <= ch.startX && ch.endX <= targ.channel.endX);
             const isOpen = !!channels.find(ch => ch.isOpen);
+            /*
+            console.log("src", src)
+            console.log("link", l)
+            console.log("channels", channels)
+            console.log("isOpen", isOpen)
+            */
+            //@todo - bug - when opening a channel, the next links also show as being open
+            //because of the above line
             //@todo - bug - centre jumps up when dragging from one channel into another if its open
             const centre = [
                 ((src.x + targ.x)/2),// - barChartWidth/2,

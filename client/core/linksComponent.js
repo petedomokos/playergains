@@ -44,6 +44,7 @@ export default function linksComponent() {
                 .append("g")
                     .attr("class", "link")
                     .attr("id", d => "link-"+d.id)
+                    .attr("opacity", 1)
                     .each(function(d,i){
                         //ENTER
                         d3.select(this)
@@ -123,6 +124,18 @@ export default function linksComponent() {
                         .attr("y2", d.targ.y)
                 }
             })
+
+            //EXIT
+            linkG.exit().each(function(d){
+                //will be multiple exits because of the delay in removing
+                if(d3.select(this).attr("opacity") == 1){
+                    d3.select(this)
+                        .transition()
+                            .duration(200)
+                            .attr("opacity", 0)
+                            .on("end", function() { d3.select(this).remove() });
+                }
+            }) 
         })
 
         function onPlanetDrag(){

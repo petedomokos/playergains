@@ -36,6 +36,8 @@ export default function planetsLayout(){
                 //console.log("layout targetX", targetX)
                 //console.log("targetDate........", p.targetDate)
             }
+            const rx = (contentsWidth) => currentZoom.k * contentsWidth * 0.8 / 2;
+            const ry = (contentsHeight) => currentZoom.k * contentsHeight * 0.8 / 2;
             return {
                 ...p,
                 channel,
@@ -43,8 +45,10 @@ export default function planetsLayout(){
                 x:p.unaligned ? targetX : channel.endX, //planets positioned on channel end line
                 y: yScale(p.yPC),
                 targetX,
-                rx:(contentsWidth) => currentZoom.k * contentsWidth * 0.8 / 2,
-                ry:(contentsHeight) => currentZoom.k * contentsHeight * 0.8 / 2
+                rx,
+                ry,
+                ringRx:contentsWidth => rx(contentsWidth) * 1.3,
+                ringRy:contentsHeight => ry(contentsHeight) * 1.3
             }
         })
     }

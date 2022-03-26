@@ -63,12 +63,12 @@ export default function journeyComponent() {
         canvasWidth = contentsWidth// * 5;
         canvasHeight = contentsHeight * 5; //this should be lrge enough for all planets, and rest can be accesed via pan
 
-        planetWrapperWidth = 105;
+        planetWrapperWidth = 85;
         //note - planetWrapperHeight depends on whether or not planet is active
         
         planetWidth = planetWrapperWidth;
         planetContentsWidth = planetWidth - planetMargin.left - planetMargin.right;
-        planetHeight = 65;//calcPlanetHeight(height);
+        planetHeight = 60;//calcPlanetHeight(height);
         planetContentsHeight = planetHeight - planetMargin.top - planetMargin.bottom;
 
         chartWidth = planetWrapperWidth;
@@ -79,6 +79,7 @@ export default function journeyComponent() {
     //api
     let addPlanet = function(){};
     let updatePlanet = function(){};
+    let deletePlanet = function (){};
     let addLink = function(){};
     let updateChannel = function(){};
 
@@ -150,6 +151,7 @@ export default function journeyComponent() {
             // Zoom configuration
             const extent = [[0,0],[chartWidth, chartHeight]];
             enhancedZoom
+                .beforeAll(() => { planets.selected(undefined)})
                 .onClick(handleClick)
                 .onLongpressStart(function(e,d){
                     if(!enhancedZoom.wasMoved()){
@@ -203,7 +205,7 @@ export default function journeyComponent() {
                 .yScale(zoomedYScale)
                 //.timeScale(timeScale)
                 .timeScale(zoomedTimeScale)
-                .strokeWidth(k * 1)
+                .strokeWidth(k * 0.5)
                 .barChartSettings({
                     width:70 * k,
                     height:30 * k
@@ -249,6 +251,7 @@ export default function journeyComponent() {
                 })
                 .addLink(addLink)
                 .updatePlanet(updatePlanet)
+                .deletePlanet(deletePlanet)
 
             canvasG.selectAll("g.planets")
                 .data([planetsData])
@@ -324,6 +327,13 @@ export default function journeyComponent() {
         if (!arguments.length) { return updatePlanet; }
         if(typeof value === "function"){
             updatePlanet = value;
+        }
+        return journey;
+    };
+    journey.deletePlanet = function (value) {
+        if (!arguments.length) { return deletePlanet; }
+        if(typeof value === "function"){
+            deletePlanet = value;
         }
         return journey;
     };

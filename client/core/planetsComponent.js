@@ -9,7 +9,8 @@ import { grey10 } from "./constants";
 import { findNearestPlanet, distanceBetweenPoints, channelContainsPoint, channelContainsDate } from './geometryHelpers';
 import { OPEN_CHANNEL_EXT_WIDTH } from './constants';
 import dragEnhancements from './enhancedDragHandler';
-import { timeMonth, timeWeek } from "d3-time"
+import { timeMonth, timeWeek } from "d3-time";
+import menuComponent from './menuComponent';
 /*
 
 */
@@ -56,9 +57,20 @@ export default function planetsComponent() {
     //api
     let addPlanet = function(){};
     let updatePlanet = function(){};
+    let deletePlanet = function(){};
     let addLink = function(){};
     
     const ring = ellipse().className("ring");
+
+    let withClick = dragEnhancements();
+
+    let menu = menuComponent();
+
+    let menuOptions = [
+        { key: "delete", label:"Delete" }
+    ];
+
+    let selected;
 
     function planets(selection, options={}) {
         const { transitionEnter, transitionUpdate } = options;
@@ -68,17 +80,18 @@ export default function planetsComponent() {
             //console.log("planets", data)
             if(data){ planetsData = data;}
 
-            //3. PLANETS
+            withClick.onClick(function(e,d){ updateSelected(d.id);})
             const planetDrag = d3.drag()
-                .on("start", onPlanetDragStart)
-                .on("drag", onPlanetDrag)
-                .on("end", onPlanetDragEnd);
+                .on("start", withClick(onPlanetDragStart))
+                .on("drag", withClick(onPlanetDrag))
+                .on("end", withClick(onPlanetDragEnd));
 
             const planetG = d3.select(this).selectAll("g.planet").data(planetsData, p => p.id);
             planetG.enter()
                 .append("g")
                 .attr("class", "planet")
                 .attr("id", d => "planet-"+d.id)
+                .attr("opacity", 1) //for now, just transition out not in
                 .call(ring)
                 .each(function(d,i){
                     //ENTER
@@ -124,19 +137,48 @@ export default function planetsComponent() {
                     //text
                     contentsG.select("text")
                         .attr("font-size", fontSize)
-                        .text(d.title || "enter name...")
+                        .text(d.title || "enter name...");
                 })
                 .call(planetDrag)
                 //@todo - use mask to make it a donut and put on top
                 .call(ring
-                        .rx(d => d.rx(contentsWidth) * 1.3)
-                        .ry(d => d.ry(contentsWidth) * 1.3)
-                        .fill("transparent")
-                        .stroke("none")
-                        .onDragStart(onRingDragStart)
-                        .onDrag(onRingDrag)
-                        .onDragEnd(onRingDragEnd)
-                        .container("g.contents"));
+                    .rx(d => d.ringRx(contentsWidth))
+                    .ry(d => d.ringRy(contentsWidth))
+                    .fill("transparent")
+                    .stroke("none")
+                    .onDragStart(onRingDragStart)
+                    .onDrag(onRingDrag)
+                    .onDragEnd(onRingDragEnd)
+                    .container("g.contents"))
+                .each(function(d){
+                    const menuG = d3.select(this).selectAll("g.menu").data(selected === d.id ? [menuOptions] : []);
+                    const menuGEnter = menuG.enter()
+                        .append("g")
+                            .attr("class", "menu")
+                            .attr("opacity", 1)
+                            /*
+                            .attr("opacity", 0)
+                            .transition()
+                                .duration(200)
+                                .attr("opacity", 1);*/
+                    
+                    menuGEnter.merge(menuG)
+                        .attr("transform", "translate(0," + (d.rx(contentsWidth) * 0.8) +")")
+                        .call(menu);
+
+                    menuG.exit().each(function(d){
+                        //will be multiple exits because of the delay in removing
+                        if(d3.select(this).attr("opacity") == 1){
+                            d3.select(this)
+                                .transition()
+                                    .duration(200)
+                                    .attr("opacity", 0)
+                                    .on("end", function() { d3.select(this).remove() });
+                        }
+                    }) 
+                })
+            
+            
             
             //UPDATE ONLY - transition position
             planetG.each(function(d){
@@ -154,14 +196,23 @@ export default function planetsComponent() {
                         .attr("transform", "translate("+d.x +"," +d.y +")");
                 }
             })
-            
 
-            let planetWasMoved = true; //for now, always true
+            //EXIT
+            planetG.exit().each(function(d){
+                //will be multiple exits because of the delay in removing
+                if(d3.select(this).attr("opacity") == 1){
+                    d3.select(this)
+                        .transition()
+                            .duration(200)
+                            .attr("opacity", 0)
+                            .on("end", function() { d3.select(this).remove() });
+                }
+            }) 
+     
             function onPlanetDragStart(e , d){
                 onDragStart.call(this, e, d)
             }
             function onPlanetDrag(e , d){
-                if(!planetWasMoved) { return; }
                 d.x += e.dx;
                 d.y += e.dy;
 
@@ -181,11 +232,6 @@ export default function planetsComponent() {
 
             //note: newX and Y should be stored as d.x and d.y
             function onPlanetDragEnd(e, d){
-                //if(!wasMoved){
-                    //onPlanetClick.call(planetG.node(), e, d)
-                    //return;
-                //}
-
                 onDragEnd.call(this, e, d);
             }
 
@@ -244,6 +290,7 @@ export default function planetsComponent() {
                 planetG.select("line.temp-link").remove();
                 d3.selectAll("g.planet").select("g.contents").select("ellipse")
                     .attr("stroke", grey10(5))
+                    .attr("stroke-width", 1)
 
                 //set x2, y2 to centre of nearest planet
                 //...\
@@ -254,9 +301,20 @@ export default function planetsComponent() {
                 }
             }
         })
-
         return selection;
-    }     
+    }
+    //helpers
+    function updateSelected(id){
+        selected = id;
+        menu.onClick((option) => {
+            switch(option.key){
+                case "delete": { deletePlanet(selected) };
+                default:{};
+            }
+        });
+    }
+    
+    //api
     planets.margin = function (value) {
         if (!arguments.length) { return margin; }
         margin = { ...margin, ...value};
@@ -297,6 +355,11 @@ export default function planetsComponent() {
         timeScale = value;
         return planets;
     };
+    planets.selected = function (value) {
+        if (!arguments.length) { return selected; }
+        updateSelected(value);
+        return planets;
+    };
     planets.onDragStart = function (value) {
         if (!arguments.length) { return onDragStart; }
         if(typeof value === "function"){
@@ -330,6 +393,13 @@ export default function planetsComponent() {
         if (!arguments.length) { return updatePlanet; }
         if(typeof value === "function"){
             updatePlanet = value;
+        }
+        return planets;
+    };
+    planets.deletePlanet = function (value) {
+        if (!arguments.length) { return deletePlanet; }
+        if(typeof value === "function"){
+            deletePlanet = value;
         }
         return planets;
     };
