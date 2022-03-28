@@ -6,6 +6,8 @@ export default function planetsLayout(){
     let yScale = x => 0;
     let currentZoom = d3.zoomIdentity;
 
+    let selected;
+
     let channelsData;
     let trueX = x => x;
     let adjX = x => x;
@@ -48,7 +50,8 @@ export default function planetsLayout(){
                 rx,
                 ry,
                 ringRx:contentsWidth => rx(contentsWidth) * 1.3,
-                ringRy:contentsHeight => ry(contentsHeight) * 1.3
+                ringRy:contentsHeight => ry(contentsHeight) * 1.3,
+                isSelected:selected === p.id
             }
         })
     }
@@ -70,6 +73,11 @@ export default function planetsLayout(){
     update.currentZoom = function (value) {
         if (!arguments.length) { return currentZoom; }
         currentZoom = value;
+        return update;
+    };
+    update.selected = function (value) {
+        if (!arguments.length) { return selected; }
+        selected = value;
         return update;
     };
 

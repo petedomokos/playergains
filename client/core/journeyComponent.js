@@ -81,6 +81,7 @@ export default function journeyComponent() {
     let updatePlanet = function(){};
     let deletePlanet = function (){};
     let addLink = function(){};
+    let deleteLink = function(){};
     let updateChannel = function(){};
 
     //dom
@@ -146,13 +147,17 @@ export default function journeyComponent() {
 
             axesG.datum(axesData).call(axes);
 
-            //helpers
-            const { trueX, pointChannel } = channelsData;
             // Zoom configuration
             const extent = [[0,0],[chartWidth, chartHeight]];
             enhancedZoom
-                .beforeAll(() => { planets.selected(undefined)})
-                .onClick(handleClick)
+                //.beforeAll(() => { updateSelected(undefined); })
+                .onClick((e,d) => {
+                    if(selected()){
+                        updateSelected(undefined); 
+                    }else{
+                        addPlanet(zoomedTimeScale.invert(trueX(e.sourceEvent.layerX)), zoomedYScale.invert(e.sourceEvent.layerY))
+                    }
+                })
                 .onLongpressStart(function(e,d){
                     if(!enhancedZoom.wasMoved()){
                         //longpress toggles isOpen
@@ -177,16 +182,15 @@ export default function journeyComponent() {
                     update();
                 }))
                 .on("end", enhancedZoom())
-                
-            //e is not from d3.drag here so use layerX and layerY
-            function handleClick(e){
-                //addPlanet(timeScale.invert(trueX(e.sourceEvent.layerX)), yScale.invert(e.sourceEvent.layerY))
-                addPlanet(zoomedTimeScale.invert(trueX(e.sourceEvent.layerX)), zoomedYScale.invert(e.sourceEvent.layerY))
-            }
 
             svg.call(zoom)
             //.on("wheel.zoom", null)
 
+            //ELEMENTS
+            //helpers
+            const { trueX, pointChannel } = channelsData;
+           
+            //layouts
             myPlanetsLayout
                 .currentZoom(currentZoom)
                 .timeScale(zoomedTimeScale)
@@ -210,6 +214,11 @@ export default function journeyComponent() {
                     width:70 * k,
                     height:30 * k
                 })
+                .deleteLink(id => {
+                    myLinksLayout.selected(undefined);
+                    deleteLink(id);
+                })
+                .onClick((e,d) => { updateSelected(d.id);})
 
             canvasG.selectAll("g.links")
                 .data([linksData])
@@ -226,9 +235,6 @@ export default function journeyComponent() {
                 .timeScale(zoomedTimeScale)
                 .yScale(zoomedYScale)
                 .fontSize(k * 9)
-                .onDragStart(function(e,d){
-
-                })
                 .onDrag(function(e , d){
                     //console.log("DRAG.......")
                     //links layout needs updated planet position and targetDate
@@ -242,7 +248,6 @@ export default function journeyComponent() {
                         .attr("class", "links")
                         .call(links) //no transitions
 
-                    //links.onPlanetDrag.call(this, e, d);
                 })
                 .onDragEnd(function(e , d){
                     //targetDate must be based on trueX
@@ -251,13 +256,20 @@ export default function journeyComponent() {
                 })
                 .addLink(addLink)
                 .updatePlanet(updatePlanet)
-                .deletePlanet(deletePlanet)
+                .deletePlanet(id => {
+                    myPlanetsLayout.selected(undefined);
+                    deletePlanet(id);
+                })
+                .onClick((e,d) => { updateSelected(d.id);})
 
             canvasG.selectAll("g.planets")
                 .data([planetsData])
                 .join("g")
                 .attr("class", "planets")
                 .call(planets, options.planets)
+
+            //helpers
+            function selected(){ return [...planetsData, ...linksData].find(d => d.isSelected); }
 
         }
 
@@ -288,9 +300,16 @@ export default function journeyComponent() {
                 .attr("transform", "translate(0," +contentsHeight +")")
         }
 
+        function updateSelected(id){
+            myPlanetsLayout.selected(id);
+            myLinksLayout.selected(id);
+            update();
+        }
 
         return selection;
-    }     
+    }
+
+    //api
     journey.margin = function (value) {
         if (!arguments.length) { return margin; }
         margin = { ...margin, ...value};
@@ -341,6 +360,13 @@ export default function journeyComponent() {
         if (!arguments.length) { return addLink; }
         if(typeof value === "function"){
             addLink = value;
+        }
+        return journey;
+    };
+    journey.deleteLink = function (value) {
+        if (!arguments.length) { return deleteLink; }
+        if(typeof value === "function"){
+            deleteLink = value;
         }
         return journey;
     };

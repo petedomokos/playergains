@@ -59,18 +59,16 @@ export default function planetsComponent() {
     let updatePlanet = function(){};
     let deletePlanet = function(){};
     let addLink = function(){};
-    
-    const ring = ellipse().className("ring");
+    let onClick = function(){};
 
     let withClick = dragEnhancements();
 
-    let menu = menuComponent();
-
+    //components
+    const ring = ellipse().className("ring");
+    let menus = {};
     let menuOptions = [
         { key: "delete", label:"Delete" }
     ];
-
-    let selected;
 
     function planets(selection, options={}) {
         const { transitionEnter, transitionUpdate } = options;
@@ -80,7 +78,7 @@ export default function planetsComponent() {
             //console.log("planets", data)
             if(data){ planetsData = data;}
 
-            withClick.onClick(function(e,d){ updateSelected(d.id);})
+            withClick.onClick(onClick)
             const planetDrag = d3.drag()
                 .on("start", withClick(onPlanetDragStart))
                 .on("drag", withClick(onPlanetDrag))
@@ -104,6 +102,7 @@ export default function planetsComponent() {
                         .append("ellipse")
                             .attr("class", "core")
                             .attr("fill", grey10(5))
+                            .attr("cursor", "pointer")
                     
                     //text
                     contentsG
@@ -112,6 +111,9 @@ export default function planetsComponent() {
                         .attr("text-anchor", "middle")
                         .attr("dominant-baseline", "middle")
                         .style("pointer-events", "none")
+
+                    //menu component
+                    menus[d.id] = menuComponent();
                 
                 })
                 .each(function(d,i){
@@ -151,7 +153,7 @@ export default function planetsComponent() {
                     .onDragEnd(onRingDragEnd)
                     .container("g.contents"))
                 .each(function(d){
-                    const menuG = d3.select(this).selectAll("g.menu").data(selected === d.id ? [menuOptions] : []);
+                    const menuG = d3.select(this).selectAll("g.menu").data(d.isSelected ? [menuOptions] : [], d => d.key);
                     const menuGEnter = menuG.enter()
                         .append("g")
                             .attr("class", "menu")
@@ -164,7 +166,13 @@ export default function planetsComponent() {
                     
                     menuGEnter.merge(menuG)
                         .attr("transform", "translate(0," + (d.rx(contentsWidth) * 0.8) +")")
-                        .call(menu);
+                        .call(menus[d.id]
+                            .onClick((opt) => {
+                                switch(opt.key){
+                                    case "delete": { deletePlanet(d.id) };
+                                    default:{};
+                                }
+                            }))
 
                     menuG.exit().each(function(d){
                         //will be multiple exits because of the delay in removing
@@ -210,6 +218,8 @@ export default function planetsComponent() {
             }) 
      
             function onPlanetDragStart(e , d){
+                //note - called on click too - could improve enhancedDrag by preveting dragStart event
+                //until a drag event has also been recieved, so stroe it and then release when first drag event comes through
                 onDragStart.call(this, e, d)
             }
             function onPlanetDrag(e , d){
@@ -232,6 +242,7 @@ export default function planetsComponent() {
 
             //note: newX and Y should be stored as d.x and d.y
             function onPlanetDragEnd(e, d){
+                if(withClick.isClick()) { return; }
                 onDragEnd.call(this, e, d);
             }
 
@@ -303,16 +314,6 @@ export default function planetsComponent() {
         })
         return selection;
     }
-    //helpers
-    function updateSelected(id){
-        selected = id;
-        menu.onClick((option) => {
-            switch(option.key){
-                case "delete": { deletePlanet(selected) };
-                default:{};
-            }
-        });
-    }
     
     //api
     planets.margin = function (value) {
@@ -355,9 +356,9 @@ export default function planetsComponent() {
         timeScale = value;
         return planets;
     };
-    planets.selected = function (value) {
-        if (!arguments.length) { return selected; }
-        updateSelected(value);
+    planets.onClick = function (value) {
+        if (!arguments.length) { return onClick; }
+        onClick = value;
         return planets;
     };
     planets.onDragStart = function (value) {

@@ -39,6 +39,7 @@ export function ellipse(selection, dispatch) {
                 g.append("ellipse")
                     .attr("class", className)
                     .attr("id", className + "-" + d.id)
+                    .attr("cursor", "crosshair")
             }
             //update
             g.select("ellipse" +(className ? "."+className : "."))

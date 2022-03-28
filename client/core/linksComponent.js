@@ -8,11 +8,11 @@ import { calcChartHeight, findFuturePlanets, findFirstFuturePlanet, findNearestD
 import { addWeeks } from "../util/TimeHelpers"
 import { ellipse } from "./ellipse";
 import { grey10 } from "./constants";
-import { findNearestPlanet, distanceBetweenPoints, channelContainsPoint, channelContainsDate } from './geometryHelpers';
+import { findNearestPlanet, distanceBetweenPoints, angleOfRotation } from './geometryHelpers';
 import { OPEN_CHANNEL_EXT_WIDTH } from './constants';
 import dragEnhancements from './enhancedDragHandler';
 import { timeMonth, timeWeek } from "d3-time"
-import { ContactSupportOutlined } from '@material-ui/icons';
+import menuComponent from './menuComponent';
 /*
 
 */
@@ -30,7 +30,15 @@ export default function linksComponent() {
     let linksData = [];
 
     //functions
+    let deleteLink = function (){}
+    let onClick = function (){}
+
+    //components
     let barCharts = {};
+    let menus = {};
+    let menuOptions = [
+        { key: "delete", label:"Delete" }
+    ];
 
     function links(selection, options={}) {
         const { transitionEnter, transitionUpdate } = options;
@@ -47,30 +55,56 @@ export default function linksComponent() {
                     .attr("opacity", 1)
                     .each(function(d,i){
                         //ENTER
+                        //line
                         d3.select(this)
                             .append("line")
                                 .attr("stroke", grey10(5))
+                                .attr("cursor", "pointer")
+                                .attr("x1", d.src.x)
+                                .attr("y1", d.src.y)
+                                .attr("x2", d.targ.x)
+                                .attr("y2", d.targ.y)
                         
+                        //hitbox
+                        d3.select(this)
+                            .append("rect")
+                            .attr("class", "hitbox")
+                            .attr("stroke", "transparent")
+                            .attr("fill", "transparent")
+                            .style("cursor", "pointer")
+
+                        //bar charts
                         barCharts[d.id] = barChart();
 
                         d3.select(this)
                             .append("g")
                                 .attr("class", "bar-chart")
                                 .attr("opacity", 0)
-
-                        d3.select(this).select("line")
-                            .attr("x1", d.src.x)
-                            .attr("y1", d.src.y)
-                            .attr("x2", d.targ.x)
-                            .attr("y2", d.targ.y)
+                                .attr("display", "none")
+                        
+                        //menu component
+                        menus[d.id] = menuComponent();
+                            
                     })
                     .merge(linkG)
                     .each(function(d){
                         //ENTER AND UPDATE
                         //console.log("centre x", d.centre[0])
                         //lines
+                        const angle = angleOfRotation(d.src, d.targ)
                         d3.select(this).select("line")
                             .attr("stroke-width", strokeWidth)
+                            .on("click", onClick)
+                        
+                        //hitbox
+                        const hitboxWidth = 5;
+                        d3.select(this).select("rect.hitbox")
+                            .attr("transform", "rotate(" +angle +" " +d.src.x +" " +d.src.y +")")
+                            .attr("x", d.src.x)
+                            .attr("y", d.src.y - hitboxWidth/2)
+                            .attr("width", distanceBetweenPoints(d.src, d.targ))
+                            .attr("height", hitboxWidth)
+                            .on("click", onClick)
 
                         //about bar charts
                         //- they appear halfway up the link, so if link covers two channels, it will not be in same pos as a chart for a link covering one of the channels
@@ -88,6 +122,7 @@ export default function linksComponent() {
                         //fade in and out bar chart
                         if(d.isOpen && barChartG.attr("opacity") === "0"){
                             barChartG
+                                .attr("display", "inline")
                                 .transition()
                                 .delay(100)
                                 .duration(400)
@@ -100,10 +135,46 @@ export default function linksComponent() {
                                 //.delay(100)
                                 //.duration(400)
                                 .attr("opacity", 0)
+                                .attr("display", "none")
                         }
 
                         //todo - transition the transform of barChartG when a planet is dragged
                     })
+                    .each(function(d){
+                        const menuG = d3.select(this).selectAll("g.menu").data(d.isSelected ? [menuOptions] : []);
+                        const menuGEnter = menuG.enter()
+                            .append("g")
+                                .attr("class", "menu")
+                                .attr("opacity", 1)
+                                /*
+                                .attr("opacity", 0)
+                                .transition()
+                                    .duration(200)
+                                    .attr("opacity", 1);*/
+                        
+                        menuGEnter.merge(menuG)
+                            .attr("transform", "translate(" +d.centre[0] + "," +(d.centre[1] - menus[d.id].optDimns().height/2) +")")
+                            .call(menus[d.id]
+                                .onClick((opt) => {
+                                    switch(opt.key){
+                                        case "delete": { deleteLink(d.id) };
+                                        default:{};
+                                    }
+                                }))
+    
+                        menuG.exit().each(function(d){
+                            //will be multiple exits because of the delay in removing
+                            if(d3.select(this).attr("opacity") == 1){
+                                d3.select(this)
+                                    .transition()
+                                        .duration(200)
+                                        .attr("opacity", 0)
+                                        .on("end", function() { d3.select(this).remove() });
+                            }
+                        }) 
+                    })
+                    .on("mousedown", e => { e.stopPropagation(); })
+
             //update only
             linkG.each(function(d){
                 const line = d3.select(this).select("line")
@@ -138,11 +209,24 @@ export default function linksComponent() {
             }) 
         })
 
-        function onPlanetDrag(){
-
-        }
         return selection;
-    }     
+    }
+    
+    //helpers
+    /*
+    function updateSelected(id){
+        console.log("updateSel", id)
+        selected = id;
+        menu.onClick((option) => {
+            switch(option.key){
+                case "delete": { deletePlanet(selected) };
+                default:{};
+            }
+        });
+    }
+    */
+
+    //api
     links.yScale = function (value) {
         if (!arguments.length) { return yScale; }
         yScale = value;
@@ -163,26 +247,19 @@ export default function linksComponent() {
         barChartSettings = { ...barChartSettings, ...value};
         return links;
     };
-    links.updatePlanet = function (value) {
-        if (!arguments.length) { return updatePlanet; }
+    links.deleteLink = function (value) {
+        if (!arguments.length) { return deleteLink; }
         if(typeof value === "function"){
-            updatePlanet = value;
+            deleteLink = value;
         }
         return links;
     };
-    links.addLink = function (value) {
-        if (!arguments.length) { return addLink; }
-        if(typeof value === "function"){
-            addLink = value;
-        }
+    links.onClick = function (value) {
+        if (!arguments.length) { return onClick; }
+        onClick = value;
         return links;
     };
-    links.on = function () {
-        if (!dispatch) return links;
-        // attach extra arguments
-        const value = dispatch.on.apply(dispatch, arguments);
-        return value === dispatch ? links : value;
-    };
+    /*
     links.onPlanetDrag = function (e, d) {
         //src links
         d3.selectAll("g.link")
@@ -213,5 +290,6 @@ export default function linksComponent() {
         
         return links;
     }
+    */
     return links;
 };

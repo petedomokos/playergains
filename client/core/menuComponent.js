@@ -21,14 +21,12 @@ export default function menuComponent() {
     let contentsWidth;
     let contentsHeight;
 
-    let FIXED_OPT_WIDTH = 25;
-    let FIXED_OPT_HEIGHT = 10;
-    let FIXED_OPT_SPACING = 5;
-
     let optWrapperWidth;
-    let optSpacing;
-    let optWidth;
-    let optHeight;
+    let optDimns = {
+        width:25,
+        height:10,
+        spacing:5
+    }
 
     let bg = {
         fill: FILLS.canvas, //"transparent",
@@ -52,13 +50,11 @@ export default function menuComponent() {
             //specified total width
             contentsWidth = width - margin.left - margin.right;
             optWrapperWidth = contentsWidth / data.length;
-            optSpacing = 3 + optWrapperWidth * 0.2;
-            optWidth = optWrapperWidth - optSpacing;
+            optDimns.spacing = 3 + optWrapperWidth * 0.2;
+            optDimns.width = optWrapperWidth - optDimns.spacing;
         }else{
             //adjustable total width
-            optWidth = FIXED_OPT_WIDTH;
-            optSpacing = FIXED_OPT_SPACING;
-            optWrapperWidth = optWidth + optSpacing;
+            optWrapperWidth = optDimns.width + optDimns.spacing;
             contentsWidth = optWrapperWidth * data.length;
             width = contentsWidth + margin.left + margin.right;
         }
@@ -67,16 +63,14 @@ export default function menuComponent() {
         if(height){
             //specifed total height
             contentsHeight = height - margin.top - margin.bottom;
-            optHeight = contentsHeight;
+            optDimns.height = contentsHeight;
         }else{
-            optHeight = FIXED_OPT_HEIGHT;
-            contentsHeight = optHeight;
+            contentsHeight = optDimns.height;
             height = contentsHeight + margin.left + margin.right;
         }
     };
 
     function menu(selection) {
-        // expression elements
         selection.each(function (data) {
             updateDimns(data);
             //console.log("menu", data)
@@ -122,19 +116,19 @@ export default function menuComponent() {
 
                         })
                         .merge(optionG)
-                        .attr("transform", (d,i) => "translate(" + ((optSpacing/2) + i * optWrapperWidth) +", 0)")
+                        .attr("transform", (d,i) => "translate(" + ((optDimns.spacing/2) + i * optWrapperWidth) +", 0)")
                         .each(function(d){
                             //option-bg
                             d3.select(this).select("rect.option-bg")
-                                .attr("width", optWidth)
-                                .attr("height", optHeight)
+                                .attr("width", optDimns.width)
+                                .attr("height", optDimns.height)
                                 .attr("fill", optBg.fill)
                                 .attr("stroke", optBg.stroke);
 
                             //opt-text
                             d3.select(this).select("text")
-                                .attr("x", optWidth/2)
-                                .attr("y", optHeight/2)
+                                .attr("x", optDimns.width/2)
+                                .attr("y", optDimns.height/2)
                                 .attr("fill", optText.fill)
                                 .attr("stroke", optText.stroke)
                                 .attr("stroke-width", optText.strokeWidth)
@@ -162,6 +156,11 @@ export default function menuComponent() {
     menu.height = function (value) {
         if (!arguments.length) { return height; }
         height = value;
+        return menu;
+    };
+    menu.optDimns = function (value) {
+        if (!arguments.length) { return optDimns; }
+        optDimns = { ...optDimns, ...value };
         return menu;
     };
     menu.fontSize = function (value) {

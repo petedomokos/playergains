@@ -63,7 +63,6 @@ const Journey = ({dimns}) => {
 
   useEffect(() => {
     if(!containerRef.current || !journey){return; }
-
     journey
         .addPlanet((targetDate, yPC) => {
           const newPlanet = {
@@ -91,59 +90,61 @@ const Journey = ({dimns}) => {
           }
           setLinkState(prevState => ([ ...prevState, newLink]))
         })
+        .deleteLink(id => {
+          setLinkState(prevState => prevState.filter(l => l.id !== id));
+        })
         .updateChannel(props => {
           setChannelState(prevState => updatedState(prevState, props, (other, updated) => other.nr < updated.nr))
         })
 
-    /*
-
-    const parsedData = getPlanetsData()
-        .map((p,i, planets) => ({
-            ...p,
-            targetDate:new Date(p.targetDate),
-            goals:p.goals.map(g => ({
-                ...g,
-                datasetMeasures:g.datasetMeasures.map(m => ({
-                      ...m,
-                      startValue:+m.startValue,
-                      targetValue:+m.targetValue,
-                      //could order the ds here but seemd to cause probalems later when accessing d[0] the latest d
-                      datapoints:m.datapoints
-                          .map(d => ({
-                              date:new Date(d.date),
-                              value:+d.value
-                          }))
-                }))
-            }))
-        }))
-
-    const data = parsedData
-        .sort((a, b) => d3.ascending(a.targetDate, b.targetDate))
-        .map((p,i, planets) => ({
-            ...p,
-            i,
-            //first planet has a manually entered startDate (todo - make it default to first datapoint)
-            startDate: i === 0 ? new Date(p.startDate) : new Date(planets[i-1].targetDate),
-            //if isOpen has been set, we leave it as it is, otherwise must init
-            isOpen:typeof p.isOpen == "boolean" ? p.isOpen : p.id === findFirstFuturePlanet(planets)?.id,
-        }))
-        */
-
     d3.select(containerRef.current)
-      //.datum(data)
+      ////.datum(data)
       .datum({ planets: planetState, links: linkState, channels: channelState })
       .call(journey
-        //.margin({left: screenWidth * 0.1, right: screenWidth * 0.1, top: screenHeight * 0.1, bottom:40})
+        ////.margin({left: screenWidth * 0.1, right: screenWidth * 0.1, top: screenHeight * 0.1, bottom:40})
         .width(screenWidth - 20)
         .height(screenHeight - 20))
-        //.onSetOpenPlanet(setOpenPlanet))
+        ////.onSetOpenPlanet(setOpenPlanet))
+
+        /*
+      if(d3.select(containerRef.current).select("*").empty()){
+        const svg = d3.select(containerRef.current)
+          .attr("stroke", "black")
+          .attr("width", 300)
+          .attr("height", 300)
+
+        const outerRect = svg
+          .append("rect")
+            .attr("class", "outer")
+            .attr("x", 0)
+            .attr("y", 0)
+            .attr("width", 300)
+            .attr("height", 300)
+            .attr("fill", "red")
+
+          //.attr("transform", "translate(50,50)");
+        const innerRect = svg
+          .append("rect")
+            .attr("class", "inner")
+            .attr("transform", "translate(50,50)")
+            .attr("x", 0)
+            .attr("y", 100)
+            .attr("width", 100)
+            .attr("height", 100)
+            .attr("fill", "yellow")
+
+        console.log("outer rect bBox", outerRect.node().getBBox())
+        console.log("inner rect bBox", innerRect.node().getBBox())
+      }
+      */
+      
 
 
   })
 
 
   return (
-    <div className={classes.root} style={{height: screenHeight, marginTop:10, marginLeft:10}}>
+    <div className={classes.root} style={{height: screenHeight, marginTop:10, marginLeft:10 }}>
         <svg className={classes.svg} ref={containerRef}></svg>
     </div>
   )

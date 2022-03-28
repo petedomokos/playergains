@@ -9,6 +9,7 @@ export default function linkslayout(){
     const mockGoalsData = getGoalsData();
 
     let currentZoom = d3.zoomIdentity;
+    let selected;
 
     let channelsData = [];
     let planetsData = [];
@@ -43,7 +44,8 @@ export default function linkslayout(){
                 targ, 
                 isOpen, 
                 barChartData,
-                centre
+                centre,
+                isSelected:selected === l.id
             }
         });
     }
@@ -61,6 +63,11 @@ export default function linkslayout(){
     update.currentZoom = function (value) {
         if (!arguments.length) { return currentZoom; }
         currentZoom = value;
+        return update;
+    };
+    update.selected = function (value) {
+        if (!arguments.length) { return selected; }
+        selected = value;
         return update;
     };
 
