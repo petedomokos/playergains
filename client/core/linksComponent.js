@@ -58,12 +58,25 @@ export default function linksComponent() {
                         //line
                         d3.select(this)
                             .append("line")
+                                .attr("class", "main")
                                 .attr("stroke", grey10(5))
                                 .attr("cursor", "pointer")
                                 .attr("x1", d.src.x)
                                 .attr("y1", d.src.y)
                                 .attr("x2", d.targ.x)
                                 .attr("y2", d.targ.y)
+                        
+                        //completion line
+                        d3.select(this)
+                            .append("line")
+                                .attr("class", "completion")
+                                .attr("stroke", "blue")
+                                .attr("cursor", "pointer")
+                                .attr("x1", d.src.x)
+                                .attr("y1", d.src.y)
+                                .attr("x2", d.compX)
+                                .attr("y2", d.compY)
+
                         
                         //hitbox
                         d3.select(this)
@@ -91,15 +104,18 @@ export default function linksComponent() {
                         //ENTER AND UPDATE
                         //console.log("centre x", d.centre[0])
                         //lines
-                        const angle = angleOfRotation(d.src, d.targ)
-                        d3.select(this).select("line")
+                        d3.select(this).select("line.main")
                             .attr("stroke-width", strokeWidth)
+                            .on("click", onClick)
+
+                        d3.select(this).select("line.completion")
+                            .attr("stroke-width", strokeWidth * 1.3)
                             .on("click", onClick)
                         
                         //hitbox
                         const hitboxWidth = 5;
                         d3.select(this).select("rect.hitbox")
-                            .attr("transform", "rotate(" +angle +" " +d.src.x +" " +d.src.y +")")
+                            .attr("transform", "rotate(" +d.theta +" " +d.src.x +" " +d.src.y +")")
                             .attr("x", d.src.x)
                             .attr("y", d.src.y - hitboxWidth/2)
                             .attr("width", distanceBetweenPoints(d.src, d.targ))
@@ -177,9 +193,10 @@ export default function linksComponent() {
 
             //update only
             linkG.each(function(d){
-                const line = d3.select(this).select("line")
+                const mainLine = d3.select(this).select("line.main")
+                const compLine = d3.select(this).select("line.completion")
                 if(transitionUpdate){
-                    line
+                    mainLine
                         .transition()
                         .delay(50)
                         .duration(200)
@@ -187,12 +204,27 @@ export default function linksComponent() {
                             .attr("y1", d.src.y)
                             .attr("x2", d.targ.x)
                             .attr("y2", d.targ.y)
+
+                    compLine
+                        .transition()
+                        .delay(50)
+                        .duration(200)
+                            .attr("x1", d.src.x)
+                            .attr("y1", d.src.y)
+                            .attr("x2", d.compX)
+                            .attr("y2", d.compY)
                 }else{
-                    line
+                    mainLine
                         .attr("x1", d.src.x)
                         .attr("y1", d.src.y)
                         .attr("x2", d.targ.x)
                         .attr("y2", d.targ.y)
+                    
+                    compLine
+                        .attr("x1", d.src.x)
+                        .attr("y1", d.src.y)
+                        .attr("x2", d.compX)
+                        .attr("y2", d.compY)
                 }
             })
 

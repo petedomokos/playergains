@@ -75,7 +75,7 @@ export const angleOfRotation = (from, to) => {
     //console.log("x1", to.x)
     //console.log("y0", from.y)
     //console.log("y1", to.y)
-    const theta = angleFromTop([from, to]);
+    const theta = angleFromVertical([from, to]);
     //console.log("theta", theta)
     // note: y is reversed
     let angleOfRotation = 0;
@@ -108,7 +108,53 @@ export const angleOfRotation = (from, to) => {
     return angleOfRotation;
 }
 
-export function angleFromTop(points) {
+
+export const angleOfElevation = (from, to) => {
+    //TODO - sort out centre of rotation - make it from src
+    //thats why it doesnt show when  0 or 270 as its off teh page
+    /*
+    console.log("x0", from.x)
+    console.log("x1", to.x)
+    console.log("y0", from.y)
+    console.log("y1", to.y)
+    */
+    //in quad2, this is actually angle from bottom
+    const theta = angleFromVertical([from, to]);
+    //console.log("angle from top", theta)
+    // note: y is reversed
+    // quadrants clockwise from top
+    const quad1 = to.x >= from.x && to.y <= from.y;
+    const quad2 = to.x >= from.x && to.y > from.y;
+    //const quad3 = to.x < from.x && to.y > from.y;
+    //const quad4 = to.x < from.x && to.y <= from.y
+    //cases - quadrants clockwise from the top
+    if (quad1) {
+        //console.log("case A")
+        return { quad: 1, theta:90 - theta }
+    }
+    if (quad2) {
+        //console.log("case B")
+        return { quad: 1, theta:-(90 - theta) };
+    }
+    //console.log("neither A nor B")
+    //placeholder
+    return { quad:3, theta:0 }
+    //TEH NEXT TWO ARE UNTESTED AS TO.X IS ALWAYS TO.X ALWAYS GREATER
+    //PROBABLY WRONG AS NEDS TO BE ROTATED FROM HORIZONTAL
+    /*
+    if (quad3) {
+        console.log("case C")
+        // angle from top is "270-360";
+    }
+    if (quad4) {
+        console.log("case D")
+        // angle from top is "180-270";
+    }
+    */
+    //console.log("angleOfRot", angleOfRotation)
+}
+
+export function angleFromVertical(points) {
     // Must be at least two points
     if (!points[1]) { return undefined; }
     // assume straight line so just take first two points
@@ -134,7 +180,7 @@ export function angleOfElevation(pts){
     console.log("y1", pts[1].y)
     // Must be at least two points
     if (!pts[1]) { return undefined; }
-    const positiveTheta = 90 - angleFromTop(pts);
+    const positiveTheta = 90 - angleFromVertical(pts);
     //add sign for negative (quadrant 2 and 3 from the top)
     //WARNING - REMEMBER Y IS REVERSED!!!
     if (pts[1].x >= pts[0].x && pts[1].y <= pts[0].y) {

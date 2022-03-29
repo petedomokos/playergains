@@ -5,14 +5,65 @@ export function getPlanetsData(userId){
     return planetsData;
 }
 
-export function getGoalsData(userId){
+export function getGoalsData(linkId){
     //for now, same all users
-    return planetsData[2].goals;
+    if(!linkId) { return planetsData[2].goals; }
+    return goals[linkId] || goals["p4-p6"];
 }
 
 export function getStarData(userId){
     //for now, same all users
     return starData;
+}
+
+//goals for 8 planets, split as follows for 4 months... 1 / 3-1 / 1-1 / 1
+const goals = {
+    //COMPLETED
+    //group 1 to 3
+    "p1-p2":[createGoal("p1p2-g1", 100), createGoal("p1p2-g2", 100), createGoal("p1p2-g3", 100)],
+    "p1-p3":[createGoal("p1p3-g1", 100), createGoal("p1p3-g2", 100), createGoal("p1p3-g3", 100)],
+    "p1-p4":[createGoal("p1p4-g1", 100), createGoal("p1p4-g2", 100), createGoal("p1p4-g3", 100)],
+    //group 1 to 1
+    "p1-p5":[createGoal("p1p5-g1", 100), createGoal("p1p5-g2", 100), createGoal("p1p5-g3", 100)],
+    //MIDWAY
+    //group 3 to 1
+    "p2-p6":[createGoal("p2p6-g1", 60), createGoal("p2p6-g2", 60), createGoal("p2p6-g3", 50)],
+    "p3-p6":[createGoal("p3p6-g1", 90), createGoal("p3p6-g2", 70), createGoal("p3p6-g3", 40)],
+    "p4-p6":[createGoal("p4p6-g1", 80), createGoal("p4p6-g2", 70), createGoal("p4p6-g3", 60)],
+    //group 1 to 1
+    "p5-p7":[createGoal("p5p7-g1", 75), createGoal("p5p7-g2", 70), createGoal("p5p7-g3", 30)],
+    //NOT STARTED
+    "p6-p8":[createGoal("p6p8-g1", 0), createGoal("p6p8-g2", 0), createGoal("p6p8-g3", 0)],
+    "p7-p8":[createGoal("p7p8-g1", 0), createGoal("p7p8-g2", 0), createGoal("p7p8-g3", 0)],
+}
+
+function createGoal(id, pcScore){
+    return {
+        key:"goal-"+1,
+        id,
+        title:"My passes and crosses are good on both feet",
+        label:"Both feet",
+        desc:"",
+        datasetMeasures:[
+            //for now, one per goal
+            { 
+                datasetId:"606b2f653eecde47d886479a", 
+                measureKey:undefined, //will use isMain or first one
+                startValue:"7",
+                targetValue:"25",
+                //for now, just put in the measure properties as mocks
+                key:"m1",
+                title:"M1",
+                order:"highest is best",
+                unit:"secs",
+                //datapoints will be added here when got from server, embellishing each with a date and value property
+                //for now. put in mock
+                datapoints:[ 
+                    {date:"2021-10-09", value:"" +(7 + pcScore * (25 - 7) / 100)},
+                ],
+            } 
+        ]
+    }
 }
 
 const starData = {

@@ -66,7 +66,7 @@ const Journey = ({dimns}) => {
     journey
         .addPlanet((targetDate, yPC) => {
           const newPlanet = {
-              id:"planet"+ (nrPlanetsCreated.current + 1),
+              id:"p"+ (nrPlanetsCreated.current + 1),
               targetDate,
               yPC
               //goals

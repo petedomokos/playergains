@@ -1,12 +1,12 @@
 import * as d3 from 'd3';
 import barChartLayout from "./barChartLayout";
 import { getGoalsData } from '../data/planets';
+import { distanceBetweenPoints, angleOfRotation, angleOfElevation, toRadians } from './geometryHelpers';
 
 export default function linkslayout(){
     //const barChartWidth = 100;
     //const barChartHeight = 100; 
     //move bar dimns to linksCompo
-    const mockGoalsData = getGoalsData();
 
     let currentZoom = d3.zoomIdentity;
     let selected;
@@ -17,6 +17,8 @@ export default function linkslayout(){
         return data.map((l,i) => {
             const src = planetsData.find(p => p.id === l.src);
             const targ = planetsData.find(p => p.id === l.targ);
+
+            //const theta = 
             //we want all visible channels to show, even if actual targetDate is not after, so we use x to get channels not dates
             //include teh src and targ channels, plus any in between
             //const channels = channelsData.filter(ch => src.channel.nr === ch.nr || targ.channel.nr === ch.nr || ch.startX >= src.x && ch.endX <= targ.x);
@@ -37,13 +39,32 @@ export default function linkslayout(){
                 ((src.y + targ.y)/2),// - barChartHeight/2
             ]
             //pass the targ planet, along with mock goals, and the src targetDate as the startDate, to the bar layout
-            const barChartData = barChartLayout({ ...targ, startDate:src.targetDate, goals: mockGoalsData})
+            const barChartData = barChartLayout({ ...targ, startDate:src.targetDate, goals: getGoalsData(l.id)})
+            const overallProgressPC = d3.mean(barChartData, g => g.pcValue);
+
+            const { cos, sin } = Math;
+
+            //const theta = angleOfRotation(src, targ);
+            //console.log("theta", theta)
+            const { quad, theta } = angleOfElevation(src, targ)
+            //console.log("elev", theta)
+            const lineLength = distanceBetweenPoints(src, targ);
+            //console.log("lineLength", lineLength)
+            //console.log("overallPC", overallProgressPC)
+            //console.log("compX", cos(toRadians(theta)))
+            const compX = src.x + (overallProgressPC / 100) * lineLength * cos(toRadians(theta));
+            //subtract y as its reversed in svg coods
+            const compY = src.y - (overallProgressPC / 100) * lineLength * sin(toRadians(theta));
             return { 
                 ...l, 
                 src, 
-                targ, 
+                targ,
+                theta,
+                compX,
+                compY,
                 isOpen, 
                 barChartData,
+                overallProgressPC,
                 centre,
                 isSelected:selected === l.id
             }
