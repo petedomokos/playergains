@@ -176,7 +176,7 @@ export default function journeyComponent() {
                 //.scaleExtent([1, 3])
                 .extent(extent)
                 .scaleExtent([0.125, 8])
-                .on("start", enhancedZoom())
+                .on("start", () => { updateSelected(undefined); })
                 .on("zoom", enhancedZoom(function(e){
                     currentZoom = e.transform
                     update();
@@ -235,7 +235,9 @@ export default function journeyComponent() {
                 .timeScale(zoomedTimeScale)
                 .yScale(zoomedYScale)
                 .fontSize(k * 9)
+                .onClick((e,d) => { updateSelected(d.id);})
                 .onDrag(function(e , d){
+                    updateSelected(undefined); //warning - may interrupt drag handling with touch
                     //console.log("DRAG.......")
                     //links layout needs updated planet position and targetDate
                     state.planets = state.planets.map(p => { return p.id === d.id ? d : p });
@@ -250,6 +252,7 @@ export default function journeyComponent() {
 
                 })
                 .onDragEnd(function(e , d){
+                    updateSelected(undefined);
                     //targetDate must be based on trueX
                     //updatePlanet({ id:d.id, targetDate:timeScale.invert(trueX(d.x)), yPC:yScale.invert(d.y) });
                     updatePlanet({ id:d.id, targetDate:zoomedTimeScale.invert(trueX(d.x)), yPC:zoomedYScale.invert(d.y) });
@@ -260,7 +263,6 @@ export default function journeyComponent() {
                     myPlanetsLayout.selected(undefined);
                     deletePlanet(id);
                 })
-                .onClick((e,d) => { updateSelected(d.id);})
 
             canvasG.selectAll("g.planets")
                 .data([planetsData])
