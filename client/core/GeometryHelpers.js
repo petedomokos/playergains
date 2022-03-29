@@ -172,41 +172,6 @@ export function angleFromVertical(points) {
     const theta = toDegrees(Math.atan(deltaX / deltaY));
     return theta;
 }
-/*
-export function angleOfElevation(pts){
-    console.log("x0", pts[0].x)
-    console.log("x1", pts[1].x)
-    console.log("y0", pts[0].y)
-    console.log("y1", pts[1].y)
-    // Must be at least two points
-    if (!pts[1]) { return undefined; }
-    const positiveTheta = 90 - angleFromVertical(pts);
-    //add sign for negative (quadrant 2 and 3 from the top)
-    //WARNING - REMEMBER Y IS REVERSED!!!
-    if (pts[1].x >= pts[0].x && pts[1].y <= pts[0].y) {
-        console.log("case A")
-        // quad 1 from top 0-90 - no need to negate
-        return positiveTheta;
-    }
-    if (pts[1].x >= pts[0].x && pts[1].y >= pts[0].y) {
-        console.log("case B")
-        // quad 2 from top 90-180 must negate
-        //angleOfRotation = 180 + theta;
-        return -positiveTheta;
-    }
-    if (pts[1].x <= pts[0].x && pts[1].y >= pts[0].y) {
-        console.log("case C")
-        // quad 3 from top is "180-270";
-        //angleOfRotation = 180 - theta;
-        return -positiveTheta;
-    }
-    if (pts[1].x <= pts[0].x && pts[1].y <= pts[0].y) {
-        console.log("case D")
-        // quad 4 from top is "270-360";
-        return positiveTheta;
-    }
-}
-*/
 
 export function toRadians(degrees) {
     return degrees * (Math.PI / 180);
