@@ -5,9 +5,9 @@ import { getClientPoint } from "./domHelpers.js";
 export default function dragEnhancements() {
     // consts
     const LONGPRESS_TIME_THRESHOLD = 500;
-    const DRAG_DISTANCE_THRESHOLD = 10;
 
     // settings
+    let dragThreshold = 10;
     let isDragEnabled = true;
     let withLongpress = false;
     let withClick = false;
@@ -34,6 +34,7 @@ export default function dragEnhancements() {
     let originalCursor;
     function withEnhancements(cb = () => { }) {
         return function (e, d) {
+            console.log("ev", e.type)
             beforeAll.call(this, e, d);
             if(e.sourceEvent.type === "wheel"){
                 cb.call(this, e, d);
@@ -42,6 +43,7 @@ export default function dragEnhancements() {
             if (!isDragEnabled) { return; }
             switch (e.type) {
                 case "start": {
+                    console.log("start")
                     if (isMultitouch) { break; }
                     // set up for drag threshold test
                     startPoint = getClientPoint(e);
@@ -54,6 +56,7 @@ export default function dragEnhancements() {
                 }
                 case "drag":
                 case "zoom": {
+                    console.log("zoom or drag")
                     if (isMultitouch) {
                         break;
                     }
@@ -62,13 +65,18 @@ export default function dragEnhancements() {
                         break;
                     }
 
-                    const minDistance = withClick ? DRAG_DISTANCE_THRESHOLD : 0;
+                    const minDistance = withClick ? dragThreshold : 0;
                     // CHECK ITS REACHED THE DRAG THRESHOLD
                     const currentPoint = getClientPoint(e);
+                    if(!startPoint) { startPoint = currentPoint; }
+                    //console.log("start x----", startPoint.x)
+                    //console.log("curr x", currentPoint.x)
                     const distanceDragged = distanceBetweenPoints(startPoint, currentPoint);
+                    //console.log("distanceDragged", distanceDragged)
                     if (distanceDragged < minDistance) {
                         break;
                     }
+                    //console.log("was moved")
                     wasMoved = true;
 
                     // if moved before longpress set to true, need to stop the timer
@@ -89,6 +97,7 @@ export default function dragEnhancements() {
                 case "end": {
                     // click flag
                     isClick = withClick && !wasMoved && !isLongpress && !isMultitouch;
+                    console.log("end isClick", isClick)
 
                     if (isLongpress && onLongpressEnd) {
                         onLongpressEnd.call(this, e, d);
@@ -113,8 +122,10 @@ export default function dragEnhancements() {
     }
 
     function setLongpressTimer(e, d) {
+        console.log("set lp timer")
         longpressTimer = d3.timeout(() => {
             if (isMultitouch) { return; }
+            console.log("set lp to true")
             isLongpress = true;
             if (longpressSettings.cursor) {
                 originalCursor = d3.select(this).style("cursor");
@@ -145,7 +156,11 @@ export default function dragEnhancements() {
     }
 
     // api
-
+    withEnhancements.dragThreshold = function (value) {
+        if (!arguments.length) { return dragThreshold; }
+        dragThreshold = value;
+        return withEnhancements;
+    };
     withEnhancements.isDragEnabled = function (value) {
         if (!arguments.length) { return isDragEnabled; }
         isDragEnabled = value;

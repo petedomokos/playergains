@@ -189,7 +189,10 @@ export default function linksComponent() {
                             }
                         }) 
                     })
-                    .on("mousedown", e => { e.stopPropagation(); })
+                    .on("mousedown", e => { 
+                        console.log("link md")
+                        //e.stopPropagation(); 
+                    })
 
             //update only
             linkG.each(function(d){

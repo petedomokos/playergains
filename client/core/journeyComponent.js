@@ -150,8 +150,10 @@ export default function journeyComponent() {
             // Zoom configuration
             const extent = [[0,0],[chartWidth, chartHeight]];
             enhancedZoom
+                //.dragThreshold(200) //dont get why this has to be so large
                 //.beforeAll(() => { updateSelected(undefined); })
                 .onClick((e,d) => {
+                    console.log("enhancedZoom click", selected())
                     if(selected()){
                         updateSelected(undefined); 
                     }else{
@@ -159,6 +161,7 @@ export default function journeyComponent() {
                     }
                 })
                 .onLongpressStart(function(e,d){
+                    console.log("lpStart", enhancedZoom.wasMoved())
                     if(!enhancedZoom.wasMoved()){
                         //longpress toggles isOpen
                         const chan = pointChannel({ x:e.sourceEvent.layerX, y:e.sourceEvent.layerY });
