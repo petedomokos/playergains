@@ -34,7 +34,6 @@ export default function dragEnhancements() {
     let originalCursor;
     function withEnhancements(cb = () => { }) {
         return function (e, d) {
-            console.log("ev", e.type)
             beforeAll.call(this, e, d);
             if(e.sourceEvent.type === "wheel"){
                 cb.call(this, e, d);
@@ -43,7 +42,6 @@ export default function dragEnhancements() {
             if (!isDragEnabled) { return; }
             switch (e.type) {
                 case "start": {
-                    console.log("start")
                     if (isMultitouch) { break; }
                     // set up for drag threshold test
                     startPoint = getClientPoint(e);
@@ -56,7 +54,6 @@ export default function dragEnhancements() {
                 }
                 case "drag":
                 case "zoom": {
-                    console.log("zoom or drag")
                     if (isMultitouch) {
                         break;
                     }
@@ -69,8 +66,6 @@ export default function dragEnhancements() {
                     // CHECK ITS REACHED THE DRAG THRESHOLD
                     const currentPoint = getClientPoint(e);
                     if(!startPoint) { startPoint = currentPoint; }
-                    //console.log("start x----", startPoint.x)
-                    //console.log("curr x", currentPoint.x)
                     const distanceDragged = distanceBetweenPoints(startPoint, currentPoint);
                     //console.log("distanceDragged", distanceDragged)
                     if (distanceDragged < minDistance) {
@@ -97,7 +92,6 @@ export default function dragEnhancements() {
                 case "end": {
                     // click flag
                     isClick = withClick && !wasMoved && !isLongpress && !isMultitouch;
-                    console.log("end isClick", isClick)
 
                     if (isLongpress && onLongpressEnd) {
                         onLongpressEnd.call(this, e, d);
@@ -122,10 +116,8 @@ export default function dragEnhancements() {
     }
 
     function setLongpressTimer(e, d) {
-        console.log("set lp timer")
         longpressTimer = d3.timeout(() => {
             if (isMultitouch) { return; }
-            console.log("set lp to true")
             isLongpress = true;
             if (longpressSettings.cursor) {
                 originalCursor = d3.select(this).style("cursor");

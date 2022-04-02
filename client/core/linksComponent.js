@@ -28,6 +28,7 @@ export default function linksComponent() {
     let strokeWidth = 1;
 
     let linksData = [];
+    let withCompletion = true;
 
     //functions
     let deleteLink = function (){}
@@ -70,6 +71,7 @@ export default function linksComponent() {
                         d3.select(this)
                             .append("line")
                                 .attr("class", "completion")
+                                .attr("display", withCompletion ? "inline" : "none")
                                 .attr("stroke", "blue")
                                 .attr("cursor", "pointer")
                                 .attr("x1", d.src.x)
@@ -198,6 +200,8 @@ export default function linksComponent() {
             linkG.each(function(d){
                 const mainLine = d3.select(this).select("line.main")
                 const compLine = d3.select(this).select("line.completion")
+                    .attr("display", withCompletion ? "inline" : "none")
+
                 if(transitionUpdate){
                     mainLine
                         .transition()
@@ -262,6 +266,11 @@ export default function linksComponent() {
     */
 
     //api
+    links.withCompletion = function (value) {
+        if (!arguments.length) { return withCompletion; }
+        withCompletion = value;
+        return links;
+    };
     links.yScale = function (value) {
         if (!arguments.length) { return yScale; }
         yScale = value;

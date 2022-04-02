@@ -46,6 +46,8 @@ export default function journeyComponent() {
     const TIME_AXIS_WIDTH = 50;
     let planetWrapperWidth;
 
+    let withCompletionPaths = false;
+
     let enhancedZoom = dragEnhancements();
 
     const myChannelsLayout = channelsLayout();
@@ -153,7 +155,6 @@ export default function journeyComponent() {
                 //.dragThreshold(200) //dont get why this has to be so large
                 //.beforeAll(() => { updateSelected(undefined); })
                 .onClick((e,d) => {
-                    console.log("enhancedZoom click", selected())
                     if(selected()){
                         updateSelected(undefined); 
                     }else{
@@ -161,7 +162,6 @@ export default function journeyComponent() {
                     }
                 })
                 .onLongpressStart(function(e,d){
-                    console.log("lpStart", enhancedZoom.wasMoved())
                     if(!enhancedZoom.wasMoved()){
                         //longpress toggles isOpen
                         const chan = pointChannel({ x:e.sourceEvent.layerX, y:e.sourceEvent.layerY });
@@ -179,7 +179,8 @@ export default function journeyComponent() {
                 //.scaleExtent([1, 3])
                 .extent(extent)
                 .scaleExtent([0.125, 8])
-                .on("start", () => { updateSelected(undefined); })
+                //.on("start", () => { updateSelected(undefined); })
+                .on("start", enhancedZoom(() => { updateSelected(undefined); }))
                 .on("zoom", enhancedZoom(function(e){
                     currentZoom = e.transform
                     update();
@@ -209,6 +210,7 @@ export default function journeyComponent() {
 
             //links
             links
+                .withCompletion(withCompletionPaths)
                 .yScale(zoomedYScale)
                 //.timeScale(timeScale)
                 .timeScale(zoomedTimeScale)
@@ -338,6 +340,11 @@ export default function journeyComponent() {
     journey.height = function (value) {
         if (!arguments.length) { return height; }
         height = value;
+        return journey;
+    };
+    journey.withCompletionPaths = function (value) {
+        if (!arguments.length) { return withCompletionPaths; }
+        withCompletionPaths = value;
         return journey;
     };
     journey.addPlanet = function (value) {

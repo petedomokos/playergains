@@ -1,11 +1,13 @@
 import React, { useEffect, useState, useRef } from 'react'
 import * as d3 from 'd3';
 import { makeStyles } from '@material-ui/core/styles'
+import Button from '@material-ui/core/Button'
 import { getPlanetsData, getGoalsData, getStarData } from '../data/planets'
 import { findFirstFuturePlanet, updatedState } from './helpers';
 import journeyComponent from "./journeyComponent"
 import { addMonths, startOfMonth, idFromDates } from '../util/TimeHelpers';
 import { channelContainsDate } from './geometryHelpers';
+import { setWith } from 'lodash';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -44,9 +46,11 @@ const Journey = ({dimns}) => {
   const [planetState, setPlanetState] = useState([]);
   const [linkState, setLinkState] = useState([]);
   const [channelState, setChannelState] = useState(initChannels);
+  const [withCompletionPaths, setWithCompletionPath] = useState(false);
   //const [nrPlanetsCreated, setNrPlanetsCreated] = useState(0);
   //console.log("planetState", planetState)
   //console.log("linkState", linkState)
+  console.log("withcomp?", withCompletionPaths)
   const nrPlanetsCreated = useRef(0);
   //const goals = getGoalsData().map(g => {
 
@@ -64,6 +68,7 @@ const Journey = ({dimns}) => {
   useEffect(() => {
     if(!containerRef.current || !journey){return; }
     journey
+        .withCompletionPaths(withCompletionPaths)
         .addPlanet((targetDate, yPC) => {
           const newPlanet = {
               id:"p"+ (nrPlanetsCreated.current + 1),
@@ -142,10 +147,15 @@ const Journey = ({dimns}) => {
 
   })
 
+  const toggleCompletion = () => {
+    setWithCompletionPath(prevState => !prevState)
+  }
+
 
   return (
     <div className={classes.root} style={{height: screenHeight, marginTop:10, marginLeft:10 }}>
         <svg className={classes.svg} ref={containerRef}></svg>
+        <Button color="primary" variant="contained" onClick={toggleCompletion} style={{ width:50, height:10, fontSize:7 }}>completion</Button>
     </div>
   )
 }
