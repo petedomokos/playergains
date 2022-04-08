@@ -155,6 +155,7 @@ export default function journeyComponent() {
                 //.dragThreshold(200) //dont get why this has to be so large
                 //.beforeAll(() => { updateSelected(undefined); })
                 .onClick((e,d) => {
+                    console.log("invert true layerX", zoomedTimeScale.invert(trueX(e.sourceEvent.layerX)))
                     if(selected()){
                         updateSelected(undefined); 
                     }else{

@@ -45,18 +45,40 @@ export default function channelsLayout(){
         })
 
         //add helpers
-        const _trueX = (adjX) => {
-            //console.log("scale.domain", scale.domain())
-            //console.log("scale inv 0", scale.invert(0))
+        /*
+        old trueX
+        const trueX = (adjX) => {
             const channel = channelsData.find(ch => ch.endX >= adjX)
             const extraX = adjX - channel.startX;
-            //console.log("channel.nrPrevOpenChannels", channel.nrPrevOpenChannels)
-            //the fault is with teh first part of the line below, coz even if we comment out the last bit it still 
-            //reduces x too much and thinks you are in `mar-Apr when you click apr-may (when mar-apr is open)
             return channel.startX + ((extraX/channel.width) * channel.closedWidth) - (channel.nrPrevOpenChannels * OPEN_CHANNEL_EXT_WIDTH);
         }
+        */
 
-        const channelsData = _channelsData.map(c => ({ ...c, trueX:_trueX}))
+        const trueX = x => {
+            const openChannelsBefore = openChannelsBeforeX(x);
+            const lastOpen = openChannelsBefore[openChannelsBefore.length - 1]
+            const xChannelIsOpen = lastOpen && lastOpen.startX <= x && lastOpen.endX >= x;
+            if(openChannelsBefore.length === 0){
+                //console.log("USING SCALEDX")
+                const scaledX = x - currentZoom.k * openChannelsBefore.length;
+                return scaledX;
+            }
+            else if(xChannelIsOpen){
+                //console.log("USING DELTA METHOD")
+                const ch = lastOpen; //in this case, could just return this ch at this point?
+                const delta = x - ch.startX;
+                const deltaProp = delta / ch.width;
+                const trueDelta = deltaProp * ch.closedWidth;
+                return scale(ch.startDate) + trueDelta;
+            }else{
+                //console.log("USING SUB METHOD")
+                //const sub = openChannelsBefore.length * 100 * currentZoom.K;
+                return x - openChannelsBefore.length * 100 * currentZoom.k;
+            }
+
+        }
+
+        const channelsData = _channelsData.map(c => ({ ...c, trueX:trueX}))
 
         const channelContainsPoint = (pt, chan) => chan.startX <= pt.x && pt.x < chan.endX;
         const channelContainsDate = (date, channel) => channel.startDate <= date && date < channel.endDate;
@@ -95,6 +117,7 @@ export default function channelsLayout(){
 
         //channelsData.pointChannel = (pt) => channelsData.find(ch => channelContainsPoint(pt, ch));
         channelsData.pointChannel = (pt) => {
+            /*
             const { x } = pt;
             const openChannelsBefore = openChannelsBeforeX(pt.x);
             const lastOpen = openChannelsBefore[openChannelsBefore.length - 1]
@@ -117,10 +140,12 @@ export default function channelsLayout(){
                 const sub = openChannelsBefore.length * 100 * currentZoom.K;
                 trueX = x - openChannelsBefore.length * 100 * currentZoom.k;
             }
-            return channelsData.find(ch => channelContainsDate(scale.invert(trueX), ch))
+            */
+            return channelsData.find(ch => channelContainsDate(scale.invert(trueX(pt.x)), ch))
+            //return channelsData.find(ch => channelContainsDate(scale.invert(trueX), ch))
         }
 
-        channelsData.trueX = _trueX;
+        channelsData.trueX = trueX;
     
         return channelsData;
     }

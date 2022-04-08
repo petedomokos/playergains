@@ -50,7 +50,7 @@ const Journey = ({dimns}) => {
   //const [nrPlanetsCreated, setNrPlanetsCreated] = useState(0);
   //console.log("planetState", planetState)
   //console.log("linkState", linkState)
-  console.log("withcomp?", withCompletionPaths)
+  //console.log("withcomp?", withCompletionPaths)
   const nrPlanetsCreated = useRef(0);
   //const goals = getGoalsData().map(g => {
 
