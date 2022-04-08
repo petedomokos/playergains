@@ -55,6 +55,7 @@ export default function linkslayout(){
             const compX = src.x + (overallProgressPC / 100) * lineLength * cos(toRadians(theta));
             //subtract y as its reversed in svg coods
             const compY = src.y - (overallProgressPC / 100) * lineLength * sin(toRadians(theta));
+            const rotation = angleOfRotation(src, targ);
             return { 
                 ...l, 
                 src, 
@@ -66,7 +67,8 @@ export default function linkslayout(){
                 barChartData,
                 overallProgressPC,
                 centre,
-                isSelected:selected === l.id
+                isSelected:selected === l.id,
+                rotation
             }
         });
     }

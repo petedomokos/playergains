@@ -85,6 +85,7 @@ export default function linksComponent() {
                             .append("rect")
                             .attr("class", "hitbox")
                             .attr("stroke", "transparent")
+                            .attr("stroke", "black")
                             .attr("fill", "transparent")
                             .style("cursor", "pointer")
 
@@ -117,7 +118,7 @@ export default function linksComponent() {
                         //hitbox
                         const hitboxWidth = 5;
                         d3.select(this).select("rect.hitbox")
-                            .attr("transform", "rotate(" +d.theta +" " +d.src.x +" " +d.src.y +")")
+                            .attr("transform", "rotate(" +d.rotation +" " +d.src.x +" " +d.src.y +")")
                             .attr("x", d.src.x)
                             .attr("y", d.src.y - hitboxWidth/2)
                             .attr("width", distanceBetweenPoints(d.src, d.targ))
@@ -191,10 +192,7 @@ export default function linksComponent() {
                             }
                         }) 
                     })
-                    .on("mousedown", e => { 
-                        console.log("link md")
-                        //e.stopPropagation(); 
-                    })
+                    .on("mousedown", e => { e.stopPropagation(); })
 
             //update only
             linkG.each(function(d){
