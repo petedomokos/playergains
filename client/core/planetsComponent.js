@@ -5,7 +5,7 @@ import { calcTrueX, calcAdjX, findPointChannel, findDateChannel, findNearestChan
 //import { COLOURS, DIMNS } from "./constants";
 import { addWeeks } from "../util/TimeHelpers"
 import { ellipse } from "./ellipse";
-import { grey10 } from "./constants";
+import { grey10, COLOURS } from "./constants";
 import { findNearestPlanet, distanceBetweenPoints, channelContainsPoint, channelContainsDate } from './geometryHelpers';
 import { OPEN_CHANNEL_EXT_WIDTH } from './constants';
 import dragEnhancements from './enhancedDragHandler';
@@ -145,8 +145,8 @@ export default function planetsComponent() {
                 //@todo - use mask to make it a donut and put on top
                 .call(ring
                     .rx(d => d.ringRx(contentsWidth))
-                    .ry(d => d.ringRy(contentsWidth))
-                    .fill("transparent")
+                    .ry(d => d.ringRy(contentsHeight))
+                    .fill((d, hovered) => hovered ? COLOURS.potentialLinkPlanet : "transparent")
                     .stroke("none")
                     .onDragStart(onRingDragStart)
                     .onDrag(onRingDrag)
@@ -251,9 +251,8 @@ export default function planetsComponent() {
             function onRingDragStart(e,d){
                 linkPlanets = [d];
                 const planetG = d3.select("g#planet-"+d.id);
-                planetG.select("g.contents").select("ellipse")
-                    .attr("stroke", grey10(3))
-                    .attr("stroke-width", 5)
+                //update ring fill
+                ring.fill((d,hovered) => hovered || linkPlanets.includes(d.id) ? COLOURS.potentialLinkPlanet : "transparent");
                 
                 planetG.select("g.contents")
                     .insert("line", ":first-child")
@@ -263,8 +262,8 @@ export default function planetsComponent() {
                         .attr("x2", e.sourceEvent.offsetX - timeScale(d.displayDate))
                         .attr("y2", e.sourceEvent.offsetY - yScale(d.yPC))
                         .attr("stroke-width", 1)
-                        .attr("stroke", grey10(3))
-                        .attr("fill", grey10(3));
+                        .attr("stroke", COLOURS.potentialLink)
+                        .attr("fill", COLOURS.potentialLink);
 
             }
 
@@ -286,22 +285,19 @@ export default function planetsComponent() {
                 //console.log("near", nearestPlanet)
                 const linkPlanet = distanceBetweenPoints(e, nearestPlanet) <= LINK_THRESHOLD ? nearestPlanet : undefined;
                 //const { x, y, ...rest } = linkPlanet
-                //console.log("link", rest)
-                linkPlanets = linkPlanet ? [d, linkPlanet] : [];
+                //console.log("linkPlanet", linkPlanet)
+                linkPlanets = linkPlanet ? [d, linkPlanet] : [d];
 
-                d3.selectAll("g.planet").selectAll("g.contents").selectAll("ellipse")
-                    .attr("stroke", p => p.id === d.id || p.id === linkPlanet?.id ? grey10(3) : grey10(5))
-                    .attr("stroke-width", p => p.id === d.id || p.id === linkPlanet?.id ? 5 : 1);
+                //update ring fill
+                ring.fill((d,hovered) => hovered || linkPlanets.map(p => p.id).includes(d.id) ? COLOURS.potentialLinkPlanet : "transparent");
+
             }
             
             function onRingDragEnd(e, d){
                 const planetG = d3.select("g#planet-"+d.id);
-                //const ringNr = planetG.selectAll("line").size() - 1;
                 //cleanup dom
                 planetG.select("line.temp-link").remove();
-                d3.selectAll("g.planet").select("g.contents").select("ellipse")
-                    .attr("stroke", grey10(5))
-                    .attr("stroke-width", 1)
+                ring.fill((d,hovered) => hovered ? COLOURS.potentialLinkPlanet : "transparent");
 
                 //set x2, y2 to centre of nearest planet
                 //...\

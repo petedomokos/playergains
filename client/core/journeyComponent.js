@@ -12,7 +12,7 @@ import { calcChartHeight, findFuturePlanets, findFirstFuturePlanet, findNearestD
 //import { COLOURS, DIMNS } from "./constants";
 import { addMonths, addWeeks } from "../util/TimeHelpers"
 import { ellipse } from "./ellipse";
-import { grey10, DEFAULT_D3_TICK_SIZE, FILLS } from "./constants";
+import { grey10, DEFAULT_D3_TICK_SIZE, COLOURS } from "./constants";
 import { findNearestPlanet, distanceBetweenPoints, channelContainsPoint, channelContainsDate } from './geometryHelpers';
 import dragEnhancements from './enhancedDragHandler';
 import { timeMonth, timeWeek } from "d3-time"
@@ -155,7 +155,6 @@ export default function journeyComponent() {
                 //.dragThreshold(200) //dont get why this has to be so large
                 //.beforeAll(() => { updateSelected(undefined); })
                 .onClick((e,d) => {
-                    console.log("invert true layerX", zoomedTimeScale.invert(trueX(e.sourceEvent.layerX)))
                     if(selected()){
                         updateSelected(undefined); 
                     }else{
@@ -300,7 +299,7 @@ export default function journeyComponent() {
                 .append("rect")
                     .attr("width", canvasWidth)
                     .attr("height", canvasHeight)
-                    .attr("fill", FILLS?.canvas || "#FAEBD7");
+                    .attr("fill", COLOURS?.canvas || "#FAEBD7");
 
             axesG = contentsG
                 .append("g")

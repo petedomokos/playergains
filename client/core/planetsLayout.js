@@ -31,13 +31,6 @@ export default function planetsLayout(){
             //but we have already stored that
             const targetX = timeScale(p.targetDate) + axisRangeShift;
             //const targetX = timeScale(p.targetDate) + nrPrevOpenChannels * scaledExtWidth;
-            if(p.id === "planet2"){
-                //console.log("channel", channel)
-                //console.log("nropen", nrPrevOpenChannels)
-                //console.log("scaledextwidth", scaledExtWidth)
-                //console.log("layout targetX", targetX)
-                //console.log("targetDate........", p.targetDate)
-            }
             const rx = (contentsWidth) => currentZoom.k * contentsWidth * 0.8 / 2;
             const ry = (contentsHeight) => currentZoom.k * contentsHeight * 0.8 / 2;
             return {

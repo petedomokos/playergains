@@ -1,7 +1,7 @@
 import * as d3 from 'd3';
 import { gridGenerator } from "./gridGenerator";
 import { playerGenerator } from "./playerGenerator";
-import { COLOURS, NR_CELL_ROWS, NR_CELL_COLS } from '../constants';
+import { COLOURS, NR_CELL_ROWS, NR_CELL_COLOURS } from '../constants';
 
 export function avalancheGenerator(){
     //api vars
@@ -31,7 +31,7 @@ export function avalancheGenerator(){
 
             const gridWidth = contentsHeight * 0.6//0.475;
             const gridHeight = gridWidth * 0.8;
-            const cellWidth = gridWidth / NR_CELL_COLS;
+            const cellWidth = gridWidth / NR_CELL_COLOURS;
             const cellHeight = gridHeight / NR_CELL_ROWS;
 
             const plainG = contentsG.append("g")

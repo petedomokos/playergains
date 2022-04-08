@@ -1,5 +1,5 @@
 import * as d3 from 'd3';
-import { COLOURS, NR_CELL_ROWS, NR_CELL_COLS } from '../constants';
+import { COLOURS, NR_CELL_ROWS, NR_CELL_COLOURS } from '../constants';
 
 export function gridGenerator(){
     //api vars
@@ -10,7 +10,7 @@ export function gridGenerator(){
     let contentsHeight;
 
     let nrRows = NR_CELL_ROWS || 4;
-    let nrCols = NR_CELL_COLS || 5;
+    let nrCols = NR_CELL_COLOURS || 5;
     let cellWidth;
     let cellHeight;
 

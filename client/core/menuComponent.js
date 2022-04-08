@@ -5,7 +5,7 @@ import { calcTrueX, calcAdjX, findPointChannel, findDateChannel, findNearestChan
 //import { COLOURS, DIMNS } from "./constants";
 import { addWeeks } from "../util/TimeHelpers"
 import { ellipse } from "./ellipse";
-import { FILLS, grey10 } from "./constants";
+import { COLOURS, grey10 } from "./constants";
 import { findNearestPlanet, distanceBetweenPoints, channelContainsPoint, channelContainsDate } from './geometryHelpers';
 import { OPEN_CHANNEL_EXT_WIDTH } from './constants';
 import dragEnhancements from './enhancedDragHandler';
@@ -29,7 +29,7 @@ export default function menuComponent() {
     }
 
     let bg = {
-        fill: FILLS.canvas, //"transparent",
+        fill: COLOURS.canvas, //"transparent",
         stroke: "none"
     }
     let optBg = {

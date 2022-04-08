@@ -1,7 +1,7 @@
 import * as d3 from 'd3';
 //import { planetsGenerator } from "./planetsGenerator";
 //import {  } from "./helpers";
-import { FILLS } from "./constants";
+import { COLOURS } from "./constants";
 
 /*
 
@@ -55,7 +55,7 @@ export default function barChartComponent() {
                         .attr("class", "border")
                         .attr("width", width)
                         .attr("height", height)
-                        .attr("fill", FILLS?.canvas || "white")
+                        .attr("fill", COLOURS?.canvas || "white")
                         .attr("stroke", "none")// "red")
                         .attr("stroke-width", 0.3)
                 

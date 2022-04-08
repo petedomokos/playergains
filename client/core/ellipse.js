@@ -13,11 +13,13 @@ export function ellipse(selection, dispatch) {
     let className = "";
     let rx = d => d.rx || 50;
     let ry = d => d.ry || 50;
-    let fill = "#000000";
+    let fill = (d, hovered) => "#000000";
     let stroke = "#000000";
     let opacity = 1;
     let attrs = {};
     let container;
+
+    let currentSelection;
 
     //handlers
     let onDragStart = function () {};
@@ -26,6 +28,7 @@ export function ellipse(selection, dispatch) {
     let onClick = function () {};
 
     function update(selection){
+        currentSelection = selection;
         const drag = d3.drag()
             .on("start", onDragStart)
             .on("drag", onDrag)
@@ -45,18 +48,26 @@ export function ellipse(selection, dispatch) {
             g.select("ellipse" +(className ? "."+className : "."))
                 .attr("rx", rx(d))
                 .attr("ry", ry(d))
-                .attr("fill", fill)
                 .attr("stroke", stroke)
                 .attr("opacity", opacity)
                 //.call(drag)
                 //.attrs(attrs); see top - doesnt work
         
-        })
+        }).call(updateFill)
 
-        selection.selectAll("ellipse" +(className ? "."+className : "."))
+        selection.selectAll("ellipse" +(className ? "."+className : ""))
             .call(drag)
 
     };
+
+    function updateFill(selection){
+        selection.each(function(d){
+            d3.select(this).select("ellipse" +(className ? "."+className : ""))
+                .attr("fill", fill(d, false))
+                .on("mouseover", function(){ d3.select(this).attr("fill", fill(d, true)) })
+                .on("mouseout", function(){ d3.select(this).attr("fill", fill(d, false)) })
+        })
+    }
 
 
     update.className = function (value) {
@@ -76,7 +87,17 @@ export function ellipse(selection, dispatch) {
     };
     update.fill = function (value) {
         if (!arguments.length) { return fill; }
-        if(typeof value === "string") { fill = value;}
+        if(typeof value === "string") { 
+            fill = () => value;
+        }else{
+            //assume function
+            fill = value;
+        }
+        //update
+        if(currentSelection){
+            currentSelection.call(updateFill);
+        }
+
         return update;
     };
     update.stroke = function (value) {
