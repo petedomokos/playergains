@@ -17,6 +17,7 @@ import { findNearestPlanet, distanceBetweenPoints, channelContainsPoint, channel
 import dragEnhancements from './enhancedDragHandler';
 import { timeMonth, timeWeek } from "d3-time"
 import { update } from 'lodash';
+import { ContactSupportOutlined } from '@material-ui/icons';
 
 /*
 
@@ -89,8 +90,10 @@ export default function journeyComponent() {
     let addLink = function(){};
     let deleteLink = function(){};
     let updateChannel = function(){};
-    let setForm = function(){};
+    let setFormData = function(){};
     let setZoom = function(){};
+    let onStartEditPlanet = function (){};
+    let onEndEditPlanet = function (){};
 
     //dom
     let svg;
@@ -104,6 +107,9 @@ export default function journeyComponent() {
     let timeScale;
     let yScale;
 
+    let zoom;
+    let applyZoomX;
+    let applyZoomY;
     let currentZoom = d3.zoomIdentity;
     let channelsData;
 
@@ -185,7 +191,7 @@ export default function journeyComponent() {
                     }
                 })
 
-            const zoom = d3.zoom()
+            zoom = d3.zoom()
                 //.scaleExtent([1, 3])
                 .extent(extent)
                 .scaleExtent([0.125, 8])
@@ -244,11 +250,6 @@ export default function journeyComponent() {
                 .call(links, options.links)
 
             //planets
-
-            //helpers
-            const applyZoomX = x => (x + currentZoom.x) / currentZoom.k;
-            const applyZoomY = y => (y + currentZoom.y) / currentZoom.k;
-
             planets
                 .width(planetWidth)
                 .height(planetHeight)
@@ -287,6 +288,7 @@ export default function journeyComponent() {
                 })
                 .startEditPlanet(onStartEditPlanet)
 
+            /*
             function onStartEditPlanet(d){
                 editing = d;
                 updateSelected(undefined);
@@ -294,22 +296,25 @@ export default function journeyComponent() {
                 svg.transition().duration(750).call(
                     zoom.transform, 
                     d3.zoomIdentity.translate(
-                        applyZoomX(-d.x + d.rx(contentsWidth)/2), 
-                        applyZoomY(-d.y + d.ry(contentsHeight)/2)
+                        applyZoomX(-d.x + d.rx(contentsWidth)/3), 
+                        applyZoomY(-d.y + d.ry(contentsHeight)/3)
                     ))
-                setForm(d)
+                    .on("end", () => {
+                        //error - this now uses currentZoom instead of the new position
+                        setFormData(d)
+                    })
             }
 
             function onEndEditPlanet(){
+                setFormData(undefined)
                 editing = undefined;
                 svg.transition().duration(750).call(
                     zoom.transform, 
                     d3.zoomIdentity
                         .translate(preEditZoom.x, preEditZoom.y)
                         .scale(preEditZoom.k))
-                        
-                setForm(undefined)
             }
+            */
 
             canvasG.selectAll("g.planets")
                 .data([planetsData])
@@ -349,6 +354,35 @@ export default function journeyComponent() {
         function updateSelected(d){
             selected = d;
             update();
+        }
+
+        //helpers
+        applyZoomX = x => (x + currentZoom.x) / currentZoom.k;
+        applyZoomY = y => (y + currentZoom.y) / currentZoom.k;
+        onStartEditPlanet = (d) => {
+            editing = d;
+            updateSelected(undefined);
+            preEditZoom = currentZoom;
+            svg.transition().duration(750).call(
+                zoom.transform, 
+                d3.zoomIdentity.translate(
+                    applyZoomX(-d.x + d.rx(contentsWidth)/3), 
+                    applyZoomY(-d.y + d.ry(contentsHeight)/3)
+                ))
+                .on("end", () => {
+                    //error - this now uses currentZoom instead of the new position
+                    setFormData(d)
+                })
+        }
+
+        onEndEditPlanet = () => {
+            setFormData(undefined)
+            editing = undefined;
+            svg.transition().duration(750).call(
+                zoom.transform, 
+                d3.zoomIdentity
+                    .translate(preEditZoom.x, preEditZoom.y)
+                    .scale(preEditZoom.k))
         }
 
         return selection;
@@ -425,10 +459,10 @@ export default function journeyComponent() {
         }
         return journey;
     };
-    journey.setForm = function (value) {
-        if (!arguments.length) { return setForm; }
+    journey.setFormData = function (value) {
+        if (!arguments.length) { return setFormData; }
         if(typeof value === "function"){
-            setForm = value;
+            setFormData = value;
         }
         return journey;
     };
@@ -446,5 +480,6 @@ export default function journeyComponent() {
         }
         return journey;
     };
+    journey.endEditPlanet = function(){ onEndEditPlanet() }
     return journey;
 }

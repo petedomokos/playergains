@@ -143,7 +143,8 @@ export default function planetsComponent() {
                     //text
                     contentsG.select("text")
                         .attr("font-size", fontSize)
-                        .text(d.id)//d.title || "enter name...");
+                        .text(d.name || d.id)
+                        //.text(d.name || "enter name")
                 })
                 .call(planetDrag)
                 //@todo - use mask to make it a donut and put on top

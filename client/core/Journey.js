@@ -7,7 +7,7 @@ import { findFirstFuturePlanet, updatedState } from './helpers';
 import journeyComponent from "./journeyComponent"
 import { addMonths, startOfMonth, idFromDates } from '../util/TimeHelpers';
 import { channelContainsDate } from './geometryHelpers';
-import { setWith } from 'lodash';
+import NameForm from "./NameForm"
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -43,6 +43,7 @@ const Journey = ({dimns}) => {
   const classes = useStyles(styleProps) 
   const containerRef = useRef(null);
   const formRef = useRef(null);
+  const formDimnsRef = useRef({ width:500, height:700 });
   const { screenWidth, screenHeight } = dimns;
   const [journey, setJourney] = useState(undefined)
   //@todo - put into one state object to avoid multiple updates
@@ -50,9 +51,8 @@ const Journey = ({dimns}) => {
   const [linkState, setLinkState] = useState([]);
   const [channelState, setChannelState] = useState(initChannels);
   const [withCompletionPaths, setWithCompletionPath] = useState(false);
-  const [form, setForm] = useState(undefined);
+  const [formData, setFormData] = useState(undefined);
   //const [nrPlanetsCreated, setNrPlanetsCreated] = useState(0);
-  //console.log("planetState", planetState)
   //console.log("linkState", linkState)
   //console.log("withcomp?", withCompletionPaths)
   const nrPlanetsCreated = useRef(0);
@@ -60,12 +60,23 @@ const Journey = ({dimns}) => {
 
   //})
 
+  useEffect(() => {
+    const width = d3.min([screenWidth * 0.725, 500]);
+    const height = d3.min([screenHeight * 0.725, 700]);
+    formDimnsRef.current = { 
+      width,
+      height,
+      left:((screenWidth - width) / 2) + "px",
+      top:((screenHeight - height) / 2) + "px"
+    }
+  }, [screenWidth, screenHeight])
+
   //init
   useEffect(() => {
     if(!containerRef.current){return; }
 
-    const journey = journeyComponent()
-    setJourney(() => journey)
+    const journey = journeyComponent();
+    setJourney(() => journey);
     
   }, [])
 
@@ -105,10 +116,10 @@ const Journey = ({dimns}) => {
         .updateChannel(props => {
           setChannelState(prevState => updatedState(prevState, props, (other, updated) => other.nr < updated.nr))
         })
-        .setForm(setForm)
+        .setFormData(setFormData)
         .setZoom(zoom => {
-          if(form){
-            d3.select(formRef.current).style("left", (form.x + zoom.x) +"px").style("top", (form.y + zoom.y) +"px")
+          if(formData){
+            d3.select(formRef.current).style("left", (formData.x + zoom.x) +"px").style("top", (formData.y + zoom.y) +"px")
           }
         })
 
@@ -161,18 +172,32 @@ const Journey = ({dimns}) => {
     setWithCompletionPath(prevState => !prevState)
   }
 
+  const handleFormUpdate = (name, value) => {
+    const props = { id:formData.id, [name]: value };
+    setPlanetState(prevState => updatedState(prevState, props))
+  }
+
+  const handleFormClose = () => {
+    journey.endEditPlanet();
+    setFormData(undefined);
+  }
+
   return (
     <div className={classes.root} style={{height: screenHeight, marginTop:10, marginLeft:10 }}>
         <svg className={classes.svg} ref={containerRef}></svg>
         <Button color="primary" variant="contained" onClick={toggleCompletion} style={{ width:50, height:10, fontSize:7 }}>completion</Button>
-        {/**form && <div ref={formRef}
-                      style={{
-                      position:"absolute", 
-                      left:(form.x) +"px", 
-                      top:form.y + "px", 
-                      background:"aqua",
-                    }}>Context Menu</div>
-                  **/}
+        {formData && 
+          <div ref={formRef}
+              style={{
+                position:"absolute", 
+                left:formDimnsRef.current.left, 
+                top:formDimnsRef.current.top, 
+                width:formDimnsRef.current.width,
+                height:formDimnsRef.current.height,
+                background:"aqua",
+            }}><NameForm d={formData} onUpdate={handleFormUpdate} onClose={handleFormClose} />
+          </div>
+        }
     </div>
   )
 }
