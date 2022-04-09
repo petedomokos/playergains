@@ -290,29 +290,25 @@ export default function journeyComponent() {
             function onStartEditPlanet(d){
                 editing = d;
                 updateSelected(undefined);
-                d3.timeout(() => {
-                    preEditZoom = currentZoom;
-                    svg.call(
-                        zoom.transform, 
-                        d3.zoomIdentity.translate(
-                            applyZoomX(-d.x + d.rx(contentsWidth)/2), 
-                            applyZoomY(-d.y + d.ry(contentsHeight)/2)
-                        ))
-                    setForm(d)
-                }, 100)
+                preEditZoom = currentZoom;
+                svg.transition().duration(750).call(
+                    zoom.transform, 
+                    d3.zoomIdentity.translate(
+                        applyZoomX(-d.x + d.rx(contentsWidth)/2), 
+                        applyZoomY(-d.y + d.ry(contentsHeight)/2)
+                    ))
+                setForm(d)
             }
 
             function onEndEditPlanet(){
                 editing = undefined;
-                d3.timeout(() => {
-                    svg.call(
-                        zoom.transform, 
-                        d3.zoomIdentity
-                            .translate(preEditZoom.x, preEditZoom.y)
-                            .scale(preEditZoom.k))
-                    setForm(undefined)
-                }, 100)
-
+                svg.transition().duration(750).call(
+                    zoom.transform, 
+                    d3.zoomIdentity
+                        .translate(preEditZoom.x, preEditZoom.y)
+                        .scale(preEditZoom.k))
+                        
+                setForm(undefined)
             }
 
             canvasG.selectAll("g.planets")
