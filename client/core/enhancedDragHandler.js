@@ -35,7 +35,8 @@ export default function dragEnhancements() {
     function withEnhancements(cb = () => { }) {
         return function (e, d) {
             beforeAll.call(this, e, d);
-            if(e.sourceEvent.type === "wheel"){
+            //programmatic zoom has no src ev
+            if(!e.sourceEvent || e.sourceEvent.type === "wheel"){
                 cb.call(this, e, d);
                 return;
             }

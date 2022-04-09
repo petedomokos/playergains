@@ -57,6 +57,7 @@ export default function planetsComponent() {
     //api
     let addPlanet = function(){};
     let updatePlanet = function(){};
+    let startEditPlanet = function(){};
     let deletePlanet = function(){};
     let addLink = function(){};
     let onClick = function(){};
@@ -67,7 +68,10 @@ export default function planetsComponent() {
     const ring = ellipse().className("ring");
     let menus = {};
     let menuOptions = [
-        { key: "delete", label:"Delete" }
+        { key: "edit", label:"Edit" },
+        { key: "delete", label:"Delete" },
+         //put goals on planet, and only show it in bar chart when it is 
+        //also on src planet. BUT it does mean we need to also put it on src. Could have a goals library, or just use the dataset library (1 goal per dataset for now)
     ];
 
     function planets(selection, options={}) {
@@ -170,6 +174,8 @@ export default function planetsComponent() {
                             .onClick((opt) => {
                                 switch(opt.key){
                                     case "delete": { deletePlanet(d.id) };
+                                    //for goals
+                                    case "edit": { startEditPlanet(d) };
                                     default:{};
                                 }
                             }))
@@ -179,7 +185,7 @@ export default function planetsComponent() {
                         if(d3.select(this).attr("opacity") == 1){
                             d3.select(this)
                                 .transition()
-                                    .duration(200)
+                                    .duration(100)
                                     .attr("opacity", 0)
                                     .on("end", function() { d3.select(this).remove() });
                         }
@@ -390,6 +396,13 @@ export default function planetsComponent() {
         if (!arguments.length) { return updatePlanet; }
         if(typeof value === "function"){
             updatePlanet = value;
+        }
+        return planets;
+    };
+    planets.startEditPlanet = function (value) {
+        if (!arguments.length) { return Planet; }
+        if(typeof value === "function"){
+            startEditPlanet = value;
         }
         return planets;
     };

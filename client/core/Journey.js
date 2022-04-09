@@ -11,8 +11,10 @@ import { setWith } from 'lodash';
 
 const useStyles = makeStyles((theme) => ({
   root: {
+    position:"relative"
   },
   svg:{
+    //position:"absolute"
   }
 }))
 
@@ -40,6 +42,7 @@ const Journey = ({dimns}) => {
   const styleProps = { };
   const classes = useStyles(styleProps) 
   const containerRef = useRef(null);
+  const formRef = useRef(null);
   const { screenWidth, screenHeight } = dimns;
   const [journey, setJourney] = useState(undefined)
   //@todo - put into one state object to avoid multiple updates
@@ -47,6 +50,7 @@ const Journey = ({dimns}) => {
   const [linkState, setLinkState] = useState([]);
   const [channelState, setChannelState] = useState(initChannels);
   const [withCompletionPaths, setWithCompletionPath] = useState(false);
+  const [form, setForm] = useState(undefined);
   //const [nrPlanetsCreated, setNrPlanetsCreated] = useState(0);
   //console.log("planetState", planetState)
   //console.log("linkState", linkState)
@@ -101,6 +105,12 @@ const Journey = ({dimns}) => {
         .updateChannel(props => {
           setChannelState(prevState => updatedState(prevState, props, (other, updated) => other.nr < updated.nr))
         })
+        .setForm(setForm)
+        .setZoom(zoom => {
+          if(form){
+            d3.select(formRef.current).style("left", (form.x + zoom.x) +"px").style("top", (form.y + zoom.y) +"px")
+          }
+        })
 
     d3.select(containerRef.current)
       ////.datum(data)
@@ -151,11 +161,18 @@ const Journey = ({dimns}) => {
     setWithCompletionPath(prevState => !prevState)
   }
 
-
   return (
     <div className={classes.root} style={{height: screenHeight, marginTop:10, marginLeft:10 }}>
         <svg className={classes.svg} ref={containerRef}></svg>
         <Button color="primary" variant="contained" onClick={toggleCompletion} style={{ width:50, height:10, fontSize:7 }}>completion</Button>
+        {/**form && <div ref={formRef}
+                      style={{
+                      position:"absolute", 
+                      left:(form.x) +"px", 
+                      top:form.y + "px", 
+                      background:"aqua",
+                    }}>Context Menu</div>
+                  **/}
     </div>
   )
 }

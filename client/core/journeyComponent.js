@@ -79,12 +79,18 @@ export default function journeyComponent() {
     };
 
     //api
+    let selected;
+    let editing;
+    let preEditZoom;
+
     let addPlanet = function(){};
     let updatePlanet = function(){};
     let deletePlanet = function (){};
     let addLink = function(){};
     let deleteLink = function(){};
     let updateChannel = function(){};
+    let setForm = function(){};
+    let setZoom = function(){};
 
     //dom
     let svg;
@@ -155,7 +161,11 @@ export default function journeyComponent() {
                 //.dragThreshold(200) //dont get why this has to be so large
                 //.beforeAll(() => { updateSelected(undefined); })
                 .onClick((e,d) => {
-                    if(selected()){
+                    if(editing){
+                        onEndEditPlanet();
+                    }
+                    //note - on start editing, selected is already set to undefined
+                    else if(selected){
                         updateSelected(undefined); 
                     }else{
                         addPlanet(zoomedTimeScale.invert(trueX(e.sourceEvent.layerX)), zoomedYScale.invert(e.sourceEvent.layerY))
@@ -179,10 +189,10 @@ export default function journeyComponent() {
                 //.scaleExtent([1, 3])
                 .extent(extent)
                 .scaleExtent([0.125, 8])
-                //.on("start", () => { updateSelected(undefined); })
-                .on("start", enhancedZoom(() => { updateSelected(undefined); }))
                 .on("zoom", enhancedZoom(function(e){
-                    currentZoom = e.transform
+                    selected = undefined;
+                    currentZoom = e.transform;
+                    setZoom(currentZoom);
                     update();
                 }))
                 .on("end", enhancedZoom())
@@ -196,6 +206,7 @@ export default function journeyComponent() {
            
             //layouts
             myPlanetsLayout
+                .selected(selected?.id)
                 .currentZoom(currentZoom)
                 .timeScale(zoomedTimeScale)
                 .yScale(zoomedYScale)
@@ -203,6 +214,7 @@ export default function journeyComponent() {
             const planetsData = myPlanetsLayout(state.planets);
 
             myLinksLayout
+                .selected(selected?.id)
                 .currentZoom(currentZoom)
                 .channelsData(channelsData)
                 .planetsData(planetsData);
@@ -220,10 +232,10 @@ export default function journeyComponent() {
                     height:30 * k
                 })
                 .deleteLink(id => {
-                    myLinksLayout.selected(undefined);
+                    selected = undefined;
                     deleteLink(id);
                 })
-                .onClick((e,d) => { updateSelected(d.id);})
+                .onClick((e,d) => { updateSelected(d);})
 
             canvasG.selectAll("g.links")
                 .data([linksData])
@@ -232,6 +244,11 @@ export default function journeyComponent() {
                 .call(links, options.links)
 
             //planets
+
+            //helpers
+            const applyZoomX = x => (x + currentZoom.x) / currentZoom.k;
+            const applyZoomY = y => (y + currentZoom.y) / currentZoom.k;
+
             planets
                 .width(planetWidth)
                 .height(planetHeight)
@@ -240,7 +257,7 @@ export default function journeyComponent() {
                 .timeScale(zoomedTimeScale)
                 .yScale(zoomedYScale)
                 .fontSize(k * 9)
-                .onClick((e,d) => { updateSelected(d.id);})
+                .onClick((e,d) => { updateSelected(d);})
                 .onDrag(function(e , d){
                     updateSelected(undefined); //warning - may interrupt drag handling with touch
                     //console.log("DRAG.......")
@@ -257,7 +274,7 @@ export default function journeyComponent() {
 
                 })
                 .onDragEnd(function(e , d){
-                    updateSelected(undefined);
+                    selected = undefined;
                     //targetDate must be based on trueX
                     //updatePlanet({ id:d.id, targetDate:timeScale.invert(trueX(d.x)), yPC:yScale.invert(d.y) });
                     updatePlanet({ id:d.id, targetDate:zoomedTimeScale.invert(trueX(d.x)), yPC:zoomedYScale.invert(d.y) });
@@ -265,18 +282,44 @@ export default function journeyComponent() {
                 .addLink(addLink)
                 .updatePlanet(updatePlanet)
                 .deletePlanet(id => {
-                    myPlanetsLayout.selected(undefined);
+                    selected = undefined;
                     deletePlanet(id);
                 })
+                .startEditPlanet(onStartEditPlanet)
+
+            function onStartEditPlanet(d){
+                editing = d;
+                updateSelected(undefined);
+                d3.timeout(() => {
+                    preEditZoom = currentZoom;
+                    svg.call(
+                        zoom.transform, 
+                        d3.zoomIdentity.translate(
+                            applyZoomX(-d.x + d.rx(contentsWidth)/2), 
+                            applyZoomY(-d.y + d.ry(contentsHeight)/2)
+                        ))
+                    setForm(d)
+                }, 100)
+            }
+
+            function onEndEditPlanet(){
+                editing = undefined;
+                d3.timeout(() => {
+                    svg.call(
+                        zoom.transform, 
+                        d3.zoomIdentity
+                            .translate(preEditZoom.x, preEditZoom.y)
+                            .scale(preEditZoom.k))
+                    setForm(undefined)
+                }, 100)
+
+            }
 
             canvasG.selectAll("g.planets")
                 .data([planetsData])
                 .join("g")
                 .attr("class", "planets")
                 .call(planets, options.planets)
-
-            //helpers
-            function selected(){ return [...planetsData, ...linksData].find(d => d.isSelected); }
 
         }
 
@@ -307,9 +350,8 @@ export default function journeyComponent() {
                 .attr("transform", "translate(0," +contentsHeight +")")
         }
 
-        function updateSelected(id){
-            myPlanetsLayout.selected(id);
-            myLinksLayout.selected(id);
+        function updateSelected(d){
+            selected = d;
             update();
         }
 
@@ -325,6 +367,11 @@ export default function journeyComponent() {
     journey.width = function (value) {
         if (!arguments.length) { return width; }
         width = value;
+        return journey;
+    };
+    journey.selected = function (value) {
+        if (!arguments.length) { return selected; }
+        selected = value;
         return journey;
     };
     journey.height = function (value) {
@@ -379,6 +426,20 @@ export default function journeyComponent() {
         if (!arguments.length) { return deleteLink; }
         if(typeof value === "function"){
             deleteLink = value;
+        }
+        return journey;
+    };
+    journey.setForm = function (value) {
+        if (!arguments.length) { return setForm; }
+        if(typeof value === "function"){
+            setForm = value;
+        }
+        return journey;
+    };
+    journey.setZoom = function (value) {
+        if (!arguments.length) { return setZoom; }
+        if(typeof value === "function"){
+            setZoom = value;
         }
         return journey;
     };

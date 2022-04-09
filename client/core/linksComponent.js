@@ -85,7 +85,6 @@ export default function linksComponent() {
                             .append("rect")
                             .attr("class", "hitbox")
                             .attr("stroke", "transparent")
-                            .attr("stroke", "black")
                             .attr("fill", "transparent")
                             .style("cursor", "pointer")
 

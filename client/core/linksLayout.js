@@ -60,7 +60,6 @@ export default function linkslayout(){
                 ...l, 
                 src, 
                 targ,
-                theta,
                 compX,
                 compY,
                 isOpen, 
