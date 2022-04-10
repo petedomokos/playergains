@@ -12,12 +12,11 @@ import { calcChartHeight, findFuturePlanets, findFirstFuturePlanet, findNearestD
 //import { COLOURS, DIMNS } from "./constants";
 import { addMonths, addWeeks } from "../util/TimeHelpers"
 import { ellipse } from "./ellipse";
-import { grey10, DEFAULT_D3_TICK_SIZE, COLOURS } from "./constants";
+import { grey10, DEFAULT_D3_TICK_SIZE, COLOURS, DIMNS } from "./constants";
 import { findNearestPlanet, distanceBetweenPoints, channelContainsPoint, channelContainsDate } from './geometryHelpers';
 import dragEnhancements from './enhancedDragHandler';
 import { timeMonth, timeWeek } from "d3-time"
-import { update } from 'lodash';
-import { ContactSupportOutlined } from '@material-ui/icons';
+
 
 /*
 
@@ -35,8 +34,8 @@ export default function journeyComponent() {
     let canvasWidth;
     let canvasHeight;
 
-    let planetWidth;
-    let planetHeight;
+    let planetWidth = DIMNS.planet.width;
+    let planetHeight = DIMNS.planet.height;
     let planetContentsWidth;
     let planetContentsHeight;
 
@@ -45,7 +44,6 @@ export default function journeyComponent() {
     const planetWrapperHeight = isOpen => isOpen ? planetHeight + chartHeight : planetHeight;
     
     const TIME_AXIS_WIDTH = 50;
-    let planetWrapperWidth;
 
     let withCompletionPaths = false;
 
@@ -65,16 +63,11 @@ export default function journeyComponent() {
         contentsHeight = height - margin.top - margin.bottom;
         canvasWidth = contentsWidth// * 5;
         canvasHeight = contentsHeight * 5; //this should be lrge enough for all planets, and rest can be accesed via pan
-
-        planetWrapperWidth = 85;
-        //note - planetWrapperHeight depends on whether or not planet is active
         
-        planetWidth = planetWrapperWidth;
         planetContentsWidth = planetWidth - planetMargin.left - planetMargin.right;
-        planetHeight = 60;//calcPlanetHeight(height);
         planetContentsHeight = planetHeight - planetMargin.top - planetMargin.bottom;
 
-        chartWidth = planetWrapperWidth;
+        chartWidth = planetWidth;
         //we want enough space on screen for two planets and 1 chart
         chartHeight = calcChartHeight(height, planetHeight);
     };
@@ -284,37 +277,10 @@ export default function journeyComponent() {
                 .updatePlanet(updatePlanet)
                 .deletePlanet(id => {
                     selected = undefined;
+                    editing = undefined;
                     deletePlanet(id);
                 })
                 .startEditPlanet(onStartEditPlanet)
-
-            /*
-            function onStartEditPlanet(d){
-                editing = d;
-                updateSelected(undefined);
-                preEditZoom = currentZoom;
-                svg.transition().duration(750).call(
-                    zoom.transform, 
-                    d3.zoomIdentity.translate(
-                        applyZoomX(-d.x + d.rx(contentsWidth)/3), 
-                        applyZoomY(-d.y + d.ry(contentsHeight)/3)
-                    ))
-                    .on("end", () => {
-                        //error - this now uses currentZoom instead of the new position
-                        setFormData(d)
-                    })
-            }
-
-            function onEndEditPlanet(){
-                setFormData(undefined)
-                editing = undefined;
-                svg.transition().duration(750).call(
-                    zoom.transform, 
-                    d3.zoomIdentity
-                        .translate(preEditZoom.x, preEditZoom.y)
-                        .scale(preEditZoom.k))
-            }
-            */
 
             canvasG.selectAll("g.planets")
                 .data([planetsData])
@@ -353,6 +319,10 @@ export default function journeyComponent() {
 
         function updateSelected(d){
             selected = d;
+            if(d?.dataType === "planet"){
+                //open name form too, but as selected rather than editing
+                setFormData({ d, nameOnly:true })
+            }
             update();
         }
 
@@ -360,9 +330,14 @@ export default function journeyComponent() {
         applyZoomX = x => (x + currentZoom.x) / currentZoom.k;
         applyZoomY = y => (y + currentZoom.y) / currentZoom.k;
         onStartEditPlanet = (d) => {
+            console.log("start edit")
+            setFormData(undefined)
             editing = d;
             updateSelected(undefined);
             preEditZoom = currentZoom;
+            //hide nameform immediately
+            setFormData(undefined)
+            //console.log("form div", d3.select)
             svg.transition().duration(750).call(
                 zoom.transform, 
                 d3.zoomIdentity.translate(
@@ -371,7 +346,7 @@ export default function journeyComponent() {
                 ))
                 .on("end", () => {
                     //error - this now uses currentZoom instead of the new position
-                    setFormData(d)
+                    setFormData({ d })
                 })
         }
 

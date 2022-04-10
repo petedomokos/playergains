@@ -11,15 +11,21 @@ import { DIMNS } from "./constants"
 
 const useStyles = makeStyles(theme => ({
   card: {
-    width: "100%",
-    height:"100%",
-    margin: 0,
+    [theme.breakpoints.down('md')]: {
+      width: "100%",
+      height:"100%",
+    },
+    [theme.breakpoints.up('lg')]: {
+      width: "500px",
+      height:"700px",
+    },
+    margin: 'auto',
     textAlign: 'center',
-    paddingBottom: 0,
+    marginTop: 0, // props => props.fullEdit ? 0 : 10,
+    paddingBottom: props => props.fullEdit ? theme.spacing(1) : 0,
   },
   cardContent:{
       //border:"solid",
-      margin:0,
       padding:0
   },
   error: {
@@ -27,13 +33,22 @@ const useStyles = makeStyles(theme => ({
   },
   textField: {
     //border:"solid",
-    margin: 0,//theme.spacing(1),
-    width:"100%",
-    height:"100%",
+    margin: theme.spacing(1),
+    height:"40px",
     fontSize:"10px",
+    [theme.breakpoints.down('md')]: {
+      width:"80%",
+      //fontSize:"40px"
+    },
+    [theme.breakpoints.up('lg')]: {
+      width:"400px"
+    },
   },
   resize:{
     margin:0,
+    [theme.breakpoints.down('md')]: {
+      //fontSize:"34px"
+    },
   },
 }))
 

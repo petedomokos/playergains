@@ -8,6 +8,8 @@ import journeyComponent from "./journeyComponent"
 import { addMonths, startOfMonth, idFromDates } from '../util/TimeHelpers';
 import { channelContainsDate } from './geometryHelpers';
 import NameForm from "./NameForm"
+import Form from "./Form"
+import { DIMNS } from './constants';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -15,6 +17,14 @@ const useStyles = makeStyles((theme) => ({
   },
   svg:{
     //position:"absolute"
+  },
+  form:{
+    border:"solid",
+    position:"absolute",
+    left:props => props.form?.left,
+    top:props => props.form?.top,
+    width:props => props.form?.width, 
+    height:props => props.form?.height
   }
 }))
 
@@ -39,12 +49,6 @@ const initChannels = d3.range(numberMonths)
   })
 
 const Journey = ({dimns}) => {
-  const styleProps = { };
-  const classes = useStyles(styleProps) 
-  const containerRef = useRef(null);
-  const formRef = useRef(null);
-  const formDimnsRef = useRef({ width:500, height:700 });
-  const { screenWidth, screenHeight } = dimns;
   const [journey, setJourney] = useState(undefined)
   //@todo - put into one state object to avoid multiple updates
   const [planetState, setPlanetState] = useState([]);
@@ -52,6 +56,26 @@ const Journey = ({dimns}) => {
   const [channelState, setChannelState] = useState(initChannels);
   const [withCompletionPaths, setWithCompletionPath] = useState(false);
   const [formData, setFormData] = useState(undefined);
+
+  const { screenWidth, screenHeight } = dimns;
+  let styleProps = {}
+  if(formData) {
+    const width = formData.nameOnly ? DIMNS.planet.width : d3.min([screenWidth * 0.725, 500]); 
+    const height = formData.nameOnly ? DIMNS.planet.height/4 : d3.min([screenHeight * 0.725, 700]);
+    styleProps = {
+      form:{
+        width,
+        height,
+        left: formData.nameOnly ? formData.d.x - width/2 : ((screenWidth - width) / 2) + "px",
+        top: formData.nameOnly ? formData.d.y - height/2 : ((screenHeight - height) / 2) + "px"
+      }
+    } 
+  };
+  const classes = useStyles(styleProps) 
+  const containerRef = useRef(null);
+  const formRef = useRef(null);
+  const formDimnsRef = useRef({ width:500, height:700 });
+ 
   //const [nrPlanetsCreated, setNrPlanetsCreated] = useState(0);
   //console.log("linkState", linkState)
   //console.log("withcomp?", withCompletionPaths)
@@ -88,7 +112,8 @@ const Journey = ({dimns}) => {
           const newPlanet = {
               id:"p"+ (nrPlanetsCreated.current + 1),
               targetDate,
-              yPC
+              yPC,
+              dataType:"planet"
               //goals
           }
           setPlanetState(prevState => [...prevState, newPlanet]);
@@ -99,6 +124,7 @@ const Journey = ({dimns}) => {
           setPlanetState(prevState => updatedState(prevState, props))
         })
         .deletePlanet(id => {
+          setFormData(undefined);
           //must delete link first, but when state is put together this wont matter
           setLinkState(prevState => prevState.filter(l => l.src !== id && l.targ !== id));
           setPlanetState(prevState => prevState.filter(p => p.id !== id));
@@ -106,7 +132,8 @@ const Journey = ({dimns}) => {
         .addLink(props => {
           const newLink = {
             ...props,
-            id:props.src + "-" + props.targ
+            id:props.src + "-" + props.targ,
+            dataType:"link"
           }
           setLinkState(prevState => ([ ...prevState, newLink]))
         })
@@ -173,7 +200,7 @@ const Journey = ({dimns}) => {
   }
 
   const handleFormUpdate = (name, value) => {
-    const props = { id:formData.id, [name]: value };
+    const props = { id:formData.d.id, [name]: value };
     setPlanetState(prevState => updatedState(prevState, props))
   }
 
@@ -187,15 +214,12 @@ const Journey = ({dimns}) => {
         <svg className={classes.svg} ref={containerRef}></svg>
         <Button color="primary" variant="contained" onClick={toggleCompletion} style={{ width:50, height:10, fontSize:7 }}>completion</Button>
         {formData && 
-          <div ref={formRef}
-              style={{
-                position:"absolute", 
-                left:formDimnsRef.current.left, 
-                top:formDimnsRef.current.top, 
-                width:formDimnsRef.current.width,
-                height:formDimnsRef.current.height,
-                background:"aqua",
-            }}><NameForm d={formData} onUpdate={handleFormUpdate} onClose={handleFormClose} />
+          <div ref={formRef} className={classes.form}>
+            {formData.fullEdit ? 
+              <Form data={formData} onUpdate={handleFormUpdate} onClose={handleFormClose} />
+              :
+              <NameForm data={formData} onUpdate={handleFormUpdate} onClose={handleFormClose} />
+            }
           </div>
         }
     </div>

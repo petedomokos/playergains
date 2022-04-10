@@ -174,9 +174,15 @@ export default function planetsComponent() {
                         .call(menus[d.id]
                             .onClick((opt) => {
                                 switch(opt.key){
-                                    case "delete": { deletePlanet(d.id) };
+                                    case "delete": { 
+                                        deletePlanet(d.id);
+                                        break;
+                                    };
                                     //for goals
-                                    case "edit": { startEditPlanet(d) };
+                                    case "edit": { 
+                                        startEditPlanet(d);
+                                        break; 
+                                    };
                                     default:{};
                                 }
                             }))
