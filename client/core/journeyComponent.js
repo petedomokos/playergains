@@ -322,6 +322,8 @@ export default function journeyComponent() {
             if(d?.dataType === "planet"){
                 //open name form too, but as selected rather than editing
                 setFormData({ d, nameOnly:true })
+            }else{
+                setFormData(undefined);
             }
             update();
         }
