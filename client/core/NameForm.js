@@ -28,18 +28,19 @@ const useStyles = makeStyles(theme => ({
   textField: {
     //border:"solid",
     margin: 0,//theme.spacing(1),
+    marginLeft:"3px",
     width:"100%",
     height:"100%",
-    fontSize:"10px",
   },
   resize:{
     margin:0,
+    fontSize:"10px"
   },
 }))
 
 export default function NameForm({ data, onUpdate, onClose }) {
-    const { d, fullEdit=true } = data;
-    const styleProps = { fullEdit };
+    const { d } = data;
+    const styleProps = { };
     const classes = useStyles(styleProps) 
     const [values, setValues] = useState({
         name: d?.name || "",
@@ -51,9 +52,6 @@ export default function NameForm({ data, onUpdate, onClose }) {
         onUpdate(name, event.target.value)
     }
 
-    //fix bug i put in by changing setFormData to recieve d and fullEdit
-    //then if not fulEdit, should not zoom etc, just show name textfield over name
-    //toido - make name form come up on click name, but just nameform over the name
     const handleKeyDown = (e) =>{
         if(e.keyCode === 13){
             onClose();
@@ -65,24 +63,29 @@ export default function NameForm({ data, onUpdate, onClose }) {
             <CardContent className={classes.cardContent}>
             <TextField
                 type="submit"
-                id="name" type="name" label="Name" 
+                id="name" type="name" placeholder="Name"
                 className={classes.textField} 
+                autoComplete='off'
                 value={values.name} 
                 onChange={handleChange('name')}
                 onKeyDown={handleKeyDown}
                 margin="none"
+                size="small"
                 InputProps={{
+                    disableUnderline: true,
                     classes: {
                         input: classes.resize,
                     },
                 }}
-            /><br/>
-            <br/> {
+            />
+            {/**<br/>*/}
+            {/**<br/>*/}
+            {/**
                 values.error && (<Typography component="p" color="error">
                 <Icon color="error" className={classes.error}>error</Icon>
                 {values.error}
                 </Typography>)
-            }
+            */}
             </CardContent>
         </Card>
         )

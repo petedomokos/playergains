@@ -189,7 +189,18 @@ export default function journeyComponent() {
                 .extent(extent)
                 .scaleExtent([0.125, 8])
                 .on("zoom", enhancedZoom(function(e){
-                    selected = undefined;
+                    if(e.sourceEvent){
+                        //user has manually zoomed so close selected/editing
+                        //selected = undefined;
+                        if(editing){
+                            onEndEditPlanet()
+                        }
+                        if(selected){
+                            updateSelected(undefined);
+                        }
+                        //editing = undefined;
+                        //setFormData(undefined);
+                    }
                     currentZoom = e.transform;
                     setZoom(currentZoom);
                     update();
@@ -332,14 +343,12 @@ export default function journeyComponent() {
         applyZoomX = x => (x + currentZoom.x) / currentZoom.k;
         applyZoomY = y => (y + currentZoom.y) / currentZoom.k;
         onStartEditPlanet = (d) => {
-            console.log("start edit")
+            //hide nameform immediately
             setFormData(undefined)
             editing = d;
             updateSelected(undefined);
             preEditZoom = currentZoom;
-            //hide nameform immediately
-            setFormData(undefined)
-            //console.log("form div", d3.select)
+
             svg.transition().duration(750).call(
                 zoom.transform, 
                 d3.zoomIdentity.translate(

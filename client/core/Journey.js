@@ -19,7 +19,6 @@ const useStyles = makeStyles((theme) => ({
     //position:"absolute"
   },
   form:{
-    border:"solid",
     position:"absolute",
     left:props => props.form?.left,
     top:props => props.form?.top,
@@ -56,6 +55,7 @@ const Journey = ({dimns}) => {
   const [channelState, setChannelState] = useState(initChannels);
   const [withCompletionPaths, setWithCompletionPath] = useState(false);
   const [formData, setFormData] = useState(undefined);
+  //console.log("formData", formData)
 
   const { screenWidth, screenHeight } = dimns;
   let styleProps = {}
@@ -215,10 +215,10 @@ const Journey = ({dimns}) => {
         <Button color="primary" variant="contained" onClick={toggleCompletion} style={{ width:50, height:10, fontSize:7 }}>completion</Button>
         {formData && 
           <div ref={formRef} className={classes.form}>
-            {formData.fullEdit ? 
-              <Form data={formData} onUpdate={handleFormUpdate} onClose={handleFormClose} />
-              :
+            {formData.nameOnly ? 
               <NameForm data={formData} onUpdate={handleFormUpdate} onClose={handleFormClose} />
+              :
+              <Form data={formData} onUpdate={handleFormUpdate} onClose={handleFormClose} />
             }
           </div>
         }

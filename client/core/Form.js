@@ -35,7 +35,6 @@ const useStyles = makeStyles(theme => ({
     //border:"solid",
     margin: theme.spacing(1),
     height:"40px",
-    fontSize:"10px",
     [theme.breakpoints.down('md')]: {
       width:"80%",
       //fontSize:"40px"
@@ -46,15 +45,19 @@ const useStyles = makeStyles(theme => ({
   },
   resize:{
     margin:0,
+    fontSize:"12px",
     [theme.breakpoints.down('md')]: {
-      //fontSize:"34px"
+      fontSize:"10px"
+    },
+    [theme.breakpoints.up('lg')]: {
+      fontSize:"12px"
     },
   },
 }))
 
-export default function NameForm({ data, onUpdate, onClose }) {
-    const { d, fullEdit=true } = data;
-    const styleProps = { fullEdit };
+export default function Form({ data, onUpdate, onClose }) {
+    const { d } = data;
+    const styleProps = { };
     const classes = useStyles(styleProps) 
     const [values, setValues] = useState({
         name: d?.name || "",
@@ -66,9 +69,6 @@ export default function NameForm({ data, onUpdate, onClose }) {
         onUpdate(name, event.target.value)
     }
 
-    //fix bug i put in by changing setFormData to recieve d and fullEdit
-    //then if not fulEdit, should not zoom etc, just show name textfield over name
-    //toido - make name form come up on click name, but just nameform over the name
     const handleKeyDown = (e) =>{
         if(e.keyCode === 13){
             onClose();
@@ -80,12 +80,14 @@ export default function NameForm({ data, onUpdate, onClose }) {
             <CardContent className={classes.cardContent}>
             <TextField
                 type="submit"
-                id="name" type="name" label="Name" 
+                id="name" type="name" placeholder="Name" 
                 className={classes.textField} 
+                autoComplete='off'
                 value={values.name} 
                 onChange={handleChange('name')}
                 onKeyDown={handleKeyDown}
                 margin="none"
+                size="small"
                 InputProps={{
                     classes: {
                         input: classes.resize,
