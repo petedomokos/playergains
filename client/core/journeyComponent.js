@@ -188,6 +188,7 @@ export default function journeyComponent() {
                 //.scaleExtent([1, 3])
                 .extent(extent)
                 .scaleExtent([0.125, 8])
+                .on("start", enhancedZoom())
                 .on("zoom", enhancedZoom(function(e){
                     if(e.sourceEvent){
                         //user has manually zoomed so close selected/editing
