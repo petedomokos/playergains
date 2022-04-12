@@ -134,6 +134,7 @@ export default function linksComponent() {
                             .call(barCharts[d.id]
                                 .width(barChartSettings.width)
                                 .height(barChartSettings.height)
+                                .labelSettings(barChartSettings.label)
                             )
                             .attr("transform", "translate("+ (d.centre[0] - barChartSettings.width/2)+ "," + (d.centre[1]- barChartSettings.height/2) +")")
 

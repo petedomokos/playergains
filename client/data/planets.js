@@ -20,7 +20,20 @@ export function getStarData(userId){
 const goals = {
     //COMPLETED
     //group 1 to 3
-    "p1-p2":[createGoal("p1p2-g1", 100), createGoal("p1p2-g2", 100), createGoal("p1p2-g3", 100)],
+    //incomplete to show just one link
+    "p1-p2":[
+        createGoal("p1p2-g1", 95, "Shot Acc", "My shots are accurate"), 
+        createGoal("p1p2-g2", 70, "Both Feet", "My shots and crosses are good with both feet"), 
+        createGoal("p1p2-g3", 60, "1 v 1s", "I am reliable finisher when 1v1 against the keeper")
+    ],
+    /*
+    //fully complete for path
+    "p1-p2":[
+        createGoal("p1p2-g1", 100, "Shot Acc"), 
+        createGoal("p1p2-g2", 100, ""), 
+        createGoal("p1p2-g3", 100)
+    ],
+    */
     "p1-p3":[createGoal("p1p3-g1", 100), createGoal("p1p3-g2", 100), createGoal("p1p3-g3", 100)],
     "p1-p4":[createGoal("p1p4-g1", 100), createGoal("p1p4-g2", 100), createGoal("p1p4-g3", 100)],
     //group 1 to 1
@@ -37,12 +50,12 @@ const goals = {
     "p7-p8":[createGoal("p7p8-g1", 0), createGoal("p7p8-g2", 0), createGoal("p7p8-g3", 0)],
 }
 
-function createGoal(id, pcScore){
+function createGoal(id, pcScore, label="Both Feet", title="My passes and crosses are good on both feet"){
     return {
         key:"goal-"+1,
         id,
-        title:"My passes and crosses are good on both feet",
-        label:"Both feet",
+        title,
+        label,
         desc:"",
         datasetMeasures:[
             //for now, one per goal

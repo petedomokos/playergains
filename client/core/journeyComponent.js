@@ -239,8 +239,12 @@ export default function journeyComponent() {
                 .timeScale(zoomedTimeScale)
                 .strokeWidth(k * 0.5)
                 .barChartSettings({
-                    width:70 * k,
-                    height:30 * k
+                    width:80 * k,
+                    height:30 * k,
+                    label:{
+                        fontSize:5 * k,
+                        width:20 * k,
+                    }
                 })
                 .deleteLink(id => {
                     selected = undefined;
@@ -365,11 +369,17 @@ export default function journeyComponent() {
         onEndEditPlanet = () => {
             setFormData(undefined)
             editing = undefined;
-            svg.transition().duration(750).call(
-                zoom.transform, 
-                d3.zoomIdentity
-                    .translate(preEditZoom.x, preEditZoom.y)
-                    .scale(preEditZoom.k))
+            //zoom is only applied for full edit, not if its nameOnly
+            if(preEditZoom){
+                svg.transition().duration(750).call(
+                    zoom.transform, 
+                    d3.zoomIdentity
+                        .translate(preEditZoom.x, preEditZoom.y)
+                        .scale(preEditZoom.k))
+            }
+            updateSelected(undefined);
+            //reset
+            preEditZoom = undefined;
         }
 
         return selection;
