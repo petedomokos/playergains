@@ -238,7 +238,7 @@ export default function journeyComponent() {
                 //.timeScale(timeScale)
                 .timeScale(zoomedTimeScale)
                 .strokeWidth(k * 0.5)
-                .barChartSettings({
+                .openedContentSettings({
                     width:80 * k,
                     height:30 * k,
                     label:{

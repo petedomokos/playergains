@@ -12,13 +12,16 @@ import { findNearestPlanet, distanceBetweenPoints, angleOfRotation } from './geo
 import { OPEN_CHANNEL_EXT_WIDTH } from './constants';
 import dragEnhancements from './enhancedDragHandler';
 import { timeMonth, timeWeek } from "d3-time"
+import tooltipComponent from "./tooltipComponent";
 import menuComponent from './menuComponent';
+import { update } from 'lodash';
+import openedChannelContentComponent from './openedChannelContentComponent';
 /*
 
 */
 export default function linksComponent() {
     // dimensions
-    let barChartSettings = {
+    let openedContentSettings = {
         width:100,
         height: 100
     }
@@ -35,17 +38,21 @@ export default function linksComponent() {
     let onClick = function (){}
 
     //components
+    //@todo make an openedContent component
     let barCharts = {};
+    let tooltips = {};
+    let openedChannelContent = {};
     let menus = {};
     let menuOptions = [
         { key: "delete", label:"Delete" }
     ];
 
+    let hovered;
+
     function links(selection, options={}) {
         const { transitionEnter, transitionUpdate } = options;
 
         selection.each(function (data) {
-            //console.log("links", data);
             if(data){ linksData = data;}
            
             const linkG = d3.select(this).selectAll("g.link").data(linksData, l => l.id);
@@ -55,9 +62,10 @@ export default function linksComponent() {
                     .attr("id", d => "link-"+d.id)
                     .attr("opacity", 1)
                     .each(function(d,i){
+                        const linkG = d3.select(this);
                         //ENTER
                         //line
-                        d3.select(this)
+                        linkG
                             .append("line")
                                 .attr("class", "main")
                                 .attr("stroke", grey10(5))
@@ -68,7 +76,7 @@ export default function linksComponent() {
                                 .attr("y2", d.targ.y)
                         
                         //completion line
-                        d3.select(this)
+                        linkG
                             .append("line")
                                 .attr("class", "completion")
                                 .attr("display", withCompletion ? "inline" : "none")
@@ -81,21 +89,34 @@ export default function linksComponent() {
 
                         
                         //hitbox
-                        d3.select(this)
+                        linkG
                             .append("rect")
                             .attr("class", "hitbox")
                             .attr("stroke", "transparent")
                             .attr("fill", "transparent")
                             .style("cursor", "pointer")
 
-                        //bar charts
-                        barCharts[d.id] = barChart();
-
-                        d3.select(this)
+                        //opened content
+                        const openedContentG = linkG.append("g").attr("class", "opened-content");
+                        //bar
+                        /*
+                        openedContentG
                             .append("g")
                                 .attr("class", "bar-chart")
                                 .attr("opacity", 0)
-                                .attr("display", "none")
+                                .attr("display", "none");
+                        
+                        //tooltip
+                        openedContentG
+                            .append("g")
+                                .attr("class", "tooltip");
+                            
+
+                        //bar chart component
+                        barCharts[d.id] = barChart();
+                        tooltips[d.id] = tooltipComponent();
+                        */
+                        openedChannelContent[d.id] = openedChannelContentComponent();
                         
                         //menu component
                         menus[d.id] = menuComponent();
@@ -127,17 +148,35 @@ export default function linksComponent() {
                         //about bar charts
                         //- they appear halfway up the link, so if link covers two channels, it will not be in same pos as a chart for a link covering one of the channels
                         //- if any channel that teh link covers is open, then the link chart show
-                        const barChartG = d3.select(this).select("g.bar-chart");
-                        barChartG
+                        const openedContentG = d3.select(this).select("g.opened-content")
+                            .attr("transform", "translate("+ (d.centre[0] - openedContentSettings.width/2)+ "," + (d.centre[1]- openedContentSettings.height/2) +")")
+                            .datum(d)
+                            .call(openedChannelContent[d.id]
+                                .width(openedContentSettings.width)
+                                .height(openedContentSettings.height)
+                                .labelSettings(openedContentSettings.label))
+                        
+                        /*
+                            //bar chart
+                        const barChartG = openedContentG.select("g.bar-chart")
                             //.attr("display", d.isOpen ? "inline" : "none")
                             .datum(d.barChartData)
                             .call(barCharts[d.id]
-                                .width(barChartSettings.width)
-                                .height(barChartSettings.height)
-                                .labelSettings(barChartSettings.label)
-                            )
-                            .attr("transform", "translate("+ (d.centre[0] - barChartSettings.width/2)+ "," + (d.centre[1]- barChartSettings.height/2) +")")
+                                .width(openedContentSettings.width)
+                                .height(openedContentSettings.height)
+                                .labelSettings(openedContentSettings.label)
+                                .onHover(d => { 
+                                    hovered = d;
+                                }))
+                            
 
+                        openedContentG.select("g.tooltip")
+                            .attr("transform", "translate(" +(-openedContentSettings.width/2) +"," +(-openedContentSettings.height) +")")
+                            .datum(hovered)
+                            .call(tooltips[d.id]
+                                .width(openedContentSettings.width)
+                                .height(openedContentSettings.height))
+                                
                         //fade in and out bar chart
                         if(d.isOpen && barChartG.attr("opacity") === "0"){
                             barChartG
@@ -156,6 +195,7 @@ export default function linksComponent() {
                                 .attr("opacity", 0)
                                 .attr("display", "none")
                         }
+                        */
 
                         //todo - transition the transform of barChartG when a planet is dragged
                     })
@@ -284,9 +324,9 @@ export default function linksComponent() {
         strokeWidth = value;
         return links;
     };
-    links.barChartSettings = function (value) {
-        if (!arguments.length) { return barChartSettings; }
-        barChartSettings = { ...barChartSettings, ...value};
+    links.openedContentSettings = function (value) {
+        if (!arguments.length) { return openedContentSettings; }
+        openedContentSettings = { ...openedContentSettings, ...value};
         return links;
     };
     links.deleteLink = function (value) {

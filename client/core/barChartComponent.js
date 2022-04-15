@@ -1,6 +1,4 @@
 import * as d3 from 'd3';
-//import { planetsGenerator } from "./planetsGenerator";
-//import {  } from "./helpers";
 import { COLOURS, grey10 } from "./constants";
 
 /*
@@ -18,8 +16,6 @@ export default function barChartComponent() {
     let contentsWidth;
     let contentsHeight;
 
-    //let planets = planetsGenerator();
-
     function updateDimns(){
         margin = margin = {
             left:width * 0.05, 
@@ -33,9 +29,12 @@ export default function barChartComponent() {
 
     let labelSettings = { fontSize:9, width:30 };
 
-    //functions
+    //handlers
+    function onMouseover (){};
+    function onMouseout (){};
 
     //dom
+    let containerG;
     let contentsG;
     let backgroundRect;
     let contentsBackgroundRect;
@@ -45,32 +44,34 @@ export default function barChartComponent() {
         updateDimns();
         // expression elements
         selection.each(function (data) {
-            if(d3.select(this).select("g").empty()){
+            if(d3.select(this).select("g.contents").empty()){
                 init.call(this);
             }
             //console.log("barChart.....", data);
             function init(){
                 //console.log("barChart init", this);
+                containerG = d3.select(this);
 
-                backgroundRect = d3.select(this)
+                backgroundRect = containerG
                     .append("rect")
                         .attr("class", "border")
                         .attr("width", width)
                         .attr("height", height)
                         .attr("fill", COLOURS?.canvas || "white")
                 
-                contentsG = d3.select(this)
+                contentsG = containerG
                     .append("g")
                     .attr("class", "contents")
                 
                 contentsBackgroundRect = contentsG
                     .append("rect")
                         .attr("fill", "transparent")
+
             }
 
             backgroundRect.attr("width", width).attr("height", height)
             contentsG.attr("transform", "translate("+margin.left +"," +margin.top +")");
-            contentsBackgroundRect.attr("width", contentsWidth).attr("height", contentsHeight)
+            contentsBackgroundRect.attr("width", contentsWidth).attr("height", contentsHeight);
 
             //make the chart
             //axis
@@ -115,6 +116,9 @@ export default function barChartComponent() {
                 .merge(barsAreaG)
                 .attr("transform", "translate("+catAxisWidth +",0)")
                 .each(function(){
+                    //tooltip
+                    d3.select(this).append("g").attr("class", "tooltip")
+                    //bars
                     const barG = d3.select(this).selectAll("g.bar").data(data)
                     barG.enter()
                         .append("g")
@@ -151,15 +155,15 @@ export default function barChartComponent() {
                                 .attr("dominant-baseline", "central")
                                 .attr("font-size", 5);
 
-                            /*
-                            g.append("svg:image")
-                                .attr("href", "/tick.svg")
-                                .attr("class", "tick");
-                            */
+                            // g.append("svg:image")
+                                // .attr("href", "/tick.svg")
+                                // .attr("class", "tick");
                             
                         })
                         .merge(barG)
                         .attr("transform", (d,i) => "translate(0, "+((barSpacing/2) +i * barWrapperWidth) +")")
+                        .on("mouseover", onMouseover)
+                        .on("mouseout", onMouseout)
                         .each(function(d,i){
                             //console.log("d...", d)
                             //datapoint
@@ -194,24 +198,20 @@ export default function barChartComponent() {
                                 .attr("transform", "translate(-3," +barWidth/2 +")")
                                 .attr("fill", d.isSelected ? grey10(7) : grey10(5))
                                 .text(d.label);
-
-                            /*
                             
-                            const tickWidth = barWidth * 0.33;
-                            const tickHeight = tickWidth;
-                            g.select(".tick")
-                                .attr("display", d.projPCValue < 100 ?  "none" : "inline")
-                                .attr("width", tickWidth)
-                                .attr("height", tickHeight)
-                                .attr("x", barWidth/2 - tickWidth/2)
-                                .attr("y",-tickHeight)
-                                .attr("opacity", 0)
-                                .transition()
-                                .delay(1000)
-                                .duration(300)
-                                    .attr("opacity", 1);
-
-                                    */
+                            //const tickWidth = barWidth * 0.33;
+                            //const tickHeight = tickWidth;
+                            //g.select(".tick")
+                              //  .attr("display", d.projPCValue < 100 ?  "none" : "inline")
+                              //.attr("width", tickWidth)
+                               // .attr("height", tickHeight)
+                               // .attr("x", barWidth/2 - tickWidth/2)
+                                //.attr("y",-tickHeight)
+                                //.attr("opacity", 0)
+                               // .transition()
+                                //.delay(1000)
+                               // .duration(300)
+                                   // .attr("opacity", 1);
                             
                         })
                 })
@@ -228,6 +228,24 @@ export default function barChartComponent() {
     barChart.height = function (value) {
         if (!arguments.length) { return height; }
         height = value;
+        return barChart;
+    };
+    barChart.onMouseover = function (value) {
+        if (!arguments.length) { return onMouseover; }
+        if(typeof value === "function"){
+            onMouseover = value;
+        }else{
+            onMouseover = function(){};
+        }
+        return barChart;
+    };
+    barChart.onMouseout = function (value) {
+        if (!arguments.length) { return onMouseout; }
+        if(typeof value === "function"){
+            onMouseout = value;
+        }else{
+            onMouseout = function(){};
+        }
         return barChart;
     };
     barChart.labelSettings = function (value) {
