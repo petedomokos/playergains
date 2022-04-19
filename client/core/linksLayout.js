@@ -2,6 +2,7 @@ import * as d3 from 'd3';
 import barChartLayout from "./barChartLayout";
 import { getGoalsData } from '../data/planets';
 import { distanceBetweenPoints, angleOfRotation, angleOfElevation, toRadians } from './geometryHelpers';
+import { mapKeys } from 'lodash';
 
 export default function linkslayout(){
     //const barChartWidth = 100;
@@ -40,6 +41,29 @@ export default function linkslayout(){
             ]
             //pass the targ planet, along with mock goals, and the src targetDate as the startDate, to the bar layout
             const barChartData = barChartLayout({ ...targ, startDate:src.targetDate, goals: getGoalsData(l.id)})
+            
+            const tooltipData = barChartData.map(g => ({
+                goalId:g.id,
+                title:g.title,
+                colHeadings:["start", "now", "proj", "targ"],
+                rowHeadings:["date", "score"],
+                //@todo - allow for wider column by giving a width enum to each row/col object
+                //cols:[{ title:"start" }, { title: "now"}, {title: "proj / targ"}],
+                //rows:[{ title: "date" }, { title: "score" }],
+                datapoints:[
+                    { col:"start", row:"date", value:g.startDate || "02/03/22" },
+                    { col:"now", row:"date", value:/*new Date()*/ "17/04/2022" },
+                    { col:"proj", row:"date", value:g.endDate || "31/04/22" },
+                    { col:"targ", row:"date", value:g.endDate || "31/04/22" },
+                    //{ col:"proj / targ", row:"date", value:g.endDate || "31/04/22" },
+                    { col:"start", row:"score", value:g.startValue || "25" },
+                    { col:"now", row:"score", value:g.value || "36" }, //doesnt exist yet as its all done by pc
+                    //{ col:"proj / targ", row:"score", value:(""+g.projValue || "42") +" / " +(""+g.targ || "51") } //or projPCValue
+                    { col:"proj", row:"score", value:g.projValue || "42" }, //or projPCValue
+                    { col:"targ", row:"score", value:g.targ || "51" }
+                ]
+            }));
+            const goalsData = { barChartData, tooltipData };
             const overallProgressPC = d3.mean(barChartData, g => g.pcValue);
 
             const { cos, sin } = Math;
@@ -63,7 +87,7 @@ export default function linkslayout(){
                 compX,
                 compY,
                 isOpen, 
-                barChartData,
+                goalsData,
                 overallProgressPC,
                 centre,
                 isSelected:selected === l.id,

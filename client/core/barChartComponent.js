@@ -124,6 +124,7 @@ export default function barChartComponent() {
                         .append("g")
                         .attr("class", "bar")
                         .attr("id", d => "bar-"+d.key)
+                        .attr("cursor", "pointer")
                         .each(function(d,i){
                             //console.log("d...", d)
                             //datapoint

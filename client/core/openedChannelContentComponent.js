@@ -13,20 +13,22 @@ export default function openedChannelContentComponent() {
     let contentsWidth;
     let contentsHeight;
 
+    let tooltipWidth = 150;
+    let tooltipHeight = 60;
+
     function updateDimns(){
         contentsWidth = width - margin.left - margin.right;
         contentsHeight = height - margin.top - margin.bottom;
     };
 
     let labelSettings = {};
-    let hovered;
+    let hoveredGoalId;
     let mouseoutTimer;
 
     //dom
     let containerG;
     let contentsG;
     let barChartG;
-    let tooltipG;
 
     //components
     const barChart = barChartComponent();
@@ -35,7 +37,8 @@ export default function openedChannelContentComponent() {
     function openedChannelContent(selection) {
         updateDimns();
         const data = selection.datum();
-        const { barChartData } = data;
+        //console.log("occ data", data)
+        const { id, goalsData: { barChartData, tooltipData } } = data;
 
         if(!contentsG || contentsG.empty()){ init();}
         update();            
@@ -50,10 +53,6 @@ export default function openedChannelContentComponent() {
                     .attr("opacity", 0)
                     .attr("display", "none");
             
-            //tooltip
-            tooltipG = containerG
-                .append("g")
-                    .attr("class", "tooltip");
         }
 
         function update(){
@@ -66,14 +65,19 @@ export default function openedChannelContentComponent() {
                     .width(contentsWidth)
                     .height(contentsHeight)
                     .labelSettings(labelSettings)
-                    .onMouseover((e,d) => { 
-                        if(mouseoutTimer) { mouseoutTimer.stop();}
-                        hovered = d;
+                    .onMouseover((e,d) => {
+                        //@todo - bug - if going out then back in before timer ends, it sometimes errors - "transition 60 not found"
+                        if(mouseoutTimer) { 
+                            //console.log("stop timer!!!!!!!!!!")
+                            mouseoutTimer.stop();}
+                        //parentNode is the linkG
+                        d3.select(containerG.node().parentNode).raise();
+                        hoveredGoalId = d.id;
                         update();
                     })
                     .onMouseout(() => {
                         mouseoutTimer = d3.timeout(() => {
-                            hovered = undefined;
+                            hoveredGoalId = undefined;
                             update();
                         }, 500)
                     }))
@@ -97,14 +101,19 @@ export default function openedChannelContentComponent() {
             }
 
             //tooltip
-            tooltipG
-                .attr("transform", "translate(0," +(contentsHeight * 1.1) +")")
-                //.attr("display", hovered ? "inline" : "none")
-                //.attr("opacity", hovered ? 1 : 0)
-                .datum(hovered)
-                .call(tooltip
-                    .width(contentsWidth)
-                    .height(60)) 
+            //shift to right but not so far that it goes under a planet
+            //@todo - raise links layer or do soemthing to avoid planet clashes without the links showing above planets
+            const tooltipG = contentsG.selectAll("g.tooltip").data(tooltipData.filter(g => g.goalId === hoveredGoalId))
+            tooltipG.enter()
+                .append("g")
+                    .attr("class", "tooltip")
+                    .merge(tooltipG)
+                    .attr("transform", "translate("+(contentsWidth * 0.5) +"," +(contentsHeight * 1.1) +")")
+                    .call(tooltip
+                        .width(tooltipWidth)
+                        .height(tooltipHeight)) 
+
+            tooltipG.exit().remove();
             //@todo fade in /out
         }
 

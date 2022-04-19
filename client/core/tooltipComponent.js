@@ -1,4 +1,6 @@
 import * as d3 from 'd3';
+import textWrap from "./textWrap";
+import tableComponent from "./tableComponent";
 import { grey10 } from './constants';
 
 /*
@@ -6,15 +8,19 @@ import { grey10 } from './constants';
 */
 export default function tooltipComponent() {
     // dimensions
-    let margin = {left:5, right:5, top: 5, bottom:5};
+    let margin = { left:5, right:5, top: 5, bottom:5};
     let width = 100;
     let height = 60;
     let contentsWidth;
     let contentsHeight;
+    let nameHeight;
+    let tableHeight;
 
     function updateDimns(){
         contentsWidth = width - margin.left - margin.right;
         contentsHeight = height - margin.top - margin.bottom;
+        nameHeight = contentsHeight * 0.35;
+        tableHeight = contentsHeight * 0.65;
     };
 
     let prevData;
@@ -25,83 +31,80 @@ export default function tooltipComponent() {
     let contentsG;
     let bgG;
     let nameG;
-    let startG;
-    let currentG;
-    let projectedG;
+    let tableG;
+
+    const nameWrap = textWrap();
+    const table = tableComponent();
 
     function tooltip(selection) {
-        updateDimns();
-        const data = selection.datum();
-        if(!data && !entered){ 
-            return selection;
-        }
-        //enter
-        if(data && !entered){ 
-            containerG = selection;
-            enter();
-            entered = true;
-        }
+        selection.each(function(data){
+            containerG = d3.select(this);
+            //next
+            // - sort the patterns - stop using data as a way to enter or remove. instead, do it 
+            // in occ component using hoveredGoalId, using the enter-update pattern on them, with a .exit that transitions the removal on a timer
+            // - add the table component
+            // - hide other planets and links when editing
+            // - bars need to scale properly when zooming out
+            // - autogenrate the links in linksLayout when planets have same datset measure
+            updateDimns();
+            //enter
+            if(containerG.select("g.tooltip-contents").empty()){ 
+                enter.call(this);
+            }
 
-        if(!data && entered){
-            exit();
-            entered = false;
-            return selection;
-        }
+            update();
 
-        update();
+            function enter() {
+                containerG = d3.select(this);
 
-        function enter(){
-            containerG
-                .attr("opacity", 0)
-                .transition()
-                    .duration(200)
-                    .attr("opacity", 1);
+                containerG
+                    .attr("opacity", 0)
+                    .transition()
+                        .duration(200)
+                        .attr("opacity", 1);
 
-            contentsG = containerG
-                .append("g")
-                    .attr("class", "contents")
-                    .attr("transform", "translate(" +margin.left +"," +margin.top +")")
-            
-            bgG = contentsG
-                .append("rect")
-                    .attr("class", "bg")
-                    .attr("fill", grey10(2))
-            
-            nameG = contentsG.append("text").attr("class", "name")
-                .attr("text-anchor", "middle")
-                .attr("font-size", 5)
+                bgG = containerG
+                    .append("rect")
+                        .attr("class", "bg")
+                        .attr("fill", grey10(2))
 
-            startG = contentsG.append("g").attr("class", "start")
-            currentG = contentsG.append("g").attr("class", "curr")
-            projectedG = contentsG.append("g").attr("class", "proj")
+                contentsG = containerG
+                    .append("g")
+                        .attr("class", "contents tooltip-contents")
+                        .attr("transform", "translate(" +margin.left +"," +margin.top +")")
+                
+                nameG = contentsG.append("g").attr("class", "name")
+                    .attr("text-anchor", "middle")
+                    .attr("font-size", 5)
 
-        }
+                tableG = contentsG.append("g").attr("class", "table")
+                
+            }
 
-        function update(){
-            bgG
-                .attr("width", contentsWidth)
-                .attr("height", contentsHeight);
+            function update(){
+                bgG
+                    .attr("width", width)
+                    .attr("height", height);
 
-            nameG
-                .attr("transform", "translate(" + (contentsWidth/2) + ",10)")
-                .text(data?.title)
-            //@todo - make it a table
-            startG.attr("transform", "translate(10,10)");
-            currentG.attr("transform", "translate(10,10)");
-            projectedG.attr("transform", "translate(10,10)");
-        }
+                //nameG.select("rect")
+                    //.attr("width", contentsWidth)
+                    //.attr("height", nameHeight);
 
-        function exit(){
-            //exit
-            //@todo - transiton opacity
-            containerG
-                .transition()
-                    .duration(200)
-                    .attr("opacity", 1)
-                    .on("end", function (){
-                        d3.select(this).selectAll("*").remove();
-                    });
-        }
+                nameG
+                    .call(nameWrap
+                        .text(data?.title), {
+                            width:contentsWidth, 
+                            height:nameHeight
+                        });
+
+                tableG
+                    .attr("transform", "translate(0," +nameHeight +")")
+                    .datum(data)
+                    .call(table
+                        .width(contentsWidth)
+                        .height(tableHeight))
+            }
+        })
 
         return selection;
     }
