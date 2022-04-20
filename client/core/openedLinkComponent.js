@@ -98,7 +98,15 @@ export default function openedLinkComponent() {
             tooltipG.enter()
                 .append("g")
                     .attr("class", "tooltip")
-                    .each(function(d){ tooltip = tooltipComponent(); })
+                    .attr("opacity", 0)
+                    .each(function(d){ 
+                        tooltip = tooltipComponent();
+                        d3.select(this)
+                            .transition()
+                                .delay(200)
+                                .duration(200)
+                                .attr("opacity", 1)
+                    })
                     .merge(tooltipG)
                     .attr("transform", "translate("+(-TOOLTIP_WIDTH * 0.5) +"," +(contentsHeight * 1.1) +")")
                     .each(function(d){
@@ -108,7 +116,11 @@ export default function openedLinkComponent() {
                             .height(TOOLTIP_HEIGHT)) 
                     })
 
-            tooltipG.exit().remove();
+            tooltipG.exit()
+                .transition()
+                    .duration(200)
+                    .attr("opacity", 0)
+                    .on("end", function(){ d3.select(this).remove() });
         }) 
         
         return selection;
