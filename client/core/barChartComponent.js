@@ -116,8 +116,6 @@ export default function barChartComponent() {
                 .merge(barsAreaG)
                 .attr("transform", "translate("+catAxisWidth +",0)")
                 .each(function(){
-                    //tooltip
-                    d3.select(this).append("g").attr("class", "tooltip")
                     //bars
                     const barG = d3.select(this).selectAll("g.bar").data(data)
                     barG.enter()

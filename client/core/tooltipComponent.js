@@ -40,12 +40,15 @@ export default function tooltipComponent() {
         selection.each(function(data){
             containerG = d3.select(this);
             //next
-            // - sort the patterns - stop using data as a way to enter or remove. instead, do it 
-            // in occ component using hoveredGoalId, using the enter-update pattern on them, with a .exit that transitions the removal on a timer
-            // - add the table component
+            // BUG - tooltip not removing when hovred off, if you go from one barchart onto another
+            //prpbably to do with hovered object hash key usage, same as below
+            //BUG - tooltip may not be updating properly when hoveirng between bars
+            //BUG - axis lines sometimes disappear when hovering
+            //BUG - tooltip not showing over bar charts
             // - hide other planets and links when editing
             // - bars need to scale properly when zooming out
             // - autogenrate the links in linksLayout when planets have same datset measure
+            //BUG - zoom in/out whilst barchart displaying, when k small, rect width takes on a negative value => error
             updateDimns();
             //enter
             if(containerG.select("g.tooltip-contents").empty()){ 

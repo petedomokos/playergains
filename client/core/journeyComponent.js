@@ -15,7 +15,8 @@ import { ellipse } from "./ellipse";
 import { grey10, DEFAULT_D3_TICK_SIZE, COLOURS, DIMNS } from "./constants";
 import { findNearestPlanet, distanceBetweenPoints, channelContainsPoint, channelContainsDate } from './geometryHelpers';
 import dragEnhancements from './enhancedDragHandler';
-import { timeMonth, timeWeek } from "d3-time"
+import { timeMonth, timeWeek } from "d3-time";
+import openedLinkComponent from './openedLinkComponent';
 
 
 /*
@@ -45,19 +46,6 @@ export default function journeyComponent() {
     
     const TIME_AXIS_WIDTH = 50;
 
-    let withCompletionPaths = false;
-
-    let enhancedZoom = dragEnhancements();
-
-    const myChannelsLayout = channelsLayout();
-    const myAxesLayout = axesLayout();
-    const myLinksLayout = linksLayout();
-    const myPlanetsLayout = planetsLayout();
-
-    const axes = axesComponent();
-    const links = linksComponent();
-    const planets = planetsComponent();
-
     function updateDimns(){
         contentsWidth = width - margin.left - margin.right;
         contentsHeight = height - margin.top - margin.bottom;
@@ -71,6 +59,20 @@ export default function journeyComponent() {
         //we want enough space on screen for two planets and 1 chart
         chartHeight = calcChartHeight(height, planetHeight);
     };
+
+    let withCompletionPaths = false;
+
+    let enhancedZoom = dragEnhancements();
+
+    const myChannelsLayout = channelsLayout();
+    const myAxesLayout = axesLayout();
+    const myLinksLayout = linksLayout();
+    const myPlanetsLayout = planetsLayout();
+
+    const axes = axesComponent();
+    const links = linksComponent();
+    const planets = planetsComponent();
+    const openedLinks = {};
 
     //api
     let selected;
@@ -238,14 +240,6 @@ export default function journeyComponent() {
                 //.timeScale(timeScale)
                 .timeScale(zoomedTimeScale)
                 .strokeWidth(k * 0.5)
-                .openedContentSettings({
-                    width:80 * k,
-                    height:30 * k,
-                    label:{
-                        fontSize:5 * k,
-                        width:20 * k,
-                    }
-                })
                 .deleteLink(id => {
                     selected = undefined;
                     deleteLink(id);
@@ -304,6 +298,34 @@ export default function journeyComponent() {
                 .attr("class", "planets")
                 .call(planets, options.planets)
 
+            //openedLink
+            const openedLinkWidth = 80 * k;
+            const openedLinkHeight = 30 * k;
+            const openedLinkG = canvasG.selectAll("g.opened-link").data(linksData.filter(l => l.isOpen), l => l.id)
+            openedLinkG.enter()
+                .append("g")
+                .attr("class", "opened-link")
+                .each(function(d) { openedLinks[d.id] = openedLinkComponent(); })
+                .merge(openedLinkG)
+                .attr("transform", d => "translate("+ (d.centre[0])+ "," + (d.centre[1]- openedLinkHeight/2) +")")
+                .each(function(d) {
+                    d3.select(this)
+                        .call(openedLinks[d.id]
+                            .width(openedLinkWidth)
+                            .height(openedLinkHeight)
+                            .labelSettings({ fontSize:5 * k, width:20 * k }) //need to make this cunc recieve multiple channels
+                            .onMouseover(function(linkId, goalId){
+                                //@todo - make this same goal highlighted in othe rlinks that it is in too
+                                for (const [id, openedLink] of Object.entries(openedLinks)) {
+                                //Object.entries(openedLinks).forEach((id, openedLink) => {
+                                    if(id !== linkId && openedLink.activeGoalId()){
+                                        openedLink.activeGoalId(undefined);
+                                    }
+                                }
+                            }))
+                })
+            openedLinkG.exit().remove();
+        
         }
 
         function init(){

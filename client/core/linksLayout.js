@@ -43,7 +43,7 @@ export default function linkslayout(){
             const barChartData = barChartLayout({ ...targ, startDate:src.targetDate, goals: getGoalsData(l.id)})
             
             const tooltipData = barChartData.map(g => ({
-                goalId:g.id,
+                id:g.id,
                 title:g.title,
                 colHeadings:["start", "now", "proj", "targ"],
                 rowHeadings:["date", "score"],
@@ -52,7 +52,7 @@ export default function linkslayout(){
                 //rows:[{ title: "date" }, { title: "score" }],
                 datapoints:[
                     { col:"start", row:"date", value:g.startDate || "02/03/22" },
-                    { col:"now", row:"date", value:/*new Date()*/ "17/04/2022" },
+                    { col:"now", row:"date", value:/*new Date()*/ "17/04/22" },
                     { col:"proj", row:"date", value:g.endDate || "31/04/22" },
                     { col:"targ", row:"date", value:g.endDate || "31/04/22" },
                     //{ col:"proj / targ", row:"date", value:g.endDate || "31/04/22" },

@@ -12,20 +12,13 @@ import { findNearestPlanet, distanceBetweenPoints, angleOfRotation } from './geo
 import { OPEN_CHANNEL_EXT_WIDTH } from './constants';
 import dragEnhancements from './enhancedDragHandler';
 import { timeMonth, timeWeek } from "d3-time"
-import tooltipComponent from "./tooltipComponent";
 import menuComponent from './menuComponent';
 import { update } from 'lodash';
-import openedChannelContentComponent from './openedChannelContentComponent';
+//import openedLinkComponent from './openedLinkComponent';
 /*
 
 */
 export default function linksComponent() {
-    // dimensions
-    let openedContentSettings = {
-        width:100,
-        height: 100
-    }
-
     let timeScale = x => 0;
     let yScale = x => 0;
     let strokeWidth = 1;
@@ -41,7 +34,7 @@ export default function linksComponent() {
     //@todo make an openedContent component
     let barCharts = {};
     let tooltips = {};
-    let openedChannelContent = {};
+    //let openedLink = {};
     let menus = {};
     let menuOptions = [
         { key: "delete", label:"Delete" }
@@ -97,7 +90,7 @@ export default function linksComponent() {
                             .style("cursor", "pointer")
 
                         //opened content
-                        const openedContentG = linkG.append("g").attr("class", "opened-content");
+                        //const openedContentG = linkG.append("g").attr("class", "opened-content");
                         //bar
                         /*
                         openedContentG
@@ -116,7 +109,7 @@ export default function linksComponent() {
                         barCharts[d.id] = barChart();
                         tooltips[d.id] = tooltipComponent();
                         */
-                        openedChannelContent[d.id] = openedChannelContentComponent();
+                        //openedLink[d.id] = openedLinkComponent();
                         
                         //menu component
                         menus[d.id] = menuComponent();
@@ -148,13 +141,15 @@ export default function linksComponent() {
                         //about bar charts
                         //- they appear halfway up the link, so if link covers two channels, it will not be in same pos as a chart for a link covering one of the channels
                         //- if any channel that teh link covers is open, then the link chart show
+                        /*
                         const openedContentG = d3.select(this).select("g.opened-content")
-                            .attr("transform", "translate("+ (d.centre[0] - openedContentSettings.width/2)+ "," + (d.centre[1]- openedContentSettings.height/2) +")")
+                            .attr("transform", "translate("+ (d.centre[0])+ "," + (d.centre[1]- openedContentSettings.height/2) +")")
                             .datum(d)
-                            .call(openedChannelContent[d.id]
+                            .call(openedLink[d.id]
                                 .width(openedContentSettings.width)
                                 .height(openedContentSettings.height)
                                 .labelSettings(openedContentSettings.label))
+                        */
                         
                         /*
                             //bar chart
@@ -322,11 +317,6 @@ export default function linksComponent() {
     links.strokeWidth = function (value) {
         if (!arguments.length) { return strokeWidth; }
         strokeWidth = value;
-        return links;
-    };
-    links.openedContentSettings = function (value) {
-        if (!arguments.length) { return openedContentSettings; }
-        openedContentSettings = { ...openedContentSettings, ...value};
         return links;
     };
     links.deleteLink = function (value) {
