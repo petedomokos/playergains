@@ -305,7 +305,15 @@ export default function journeyComponent() {
             openedLinkG.enter()
                 .append("g")
                 .attr("class", "opened-link")
-                .each(function(d) { openedLinks[d.id] = openedLinkComponent(); })
+                .attr("opacity", 0)
+                .each(function(d) { 
+                    openedLinks[d.id] = openedLinkComponent();
+                    d3.select(this)
+                        .transition()
+                            .delay(200)
+                            .duration(200)
+                            .attr("opacity", 1)
+                 })
                 .merge(openedLinkG)
                 .attr("transform", d => "translate("+ (d.centre[0])+ "," + (d.centre[1]- openedLinkHeight/2) +")")
                 .each(function(d) {
@@ -324,7 +332,12 @@ export default function journeyComponent() {
                                 }
                             }))
                 })
-            openedLinkG.exit().remove();
+
+            openedLinkG.exit()
+                .transition()
+                    .duration(200)
+                    .attr("opacity", 0)
+                    .on("end", function(){ d3.select(this).remove() });
         
         }
 
