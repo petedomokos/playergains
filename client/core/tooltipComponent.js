@@ -40,9 +40,6 @@ export default function tooltipComponent() {
         selection.each(function(data){
             containerG = d3.select(this);
             //next
-            // BUG - tooltip not removing when hovred off, if you go from one barchart onto another
-            //prpbably to do with hovered object hash key usage, same as below
-            //BUG - tooltip may not be updating properly when hoveirng between bars
             //BUG - axis lines sometimes disappear when hovering
             //BUG - tooltip not showing over bar charts
             // - hide other planets and links when editing

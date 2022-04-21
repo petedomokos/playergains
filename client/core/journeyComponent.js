@@ -163,7 +163,7 @@ export default function journeyComponent() {
                 //.beforeAll(() => { updateSelected(undefined); })
                 .onClick((e,d) => {
                     if(editing){
-                        onEndEditPlanet();
+                        onEndEditPlanet(d);
                     }
                     //note - on start editing, selected is already set to undefined
                     else if(selected){
@@ -196,7 +196,7 @@ export default function journeyComponent() {
                         //user has manually zoomed so close selected/editing
                         //selected = undefined;
                         if(editing){
-                            onEndEditPlanet()
+                            onEndEditPlanet(d)
                         }
                         if(selected){
                             updateSelected(undefined);
@@ -389,6 +389,22 @@ export default function journeyComponent() {
             updateSelected(undefined);
             preEditZoom = currentZoom;
 
+            svg.selectAll("g.planet")
+                .filter(p => p.id !== d.id)
+                .transition()
+                    .duration(200)
+                    .attr("opacity", 0)
+
+            svg.selectAll("g.link")
+                .transition()
+                    .duration(200)
+                    .attr("opacity", 0)
+            
+            svg.selectAll("g.opened-link")
+                .transition()
+                    .duration(200)
+                    .attr("opacity", 0)
+
             svg.transition().duration(750).call(
                 zoom.transform, 
                 d3.zoomIdentity.translate(
@@ -401,7 +417,7 @@ export default function journeyComponent() {
                 })
         }
 
-        onEndEditPlanet = () => {
+        onEndEditPlanet = (d) => {
             setFormData(undefined)
             editing = undefined;
             //zoom is only applied for full edit, not if its nameOnly
@@ -411,6 +427,23 @@ export default function journeyComponent() {
                     d3.zoomIdentity
                         .translate(preEditZoom.x, preEditZoom.y)
                         .scale(preEditZoom.k))
+                        .on("end", function(){ 
+                            svg.selectAll("g.planet")
+                                .filter(p => p.id !== d.id)
+                                .transition()
+                                    .duration(300)
+                                    .attr("opacity", 1)
+                            
+                            svg.selectAll("g.link")
+                                .transition()
+                                    .duration(200)
+                                    .attr("opacity", 1)
+                                
+                            svg.selectAll("g.opened-link")
+                                .transition()
+                                    .duration(200)
+                                    .attr("opacity", 1)
+                        })
             }
             updateSelected(undefined);
             //reset
