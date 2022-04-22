@@ -38,7 +38,8 @@ export default function tooltipComponent() {
 
     function tooltip(selection) {
         selection.each(function(data){
-            containerG = d3.select(this);
+            containerG = d3.select(this)
+                .attr("pointer-events", "none");
             //next
             //BUG - axis lines sometimes disappear when hovering
             // - bars need to scale properly when zooming out
