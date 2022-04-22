@@ -156,7 +156,7 @@ const Journey = ({dimns}) => {
       .call(journey
         ////.margin({left: screenWidth * 0.1, right: screenWidth * 0.1, top: screenHeight * 0.1, bottom:40})
         .width(screenWidth - 20)
-        .height(screenHeight - 20))
+        .height(screenHeight - 35))
         ////.onSetOpenPlanet(setOpenPlanet))
 
         /*

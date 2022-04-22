@@ -7,6 +7,7 @@ import TextField from '@material-ui/core/TextField'
 import Typography from '@material-ui/core/Typography'
 import Icon from '@material-ui/core/Icon'
 import { makeStyles } from '@material-ui/core/styles'
+import MeasureFields from "./MeasureFields";
 import { DIMNS } from "./constants"
 
 const useStyles = makeStyles(theme => ({
@@ -94,6 +95,7 @@ export default function Form({ data, onUpdate, onClose }) {
                     },
                 }}
             /><br/>
+            <MeasureFields/>
             <br/> {
                 values.error && (<Typography component="p" color="error">
                 <Icon color="error" className={classes.error}>error</Icon>

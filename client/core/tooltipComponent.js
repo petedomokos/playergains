@@ -40,11 +40,6 @@ export default function tooltipComponent() {
         selection.each(function(data){
             containerG = d3.select(this)
                 .attr("pointer-events", "none");
-            //next
-            //BUG - axis lines sometimes disappear when hovering
-            // - bars need to scale properly when zooming out
-            // - autogenrate the links in linksLayout when planets have same datset measure
-            //BUG - zoom in/out whilst barchart displaying, when k small, rect width takes on a negative value => error
             updateDimns();
             //enter
             if(containerG.select("g.tooltip-contents").empty()){ 

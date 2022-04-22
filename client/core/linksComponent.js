@@ -137,62 +137,7 @@ export default function linksComponent() {
                             .attr("width", distanceBetweenPoints(d.src, d.targ))
                             .attr("height", hitboxWidth)
                             .on("click", onClick)
-
-                        //about bar charts
-                        //- they appear halfway up the link, so if link covers two channels, it will not be in same pos as a chart for a link covering one of the channels
-                        //- if any channel that teh link covers is open, then the link chart show
-                        /*
-                        const openedContentG = d3.select(this).select("g.opened-content")
-                            .attr("transform", "translate("+ (d.centre[0])+ "," + (d.centre[1]- openedContentSettings.height/2) +")")
-                            .datum(d)
-                            .call(openedLink[d.id]
-                                .width(openedContentSettings.width)
-                                .height(openedContentSettings.height)
-                                .labelSettings(openedContentSettings.label))
-                        */
-                        
-                        /*
-                            //bar chart
-                        const barChartG = openedContentG.select("g.bar-chart")
-                            //.attr("display", d.isOpen ? "inline" : "none")
-                            .datum(d.barChartData)
-                            .call(barCharts[d.id]
-                                .width(openedContentSettings.width)
-                                .height(openedContentSettings.height)
-                                .labelSettings(openedContentSettings.label)
-                                .onHover(d => { 
-                                    hovered = d;
-                                }))
-                            
-
-                        openedContentG.select("g.tooltip")
-                            .attr("transform", "translate(" +(-openedContentSettings.width/2) +"," +(-openedContentSettings.height) +")")
-                            .datum(hovered)
-                            .call(tooltips[d.id]
-                                .width(openedContentSettings.width)
-                                .height(openedContentSettings.height))
-                                
-                        //fade in and out bar chart
-                        if(d.isOpen && barChartG.attr("opacity") === "0"){
-                            barChartG
-                                .attr("display", "inline")
-                                .transition()
-                                .delay(100)
-                                .duration(400)
-                                .attr("opacity", 1)
-                        }
-                        if(!d.isOpen && barChartG.attr("opacity") === "1"){
-                            //@todo - put transition back but mak eit synced with close channel transition so it doesnt jump
-                            barChartG
-                                //.transition()
-                                //.delay(100)
-                                //.duration(400)
-                                .attr("opacity", 0)
-                                .attr("display", "none")
-                        }
-                        */
-
-                        //todo - transition the transform of barChartG when a planet is dragged
+                       
                     })
                     .each(function(d){
                         const menuG = d3.select(this).selectAll("g.menu").data(d.isSelected ? [menuOptions] : []);
