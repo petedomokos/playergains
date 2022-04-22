@@ -21,7 +21,7 @@ export default function openedLinkComponent() {
         contentsHeight = height - margin.top - margin.bottom;
     };
 
-    let labelSettings = {};
+    let barChartSettings = {};
 
     //let hoveredLinkId;
     let activeGoalId;
@@ -63,7 +63,8 @@ export default function openedLinkComponent() {
                             .call(barChart
                                 .width(contentsWidth)
                                 .height(contentsHeight)
-                                .labelSettings(labelSettings)
+                                .labelSettings(barChartSettings.labels)
+                                .axisSettings(barChartSettings.axis)
                                 .onMouseover((e, goal) => {
                                     //console.log("mouseover", id, goal)
                                     //@todo - bug - if going out then back in before timer ends, it sometimes errors - "transition 60 not found"
@@ -141,9 +142,9 @@ export default function openedLinkComponent() {
         margin = { ...margin, ...value };
         return openedLink;
     };
-    openedLink.labelSettings = function (value) {
-        if (!arguments.length) { return labelSettings; }
-        labelSettings = { ...labelSettings, value };
+    openedLink.barChartSettings = function (value) {
+        if (!arguments.length) { return barChartSettings; }
+        barChartSettings = { ...barChartSettings, ...value };
         return openedLink;
     };
     openedLink.activeGoalId = function (value) {

@@ -321,7 +321,11 @@ export default function journeyComponent() {
                         .call(openedLinks[d.id]
                             .width(openedLinkWidth)
                             .height(openedLinkHeight)
-                            .labelSettings({ fontSize:5 * k, width:20 * k }) //need to make this cunc recieve multiple channels
+                            .barChartSettings({
+                                labels : { fontSize:5 * k, width:30 * k },
+                                axis: { show:false }
+                                //{ show: true, ticks: { fontSize: 8 * (k ** 2) } }
+                            })
                             .onMouseover(function(linkId, goalId){
                                 //@todo - make this same goal highlighted in othe rlinks that it is in too
                                 for (const [id, openedLink] of Object.entries(openedLinks)) {

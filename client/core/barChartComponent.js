@@ -5,18 +5,23 @@ import { COLOURS, grey10 } from "./constants";
 
 */
 export default function barChartComponent() {
-    //console.log("creating bar chart")
-    let showValAxis = false;
     // dimensions
     let width = 600;
     let height = 600;
-    const valAxisExtraEndSpaceRequired = showValAxis ? 5 : 0;
+    let valAxisExtraEndSpaceRequired;
     let margin;
 
     let contentsWidth;
     let contentsHeight;
 
+    let labelSettings = { fontSize:7, width:30 };
+    let axisSettings = { show: true, ticks: { fontSize: 5 } }
+
+    let zoomScale = 1;
+
     function updateDimns(){
+        valAxisExtraEndSpaceRequired = axisSettings.show ? 5 : 0;
+
         margin = margin = {
             left:width * 0.05, 
             right:d3.max([valAxisExtraEndSpaceRequired, width * 0.05]), 
@@ -25,9 +30,8 @@ export default function barChartComponent() {
         }
         contentsWidth = width - margin.left - margin.right;
         contentsHeight = height - margin.top - margin.bottom;
-    };
 
-    let labelSettings = { fontSize:9, width:30 };
+    };
 
     //handlers
     function onMouseover (){};
@@ -66,7 +70,6 @@ export default function barChartComponent() {
                 contentsBackgroundRect = contentsG
                     .append("rect")
                         .attr("fill", "transparent")
-
             }
 
             backgroundRect.attr("width", width).attr("height", height)
@@ -75,7 +78,7 @@ export default function barChartComponent() {
 
             //make the chart
             //axis
-            const valAxisHeight = showValAxis ? 15 : 0;
+            const valAxisHeight = axisSettings.show ? 15 : 0;
             const catAxisWidth = labelSettings.width;
 
             const barsAreaWidth = contentsWidth - catAxisWidth;
@@ -86,17 +89,17 @@ export default function barChartComponent() {
             const barSpacing = barWrapperWidth * 0.4;
             const barWidth = barWrapperWidth - barSpacing; 
             //const barTextX = barsAreaWidth+10
-            const valScale = d3.scaleLinear().domain([0, 100]).range([catAxisWidth, barsAreaWidth]);
+            const valScale = d3.scaleLinear().domain([0, 100]).range([0, barsAreaWidth]);
 
             const valAxis = d3.axisBottom().scale(valScale).ticks(5)
-            const valAxisG = contentsG.selectAll("g.val-axis").data(showValAxis ? [1] : []);
+            const valAxisG = contentsG.selectAll("g.val-axis").data(axisSettings.show ? [1] : []);
             valAxisG.enter()
                 .append("g")
                     .attr("class", "axis val-axis")
                     //.attr("transform", "translate("+(margin.left +catAxisWidth) +"," +(contentsHeight - valAxisHeight)+")")
-                    .attr("transform", "translate(0," +(contentsHeight - valAxisHeight)+")")
-                    .call(valAxis)
                     .merge(valAxisG)
+                    .attr("transform", "translate(" +catAxisWidth +"," +(contentsHeight - valAxisHeight)+")")
+                    .call(valAxis)
                     .each(function(){
                         d3.select(this)
                             .style("stroke-width", 0.05)
@@ -104,7 +107,8 @@ export default function barChartComponent() {
                             .style("opacity", 0.5);
                         
                         d3.select(this).selectAll("text")
-                            .style("opacity", 0.5);
+                            .style("opacity", 0.5)
+                            .style("font-size", axisSettings.ticks.fontSize);
                     });
             valAxisG.exit().remove();
 
@@ -151,8 +155,7 @@ export default function barChartComponent() {
                             g.append("text")
                                 .style("font-size", 5)//labelSettings.fontSize)
                                 .attr("text-anchor", "end")
-                                .attr("dominant-baseline", "central")
-                                .attr("font-size", 5);
+                                .attr("dominant-baseline", "central");
 
                             // g.append("svg:image")
                                 // .attr("href", "/tick.svg")
@@ -187,15 +190,16 @@ export default function barChartComponent() {
                             g.select("rect.proj-bar")
                                 .attr("height", barWidth)
                                 .attr("x", valScale(d.pcValue))
-                                .attr("width", 0)
-                                .transition()
-                                .duration(1000)
+                                //.attr("width", 0)
+                                //.transition()
+                                //.duration(1000)
                                     //.attr("x", valScale(projPCValueToShow(d))) //@todo - instead, use axis.clamp(true)
                                     .attr("width", d3.max([valScale(clamp(d.projPCValue)) - valScale(d.pcValue), 0]));
 
                             g.select("text")
                                 .attr("transform", "translate(-3," +barWidth/2 +")")
                                 .attr("fill", d.isSelected ? grey10(7) : grey10(5))
+                                .style("font-size", labelSettings.fontSize)
                                 .text(d.label);
                             
                             //const tickWidth = barWidth * 0.33;
@@ -229,6 +233,11 @@ export default function barChartComponent() {
         height = value;
         return barChart;
     };
+    barChart.zoomScale = function (value) {
+        if (!arguments.length) { return zoomScale; }
+        zoomScale = value;
+        return barChart;
+    };
     barChart.onMouseover = function (value) {
         if (!arguments.length) { return onMouseover; }
         if(typeof value === "function"){
@@ -250,6 +259,11 @@ export default function barChartComponent() {
     barChart.labelSettings = function (value) {
         if (!arguments.length) { return labelSettings; }
         labelSettings = { ...labelSettings, ...value };
+        return barChart;
+    };
+    barChart.axisSettings = function (value) {
+        if (!arguments.length) { return axisSettings; }
+        axisSettings = { ...axisSettings, ...value };
         return barChart;
     };
     barChart.on = function () {

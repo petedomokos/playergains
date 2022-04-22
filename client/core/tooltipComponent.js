@@ -41,8 +41,6 @@ export default function tooltipComponent() {
             containerG = d3.select(this);
             //next
             //BUG - axis lines sometimes disappear when hovering
-            //BUG - tooltip not showing over bar charts
-            // - hide other planets and links when editing
             // - bars need to scale properly when zooming out
             // - autogenrate the links in linksLayout when planets have same datset measure
             //BUG - zoom in/out whilst barchart displaying, when k small, rect width takes on a negative value => error
