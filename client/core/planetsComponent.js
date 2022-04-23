@@ -143,7 +143,7 @@ export default function planetsComponent() {
                     //text
                     contentsG.select("text")
                         .attr("font-size", fontSize)
-                        .text(d.name || d.id)
+                        .text(d.name || d.id.slice(-1))
                         //.text(d.name || "enter name")
                 })
                 .call(planetDrag)

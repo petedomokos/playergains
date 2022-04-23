@@ -25,16 +25,37 @@ const useStyles = makeStyles(theme => ({
     marginTop: 0, // props => props.fullEdit ? 0 : 10,
     paddingBottom: props => props.fullEdit ? theme.spacing(1) : 0,
   },
+  title: {
+    margin: theme.spacing(1),
+    color: theme.palette.openTitle,
+    fontSize:"10px",
+    display:"flex",
+    border:"solid",
+    display:"flex",
+    height:"40px",
+    [theme.breakpoints.down('md')]: {
+      width:"80%",
+      //fontSize:"40px"
+    },
+    [theme.breakpoints.up('lg')]: {
+      width:"400px"
+    },
+  },
   cardContent:{
       //border:"solid",
-      padding:0
+      padding:0,
+      display:"flex",
+      flexDirection:"column",
+      alignItems:"center"
   },
   error: {
     verticalAlign: 'middle'
   },
   textField: {
-    //border:"solid",
-    margin: theme.spacing(1),
+    display:"flex",
+    margin: theme.spacing(2),
+    marginBottom:0,
+
     height:"40px",
     [theme.breakpoints.down('md')]: {
       width:"80%",
@@ -79,29 +100,30 @@ export default function Form({ data, onUpdate, onClose }) {
     return (
         <Card className={classes.card}>
             <CardContent className={classes.cardContent}>
-            <TextField
-                type="submit"
-                id="name" type="name" placeholder="Name" 
-                className={classes.textField} 
-                autoComplete='off'
-                value={values.name} 
-                onChange={handleChange('name')}
-                onKeyDown={handleKeyDown}
-                margin="none"
-                size="small"
-                InputProps={{
-                    classes: {
-                        input: classes.resize,
-                    },
-                }}
-            /><br/>
-            <MeasureFields/>
-            <br/> {
-                values.error && (<Typography component="p" color="error">
-                <Icon color="error" className={classes.error}>error</Icon>
-                {values.error}
-                </Typography>)
-            }
+                <TextField
+                    type="submit"
+                    id="name" type="name" placeholder="Name" 
+                    className={classes.textField} 
+                    autoComplete='off'
+                    value={values.name} 
+                    onChange={handleChange('name')}
+                    onKeyDown={handleKeyDown}
+                    margin="none"
+                    size="small"
+                    InputProps={{
+                        classes: {
+                            input: classes.resize,
+                        },
+                    }}
+                />
+                <MeasureFields/>
+                <br/> 
+                {
+                    values.error && (<Typography component="p" color="error">
+                    <Icon color="error" className={classes.error}>error</Icon>
+                    {values.error}
+                    </Typography>)
+                }
             </CardContent>
         </Card>
         )
