@@ -39,11 +39,11 @@ const useStyles = makeStyles(theme => ({
 }))
 
 export default function NameForm({ data, onUpdate, onClose }) {
-    const { d } = data;
+    const { planet } = data;
     const styleProps = { };
     const classes = useStyles(styleProps) 
     const [values, setValues] = useState({
-        name: d?.name || "",
+        name: planet?.name || "",
         error: ""
     })
 

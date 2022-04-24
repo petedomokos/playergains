@@ -15,6 +15,7 @@ const useStyles = makeStyles(theme => ({
     [theme.breakpoints.down('md')]: {
       width: "100%",
       height:"100%",
+      overflowY:"scroll",
     },
     [theme.breakpoints.up('lg')]: {
       width: "500px",
@@ -25,12 +26,17 @@ const useStyles = makeStyles(theme => ({
     marginTop: 0, // props => props.fullEdit ? 0 : 10,
     paddingBottom: props => props.fullEdit ? theme.spacing(1) : 0,
   },
+  cardContent:{
+    padding:0,
+    display:"flex",
+    flexDirection:"column",
+    alignItems:"center"
+},
   title: {
     margin: theme.spacing(1),
     color: theme.palette.openTitle,
     fontSize:"10px",
     display:"flex",
-    border:"solid",
     display:"flex",
     height:"40px",
     [theme.breakpoints.down('md')]: {
@@ -40,13 +46,6 @@ const useStyles = makeStyles(theme => ({
     [theme.breakpoints.up('lg')]: {
       width:"400px"
     },
-  },
-  cardContent:{
-      //border:"solid",
-      padding:0,
-      display:"flex",
-      flexDirection:"column",
-      alignItems:"center"
   },
   error: {
     verticalAlign: 'middle'
@@ -77,12 +76,12 @@ const useStyles = makeStyles(theme => ({
   },
 }))
 
-export default function Form({ data, onUpdate, onClose }) {
-    const { d } = data;
+export default function Form({ data, onUpdate, onClose, availableMeasures, addNewMeasure }) {
+    const { planet } = data;
     const styleProps = { };
     const classes = useStyles(styleProps) 
     const [values, setValues] = useState({
-        name: d?.name || "",
+        name: planet?.name || "",
         error: ""
     })
 
@@ -102,7 +101,7 @@ export default function Form({ data, onUpdate, onClose }) {
             <CardContent className={classes.cardContent}>
                 <TextField
                     type="submit"
-                    id="name" type="name" placeholder="Name" 
+                    id="name" type="name" placeholder="Goal Name" 
                     className={classes.textField} 
                     autoComplete='off'
                     value={values.name} 
@@ -116,7 +115,10 @@ export default function Form({ data, onUpdate, onClose }) {
                         },
                     }}
                 />
-                <MeasureFields/>
+                <MeasureFields 
+                    planetMeasureData={planet.measures} 
+                    availableMeasures={availableMeasures} 
+                    addNewMeasure={details => addNewMeasure(planet.id, details)} />
                 <br/> 
                 {
                     values.error && (<Typography component="p" color="error">

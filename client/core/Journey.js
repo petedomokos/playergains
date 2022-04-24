@@ -3,7 +3,7 @@ import * as d3 from 'd3';
 import { makeStyles } from '@material-ui/core/styles'
 import Button from '@material-ui/core/Button'
 import { getPlanetsData, getGoalsData, getStarData } from '../data/planets'
-import { findFirstFuturePlanet, updatedState } from './helpers';
+import { createId, findFirstFuturePlanet, updatedState } from './helpers';
 import journeyComponent from "./journeyComponent"
 import { addMonths, startOfMonth, idFromDates } from '../util/TimeHelpers';
 import { channelContainsDate } from './geometryHelpers';
@@ -55,19 +55,23 @@ const Journey = ({dimns}) => {
   const [channelState, setChannelState] = useState(initChannels);
   const [withCompletionPaths, setWithCompletionPath] = useState(false);
   const [formData, setFormData] = useState(undefined);
-  //console.log("formData", formData)
+  const [measures, setMeasures] = useState([]);
+  console.log("planetState", planetState)
+  console.log("formData", formData)
 
   const { screenWidth, screenHeight } = dimns;
   let styleProps = {}
+
   if(formData) {
+    const formPlanet = planetState.find(p => p.id === formData.planetId)
     const width = formData.nameOnly ? DIMNS.planet.width : d3.min([screenWidth * 0.725, 500]); 
     const height = formData.nameOnly ? DIMNS.planet.height/4 : d3.min([screenHeight * 0.725, 700]);
     styleProps = {
       form:{
         width,
         height,
-        left: formData.nameOnly ? formData.d.x - width/2 : ((screenWidth - width) / 2) + "px",
-        top: formData.nameOnly ? formData.d.y - height/2 : ((screenHeight - height) / 2) + "px"
+        left: formData.nameOnly ? formPlanet.x - width/2 : ((screenWidth - width) / 2) + "px",
+        top: formData.nameOnly ? formPlanet.y - height/2 : ((screenHeight - height) / 2) + "px"
       }
     } 
   };
@@ -113,7 +117,8 @@ const Journey = ({dimns}) => {
               id:"p"+ (nrPlanetsCreated.current + 1),
               targetDate,
               yPC,
-              dataType:"planet"
+              dataType:"planet",
+              measures:[]
               //goals
           }
           setPlanetState(prevState => [...prevState, newPlanet]);
@@ -209,6 +214,22 @@ const Journey = ({dimns}) => {
     setFormData(undefined);
   }
 
+  const addNewMeasure = (planetId, details) => {
+    const { name, desc, targ } = details;
+    console.log("add new measure to ", planetId, details);
+    const newMeasureId = createId(measures.map(m => m.id));
+    //name and desc are same for all planets where this measure is used
+    const newMeasure = { id: newMeasureId, name, desc };
+    setMeasures(prevState => [...prevState, newMeasure]);
+    //targ is specific to the planet
+    const planet = planetState.find(p => p.id === planetId);
+    const planetMeasureData = { measureId:newMeasureId, targ};
+    setPlanetState(prevState => {
+      const props = { id: planetId, measures:[...planet.measures, planetMeasureData]};
+      return updatedState(prevState, props);
+    })
+  }
+
   return (
     <div className={classes.root} style={{height: screenHeight, marginTop:10, marginLeft:10 }}>
         <svg className={classes.svg} ref={containerRef}></svg>
@@ -216,9 +237,15 @@ const Journey = ({dimns}) => {
         {formData && 
           <div ref={formRef} className={classes.form}>
             {formData.nameOnly ? 
-              <NameForm data={formData} onUpdate={handleFormUpdate} onClose={handleFormClose} />
+              <NameForm data={{...formData, planet:planetState.find(p => p.id === formData.planetId)}}
+                onUpdate={handleFormUpdate} onClose={handleFormClose} />
               :
-              <Form data={formData} onUpdate={handleFormUpdate} onClose={handleFormClose} />
+              <Form 
+                  data={{...formData, planet:planetState.find(p => p.id === formData.planetId)}} 
+                  onUpdate={handleFormUpdate} 
+                  onClose={handleFormClose}
+                  availableMeasures={measures}
+                  addNewMeasure={addNewMeasure} />
             }
           </div>
         }

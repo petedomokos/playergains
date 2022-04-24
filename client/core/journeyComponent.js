@@ -196,7 +196,7 @@ export default function journeyComponent() {
                         //user has manually zoomed so close selected/editing
                         //selected = undefined;
                         if(editing){
-                            onEndEditPlanet(d)
+                            onEndEditPlanet(undefined);
                         }
                         if(selected){
                             updateSelected(undefined);
@@ -210,7 +210,8 @@ export default function journeyComponent() {
                 }))
                 .on("end", enhancedZoom())
 
-            svg.call(zoom)
+            //svg.call(zoom)
+            contentsG.call(zoom)
             //.on("wheel.zoom", null)
 
             //ELEMENTS
@@ -376,7 +377,7 @@ export default function journeyComponent() {
             selected = d;
             if(d?.dataType === "planet"){
                 //open name form too, but as selected rather than editing
-                setFormData({ d, nameOnly:true })
+                setFormData({ planetId:d.id, nameOnly:true })
             }else{
                 setFormData(undefined);
             }
@@ -417,7 +418,7 @@ export default function journeyComponent() {
                 ))
                 .on("end", () => {
                     //error - this now uses currentZoom instead of the new position
-                    setFormData({ d })
+                    setFormData({ planetId:d.id })
                 })
         }
 
@@ -431,22 +432,24 @@ export default function journeyComponent() {
                     d3.zoomIdentity
                         .translate(preEditZoom.x, preEditZoom.y)
                         .scale(preEditZoom.k))
-                        .on("end", function(){ 
-                            svg.selectAll("g.planet")
-                                .filter(p => p.id !== d.id)
-                                .transition()
-                                    .duration(300)
-                                    .attr("opacity", 1)
-                            
-                            svg.selectAll("g.link")
-                                .transition()
-                                    .duration(200)
-                                    .attr("opacity", 1)
+                        .on("end", function(){
+                            if(d){
+                                svg.selectAll("g.planet")
+                                    .filter(p => p.id !== d.id)
+                                    .transition()
+                                        .duration(300)
+                                        .attr("opacity", 1)
                                 
-                            svg.selectAll("g.opened-link")
-                                .transition()
-                                    .duration(200)
-                                    .attr("opacity", 1)
+                                svg.selectAll("g.link")
+                                    .transition()
+                                        .duration(200)
+                                        .attr("opacity", 1)
+                                    
+                                svg.selectAll("g.opened-link")
+                                    .transition()
+                                        .duration(200)
+                                        .attr("opacity", 1)
+                            }
                         })
             }
             updateSelected(undefined);

@@ -132,3 +132,14 @@ export function updatedState(prevState, props, orderComparator){
     //unordered
     return [updated, ...rest];
 }
+
+export function createId(existingIds=[]){
+    const check = (idToCheck) => {
+        if(!existingIds.find(existingId => existingId === idToCheck+"")){
+            return idToCheck+"";
+        }else{
+            check(idToCheck + 1)
+        }
+    }
+    return check(0);
+}
