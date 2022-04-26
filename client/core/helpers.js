@@ -138,7 +138,7 @@ export function createId(existingIds=[]){
         if(!existingIds.find(existingId => existingId === idToCheck+"")){
             return idToCheck+"";
         }else{
-            check(idToCheck + 1)
+            return check(idToCheck + 1)
         }
     }
     return check(0);

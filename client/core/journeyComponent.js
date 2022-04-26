@@ -30,6 +30,8 @@ export default function journeyComponent() {
     let height = 2600;
     let contentsWidth;
     let contentsHeight;
+
+    let canvasContents
     //canvas will be a lot bigger than the contentsWidth and contentsHeight
     // of svg container, and can be panned/zoomed
     let canvasWidth;
@@ -46,11 +48,16 @@ export default function journeyComponent() {
     
     const TIME_AXIS_WIDTH = 50;
 
+    let measuresOpen = [];
+    let measuresHeight = measuresOpen ? 70 : 0;
+
     function updateDimns(){
         contentsWidth = width - margin.left - margin.right;
         contentsHeight = height - margin.top - margin.bottom;
-        canvasWidth = contentsWidth// * 5;
-        canvasHeight = contentsHeight * 5; //this should be lrge enough for all planets, and rest can be accesed via pan
+        canvasWidth = contentsWidth;// * 5;
+        canvasHeight = contentsHeight - measuresHeight; //this should be lrge enough for all planets, and rest can be accesed via pan
+
+
         
         planetContentsWidth = planetWidth - planetMargin.left - planetMargin.right;
         planetContentsHeight = planetHeight - planetMargin.top - planetMargin.bottom;
@@ -123,6 +130,10 @@ export default function journeyComponent() {
         })
 
         function update(options={}){
+            svg.attr("width", width).attr("height", height)
+            axesG.attr("transform", "translate(0," +canvasHeight +")")
+
+
             const { k } = currentZoom;
             //console.log("update currentZoom", currentZoom)
             yScale = d3.scaleLinear().domain([0, 100]).range([margin.top, margin.top + contentsHeight])
@@ -152,7 +163,7 @@ export default function journeyComponent() {
             const axesData = myAxesLayout(channelsData.filter(ch => ch.isDisplayed));
             axes
                 .scale(zoomedTimeScale)
-                .tickSize(contentsHeight + DEFAULT_D3_TICK_SIZE)
+                .tickSize(canvasHeight + DEFAULT_D3_TICK_SIZE)
 
             axesG.datum(axesData).call(axes);
 
@@ -343,34 +354,30 @@ export default function journeyComponent() {
                     .duration(200)
                     .attr("opacity", 0)
                     .on("end", function(){ d3.select(this).remove() });
+
+            //todo - enter measuresG here with measures component.
+            //transition it in and out with data([measuresOpen]) or soemthing like that so its empty
+            //and removes if no measuresOpen. Note, could be all measuires open or just one goals' measures
         
         }
 
         function init(){
-            svg = d3.select(this)
-                .attr("width", width)
-                .attr("height", height)
-                .style("border", "solid")
+            svg = d3.select(this).style("border", "solid")
 
             contentsG = svg
                 .append("g")
                     .attr("class", "contents")
                     .attr("transform", "translate(" +margin.left +"," +margin.top +")")
 
-            canvasG = contentsG
-                .append("g")
-                    .attr("class", "canvas")
+            canvasG = contentsG.append("g").attr("class", "canvas")
 
             canvasRect = canvasG 
                 .append("rect")
                     .attr("width", canvasWidth)
-                    .attr("height", canvasHeight)
+                    .attr("height", canvasHeight * 5)
                     .attr("fill", COLOURS?.canvas || "#FAEBD7");
 
-            axesG = contentsG
-                .append("g")
-                .attr("class", "axes")
-                .attr("transform", "translate(0," +contentsHeight +")")
+            axesG = contentsG.append("g").attr("class", "axes")
         }
 
         function updateSelected(d){
