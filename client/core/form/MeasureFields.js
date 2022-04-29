@@ -3,9 +3,8 @@ import Button from '@material-ui/core/Button'
 import TextField from '@material-ui/core/TextField'
 import Typography from '@material-ui/core/Typography'
 import Icon from '@material-ui/core/Icon'
-import EditMeasureField from "./EditMeasureField"
+import EditMeasureFields from "./EditMeasureFields"
 import { makeStyles } from '@material-ui/core/styles'
-import { DIMNS } from "./constants"
 
 const useStyles = makeStyles(theme => ({
     root: {
@@ -108,7 +107,7 @@ function MeasureFields({ planetMeasureData, availableMeasures, addNewMeasure }) 
                 { 
                     planetMeasureData?.length !== 0 ? 
                         <>
-                            {planetMeasureData.map(m => 
+                            {planetMeasureData?.map(m => 
                                 <div className={classes.measure} key={"meas"+m.measureId}>
                                     {
                                         measureEditing === m.measureId ?
@@ -127,7 +126,7 @@ function MeasureFields({ planetMeasureData, availableMeasures, addNewMeasure }) 
                         <Typography variant="h6" className={classes.noneMesg}>None yet. Add below.</Typography>
                 }
             </div>
-            <EditMeasureField availableMeasures={availableMeasures} onSave={addNewMeasure} />
+            <EditMeasureFields availableMeasures={availableMeasures} onSave={addNewMeasure} />
                     
         </div>
         )

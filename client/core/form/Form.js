@@ -8,7 +8,6 @@ import Typography from '@material-ui/core/Typography'
 import Icon from '@material-ui/core/Icon'
 import { makeStyles } from '@material-ui/core/styles'
 import MeasureFields from "./MeasureFields";
-import { DIMNS } from "./constants"
 
 const useStyles = makeStyles(theme => ({
   card: {
@@ -118,7 +117,7 @@ export default function Form({ data, onUpdate, onClose, availableMeasures, addNe
                 <MeasureFields 
                     planetMeasureData={planet.measures} 
                     availableMeasures={availableMeasures} 
-                    addNewMeasure={details => addNewMeasure(planet.id, details)} />
+                    addNewMeasure={details => addNewMeasure(details, planet.id)} />
                 <br/> 
                 {
                     values.error && (<Typography component="p" color="error">

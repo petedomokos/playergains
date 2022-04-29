@@ -7,6 +7,7 @@ import planetsLayout from "./planetsLayout";
 import axesComponent from "./axesComponent";
 import linksComponent from "./linksComponent";
 import planetsComponent from "./planetsComponent";
+import measuresBarComponent from './measuresBarComponent';
 import { calcChartHeight, findFuturePlanets, findFirstFuturePlanet, findNearestDate, getTransformation,
     calcTrueX, calcAdjX, findPointChannel, findDateChannel, findNearestChannelByEndDate } from './helpers';
 //import { COLOURS, DIMNS } from "./constants";
@@ -24,14 +25,15 @@ import openedLinkComponent from './openedLinkComponent';
 */
 export default function journeyComponent() {
     // dimensions
-    let margin = {left:0, right:0, top: 0, bottom:30};
+    let margin = {left:0, right:0, top: 0, bottom:0};
     let planetMargin = {left:5, right:5, top: 5, bottom:5};
     let width = 4000;
     let height = 2600;
     let contentsWidth;
     let contentsHeight;
 
-    let canvasContents
+    let xAxisHeight = 30;
+
     //canvas will be a lot bigger than the contentsWidth and contentsHeight
     // of svg container, and can be panned/zoomed
     let canvasWidth;
@@ -48,14 +50,16 @@ export default function journeyComponent() {
     
     const TIME_AXIS_WIDTH = 50;
 
-    let measuresOpen = [];
-    let measuresHeight = measuresOpen ? 70 : 0;
+    let measuresOpen;
+    let measuresBarHeight;
 
     function updateDimns(){
         contentsWidth = width - margin.left - margin.right;
         contentsHeight = height - margin.top - margin.bottom;
         canvasWidth = contentsWidth;// * 5;
-        canvasHeight = contentsHeight - measuresHeight; //this should be lrge enough for all planets, and rest can be accesed via pan
+        measuresBarHeight = measuresOpen ? 70 : 0
+        //note- for some reason, reducing canvasHeight doesnt seem to move axis properly, so instead just subtract measuresBarHeight for axis translateY
+        canvasHeight = contentsHeight;// - measuresBarHeight; //this should be lrge enough for all planets, and rest can be accesed via pan
 
 
         
@@ -80,6 +84,7 @@ export default function journeyComponent() {
     const links = linksComponent();
     const planets = planetsComponent();
     const openedLinks = {};
+    const measuresBar = measuresBarComponent();
 
     //api
     let selected;
@@ -130,9 +135,11 @@ export default function journeyComponent() {
         })
 
         function update(options={}){
-            svg.attr("width", width).attr("height", height)
-            axesG.attr("transform", "translate(0," +canvasHeight +")")
-
+            //console.log("measuresbarh", measuresBarHeight)
+            //Journey.log("canvash", canvasHeight)
+            svg
+                .attr("width", width)
+                .attr("height", height)
 
             const { k } = currentZoom;
             //console.log("update currentZoom", currentZoom)
@@ -165,7 +172,11 @@ export default function journeyComponent() {
                 .scale(zoomedTimeScale)
                 .tickSize(canvasHeight + DEFAULT_D3_TICK_SIZE)
 
-            axesG.datum(axesData).call(axes);
+            //note- for some reason, reducing canvasHeight doesnt seem to move teh xis properly, so instead just subtract measuresBarHeight
+            axesG
+                .attr("transform", "translate(0," +(contentsHeight-xAxisHeight - measuresBarHeight) +")")
+                .datum(axesData)
+                .call(axes);
 
             // Zoom configuration
             const extent = [[0,0],[chartWidth, chartHeight]];
@@ -358,6 +369,28 @@ export default function journeyComponent() {
             //todo - enter measuresG here with measures component.
             //transition it in and out with data([measuresOpen]) or soemthing like that so its empty
             //and removes if no measuresOpen. Note, could be all measuires open or just one goals' measures
+
+            const measuresData = {
+                title:"Measures",
+                subtitle:"All", //this will show the goal or path etc if restricted
+                measures:measuresOpen
+            }
+            console.log("measuresData", measuresData)
+            const measuresBarG = contentsG.selectAll("g.measures-bar").data(measuresOpen ? [measuresData] : [])
+            measuresBarG.enter()
+                .append("g")
+                    .attr("class", "measures-bar")
+                    .merge(measuresBarG)
+                    //.attr("transform", "translate(0," + contentsHeight +")")
+                    //note - in journey component, margin bottom is used for the axis. 
+                    .attr("transform", "translate(0," +(contentsHeight - measuresBarHeight) +")")
+                    .call(measuresBar
+                        .width(contentsWidth)
+                        .height(measuresBarHeight)
+                        .openNewMeasureForm(() => { setFormData({ measureOnly: true }) }))
+            
+            measuresBarG.exit().remove();
+
         
         }
 
@@ -478,24 +511,19 @@ export default function journeyComponent() {
         width = value;
         return journey;
     };
+    journey.height = function (value) {
+        if (!arguments.length) { return height; }
+        height = value;
+        return journey;
+    };
     journey.selected = function (value) {
         if (!arguments.length) { return selected; }
         selected = value;
         return journey;
     };
-    journey.height = function (value) {
-        if (!arguments.length) { return height; }
-        height = value;
-        return journey;
-    };
-    journey.width = function (value) {
-        if (!arguments.length) { return width; }
-        width = value;
-        return journey;
-    };
-    journey.height = function (value) {
-        if (!arguments.length) { return height; }
-        height = value;
+    journey.measuresOpen = function (value) {
+        if (!arguments.length) { return measuresOpen; }
+        measuresOpen = value;
         return journey;
     };
     journey.withCompletionPaths = function (value) {

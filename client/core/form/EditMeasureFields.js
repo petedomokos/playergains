@@ -8,8 +8,7 @@ import Typography from '@material-ui/core/Typography'
 import Icon from '@material-ui/core/Icon'
 import { makeStyles } from '@material-ui/core/styles'
 import MeasureFields from "./MeasureFields";
-import { DIMNS } from "./constants"
-import { DropdownSelector } from '../util/Selector'
+import { DropdownSelector } from '../../util/Selector'
 
 const useStyles = makeStyles(theme => ({
   root:{
@@ -100,7 +99,7 @@ const useStyles = makeStyles(theme => ({
   },
 }))
 
-export default function EditMeasureField({ measure, availableMeasures, onSave }) {
+function EditMeasureFields({ measure, availableMeasures, onSave, allowExistingMeasures }) {
     const styleProps = { };
     const classes = useStyles(styleProps)
     const [focus, setFocus] = useState(null);
@@ -150,13 +149,16 @@ export default function EditMeasureField({ measure, availableMeasures, onSave })
                       style:{ fontSize:"6px" }
                     }}
                 />
-                <div className={classes.or}>or</div>
-                <DropdownSelector
-                    options={availableMeasures}
-                    labelAccessor={option => option.name}
-                    handleChange={handleSelectChange}
-                    style={{margin:0, width:"80px", height:"20px", fontSize:"7px"}}
-                />
+                {allowExistingMeasures &&
+                  <>
+                      <div className={classes.or}>or</div>
+                      <DropdownSelector
+                          options={availableMeasures}
+                          labelAccessor={option => option.name}
+                          handleChange={handleSelectChange}
+                          style={{margin:0, width:"80px", height:"20px", fontSize:"7px"}}
+                      />
+                  </>}
             </div>
             <div className={classes.label}>Description</div>
             <TextField
@@ -212,3 +214,10 @@ export default function EditMeasureField({ measure, availableMeasures, onSave })
         </div>
         )
 }
+
+
+EditMeasureFields.defaultProps = {
+  allowExisitingMeasures:true
+}
+
+export default EditMeasureFields;

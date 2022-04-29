@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react'
+import React, { useEffect, useState, useRef, useCallback } from 'react'
 import * as d3 from 'd3';
 import { makeStyles } from '@material-ui/core/styles'
 import Button from '@material-ui/core/Button'
@@ -7,8 +7,9 @@ import { createId, findFirstFuturePlanet, updatedState } from './helpers';
 import journeyComponent from "./journeyComponent"
 import { addMonths, startOfMonth, idFromDates } from '../util/TimeHelpers';
 import { channelContainsDate } from './geometryHelpers';
-import NameForm from "./NameForm"
-import Form from "./Form"
+import NameForm from "./form/NameForm";
+import MeasureForm from "./form/MeasureForm";
+import Form from "./form/Form"
 import { DIMNS } from './constants';
 
 const useStyles = makeStyles((theme) => ({
@@ -24,6 +25,9 @@ const useStyles = makeStyles((theme) => ({
     top:props => props.form?.top,
     width:props => props.form?.width, 
     height:props => props.form?.height
+  },
+  ctrls:{
+    display:"flex"
   }
 }))
 
@@ -56,8 +60,9 @@ const Journey = ({dimns}) => {
   const [withCompletionPaths, setWithCompletionPath] = useState(false);
   const [formData, setFormData] = useState(undefined);
   const [measures, setMeasures] = useState([]);
-  console.log("planetState", planetState)
-  console.log("formData", formData)
+  const [measuresBarIsOpen, setMeasuresBarIsOpen] = useState(false);
+  //console.log("planetState", planetState)
+  //console.log("formData", formData)
 
   const { screenWidth, screenHeight } = dimns;
   let styleProps = {}
@@ -112,6 +117,7 @@ const Journey = ({dimns}) => {
     if(!containerRef.current || !journey){return; }
     journey
         .withCompletionPaths(withCompletionPaths)
+        .measuresOpen(measuresBarIsOpen ? measures.filter(m => m.isOpen) : undefined)
         .addPlanet((targetDate, yPC) => {
           const newPlanet = {
               id:"p"+ (nrPlanetsCreated.current + 1),
@@ -201,52 +207,91 @@ const Journey = ({dimns}) => {
   })
 
   const toggleCompletion = () => {
-    setWithCompletionPath(prevState => !prevState)
+      setWithCompletionPath(prevState => !prevState)
   }
 
-  const handleFormUpdate = (name, value) => {
+  //for now, we just open or close all measures
+  const toggleMeasuresOpen = useCallback((planetId) => {
+    setMeasuresBarIsOpen(prevState => !prevState);
+    //todo - if planetId, only close or open those on that planet
+    setMeasures(prevState => {
+        const measuresAreOpen = !!prevState.find(m => m.isOpen);
+        if(measuresAreOpen){
+          return prevState.map(m => ({ ...m, isOpen:false }));
+        }else{
+          return prevState.map(m => ({ ...m, isOpen:true }));
+        }
+    })
+}, [measures]);
+
+  const onUpdatePlanetForm = (name, value) => {
     const props = { id:formData.d.id, [name]: value };
     setPlanetState(prevState => updatedState(prevState, props))
   }
 
-  const handleFormClose = () => {
+  const onSaveMeasureForm = (details, planetId, isNew) => {
+    if(isNew){
+      //any newly created measure from this form must be open as this form comes from the measures bar
+      addNewMeasure({ ...details, isOpen:true }, planetId)
+      setMeasuresBarIsOpen(true);
+    }else{
+      setMeasures(prevState => updatedState(prevState, details))
+    }
+    onCloseMeasureForm();
+  }
+
+  const onClosePlanetForm = () => {
     journey.endEditPlanet();
     setFormData(undefined);
   }
 
-  const addNewMeasure = (planetId, details) => {
-    const { name, desc, targ } = details;
-    console.log("add new measure to ", planetId, details);
+  const onCloseMeasureForm = () => {
+    setFormData(undefined);
+  }
+
+  const addNewMeasure = (details, planetId) => {
+    const { name, desc } = details;
     const newMeasureId = createId(measures.map(m => m.id));
     //name and desc are same for all planets where this measure is used
-    const newMeasure = { id: newMeasureId, name, desc };
+    const newMeasure = { id: newMeasureId, name, desc, isOpen:true };
     setMeasures(prevState => [...prevState, newMeasure]);
-    //targ is specific to the planet
-    const planet = planetState.find(p => p.id === planetId);
-    const planetMeasureData = { measureId:newMeasureId, targ};
-    setPlanetState(prevState => {
-      const props = { id: planetId, measures:[...planet.measures, planetMeasureData]};
-      return updatedState(prevState, props);
-    })
+    
+    if(planetId){
+      //measure is also set on a particular planet
+      const planet = planetState.find(p => p.id === planetId);
+      const planetMeasureData = { measureId:newMeasureId, targ: details.targ};
+      setPlanetState(prevState => {
+        const props = { id: planetId, measures:[...planet.measures, planetMeasureData]};
+        return updatedState(prevState, props);
+      })
+    }
   }
 
   return (
     <div className={classes.root} style={{height: screenHeight, marginTop:10, marginLeft:10 }}>
         <svg className={classes.svg} ref={containerRef}></svg>
-        <Button color="primary" variant="contained" onClick={toggleCompletion} style={{ width:50, height:10, fontSize:7 }}>completion</Button>
+        <div className={classes.ctrls}>
+            <Button color="primary" variant="contained" onClick={toggleMeasuresOpen} style={{ width:50, height:10, fontSize:7, marginRight:"5px" }}>measures</Button>
+            <Button color="primary" variant="contained" onClick={toggleCompletion} style={{ width:50, height:10, fontSize:7 }}>completion</Button>
+        </div>
         {formData && 
           <div ref={formRef} className={classes.form}>
-            {formData.nameOnly ? 
+            {formData.nameOnly &&
               <NameForm data={{...formData, planet:planetState.find(p => p.id === formData.planetId)}}
-                onUpdate={handleFormUpdate} onClose={handleFormClose} />
-              :
+                onUpdate={onUpdatePlanetForm} onClose={onClosePlanetForm} />}
+
+            {formData.measureOnly && 
+              <MeasureForm data={{...formData, planet:planetState.find(p => p.id === formData.planetId)}}
+              onSave={onSaveMeasureForm} onCancel={onCloseMeasureForm}
+              existingMeasures={measures} />}
+
+            {formData && !formData.nameOnly && !formData.measureOnly &&
               <Form 
                   data={{...formData, planet:planetState.find(p => p.id === formData.planetId)}} 
-                  onUpdate={handleFormUpdate} 
-                  onClose={handleFormClose}
+                  onUpdate={onUpdatePlanetForm} 
+                  onClose={onClosePlanetForm}
                   availableMeasures={measures}
-                  addNewMeasure={addNewMeasure} />
-            }
+                  addNewMeasure={addNewMeasure} />}
           </div>
         }
     </div>
