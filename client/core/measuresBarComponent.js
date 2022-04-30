@@ -1,9 +1,16 @@
 import * as d3 from 'd3';
 //import "d3-selection-multi";
 import { grey10, COLOURS, DIMNS } from "./constants";
+import measureProfileComponent from "./measureProfileComponent";
 /*
 
 */
+
+const mockMeasures = [
+    { id:"mock1", name:"Puts Per Round", desc: "Reduce the nr of puts" },
+    { id:"mock2", name:"Drive 1", desc: "Increase D1 to Fairway" },
+    { id:"mock3", name:"Drive 2", desc: "Increase D2 to Fairway" }
+]
 export default function measuresBarComponent() {
     // dimensions
     let margin;
@@ -38,6 +45,9 @@ export default function measuresBarComponent() {
 
     //handlers
     let openNewMeasureForm = () => {};
+    let onMeasureDragStart = () => {};
+    let onMeasureDrag = () => {};
+    let onMeasureDragEnd = () => {};
 
     //dom
     let containerG;
@@ -49,6 +59,9 @@ export default function measuresBarComponent() {
     let newMeasureBtnG;
     let measuresG;
     let bgRect;
+
+    //components
+    let measureProfiles = {};
 
     function measuresBar(selection) {
         updateDimns();
@@ -71,44 +84,44 @@ export default function measuresBarComponent() {
             bgRect.attr("width", width).attr("height", height);
             measuresG.attr("transform", "translate(0," +titleHeight +")");
 
-            titleG.attr("transform", "translate(0," +titleHeight/2 +")")
+            titleG.attr("transform", "translate(0," +titleHeight/2 +")");
             titleText.text(title);
             subtitleG.attr("transform", "translate(" +mainTitleWidth +",0)");
             subtitleText.text(subtitle);
 
             newMeasureBtnG
                 .attr("transform", "translate("+(contentsWidth - newMeasureBtnWidth) +",2.5)")
-                .style("cursor", "pointer")
+                .style("cursor", "pointer");
 
             newMeasureBtnG.select("rect")
                 .attr("width", newMeasureBtnWidth)
-                .attr("height", newMeasureBtnHeight)
+                .attr("height", newMeasureBtnHeight);
 
             newMeasureBtnG.select("text")
-                .attr("transform", "translate("+newMeasureBtnWidth/2 +"," +newMeasureBtnHeight/2 +")")
+                .attr("transform", "translate("+newMeasureBtnWidth/2 +"," +newMeasureBtnHeight/2 +")");
 
-            const measureG = measuresG.selectAll("g.measure").data(measures);
+            const measureG = measuresG.selectAll("g.measure").data([...measures, ...mockMeasures], m => m.id);
             measureG.enter()
                 .append("g")
                     .attr("class", "measure")
-                    .each(function(d){
-                        const measureG = d3.select(this);
-                        measureG
-                            .append("rect")
-                               .attr("class", "bg")
-                               .attr("stroke", grey10(5))
-                               .attr("stroke-width", 0.2)
-                    })
+                    .attr("pointer-events", "all")
+                    .each(function(d){ measureProfiles[d.id] = measureProfileComponent(); })
                     .merge(measureG)
                     .attr("transform", (d,i) =>  "translate("+(i * (measureWidth + measureMarginRight)) +",0)")
                     .each(function(d){
-                        const measureG = d3.select(this);
-                        measureG.select("rect.bg")
-                            .attr("width", measureWidth)
-                            .attr("height", measureHeight)
-                            .attr("fill", d.isHovered ? "aqua" : grey10(2))
-
-                    
+                        d3.select(this)
+                            .call(measureProfiles[d.id]
+                                .width(measureWidth)
+                                .height(measureHeight)
+                                .onDragStart((e,d) => onMeasureDragStart(d))
+                                .onDrag((e,d) => onMeasureDrag(d))
+                                .onDragEnd((e,d) => onMeasureDragEnd(d)));
+                    })
+                    .on("mouseover", function(e, d){ 
+                        measureProfiles[d.id].bgSettings({ fill: "aqua"}, true)
+                    })
+                    .on("mouseout", function(e, d){ 
+                        measureProfiles[d.id].bgSettings({ fill: "none"}, true)
                     })
 
         }
@@ -183,6 +196,21 @@ export default function measuresBarComponent() {
     measuresBar.openNewMeasureForm = function (value) {
         if (!arguments.length) { return openNewMeasureForm; }
         openNewMeasureForm = value;
+        return measuresBar;
+    };
+    measuresBar.onMeasureDragStart = function (value) {
+        if (!arguments.length) { return onMeasureDragStart; }
+        onMeasureDragStart = value;
+        return measuresBar;
+    };
+    measuresBar.onMeasureDrag = function (value) {
+        if (!arguments.length) { return onMeasureDrag; }
+        onMeasureDrag = value;
+        return measuresBar;
+    };
+    measuresBar.onMeasureDragEnd = function (value) {
+        if (!arguments.length) { return onMeasureDragEnd; }
+        onMeasureDragEnd = value;
         return measuresBar;
     };
 

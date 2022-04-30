@@ -1,7 +1,7 @@
 import * as d3 from 'd3';
 //import "d3-selection-multi";
 import { calcTrueX, calcAdjX, findPointChannel, findDateChannel, findNearestChannelByEndDate,
-    calcChartHeight, findFuturePlanets, findFirstFuturePlanet, findNearestDate, getTransformation } from './helpers';
+    calcChartHeight, findFuturePlanets, findFirstFuturePlanet, findNearestDate, getTransformationFromTrans } from './helpers';
 //import { COLOURS, DIMNS } from "./constants";
 import { addWeeks } from "../util/TimeHelpers"
 import { ellipse } from "./ellipse";

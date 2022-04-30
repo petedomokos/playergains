@@ -39,7 +39,7 @@ export function ellipse(selection, dispatch) {
             const g = d3.select(this);
             //enter
             if(g.select("ellipse" +(className ? "."+className : ".")).empty()){
-                g.append("ellipse")
+                g.insert("ellipse", "g.contents")
                     .attr("class", className)
                     .attr("id", className + "-" + d.id)
                     .attr("cursor", "crosshair")
@@ -64,8 +64,16 @@ export function ellipse(selection, dispatch) {
         selection.each(function(d){
             d3.select(this).select("ellipse" +(className ? "."+className : ""))
                 .attr("fill", fill(d, false))
-                .on("mouseover", function(){ d3.select(this).attr("fill", fill(d, true)) })
-                .on("mouseout", function(){ d3.select(this).attr("fill", fill(d, false)) })
+                .on("mouseover", function(){ 
+                    d3.select(this)
+                        .transition()
+                            .duration(400)
+                            .attr("fill", fill(d, true)) })
+                .on("mouseout", function(){ 
+                    d3.select(this)
+                        .transition()
+                            .duration(200)
+                            .attr("fill", fill(d, false)) })
         })
     }
 

@@ -6,7 +6,7 @@ import planetsLayout from "./planetsLayout";
 import linksComponent from "./linksComponent";
 import planetsComponent from "./planetsComponent";
 import barChart from "./barChartComponent";
-import { calcChartHeight, findFuturePlanets, findFirstFuturePlanet, findNearestDate, getTransformation } from './helpers';
+import { calcChartHeight, findFuturePlanets, findFirstFuturePlanet, findNearestDate, getTransformationFromTrans } from './helpers';
 //import { COLOURS, DIMNS } from "./constants";
 import { addMonths } from "../util/TimeHelpers"
 import { ellipse } from "./ellipse";

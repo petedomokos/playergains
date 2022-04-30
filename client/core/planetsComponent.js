@@ -1,7 +1,7 @@
 import * as d3 from 'd3';
 //import "d3-selection-multi";
 import { calcTrueX, calcAdjX, findPointChannel, findDateChannel, findNearestChannelByEndDate,
-    calcChartHeight, findFuturePlanets, findFirstFuturePlanet, findNearestDate, getTransformation } from './helpers';
+    calcChartHeight, findFuturePlanets, findFirstFuturePlanet, findNearestDate, getTransformationFromTrans } from './helpers';
 //import { COLOURS, DIMNS } from "./constants";
 import { addWeeks } from "../util/TimeHelpers"
 import { ellipse } from "./ellipse";
@@ -22,6 +22,8 @@ export default function planetsComponent() {
     let contentsWidth;
     let contentsHeight;
     let fontSize = 9;
+    const DEFAULT_PLANET_RX = 50;
+    const DEFAULT_PLANET_RY = 50;
 
     function updateDimns(){
         contentsWidth = width - margin.left - margin.right;
@@ -31,7 +33,7 @@ export default function planetsComponent() {
     let timeScale = x => 0;
     let yScale = x => 0;
 
-    let planetsData = [];
+    let prevData = [];
     let linksData = [];
     let channelsData;
     //let trueX = x => x;
@@ -40,10 +42,15 @@ export default function planetsComponent() {
     let dateChannel = () => {};
     let nearestChannelByEndDate = () => {};
 
+    let withRing = true;
+    let highlighted = [];
+
     //handlers
     let onDragStart = function() {};
     let onDrag = function() {};
     let onDragEnd = function() {};
+    let onMouseover = function(){};
+    let onMouseout = function(){};
 
     function updateChannelsData(newChannelsData){
         channelsData = newChannelsData;
@@ -74,13 +81,16 @@ export default function planetsComponent() {
         //also on src planet. BUT it does mean we need to also put it on src. Could have a goals library, or just use the dataset library (1 goal per dataset for now)
     ];
 
+    //dom
+    let containerG;
+
     function planets(selection, options={}) {
         const { transitionEnter, transitionUpdate } = options;
         updateDimns();
         // expression elements
         selection.each(function (data) {
+            containerG = d3.select(this);
             //console.log("planets", data)
-            if(data){ planetsData = data;}
 
             withClick.onClick(onClick)
             const planetDrag = d3.drag()
@@ -88,13 +98,12 @@ export default function planetsComponent() {
                 .on("drag", withClick(onPlanetDrag))
                 .on("end", withClick(onPlanetDragEnd));
 
-            const planetG = d3.select(this).selectAll("g.planet").data(planetsData, p => p.id);
+            const planetG = containerG.selectAll("g.planet").data(data, p => p.id);
             planetG.enter()
                 .append("g")
-                .attr("class", "planet")
+                .attr("class", d => "planet planet-"+d.id)
                 .attr("id", d => "planet-"+d.id)
                 .attr("opacity", 1) //for now, just transition out not in
-                .call(ring)
                 .each(function(d,i){
                     //ENTER
                     const contentsG = d3.select(this)
@@ -105,7 +114,7 @@ export default function planetsComponent() {
                     contentsG
                         .append("ellipse")
                             .attr("class", "core")
-                            .attr("fill", grey10(5))
+                            .attr("fill", COLOURS.planet)
                             .attr("cursor", "pointer")
                     
                     //text
@@ -138,8 +147,8 @@ export default function planetsComponent() {
                     const contentsG = d3.select(this).select("g.contents")
                     //ellipse
                     contentsG.select("ellipse.core")
-                        .attr("rx", d.rx(contentsWidth) || 50)
-                        .attr("ry", d.ry(contentsHeight) || 50)
+                        .attr("rx", d.rx ? d.rx(contentsWidth) : DEFAULT_PLANET_RX)
+                        .attr("ry", d.ry ? d.ry(contentsHeight) : DEFAULT_PLANET_RY)
                     //text
                     contentsG.select("text")
                         .attr("font-size", fontSize)
@@ -147,16 +156,30 @@ export default function planetsComponent() {
                         //.text(d.name || "enter name")
                 })
                 .call(planetDrag)
+                //note-  could just store the planetId in here when mousedover ie 
+                //ie stored as active or something
+                //the current approach when measure is dragged doesnt work
+                //becuase it covers up teh pointer-event so mouseover isnt called.
+                //how did i resolve this in expression builder?
+                .on("mouseover", onMouseover)
+                .on("mouseout", onMouseout)
                 //@todo - use mask to make it a donut and put on top
-                .call(ring
-                    .rx(d => d.ringRx(contentsWidth))
-                    .ry(d => d.ringRy(contentsHeight))
-                    .fill((d, hovered) => hovered ? COLOURS.potentialLinkPlanet : "transparent")
-                    .stroke("none")
-                    .onDragStart(onRingDragStart)
-                    .onDrag(onRingDrag)
-                    .onDragEnd(onRingDragEnd)
-                    .container("g.contents"))
+                .call(withRing ? 
+                    ring
+                        .rx(d => d.ringRx(contentsWidth))
+                        .ry(d => d.ringRy(contentsHeight))
+                        .fill((d, hovered) => hovered ? COLOURS.potentialLinkPlanet : "transparent")
+                        .stroke("none")
+                        .onDragStart(onRingDragStart)
+                        .onDrag(onRingDrag)
+                        .onDragEnd(onRingDragEnd)
+                        .container("g.contents") 
+                    : 
+                    function(selection){
+                        selection.selectAll("ellipse.ring").remove();
+                        return selection; 
+                    }
+                ) 
                 .each(function(d){
                     const menuG = d3.select(this).selectAll("g.menu").data(d.isSelected ? [menuOptions] : [], d => d.key);
                     const menuGEnter = menuG.enter()
@@ -205,7 +228,7 @@ export default function planetsComponent() {
             planetG.each(function(d){
                 const planetG = d3.select(this);
                 if(transitionUpdate){
-                    const { translateX } = getTransformation(planetG.attr("transform"));
+                    const { translateX } = getTransformationFromTrans(planetG.attr("transform"));
                     planetG
                         .attr("transform", d => "translate("+translateX +"," +d.y +")")
                         .transition()
@@ -289,7 +312,7 @@ export default function planetsComponent() {
 
                 //find nearest planet and if dist is below threshold, set planet as target candidate
                 const LINK_THRESHOLD = 100;
-                const availablePlanets = planetsData
+                const availablePlanets = data
                     .filter(p => p.id !== d.id)
                     .filter(p => !linksData.find(l => l.id.includes(d.id) && l.id.includes(p.id)))
                     .map(p => ({ ...p, x:timeScale(p.displayDate), y:yScale(p.yPC)}))
@@ -320,8 +343,23 @@ export default function planetsComponent() {
                     addLink({ src:sortedLinks[0].id, targ:sortedLinks[1].id })
                 }
             }
+
+            prevData = data;
         })
+
         return selection;
+    }
+
+    function updateHighlighted(selection, high){
+        selection.each(function(d){
+            const rx = d => d.rx ? d.rx(contentsWidth) : DEFAULT_PLANET_RX;
+            const ry = d => d.ry ? d.ry(contentsHeight) : DEFAULT_PLANET_RY;
+            d3.select(this).select("ellipse.core")
+                .transition()
+                    .duration(200)
+                    .attr("rx", highlighted.includes(d.id) ? rx(d) * 1.5 : rx(d))
+                    .attr("ry", highlighted.includes(d.id) ? ry(d) * 1.5 : ry(d))
+        })
     }
     
     //api
@@ -340,6 +378,13 @@ export default function planetsComponent() {
         height = value;
         return planets;
     };
+    planets.withRing = function (value) {
+        if (!arguments.length) { return withRing; }
+        withRing = value;
+        containerG.call(planets);
+
+        return planets;
+    };
     planets.channelsData = function (value) {
         if (!arguments.length) { return channelsData; }
         updateChannelsData(value);
@@ -353,6 +398,27 @@ export default function planetsComponent() {
     planets.yScale = function (value) {
         if (!arguments.length) { return yScale; }
         yScale = value;
+        return planets;
+    };
+    planets.highlight = function (value) {
+        if (!arguments.length) { return yScale; }
+        const ids = Array.isArray(value) ? value : [value];
+        highlighted = [...highlighted, ...ids];
+        containerG.selectAll("g.planet")
+            .filter(d => ids.includes(d.id))
+            .call(updateHighlighted, highlighted);
+
+        return planets;
+    };
+    planets.unhighlight = function (value) {
+        if (!arguments.length) { return planets; }
+        const ids = Array.isArray(value) ? value : [value];
+        highlighted = highlighted.filter(id => !ids.includes(id));
+        //why not filtering back to 0?, could always pass it through
+        containerG.selectAll("g.planet")
+            .filter(d => ids.includes(d.id))
+            .call(updateHighlighted, highlighted);
+
         return planets;
     };
     planets.fontSize = function (value) {
@@ -391,7 +457,20 @@ export default function planetsComponent() {
         }
         return planets;
     };
-
+    planets.onMouseover = function (value) {
+        if (!arguments.length) { return onMouseover; }
+        if(typeof value === "function"){
+            onMouseover = value;
+        }
+        return planets;
+    };
+    planets.onMouseout = function (value) {
+        if (!arguments.length) { return onMouseout; }
+        if(typeof value === "function"){
+            onMouseout = value;
+        }
+        return planets;
+    };
     planets.addPlanet = function (value) {
         if (!arguments.length) { return addPlanet; }
         if(typeof value === "function"){

@@ -8,7 +8,7 @@ import axesComponent from "./axesComponent";
 import linksComponent from "./linksComponent";
 import planetsComponent from "./planetsComponent";
 import measuresBarComponent from './measuresBarComponent';
-import { calcChartHeight, findFuturePlanets, findFirstFuturePlanet, findNearestDate, getTransformation,
+import { calcChartHeight, findFuturePlanets, findFirstFuturePlanet, findNearestDate, getTransformationFromTrans,
     calcTrueX, calcAdjX, findPointChannel, findDateChannel, findNearestChannelByEndDate } from './helpers';
 //import { COLOURS, DIMNS } from "./constants";
 import { addMonths, addWeeks } from "../util/TimeHelpers"
@@ -52,6 +52,7 @@ export default function journeyComponent() {
 
     let measuresOpen;
     let measuresBarHeight;
+    let formData;
 
     function updateDimns(){
         contentsWidth = width - margin.left - margin.right;
@@ -120,6 +121,10 @@ export default function journeyComponent() {
     let currentZoom = d3.zoomIdentity;
     let channelsData;
 
+    //state
+    let hoveredPlanetId;
+    let draggedMeasure;
+
     function journey(selection) {
         updateDimns();
         selection.each(function (journeyState) {
@@ -184,13 +189,15 @@ export default function journeyComponent() {
                 //.dragThreshold(200) //dont get why this has to be so large
                 //.beforeAll(() => { updateSelected(undefined); })
                 .onClick((e,d) => {
+                    console.log("clk", measuresOpen)
                     if(editing){
                         onEndEditPlanet(d);
                     }
                     //note - on start editing, selected is already set to undefined
                     else if(selected){
-                        updateSelected(undefined); 
-                    }else{
+                        updateSelected(undefined);
+                    //if measuresBar open, we dont want the click to propagate through
+                    }else if(!measuresOpen){
                         addPlanet(zoomedTimeScale.invert(trueX(e.sourceEvent.layerX)), zoomedYScale.invert(e.sourceEvent.layerY))
                     }
                 })
@@ -306,6 +313,17 @@ export default function journeyComponent() {
                     //updatePlanet({ id:d.id, targetDate:timeScale.invert(trueX(d.x)), yPC:yScale.invert(d.y) });
                     updatePlanet({ id:d.id, targetDate:zoomedTimeScale.invert(trueX(d.x)), yPC:zoomedYScale.invert(d.y) });
                 })
+                .onMouseover(function(e,d){
+                    hoveredPlanetId = d.id;
+                    if(draggedMeasure){
+                        planets.highlight(hoveredPlanetId);
+                    }
+                })
+                .onMouseout(function(e,d){
+                    hoveredPlanetId = undefined;
+                    planets.unhighlight(d.id);
+                    
+                })
                 .addLink(addLink)
                 .updatePlanet(updatePlanet)
                 .deletePlanet(id => {
@@ -375,7 +393,6 @@ export default function journeyComponent() {
                 subtitle:"All", //this will show the goal or path etc if restricted
                 measures:measuresOpen
             }
-            console.log("measuresData", measuresData)
             const measuresBarG = contentsG.selectAll("g.measures-bar").data(measuresOpen ? [measuresData] : [])
             measuresBarG.enter()
                 .append("g")
@@ -387,7 +404,19 @@ export default function journeyComponent() {
                     .call(measuresBar
                         .width(contentsWidth)
                         .height(measuresBarHeight)
-                        .openNewMeasureForm(() => { setFormData({ measureOnly: true }) }))
+                        .openNewMeasureForm((e) => { 
+                            setFormData({ measureOnly: true });
+                        })
+                        .onMeasureDragStart(m => {
+                            //console.log("measure dS")
+                            draggedMeasure = m;
+                            planets.withRing(false);
+                        })
+                        .onMeasureDragEnd(m => {
+                            //console.log("measure dE hovred", hoveredPlanetId)
+                            draggedMeasure = undefined;
+                            planets.withRing(true);
+                        }))
             
             measuresBarG.exit().remove();
 

@@ -52,7 +52,11 @@ export function linearProjValue(x0MS, y0, x1MS, y1, xProjMS, dps){
     return dps ? (+y(deltaX)).toFixed(dps) : y(deltaX);
 }
 
-export function getTransformation(transform) {
+export function getTransformation(selection){
+    return getTransformationFromTrans(selection.attr("transform"));
+}
+
+export function getTransformationFromTrans(transform) {
     if(!transform) { 
         return {
             translateX:0,

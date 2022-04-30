@@ -139,7 +139,7 @@ function MeasureForm({ measure, data, existingMeasures, onSave, onCancel }) {
                     },
                 }}
                 InputLabelProps={{
-                  style:{ fontSize:"6px", marginBottom:0, paddingBottom:0, border:"solid" }
+                  style:{ fontSize:"6px", marginBottom:0, paddingBottom:0 }
                 }}
             />
                 {

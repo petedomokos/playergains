@@ -3,7 +3,7 @@ import * as d3 from 'd3';
 import { getGoalsData } from '../data/planets'
 import barChartLayout from "./barChartLayout";
 import barChart from "./barChartComponent";
-import { calcChartHeight, findFuturePlanets, findFirstFuturePlanet, findNearestDate, getTransformation } from './helpers';
+import { calcChartHeight, findFuturePlanets, findFirstFuturePlanet, findNearestDate, getTransformationFromTrans } from './helpers';
 //import { COLOURS, DIMNS } from "./constants";
 import { addWeeks } from "../util/TimeHelpers"
 import { ellipse } from "./ellipse";
