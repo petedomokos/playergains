@@ -51,6 +51,12 @@ const initChannels = d3.range(numberMonths)
     }
   })
 
+const mockMeasures = [
+    { id:"mock1", name:"Puts Per Round", desc: "Reduce the nr of puts" },
+    { id:"mock2", name:"Drive 1", desc: "Increase D1 to Fairway" },
+    { id:"mock3", name:"Drive 2", desc: "Increase D2 to Fairway" }
+]
+
 const Journey = ({dimns}) => {
   const [journey, setJourney] = useState(undefined)
   //@todo - put into one state object to avoid multiple updates
@@ -59,7 +65,7 @@ const Journey = ({dimns}) => {
   const [channelState, setChannelState] = useState(initChannels);
   const [withCompletionPaths, setWithCompletionPath] = useState(false);
   const [formData, setFormData] = useState(undefined);
-  const [measures, setMeasures] = useState([]);
+  const [measures, setMeasures] = useState(mockMeasures);
   const [measuresBarIsOpen, setMeasuresBarIsOpen] = useState(false);
   //console.log("planetState", planetState)
   //console.log("formData", formData)
@@ -163,7 +169,7 @@ const Journey = ({dimns}) => {
 
     d3.select(containerRef.current)
       ////.datum(data)
-      .datum({ planets: planetState, links: linkState, channels: channelState })
+      .datum({ planets: planetState, links: linkState, channels: channelState, measures })
       .call(journey
         ////.margin({left: screenWidth * 0.1, right: screenWidth * 0.1, top: screenHeight * 0.1, bottom:40})
         .width(screenWidth - 20)

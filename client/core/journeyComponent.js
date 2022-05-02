@@ -129,6 +129,7 @@ export default function journeyComponent() {
         updateDimns();
         selection.each(function (journeyState) {
             state = journeyState;
+            console.log("state", state)
             if(!svg){
                 //enter
                 init.call(this);
@@ -189,7 +190,6 @@ export default function journeyComponent() {
                 //.dragThreshold(200) //dont get why this has to be so large
                 //.beforeAll(() => { updateSelected(undefined); })
                 .onClick((e,d) => {
-                    console.log("clk", measuresOpen)
                     if(editing){
                         onEndEditPlanet(d);
                     }
@@ -197,7 +197,7 @@ export default function journeyComponent() {
                     else if(selected){
                         updateSelected(undefined);
                     //if measuresBar open, we dont want the click to propagate through
-                    }else if(!measuresOpen){
+                    }else{
                         addPlanet(zoomedTimeScale.invert(trueX(e.sourceEvent.layerX)), zoomedYScale.invert(e.sourceEvent.layerY))
                     }
                 })
@@ -255,6 +255,7 @@ export default function journeyComponent() {
                 .yScale(zoomedYScale)
                 .channelsData(channelsData);
             const planetsData = myPlanetsLayout(state.planets);
+            console.log("planetsData", planetsData)
 
             myLinksLayout
                 .selected(selected?.id)
@@ -413,9 +414,20 @@ export default function journeyComponent() {
                             planets.withRing(false);
                         })
                         .onMeasureDragEnd(m => {
-                            //console.log("measure dE hovred", hoveredPlanetId)
                             draggedMeasure = undefined;
                             planets.withRing(true);
+                            if(hoveredPlanetId){
+                                const hoveredPlanet = planetsData.find(p => p.id === hoveredPlanetId);
+                                if(hoveredPlanet.measures.find(me => me.id === m.id)){
+                                    alert("This measure is already added to this planet")
+                                }else{
+                                    updatePlanet({
+                                        id:hoveredPlanetId, 
+                                        measures:[...hoveredPlanet.measures, { id: m.id }]
+                                    })
+                                }
+                            }
+
                         }))
             
             measuresBarG.exit().remove();

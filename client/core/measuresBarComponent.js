@@ -5,12 +5,6 @@ import measureProfileComponent from "./measureProfileComponent";
 /*
 
 */
-
-const mockMeasures = [
-    { id:"mock1", name:"Puts Per Round", desc: "Reduce the nr of puts" },
-    { id:"mock2", name:"Drive 1", desc: "Increase D1 to Fairway" },
-    { id:"mock3", name:"Drive 2", desc: "Increase D2 to Fairway" }
-]
 export default function measuresBarComponent() {
     // dimensions
     let margin;
@@ -100,7 +94,7 @@ export default function measuresBarComponent() {
             newMeasureBtnG.select("text")
                 .attr("transform", "translate("+newMeasureBtnWidth/2 +"," +newMeasureBtnHeight/2 +")");
 
-            const measureG = measuresG.selectAll("g.measure").data([...measures, ...mockMeasures], m => m.id);
+            const measureG = measuresG.selectAll("g.measure").data(measures, m => m.id);
             measureG.enter()
                 .append("g")
                     .attr("class", "measure")
@@ -127,7 +121,8 @@ export default function measuresBarComponent() {
         }
 
         function init(){
-            containerG = d3.select(this);
+            containerG = d3.select(this)
+                .call(d3.drag()); //prevents zoom/click being triggered on canvas underneath
 
             bgRect = containerG
                 .append("rect")
