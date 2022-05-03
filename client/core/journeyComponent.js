@@ -123,13 +123,12 @@ export default function journeyComponent() {
 
     //state
     let hoveredPlanetId;
-    let draggedMeasure;
 
     function journey(selection) {
         updateDimns();
         selection.each(function (journeyState) {
             state = journeyState;
-            console.log("state", state)
+            //console.log("state", state)
             if(!svg){
                 //enter
                 init.call(this);
@@ -148,7 +147,6 @@ export default function journeyComponent() {
                 .attr("height", height)
 
             const { k } = currentZoom;
-            //console.log("update currentZoom", currentZoom)
             yScale = d3.scaleLinear().domain([0, 100]).range([margin.top, margin.top + contentsHeight])
 
             //start by showing 5 channels, from channel -1 to channel 3
@@ -205,10 +203,8 @@ export default function journeyComponent() {
                     if(!enhancedZoom.wasMoved()){
                         //longpress toggles isOpen
                         const chan = pointChannel({ x:e.sourceEvent.layerX, y:e.sourceEvent.layerY });
-                        //console.log("chan", chan)
                         if(!chan){ return; }
                         const { id, isOpen } = chan;
-                        //console.log("channel....", chan)
                         //there must be a diff between this code and the udate code above, or the way axis is updwted, because in zoomed state
                         //sometimes the opening of c channel is only corrected on state update
                         updateChannel({ id, isOpen:!isOpen })
@@ -246,100 +242,132 @@ export default function journeyComponent() {
             //ELEMENTS
             //helpers
             const { trueX, pointChannel } = channelsData;
+
+            let planetsData;
+            let linksData;
+            updatePlanetsData();
+            updateLinksData();
+
+            updatePlanets();
+            updateLinks();
+
+            function updatePlanetsData(){
+                myPlanetsLayout
+                    .selected(selected?.id)
+                    .currentZoom(currentZoom)
+                    .timeScale(zoomedTimeScale)
+                    .yScale(zoomedYScale)
+                    .channelsData(channelsData);
+
+                planetsData = myPlanetsLayout(state.planets);
+
+            }
+
+            function updateLinksData(){
+                //data
+                myLinksLayout
+                    .selected(selected?.id)
+                    .currentZoom(currentZoom)
+                    .channelsData(channelsData)
+                    .planetsData(planetsData);
+
+                linksData = myLinksLayout(state.links);
+
+            }
            
-            //layouts
-            myPlanetsLayout
-                .selected(selected?.id)
-                .currentZoom(currentZoom)
-                .timeScale(zoomedTimeScale)
-                .yScale(zoomedYScale)
-                .channelsData(channelsData);
-            const planetsData = myPlanetsLayout(state.planets);
-            console.log("planetsData", planetsData)
+            function updatePlanets(){
+                //data
+                myPlanetsLayout
+                    .selected(selected?.id)
+                    .currentZoom(currentZoom)
+                    .timeScale(zoomedTimeScale)
+                    .yScale(zoomedYScale)
+                    .channelsData(channelsData);
 
-            myLinksLayout
-                .selected(selected?.id)
-                .currentZoom(currentZoom)
-                .channelsData(channelsData)
-                .planetsData(planetsData);
-            const linksData = myLinksLayout(state.links);
+                 const planetsData = myPlanetsLayout(state.planets);
 
-            //links
-            links
-                .withCompletion(withCompletionPaths)
-                .yScale(zoomedYScale)
-                //.timeScale(timeScale)
-                .timeScale(zoomedTimeScale)
-                .strokeWidth(k * 0.5)
-                .deleteLink(id => {
-                    selected = undefined;
-                    deleteLink(id);
-                })
-                .onClick((e,d) => { updateSelected(d);})
+                //component
+                planets
+                    .width(planetWidth)
+                    .height(planetHeight)
+                    .channelsData(channelsData)
+                    .linksData(linksData)
+                    .timeScale(zoomedTimeScale)
+                    .yScale(zoomedYScale)
+                    .fontSize(k * 9)
+                    .onClick((e,d) => { updateSelected(d);})
+                    .onDrag(function(e , d){
+                        updateSelected(undefined); //warning - may interrupt drag handling with touch
+                        //links layout needs updated planet position and targetDate
+                        state.planets = state.planets.map(p => { return p.id === d.id ? d : p });
+                        const newPlanetsData = myPlanetsLayout(state.planets);
+                        myLinksLayout.planetsData(newPlanetsData);
+                        const newLinksData = myLinksLayout(state.links);
+                        canvasG.selectAll("g.links")
+                            .data([newLinksData])
+                            .join("g")
+                            .attr("class", "links")
+                            .call(links) //no transitions
 
-            canvasG.selectAll("g.links")
-                .data([linksData])
-                .join("g")
-                .attr("class", "links")
-                .call(links, options.links)
+                    })
+                    .onDragEnd(function(e , d){
+                        selected = undefined;
+                        //targetDate must be based on trueX
+                        //updatePlanet({ id:d.id, targetDate:timeScale.invert(trueX(d.x)), yPC:yScale.invert(d.y) });
+                        updatePlanet({ id:d.id, targetDate:zoomedTimeScale.invert(trueX(d.x)), yPC:zoomedYScale.invert(d.y) });
+                    })
+                    .onMouseover(function(e,d){
+                        hoveredPlanetId = d.id;
+                        if(measuresBar.selected()){
+                            planets.highlight(hoveredPlanetId);
+                        }
+                    })
+                    .onMouseout(function(e,d){
+                        hoveredPlanetId = undefined;
+                        planets.unhighlight(d.id);
+                        
+                    })
+                    .addLink(addLink)
+                    .updatePlanet(updatePlanet)
+                    .deletePlanet(id => {
+                        selected = undefined;
+                        editing = undefined;
+                        deletePlanet(id);
+                    })
+                    .startEditPlanet(onStartEditPlanet)
 
-            //planets
-            planets
-                .width(planetWidth)
-                .height(planetHeight)
-                .channelsData(channelsData)
-                .linksData(linksData)
-                .timeScale(zoomedTimeScale)
-                .yScale(zoomedYScale)
-                .fontSize(k * 9)
-                .onClick((e,d) => { updateSelected(d);})
-                .onDrag(function(e , d){
-                    updateSelected(undefined); //warning - may interrupt drag handling with touch
-                    //console.log("DRAG.......")
-                    //links layout needs updated planet position and targetDate
-                    state.planets = state.planets.map(p => { return p.id === d.id ? d : p });
-                    const newPlanetsData = myPlanetsLayout(state.planets);
-                    myLinksLayout.planetsData(newPlanetsData);
-                    const newLinksData = myLinksLayout(state.links);
-                    canvasG.selectAll("g.links")
-                        .data([newLinksData])
-                        .join("g")
+                //render
+                const planetsG = canvasG.selectAll("g.planets").data([planetsData]);
+                planetsG.enter()
+                    .append("g")
+                    .attr("class", "planets")
+                    .merge(planetsG)
+                    .call(planets, options.planets)
+            }
+
+            function updateLinks(){
+                //component
+                links
+                    .withCompletion(withCompletionPaths)
+                    .yScale(zoomedYScale)
+                    //.timeScale(timeScale)
+                    .timeScale(zoomedTimeScale)
+                    .strokeWidth(k * 0.5)
+                    .deleteLink(id => {
+                        selected = undefined;
+                        deleteLink(id);
+                    })
+                    .onClick((e,d) => { updateSelected(d);})
+
+                //render
+                const linksG = canvasG.selectAll("g.links").data([linksData])
+                linksG.enter()
+                    .insert("g", "g.planets")
                         .attr("class", "links")
-                        .call(links) //no transitions
-
-                })
-                .onDragEnd(function(e , d){
-                    selected = undefined;
-                    //targetDate must be based on trueX
-                    //updatePlanet({ id:d.id, targetDate:timeScale.invert(trueX(d.x)), yPC:yScale.invert(d.y) });
-                    updatePlanet({ id:d.id, targetDate:zoomedTimeScale.invert(trueX(d.x)), yPC:zoomedYScale.invert(d.y) });
-                })
-                .onMouseover(function(e,d){
-                    hoveredPlanetId = d.id;
-                    if(draggedMeasure){
-                        planets.highlight(hoveredPlanetId);
-                    }
-                })
-                .onMouseout(function(e,d){
-                    hoveredPlanetId = undefined;
-                    planets.unhighlight(d.id);
-                    
-                })
-                .addLink(addLink)
-                .updatePlanet(updatePlanet)
-                .deletePlanet(id => {
-                    selected = undefined;
-                    editing = undefined;
-                    deletePlanet(id);
-                })
-                .startEditPlanet(onStartEditPlanet)
-
-            canvasG.selectAll("g.planets")
-                .data([planetsData])
-                .join("g")
-                .attr("class", "planets")
-                .call(planets, options.planets)
-
+                        .merge(linksG)
+                        .call(links, options.links)
+            }
+            
             //openedLink
             const openedLinkWidth = 80 * k;
             const openedLinkHeight = 30 * k;
@@ -408,15 +436,15 @@ export default function journeyComponent() {
                         .openNewMeasureForm((e) => { 
                             setFormData({ measureOnly: true });
                         })
-                        .onMeasureDragStart(m => {
-                            //console.log("measure dS")
-                            draggedMeasure = m;
+                        .onMeasureDragStart(() => {
                             planets.withRing(false);
                         })
                         .onMeasureDragEnd(m => {
-                            draggedMeasure = undefined;
                             planets.withRing(true);
                             if(hoveredPlanetId){
+                                //add measure to goal
+                                // keep measure selected so targets show on goal for each planet that has it
+                                // the goal that has just been added to has target form open over it
                                 const hoveredPlanet = planetsData.find(p => p.id === hoveredPlanetId);
                                 if(hoveredPlanet.measures.find(me => me.id === m.id)){
                                     alert("This measure is already added to this planet")
@@ -427,7 +455,6 @@ export default function journeyComponent() {
                                     })
                                 }
                             }
-
                         }))
             
             measuresBarG.exit().remove();

@@ -87,7 +87,7 @@ export default function measureProfileComponent() {
             .attr("stroke", bgSettings.stroke)
             .attr("stroke-width", bgSettings.strokeWidth);
 
-        nameText
+            nameText
             .attr("transform", "translate("+contentsWidth/2 +"," +nameHeight/2 +")")
             .text(name);
         
@@ -155,6 +155,8 @@ export default function measureProfileComponent() {
                 .attr("text-anchor", "middle")
                 .attr("dominant-baseline", "central")
                 .attr("font-size", 5);
+
+        contentsG.selectAll("g").style("pointer-events", "none")
 
     }
 

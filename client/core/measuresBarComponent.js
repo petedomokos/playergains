@@ -57,6 +57,11 @@ export default function measuresBarComponent() {
     //components
     let measureProfiles = {};
 
+    //state
+    let selected;
+    let dragged;
+    let prevData;
+
     function measuresBar(selection) {
         updateDimns();
         selection.each(function (data) {
@@ -70,6 +75,8 @@ export default function measuresBarComponent() {
                 //update
                 update(data);
             }
+
+            prevData = data;
         })
 
         function update(data, options={}){
@@ -94,7 +101,12 @@ export default function measuresBarComponent() {
             newMeasureBtnG.select("text")
                 .attr("transform", "translate("+newMeasureBtnWidth/2 +"," +newMeasureBtnHeight/2 +")");
 
-            const measureG = measuresG.selectAll("g.measure").data(measures, m => m.id);
+            const measuresData = measures.map(m => ({
+                ...m,
+                isSelected:selected === m.id
+            }));
+            
+            const measureG = measuresG.selectAll("g.measure").data(measuresData, m => m.id);
             measureG.enter()
                 .append("g")
                     .attr("class", "measure")
@@ -105,24 +117,35 @@ export default function measuresBarComponent() {
                     .each(function(d){
                         d3.select(this)
                             .call(measureProfiles[d.id]
+                                .bgSettings({ fill: d.isSelected ? "aqua" : "none" })
                                 .width(measureWidth)
                                 .height(measureHeight)
-                                .onDragStart((e,d) => onMeasureDragStart(d))
+                                .onDragStart((e,d) => {
+                                    dragged = d.id;
+                                    onMeasureDragStart(d)
+                                })
                                 .onDrag((e,d) => onMeasureDrag(d))
-                                .onDragEnd((e,d) => onMeasureDragEnd(d)));
+                                .onDragEnd((e,d) => {
+                                    dragged = undefined;
+                                    onMeasureDragEnd(d)
+                                }));
                     })
-                    .on("mouseover", function(e, d){ 
-                        measureProfiles[d.id].bgSettings({ fill: "aqua"}, true)
+                    .on("mouseover", function(e, d){
+                        selected = d.id;
+                        update(prevData)
                     })
-                    .on("mouseout", function(e, d){ 
-                        measureProfiles[d.id].bgSettings({ fill: "none"}, true)
+                    .on("mouseout", function(e, d){
+                        //keep it selected if its being dragged
+                        if(dragged === d.id) { return; }
+                        selected = undefined;
+                        update(prevData);
                     })
 
         }
 
         function init(){
             containerG = d3.select(this)
-                .call(d3.drag()); //prevents zoom/click being triggered on canvas underneath
+                //()); //prevents zoom/click being triggered on canvas underneath
 
             bgRect = containerG
                 .append("rect")
@@ -206,6 +229,11 @@ export default function measuresBarComponent() {
     measuresBar.onMeasureDragEnd = function (value) {
         if (!arguments.length) { return onMeasureDragEnd; }
         onMeasureDragEnd = value;
+        return measuresBar;
+    };
+    measuresBar.selected = function (value) {
+        if (!arguments.length) { return selected; }
+        selected = value;
         return measuresBar;
     };
 
