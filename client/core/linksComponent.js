@@ -19,6 +19,8 @@ import { update } from 'lodash';
 
 */
 export default function linksComponent() {
+
+    let selectedMeasure;
     let timeScale = x => 0;
     let yScale = x => 0;
     let strokeWidth = 1;
@@ -247,6 +249,11 @@ export default function linksComponent() {
     links.withCompletion = function (value) {
         if (!arguments.length) { return withCompletion; }
         withCompletion = value;
+        return links;
+    };
+    links.selectedMeasure = function (value) {
+        if (!arguments.length) { return selectedMeasure; }
+        selectedMeasure = value;
         return links;
     };
     links.yScale = function (value) {

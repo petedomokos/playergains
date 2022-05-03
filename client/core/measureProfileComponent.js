@@ -2,6 +2,7 @@ import * as d3 from 'd3';
 //import "d3-selection-multi";
 import { grey10, COLOURS, DIMNS } from "./constants";
 import { getTransformation } from './helpers';
+import dragEnhancements from './enhancedDragHandler';
 /*
 
 */
@@ -37,6 +38,7 @@ export default function measureProfileComponent() {
     let onDragStart = function(){};
     let onDrag = function(){};
     let onDragEnd = function(){};
+    let onClick = function(){};
 
     //dom
     let containerG;
@@ -50,6 +52,8 @@ export default function measureProfileComponent() {
     let targsText;
 
     let prevData;
+
+    let withClick = dragEnhancements();
 
     function measureProfile(selection) {
         updateDimns();
@@ -73,10 +77,12 @@ export default function measureProfileComponent() {
     function update(data, options={}){
         const { name="", desc="", targs=[] } = data;
 
+        withClick.onClick(onClick)
         const drag = d3.drag()
-            .on("start", dragStart)
-            .on("drag", dragged)
-            .on("end", dragEnd);
+            .on("start", withClick(dragStart))
+            .on("drag", withClick(dragged))
+            .on("end", withClick(dragEnd));
+
 
         containerG.call(drag);
 
@@ -101,6 +107,11 @@ export default function measureProfileComponent() {
 
         let cloneG;
         let clonePos;
+        //note - dragstart abd dragEnd here are al;ways called, even if its a click
+        //@todo - consider changin teh enhanced drag handler so it only calls dragstart
+        //after wasMoved is triggered, and dragend is only called if not click
+        //change wasMoved to isDrag, and call dragStart when it changes to true, and 
+        //only call dragEnd on end event if isDrag=true
         function dragStart(e,d){
             const { translateX, translateY } = getTransformation(d3.select(this))
             clonePos = [translateX, translateY];
@@ -120,7 +131,9 @@ export default function measureProfileComponent() {
 
         function dragEnd(e,d){
             cloneG.remove();
-            onDragEnd.call(this, e, d);
+            if(!withClick.isClick()){
+                onDragEnd.call(this, e, d);
+            }
         }
 
     }
@@ -195,6 +208,11 @@ export default function measureProfileComponent() {
     measureProfile.onDragEnd = function (value) {
         if (!arguments.length) { return onDragEnd; }
         onDragEnd = value;
+        return measureProfile;
+    };
+    measureProfile.onClick = function (value) {
+        if (!arguments.length) { return onClick; }
+        onClick = value;
         return measureProfile;
     };
 

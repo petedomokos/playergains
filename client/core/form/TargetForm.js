@@ -37,13 +37,15 @@ const useStyles = makeStyles(theme => ({
   },
 }))
 
-export default function NameForm({ data, onUpdate, onClose }) {
-    const { planet } = data;
-    //console.log("NameForm", data)
+export default function TargetForm({ data, onUpdate, onClose }) {
+    const { planet, measure } = data;
+    //we can assume measure is defined on the planet for this form to be open
+    const planetMeasure = { ...measure, ...planet.measures.find(m => m.id === measure.id) };
+    //console.log("TargForm", data)
     const styleProps = { };
     const classes = useStyles(styleProps) 
     const [values, setValues] = useState({
-        name: planet?.name || "",
+        targ: planetMeasure?.targ || "",
         error: ""
     })
 
@@ -61,13 +63,14 @@ export default function NameForm({ data, onUpdate, onClose }) {
     return (
         <Card className={classes.card}>
             <CardContent className={classes.cardContent}>
+                
             <TextField
                 type="submit"
-                id="name" type="name" placeholder="Name"
+                id="targ" type="targ" placeholder="Target"
                 className={classes.textField} 
                 autoComplete='off'
-                value={values.name} 
-                onChange={handleChange('name')}
+                value={values.targ} 
+                onChange={handleChange('targ')}
                 onKeyDown={handleKeyDown}
                 margin="none"
                 size="small"

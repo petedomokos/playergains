@@ -33,6 +33,8 @@ export default function planetsComponent() {
     let timeScale = x => 0;
     let yScale = x => 0;
 
+    let selectedMeasure;
+
     let prevData = [];
     let linksData = [];
     let channelsData;
@@ -117,14 +119,14 @@ export default function planetsComponent() {
                             .attr("fill", COLOURS.planet)
                             .attr("cursor", "pointer")
                     
-                    //text
+                    //title text
                     contentsG
                         .append("text")
                         .attr("class", "title")
                         .attr("text-anchor", "middle")
                         .attr("dominant-baseline", "middle")
                         .style("pointer-events", "none")
-
+                    
                     //menu component
                     menus[d.id] = menuComponent();
                 
@@ -143,25 +145,63 @@ export default function planetsComponent() {
                 })
                 .merge(planetG)
                 .each(function(d){
+                    const rx = d.rx ? d.rx(contentsWidth) : DEFAULT_PLANET_RX;
+                    const ry =  d.ry ? d.ry(contentsHeight) : DEFAULT_PLANET_RY; 
                     //ENTER AND UPDATE
                     const contentsG = d3.select(this).select("g.contents")
                     //ellipse
-                    contentsG.select("ellipse.core")
-                        .attr("rx", d.rx ? d.rx(contentsWidth) : DEFAULT_PLANET_RX)
-                        .attr("ry", d.ry ? d.ry(contentsHeight) : DEFAULT_PLANET_RY)
-                    //text
+                    //contentsG.select("ellipse.core")
+                        //.attr("opacity", 0.5)
+                        //.attr("rx", rx)
+                        //.attr("ry", ry)
+                    //title
                     contentsG.select("text")
                         .attr("font-size", fontSize)
                         .text(d.name || d.id.slice(-1))
                         //.text(d.name || "enter name")
+
+                    //targ
+                    let targData = [];
+                    if(selectedMeasure){
+                        const planetMeasureData = d.measures.find(m => m.id === selectedMeasure.id);
+                        if(planetMeasureData){
+                            targData.push({ ...selectedMeasure, ...planetMeasureData })
+                        }
+                    }
+                    const targG = contentsG.selectAll("g.targ").data(targData)
+                    targG.enter()
+                        .append("g")
+                            .attr("class", "targ")
+                            .each(function(measure){
+                                d3.select(this)
+                                    .append("text")
+                                        .attr("text-anchor", "middle")
+                                        .attr("dominant-baseline", "middle")
+                                        .style("pointer-events", "none")
+                                        .style("font-size", 6)
+                            })
+                            .merge(targG)
+                            .attr("transform", "translate(0, " +ry/2 +")")
+                            .each(function(m){
+                                d3.select(this).select("text").text("targ")
+                                    .text("targ: "+(typeof m.targ === "Number" ? m.targ : "not set"))
+
+                            })
+                            
+                    targG.exit().remove();
+                            
                 })
+                .call(updateHighlighted)
                 .call(planetDrag)
                 //note-  could just store the planetId in here when mousedover ie 
                 //ie stored as active or something
                 //the current approach when measure is dragged doesnt work
                 //becuase it covers up teh pointer-event so mouseover isnt called.
                 //how did i resolve this in expression builder?
-                .on("mouseover", onMouseover)
+                .on("mouseover", function(e,d){
+                    d3.select(this).raise();
+                    onMouseover.call(this, e,d);
+                })
                 .on("mouseout", onMouseout)
                 //@todo - use mask to make it a donut and put on top
                 .call(withRing ? 
@@ -181,7 +221,10 @@ export default function planetsComponent() {
                     }
                 ) 
                 .each(function(d){
-                    const menuG = d3.select(this).selectAll("g.menu").data(d.isSelected ? [menuOptions] : [], d => d.key);
+                    //helper
+                    //dont show menu if targOnly form open is if planet has the selectedMeasure on it
+                    const showContextMenu = d => d.isSelected && !d.measures.find(m => m.id === selectedMeasure?.id);
+                    const menuG = d3.select(this).selectAll("g.menu").data(showContextMenu(d) ? [menuOptions] : [], d => d.key);
                     const menuGEnter = menuG.enter()
                         .append("g")
                             .attr("class", "menu")
@@ -254,6 +297,7 @@ export default function planetsComponent() {
             }) 
      
             function onPlanetDragStart(e , d){
+                d3.select(this).raise();
                 //note - called on click too - could improve enhancedDrag by preveting dragStart event
                 //until a drag event has also been recieved, so stroe it and then release when first drag event comes through
                 onDragStart.call(this, e, d)
@@ -350,16 +394,19 @@ export default function planetsComponent() {
         return selection;
     }
 
-    function updateHighlighted(selection, high){
+    function updateHighlighted(selection, shouldIncreaseSize){
         selection.each(function(d){
             const rx = d => d.rx ? d.rx(contentsWidth) : DEFAULT_PLANET_RX;
             const ry = d => d.ry ? d.ry(contentsHeight) : DEFAULT_PLANET_RY;
             d3.select(this).select("ellipse.core")
                 .transition()
                     .duration(200)
-                    .attr("rx", highlighted.includes(d.id) ? rx(d) * 1.5 : rx(d))
-                    .attr("ry", highlighted.includes(d.id) ? ry(d) * 1.5 : ry(d))
+                    .attr("rx", highlighted.includes(d.id) && shouldIncreaseSize ? rx(d) * 1.5 : rx(d))
+                    .attr("ry", highlighted.includes(d.id) && shouldIncreaseSize ? ry(d) * 1.5 : ry(d))
+                    .attr("opacity", highlighted.includes(d.id) ? 0.5 : 1)
         })
+
+        return selection;
     }
     
     //api
@@ -376,6 +423,11 @@ export default function planetsComponent() {
     planets.height = function (value) {
         if (!arguments.length) { return height; }
         height = value;
+        return planets;
+    };
+    planets.selectedMeasure = function (value) {
+        if (!arguments.length) { return selectedMeasure; }
+        selectedMeasure = value;
         return planets;
     };
     planets.withRing = function (value) {
@@ -400,13 +452,13 @@ export default function planetsComponent() {
         yScale = value;
         return planets;
     };
-    planets.highlight = function (value) {
+    planets.highlight = function (value, shouldIncreaseSize) {
         if (!arguments.length) { return yScale; }
         const ids = Array.isArray(value) ? value : [value];
         highlighted = [...highlighted, ...ids];
         containerG.selectAll("g.planet")
             .filter(d => ids.includes(d.id))
-            .call(updateHighlighted, highlighted);
+            .call(updateHighlighted, shouldIncreaseSize);
 
         return planets;
     };
@@ -417,7 +469,7 @@ export default function planetsComponent() {
         //why not filtering back to 0?, could always pass it through
         containerG.selectAll("g.planet")
             .filter(d => ids.includes(d.id))
-            .call(updateHighlighted, highlighted);
+            .call(updateHighlighted);
 
         return planets;
     };

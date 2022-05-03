@@ -276,20 +276,11 @@ export default function journeyComponent() {
             }
            
             function updatePlanets(){
-                //data
-                myPlanetsLayout
-                    .selected(selected?.id)
-                    .currentZoom(currentZoom)
-                    .timeScale(zoomedTimeScale)
-                    .yScale(zoomedYScale)
-                    .channelsData(channelsData);
-
-                 const planetsData = myPlanetsLayout(state.planets);
-
                 //component
                 planets
                     .width(planetWidth)
                     .height(planetHeight)
+                    .selectedMeasure(measuresOpen?.find(m => m.id === measuresBar.selected()))
                     .channelsData(channelsData)
                     .linksData(linksData)
                     .timeScale(zoomedTimeScale)
@@ -317,15 +308,17 @@ export default function journeyComponent() {
                         updatePlanet({ id:d.id, targetDate:zoomedTimeScale.invert(trueX(d.x)), yPC:zoomedYScale.invert(d.y) });
                     })
                     .onMouseover(function(e,d){
-                        hoveredPlanetId = d.id;
-                        if(measuresBar.selected()){
-                            planets.highlight(hoveredPlanetId);
+                        const selectedMeasureIsInPlanet = !!d.measures.find(m => m.id === measuresBar.selected());
+                        if(measuresBar.selected() && (selectedMeasureIsInPlanet || measuresBar.dragged())){
+                            hoveredPlanetId = d.id;
+                            planets.highlight(hoveredPlanetId, measuresBar.dragged());
                         }
                     })
                     .onMouseout(function(e,d){
-                        hoveredPlanetId = undefined;
-                        planets.unhighlight(d.id);
-                        
+                        if(hoveredPlanetId){
+                            hoveredPlanetId = undefined;
+                            planets.unhighlight(d.id);
+                        }
                     })
                     .addLink(addLink)
                     .updatePlanet(updatePlanet)
@@ -349,6 +342,7 @@ export default function journeyComponent() {
                 //component
                 links
                     .withCompletion(withCompletionPaths)
+                    .selectedMeasure(measuresOpen?.find(m => m.id === measuresBar.selected()))
                     .yScale(zoomedYScale)
                     //.timeScale(timeScale)
                     .timeScale(zoomedTimeScale)
@@ -436,6 +430,9 @@ export default function journeyComponent() {
                         .openNewMeasureForm((e) => { 
                             setFormData({ measureOnly: true });
                         })
+                        .onUpdateSelected(selectedMeasure => {
+                            updatePlanets();
+                        })
                         .onMeasureDragStart(() => {
                             planets.withRing(false);
                         })
@@ -485,7 +482,10 @@ export default function journeyComponent() {
             selected = d;
             if(d?.dataType === "planet"){
                 //open name form too, but as selected rather than editing
-                setFormData({ planetId:d.id, nameOnly:true })
+                const measureIsOnPlanet = d.measures.find(d => d.id === measuresBar.selected());
+                const measure = measureIsOnPlanet && measuresOpen?.find(m => m.id === measuresBar.selected());
+                const formData = measure ? { planet:d, measure, targOnly: true } : { planet: d, nameOnly:true };
+                setFormData(formData)
             }else{
                 setFormData(undefined);
             }

@@ -9,6 +9,7 @@ import { addMonths, startOfMonth, idFromDates } from '../util/TimeHelpers';
 import { channelContainsDate } from './geometryHelpers';
 import NameForm from "./form/NameForm";
 import MeasureForm from "./form/MeasureForm";
+import TargetForm from './form/TargetForm';
 import Form from "./form/Form"
 import { DIMNS } from './constants';
 
@@ -68,23 +69,24 @@ const Journey = ({dimns}) => {
   const [measures, setMeasures] = useState(mockMeasures);
   const [measuresBarIsOpen, setMeasuresBarIsOpen] = useState(false);
   //console.log("planetState", planetState)
-  //console.log("formData", formData)
+  // console.log("formData", formData)
 
   const { screenWidth, screenHeight } = dimns;
   let styleProps = {}
 
   if(formData) {
-    const formPlanet = planetState.find(p => p.id === formData.planetId)
-    const width = formData.nameOnly ? DIMNS.planet.width : d3.min([screenWidth * 0.725, 500]); 
-    const height = formData.nameOnly ? DIMNS.planet.height/4 : d3.min([screenHeight * 0.725, 700]);
+    const { planet, nameOnly, targOnly } = formData;
+    const width = nameOnly || targOnly ? DIMNS.planet.width : d3.min([screenWidth * 0.725, 500]); 
+    const height = nameOnly || targOnly ? DIMNS.planet.height/4 : d3.min([screenHeight * 0.725, 700]);
     styleProps = {
       form:{
         width,
         height,
-        left: formData.nameOnly ? formPlanet.x - width/2 : ((screenWidth - width) / 2) + "px",
-        top: formData.nameOnly ? formPlanet.y - height/2 : ((screenHeight - height) / 2) + "px"
+        left: (nameOnly || targOnly ? planet.x - width/2 : ((screenWidth - width) / 2)) + "px",
+        //@todo - use zoomScale to determine the correct shift down
+        top: (nameOnly ? planet.y - height/2 : (targOnly ? planet.y - height/2 + 20 :  ((screenHeight - height) / 2))) + "px"
       }
-    } 
+    }
   };
   const classes = useStyles(styleProps) 
   const containerRef = useRef(null);
@@ -163,6 +165,7 @@ const Journey = ({dimns}) => {
         .setFormData(setFormData)
         .setZoom(zoom => {
           if(formData){
+            //@todo - what is this for. Should it be formdata.planet.x? or styleprops.left + zoom.x?
             d3.select(formRef.current).style("left", (formData.x + zoom.x) +"px").style("top", (formData.y + zoom.y) +"px")
           }
         })
@@ -230,9 +233,14 @@ const Journey = ({dimns}) => {
     })
 }, [measures]);
 
-  const onUpdatePlanetForm = (name, value) => {
-    const props = { id:formData.d.id, [name]: value };
-    setPlanetState(prevState => updatedState(prevState, props))
+  const onUpdatePlanetForm = formType => (name, value) => {
+    if(formType === "targOnly"){
+      console.log("name", name)
+      console.log("value", value)
+    }else{
+      const props = { id:formData.planet.id, [name]: value };
+      setPlanetState(prevState => updatedState(prevState, props));
+    }
   }
 
   const onSaveMeasureForm = (details, planetId, isNew) => {
@@ -283,18 +291,21 @@ const Journey = ({dimns}) => {
         {formData && 
           <div ref={formRef} className={classes.form}>
             {formData.nameOnly &&
-              <NameForm data={{...formData, planet:planetState.find(p => p.id === formData.planetId)}}
-                onUpdate={onUpdatePlanetForm} onClose={onClosePlanetForm} />}
+              <NameForm data={formData}
+                onUpdate={onUpdatePlanetForm("nameOnly")} onClose={onClosePlanetForm} />}
+            {formData.targOnly &&
+              <TargetForm data={formData}
+                onUpdate={onUpdatePlanetForm("targOnly")} onClose={onClosePlanetForm} />}
 
             {formData.measureOnly && 
-              <MeasureForm data={{...formData, planet:planetState.find(p => p.id === formData.planetId)}}
+              <MeasureForm data={formData}
               onSave={onSaveMeasureForm} onCancel={onCloseMeasureForm}
               existingMeasures={measures} />}
 
-            {formData && !formData.nameOnly && !formData.measureOnly &&
+            {formData && !formData.nameOnly && !formData.measureOnly && !formData.targOnly &&
               <Form 
-                  data={{...formData, planet:planetState.find(p => p.id === formData.planetId)}} 
-                  onUpdate={onUpdatePlanetForm} 
+                  data={formData} 
+                  onUpdate={onUpdatePlanetForm("full")} 
                   onClose={onClosePlanetForm}
                   availableMeasures={measures}
                   addNewMeasure={addNewMeasure} />}

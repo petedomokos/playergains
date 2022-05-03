@@ -39,6 +39,7 @@ export default function measuresBarComponent() {
 
     //handlers
     let openNewMeasureForm = () => {};
+    let onUpdateSelected = () => {};
     let onMeasureDragStart = () => {};
     let onMeasureDrag = () => {};
     let onMeasureDragEnd = () => {};
@@ -60,6 +61,9 @@ export default function measuresBarComponent() {
     //state
     let selected;
     let dragged;
+    let clicked;
+
+
     let prevData;
 
     function measuresBar(selection) {
@@ -120,7 +124,13 @@ export default function measuresBarComponent() {
                                 .bgSettings({ fill: d.isSelected ? "aqua" : "none" })
                                 .width(measureWidth)
                                 .height(measureHeight)
+                                .onClick(function(e, d){
+                                    dragged = undefined;
+                                    clicked = d.id;
+                                })
                                 .onDragStart((e,d) => {
+                                    //and if clicked, measure stays selected until anoither measure is clicked,
+                                    //or measure bar is closed or measurebackground clicked
                                     dragged = d.id;
                                     onMeasureDragStart(d)
                                 })
@@ -133,12 +143,16 @@ export default function measuresBarComponent() {
                     .on("mouseover", function(e, d){
                         selected = d.id;
                         update(prevData)
+                        //pass to journey to update planets
+                        onUpdateSelected(d.id)
                     })
                     .on("mouseout", function(e, d){
                         //keep it selected if its being dragged
-                        if(dragged === d.id) { return; }
+                        if(dragged === d.id || clicked === d.id) { return; }
                         selected = undefined;
                         update(prevData);
+                        //pass to journey to update planets
+                        onUpdateSelected(undefined);
                     })
 
         }
@@ -221,6 +235,11 @@ export default function measuresBarComponent() {
         onMeasureDragStart = value;
         return measuresBar;
     };
+    measuresBar.onUpdateSelected = function (value) {
+        if (!arguments.length) { return onUpdateSelected; }
+        onUpdateSelected = value;
+        return measuresBar;
+    };
     measuresBar.onMeasureDrag = function (value) {
         if (!arguments.length) { return onMeasureDrag; }
         onMeasureDrag = value;
@@ -235,6 +254,9 @@ export default function measuresBarComponent() {
         if (!arguments.length) { return selected; }
         selected = value;
         return measuresBar;
+    };
+    measuresBar.dragged = function () {
+        return dragged;
     };
 
     return measuresBar;
