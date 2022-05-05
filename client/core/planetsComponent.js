@@ -183,8 +183,9 @@ export default function planetsComponent() {
                             .merge(targG)
                             .attr("transform", "translate(0, " +ry/2 +")")
                             .each(function(m){
+                                console.log("m", m.targ)
                                 d3.select(this).select("text").text("targ")
-                                    .text("targ: "+(typeof m.targ === "Number" ? m.targ : "not set"))
+                                    .text("targ: "+(typeof m.targ === "number" ? m.targ : "not set"))
 
                             })
                             

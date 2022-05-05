@@ -33,6 +33,9 @@ export default function planetsLayout(){
             //const targetX = timeScale(p.targetDate) + nrPrevOpenChannels * scaledExtWidth;
             const rx = (contentsWidth) => currentZoom.k * contentsWidth * 0.8 / 2;
             const ry = (contentsHeight) => currentZoom.k * contentsHeight * 0.8 / 2;
+
+            //only coerce targ if it exists, as we dont want it to become NaN in that case or it will display
+            const measures = p.measures.map(m => ({ ...m, targ:typeof m.targ === "string" ? +m.targ : undefined }))
             return {
                 ...p,
                 channel,
@@ -44,7 +47,8 @@ export default function planetsLayout(){
                 ry,
                 ringRx:contentsWidth => rx(contentsWidth) * 1.3,
                 ringRy:contentsHeight => ry(contentsHeight) * 1.3,
-                isSelected:selected === p.id
+                isSelected:selected === p.id,
+                measures
             }
         })
     }

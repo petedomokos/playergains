@@ -446,10 +446,9 @@ export default function journeyComponent() {
                                 if(hoveredPlanet.measures.find(me => me.id === m.id)){
                                     alert("This measure is already added to this planet")
                                 }else{
-                                    updatePlanet({
-                                        id:hoveredPlanetId, 
-                                        measures:[...hoveredPlanet.measures, { id: m.id }]
-                                    })
+                                    const measures = [...hoveredPlanet.measures, { id: m.id }];
+                                    updatePlanet({ id:hoveredPlanetId, measures })
+                                    updateSelected({ ...hoveredPlanet, measures })
                                 }
                             }
                         }))

@@ -68,7 +68,7 @@ const Journey = ({dimns}) => {
   const [formData, setFormData] = useState(undefined);
   const [measures, setMeasures] = useState(mockMeasures);
   const [measuresBarIsOpen, setMeasuresBarIsOpen] = useState(false);
-  //console.log("planetState", planetState)
+  console.log("planetState", planetState)
   // console.log("formData", formData)
 
   const { screenWidth, screenHeight } = dimns;
@@ -234,13 +234,15 @@ const Journey = ({dimns}) => {
 }, [measures]);
 
   const onUpdatePlanetForm = formType => (name, value) => {
+    const { planet, measure } = formData;
+    let props;
     if(formType === "targOnly"){
-      console.log("name", name)
-      console.log("value", value)
+      //for now, the only planetMeasureData that can  be updated is that targ.  Everything else that is updated is on the measure itself.
+      props = { id:planet.id, measures: planet.measures.map(m => m.id === measure.id ? { ...m, targ:value } : m) };
     }else{
-      const props = { id:formData.planet.id, [name]: value };
-      setPlanetState(prevState => updatedState(prevState, props));
+      props = { id:planet.id, [name]: value };
     }
+    setPlanetState(prevState => updatedState(prevState, props));
   }
 
   const onSaveMeasureForm = (details, planetId, isNew) => {
