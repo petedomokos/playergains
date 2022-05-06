@@ -93,7 +93,9 @@ export default function journeyComponent() {
     let preEditZoom;
 
     let addPlanet = function(){};
+    //@todo - change name to updatePlanetState and so on to distinguish from dom changes eg updateplanets could be either
     let updatePlanet = function(){};
+    let addMeasureToPlanet = function(){};
     let deletePlanet = function (){};
     let addLink = function(){};
     let deleteLink = function(){};
@@ -437,6 +439,7 @@ export default function journeyComponent() {
                             planets.withRing(false);
                         })
                         .onMeasureDragEnd(m => {
+                            //todo - lookinti what m is  -and follow teh updateProcess to see why measures stays as []
                             planets.withRing(true);
                             if(hoveredPlanetId){
                                 //add measure to goal
@@ -446,8 +449,9 @@ export default function journeyComponent() {
                                 if(hoveredPlanet.measures.find(me => me.id === m.id)){
                                     alert("This measure is already added to this planet")
                                 }else{
+                                    addMeasureToPlanet(hoveredPlanetId, m.id);
+                                    //@todo - tidy up how we save selected, but for nowwe dd the measure manuaklly to that here too
                                     const measures = [...hoveredPlanet.measures, { id: m.id }];
-                                    updatePlanet({ id:hoveredPlanetId, measures })
                                     updateSelected({ ...hoveredPlanet, measures })
                                 }
                             }
@@ -483,7 +487,7 @@ export default function journeyComponent() {
                 //open name form too, but as selected rather than editing
                 const measureIsOnPlanet = d.measures.find(d => d.id === measuresBar.selected());
                 const measure = measureIsOnPlanet && measuresOpen?.find(m => m.id === measuresBar.selected());
-                const formData = measure ? { planet:d, measure, targOnly: true } : { planet: d, nameOnly:true };
+                const formData = measure ? { planetD:d, measure, targOnly: true } : { planetD: d, nameOnly:true };
                 setFormData(formData)
             }else{
                 setFormData(undefined);
@@ -609,6 +613,13 @@ export default function journeyComponent() {
         if (!arguments.length) { return updatePlanet; }
         if(typeof value === "function"){
             updatePlanet = value;
+        }
+        return journey;
+    };
+    journey.addMeasureToPlanet = function (value) {
+        if (!arguments.length) { return addMeasureToPlanet; }
+        if(typeof value === "function"){
+            addMeasureToPlanet = value;
         }
         return journey;
     };

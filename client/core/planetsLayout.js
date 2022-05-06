@@ -35,7 +35,9 @@ export default function planetsLayout(){
             const ry = (contentsHeight) => currentZoom.k * contentsHeight * 0.8 / 2;
 
             //only coerce targ if it exists, as we dont want it to become NaN in that case or it will display
-            const measures = p.measures.map(m => ({ ...m, targ:typeof m.targ === "string" ? +m.targ : undefined }))
+            const measures = p.measures.map(m => {
+                return { ...m, targ:typeof m.targ === "string" ? +m.targ : undefined }
+            })
             return {
                 ...p,
                 channel,

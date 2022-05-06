@@ -68,23 +68,23 @@ const Journey = ({dimns}) => {
   const [formData, setFormData] = useState(undefined);
   const [measures, setMeasures] = useState(mockMeasures);
   const [measuresBarIsOpen, setMeasuresBarIsOpen] = useState(false);
-  console.log("planetState", planetState)
+  //console.log("planetState", planetState)
   // console.log("formData", formData)
 
   const { screenWidth, screenHeight } = dimns;
   let styleProps = {}
 
   if(formData) {
-    const { planet, nameOnly, targOnly } = formData;
+    const { nameOnly, targOnly, planetD } = formData;
     const width = nameOnly || targOnly ? DIMNS.planet.width : d3.min([screenWidth * 0.725, 500]); 
     const height = nameOnly || targOnly ? DIMNS.planet.height/4 : d3.min([screenHeight * 0.725, 700]);
     styleProps = {
       form:{
         width,
         height,
-        left: (nameOnly || targOnly ? planet.x - width/2 : ((screenWidth - width) / 2)) + "px",
+        left: (nameOnly || targOnly ? planetD.x - width/2 : ((screenWidth - width) / 2)) + "px",
         //@todo - use zoomScale to determine the correct shift down
-        top: (nameOnly ? planet.y - height/2 : (targOnly ? planet.y - height/2 + 20 :  ((screenHeight - height) / 2))) + "px"
+        top: (nameOnly ? planetD.y - height/2 : (targOnly ? planetD.y - height/2 + 20 :  ((screenHeight - height) / 2))) + "px"
       }
     }
   };
@@ -141,6 +141,13 @@ const Journey = ({dimns}) => {
         })
         .updatePlanet(props => {
           setPlanetState(prevState => updatedState(prevState, props))
+        })
+        .addMeasureToPlanet((planetId, measureId) => {
+            const planetToUpdate = planetState.find(p => p.id === planetId);
+            //@todo - create a transFormForState fuciton which always runs in reducers 9or before going into useState in this
+            //case, to make sure eg targ is a string. Because theoretically, a calc could update a targ and so it copuld be a number
+            const measures = [ ...planetToUpdate.measures, { id: measureId }]
+            setPlanetState(prevState => updatedState(prevState, { id: planetId, measures }))
         })
         .deletePlanet(id => {
           setFormData(undefined);
@@ -234,13 +241,14 @@ const Journey = ({dimns}) => {
 }, [measures]);
 
   const onUpdatePlanetForm = formType => (name, value) => {
-    const { planet, measure } = formData;
+    const { planetD, measure } = formData;
+    const planet = planetState.find(p => p.id === planetD.id);
     let props;
     if(formType === "targOnly"){
       //for now, the only planetMeasureData that can  be updated is that targ.  Everything else that is updated is on the measure itself.
-      props = { id:planet.id, measures: planet.measures.map(m => m.id === measure.id ? { ...m, targ:value } : m) };
+      props = { id:planetD.id, measures: planet.measures.map(m => m.id === measure.id ? { ...m, targ:value } : m) };
     }else{
-      props = { id:planet.id, [name]: value };
+      props = { id:planetD.id, [name]: value };
     }
     setPlanetState(prevState => updatedState(prevState, props));
   }
@@ -293,20 +301,20 @@ const Journey = ({dimns}) => {
         {formData && 
           <div ref={formRef} className={classes.form}>
             {formData.nameOnly &&
-              <NameForm data={formData}
+              <NameForm data={{ ...formData, planet:planetState.find(p => p.id === formData.planetD.id) }}
                 onUpdate={onUpdatePlanetForm("nameOnly")} onClose={onClosePlanetForm} />}
             {formData.targOnly &&
-              <TargetForm data={formData}
+              <TargetForm data={{ ...formData, planet:planetState.find(p => p.id === formData.planetD.id) }}
                 onUpdate={onUpdatePlanetForm("targOnly")} onClose={onClosePlanetForm} />}
 
             {formData.measureOnly && 
-              <MeasureForm data={formData}
+              <MeasureForm data={{ ...formData, planet:planetState.find(p => p.id === formData.planetD.id) }}
               onSave={onSaveMeasureForm} onCancel={onCloseMeasureForm}
               existingMeasures={measures} />}
 
             {formData && !formData.nameOnly && !formData.measureOnly && !formData.targOnly &&
               <Form 
-                  data={formData} 
+                  data={{ ...formData, planet:planetState.find(p => p.id === formData.planetD.id) }} 
                   onUpdate={onUpdatePlanetForm("full")} 
                   onClose={onClosePlanetForm}
                   availableMeasures={measures}

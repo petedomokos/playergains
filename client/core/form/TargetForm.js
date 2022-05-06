@@ -45,7 +45,7 @@ export default function TargetForm({ data, onUpdate, onClose }) {
     const styleProps = { };
     const classes = useStyles(styleProps) 
     const [values, setValues] = useState({
-        targ: planetMeasure?.targ || "",
+        targ: planetMeasure?.targ? planetMeasure?.targ+"" : "",
         error: ""
     })
 
