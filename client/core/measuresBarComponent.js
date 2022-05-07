@@ -16,8 +16,9 @@ export default function measuresBarComponent() {
 
     const mainTitleWidth = 42;
     const titleHeight = 20;
-    const newMeasureBtnWidth = 20;
-    const newMeasureBtnHeight = 10;
+    const btnWidth = 30;
+    const btnGap = 5;
+    const btnHeight = 10;
     let measuresHeight;
     let measureWidth = 50;
     let measureHeight;
@@ -39,6 +40,7 @@ export default function measuresBarComponent() {
 
     //handlers
     let openNewMeasureForm = () => {};
+    let openImportMeasuresComponent = () => {};
     let onUpdateSelected = () => {};
     let onMeasureDragStart = () => {};
     let onMeasureDrag = () => {};
@@ -52,6 +54,7 @@ export default function measuresBarComponent() {
     let subtitleG;
     let subtitleText;
     let newMeasureBtnG;
+    let importMeasuresBtnG;
     let measuresG;
     let bgRect;
 
@@ -94,16 +97,20 @@ export default function measuresBarComponent() {
             subtitleG.attr("transform", "translate(" +mainTitleWidth +",0)");
             subtitleText.text(subtitle);
 
+            //btns
+            //@todo - use enter-update with btnsData
+            contentsG.selectAll("g.btn").select("rect")
+                .attr("width", btnWidth)
+                .attr("height", btnHeight);
+            
+            contentsG.selectAll("g.btn").select("text")
+                .attr("transform", "translate("+btnWidth/2 +"," +btnHeight/2 +")");
+
             newMeasureBtnG
-                .attr("transform", "translate("+(contentsWidth - newMeasureBtnWidth) +",2.5)")
-                .style("cursor", "pointer");
-
-            newMeasureBtnG.select("rect")
-                .attr("width", newMeasureBtnWidth)
-                .attr("height", newMeasureBtnHeight);
-
-            newMeasureBtnG.select("text")
-                .attr("transform", "translate("+newMeasureBtnWidth/2 +"," +newMeasureBtnHeight/2 +")");
+                .attr("transform", "translate("+(contentsWidth - (btnWidth * 2) - btnGap) +",2.5)");
+            
+            importMeasuresBtnG
+                .attr("transform", "translate("+(contentsWidth - btnWidth) +",2.5)");
 
             const measuresData = measures.map(m => ({
                 ...m,
@@ -184,10 +191,13 @@ export default function measuresBarComponent() {
                 .append("text")
                     .attr("font-size", 5);
 
+            //new btn
             newMeasureBtnG = contentsG
                 .append("g")
-                .attr("class", "new-measure-btn")
+                .attr("class", "btn new-measure-btn")
+                .style("cursor", "pointer")
                 .on("click", openNewMeasureForm);
+
             newMeasureBtnG
                 .append("rect")
                     .attr("fill", "transparent")
@@ -200,6 +210,26 @@ export default function measuresBarComponent() {
                     .attr("dominant-baseline", "central")
                     .attr("font-size", 8)
                     .text("New");
+
+            //import btn
+            importMeasuresBtnG = contentsG
+                .append("g")
+                .attr("class", "btn import-measures-btn")
+                .style("cursor", "pointer")
+                .on("click", openImportMeasuresComponent);
+
+            importMeasuresBtnG
+                .append("rect")
+                    .attr("fill", "transparent")
+                    .attr("stroke", grey10(8))
+                    .attr("stroke-width", 0.1);
+
+            importMeasuresBtnG
+                .append("text")
+                    .attr("text-anchor", "middle")
+                    .attr("dominant-baseline", "central")
+                    .attr("font-size", 8)
+                    .text("Import");
 
             measuresG = contentsG.append("g").attr("class", "measures");
 
@@ -228,6 +258,11 @@ export default function measuresBarComponent() {
     measuresBar.openNewMeasureForm = function (value) {
         if (!arguments.length) { return openNewMeasureForm; }
         openNewMeasureForm = value;
+        return measuresBar;
+    };
+    measuresBar.openImportMeasuresComponent = function (value) {
+        if (!arguments.length) { return openImportMeasuresComponent; }
+        openImportMeasuresComponent = value;
         return measuresBar;
     };
     measuresBar.onMeasureDragStart = function (value) {

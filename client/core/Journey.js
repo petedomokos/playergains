@@ -10,8 +10,10 @@ import { channelContainsDate } from './geometryHelpers';
 import NameForm from "./form/NameForm";
 import MeasureForm from "./form/MeasureForm";
 import TargetForm from './form/TargetForm';
-import Form from "./form/Form"
+import Form from "./form/Form";
+import ImportMeasures from './ImportMeasures';
 import { DIMNS } from './constants';
+import EditMeasureFields from './form/EditMeasureFields';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -20,12 +22,12 @@ const useStyles = makeStyles((theme) => ({
   svg:{
     //position:"absolute"
   },
-  form:{
+  modal:{
     position:"absolute",
-    left:props => props.form?.left,
-    top:props => props.form?.top,
-    width:props => props.form?.width, 
-    height:props => props.form?.height
+    left:props => props.modal?.left,
+    top:props => props.modal?.top,
+    width:props => props.modal?.width, 
+    height:props => props.modal?.height
   },
   ctrls:{
     display:"flex"
@@ -53,9 +55,9 @@ const initChannels = d3.range(numberMonths)
   })
 
 const mockMeasures = [
-    { id:"mock1", name:"Puts Per Round", desc: "Reduce the nr of puts" },
-    { id:"mock2", name:"Drive 1", desc: "Increase D1 to Fairway" },
-    { id:"mock3", name:"Drive 2", desc: "Increase D2 to Fairway" }
+    { id:"mock1", name:"Puts Per Round", desc: "nr of puts in a round" },
+    { id:"mock2", name:"Drive 1", desc: "nr D1s to Fairway" },
+    { id:"mock3", name:"Drive 2", desc: "nr D2s to Fairway" }
 ]
 
 const Journey = ({dimns}) => {
@@ -65,21 +67,21 @@ const Journey = ({dimns}) => {
   const [linkState, setLinkState] = useState([]);
   const [channelState, setChannelState] = useState(initChannels);
   const [withCompletionPaths, setWithCompletionPath] = useState(false);
-  const [formData, setFormData] = useState(undefined);
+  const [modalData, setModalData] = useState(undefined);
   const [measures, setMeasures] = useState(mockMeasures);
   const [measuresBarIsOpen, setMeasuresBarIsOpen] = useState(false);
   //console.log("planetState", planetState)
-  // console.log("formData", formData)
+  // console.log("modalData", modalData)
 
   const { screenWidth, screenHeight } = dimns;
   let styleProps = {}
 
-  if(formData) {
-    const { nameOnly, targOnly, planetD } = formData;
+  if(modalData) {
+    const { nameOnly, targOnly, planetD } = modalData;
     const width = nameOnly || targOnly ? DIMNS.planet.width : d3.min([screenWidth * 0.725, 500]); 
     const height = nameOnly || targOnly ? DIMNS.planet.height/4 : d3.min([screenHeight * 0.725, 700]);
     styleProps = {
-      form:{
+      modal:{
         width,
         height,
         left: (nameOnly || targOnly ? planetD.x - width/2 : ((screenWidth - width) / 2)) + "px",
@@ -90,8 +92,8 @@ const Journey = ({dimns}) => {
   };
   const classes = useStyles(styleProps) 
   const containerRef = useRef(null);
-  const formRef = useRef(null);
-  const formDimnsRef = useRef({ width:500, height:700 });
+  const modalRef = useRef(null);
+  const modalDimnsRef = useRef({ width:500, height:700 });
  
   //const [nrPlanetsCreated, setNrPlanetsCreated] = useState(0);
   //console.log("linkState", linkState)
@@ -104,7 +106,7 @@ const Journey = ({dimns}) => {
   useEffect(() => {
     const width = d3.min([screenWidth * 0.725, 500]);
     const height = d3.min([screenHeight * 0.725, 700]);
-    formDimnsRef.current = { 
+    modalDimnsRef.current = { 
       width,
       height,
       left:((screenWidth - width) / 2) + "px",
@@ -150,7 +152,7 @@ const Journey = ({dimns}) => {
             setPlanetState(prevState => updatedState(prevState, { id: planetId, measures }))
         })
         .deletePlanet(id => {
-          setFormData(undefined);
+          setModalData(undefined);
           //must delete link first, but when state is put together this wont matter
           setLinkState(prevState => prevState.filter(l => l.src !== id && l.targ !== id));
           setPlanetState(prevState => prevState.filter(p => p.id !== id));
@@ -169,11 +171,11 @@ const Journey = ({dimns}) => {
         .updateChannel(props => {
           setChannelState(prevState => updatedState(prevState, props, (other, updated) => other.nr < updated.nr))
         })
-        .setFormData(setFormData)
+        .setModalData(setModalData)
         .setZoom(zoom => {
-          if(formData){
+          if(modalData){
             //@todo - what is this for. Should it be formdata.planet.x? or styleprops.left + zoom.x?
-            d3.select(formRef.current).style("left", (formData.x + zoom.x) +"px").style("top", (formData.y + zoom.y) +"px")
+            d3.select(modalRef.current).style("left", (modalData.x + zoom.x) +"px").style("top", (modalData.y + zoom.y) +"px")
           }
         })
 
@@ -240,11 +242,11 @@ const Journey = ({dimns}) => {
     })
 }, [measures]);
 
-  const onUpdatePlanetForm = formType => (name, value) => {
-    const { planetD, measure } = formData;
+  const onUpdatePlanetForm = modalType => (name, value) => {
+    const { planetD, measure } = modalData;
     const planet = planetState.find(p => p.id === planetD.id);
     let props;
-    if(formType === "targOnly"){
+    if(modalType === "targOnly"){
       //for now, the only planetMeasureData that can  be updated is that targ.  Everything else that is updated is on the measure itself.
       props = { id:planetD.id, measures: planet.measures.map(m => m.id === measure.id ? { ...m, targ:value } : m) };
     }else{
@@ -261,16 +263,12 @@ const Journey = ({dimns}) => {
     }else{
       setMeasures(prevState => updatedState(prevState, details))
     }
-    onCloseMeasureForm();
+    () => setModalData(undefined);
   }
 
   const onClosePlanetForm = () => {
     journey.endEditPlanet();
-    setFormData(undefined);
-  }
-
-  const onCloseMeasureForm = () => {
-    setFormData(undefined);
+    setModalData(undefined);
   }
 
   const addNewMeasure = (details, planetId) => {
@@ -291,6 +289,11 @@ const Journey = ({dimns}) => {
     }
   }
 
+  const importMeasures = measureIds => {
+    setMeasures(prevState => [...measureIds, ...prevState]);
+    setModalData(undefined);
+  }
+
   return (
     <div className={classes.root} style={{height: screenHeight, marginTop:10, marginLeft:10 }}>
         <svg className={classes.svg} ref={containerRef}></svg>
@@ -298,23 +301,27 @@ const Journey = ({dimns}) => {
             <Button color="primary" variant="contained" onClick={toggleMeasuresOpen} style={{ width:50, height:10, fontSize:7, marginRight:"5px" }}>measures</Button>
             <Button color="primary" variant="contained" onClick={toggleCompletion} style={{ width:50, height:10, fontSize:7 }}>completion</Button>
         </div>
-        {formData && 
-          <div ref={formRef} className={classes.form}>
-            {formData.nameOnly &&
-              <NameForm data={{ ...formData, planet:planetState.find(p => p.id === formData.planetD.id) }}
+        {modalData && 
+          <div ref={modalRef} className={classes.modal}>
+            {modalData.nameOnly &&
+              <NameForm data={{ ...modalData, planet:planetState.find(p => p.id === modalData.planetD?.id) }}
                 onUpdate={onUpdatePlanetForm("nameOnly")} onClose={onClosePlanetForm} />}
-            {formData.targOnly &&
-              <TargetForm data={{ ...formData, planet:planetState.find(p => p.id === formData.planetD.id) }}
+            {modalData.targOnly &&
+              <TargetForm data={{ ...modalData, planet:planetState.find(p => p.id === modalData.planetD?.id) }}
                 onUpdate={onUpdatePlanetForm("targOnly")} onClose={onClosePlanetForm} />}
+              
+            {modalData.importing &&
+              <ImportMeasures data={modalData} existing={measures} available={[]}
+                onSave={importMeasures} onClose={() => setModalData(undefined)} />}
 
-            {formData.measureOnly && 
-              <MeasureForm data={{ ...formData, planet:planetState.find(p => p.id === formData.planetD.id) }}
-              onSave={onSaveMeasureForm} onCancel={onCloseMeasureForm}
+            {modalData.measureOnly && 
+              <MeasureForm data={{ ...modalData, planet:planetState.find(p => p.id === modalData.planetD?.id) }}
+              onSave={onSaveMeasureForm} onCancel={() => setModalData(undefined)}
               existingMeasures={measures} />}
 
-            {formData && !formData.nameOnly && !formData.measureOnly && !formData.targOnly &&
+            {modalData && !modalData.nameOnly && !modalData.measureOnly && !modalData.targOnly && !modalData.importing &&
               <Form 
-                  data={{ ...formData, planet:planetState.find(p => p.id === formData.planetD.id) }} 
+                  data={{ ...modalData, planet:planetState.find(p => p.id === modalData.planetD?.id) }} 
                   onUpdate={onUpdatePlanetForm("full")} 
                   onClose={onClosePlanetForm}
                   availableMeasures={measures}

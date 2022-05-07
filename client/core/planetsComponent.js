@@ -394,16 +394,23 @@ export default function planetsComponent() {
         return selection;
     }
 
-    function updateHighlighted(selection, shouldIncreaseSize){
+    function updateHighlighted(selection, shouldIncreaseSize, shouldTransition){
         selection.each(function(d){
             const rx = d => d.rx ? d.rx(contentsWidth) : DEFAULT_PLANET_RX;
             const ry = d => d.ry ? d.ry(contentsHeight) : DEFAULT_PLANET_RY;
-            d3.select(this).select("ellipse.core")
-                .transition()
-                    .duration(200)
-                    .attr("rx", highlighted.includes(d.id) && shouldIncreaseSize ? rx(d) * 1.5 : rx(d))
-                    .attr("ry", highlighted.includes(d.id) && shouldIncreaseSize ? ry(d) * 1.5 : ry(d))
-                    .attr("opacity", highlighted.includes(d.id) ? 0.5 : 1)
+            if(shouldTransition){
+                d3.select(this).select("ellipse.core")
+                    .transition()
+                        .duration(200)
+                        .attr("rx", highlighted.includes(d.id) && shouldIncreaseSize ? rx(d) * 1.5 : rx(d))
+                        .attr("ry", highlighted.includes(d.id) && shouldIncreaseSize ? ry(d) * 1.5 : ry(d))
+                        .attr("opacity", highlighted.includes(d.id) ? 0.5 : 1);
+            }else{
+                d3.select(this).select("ellipse.core")
+                        .attr("rx", highlighted.includes(d.id) && shouldIncreaseSize ? rx(d) * 1.5 : rx(d))
+                        .attr("ry", highlighted.includes(d.id) && shouldIncreaseSize ? ry(d) * 1.5 : ry(d))
+                        .attr("opacity", highlighted.includes(d.id) ? 0.5 : 1);
+            }
         })
 
         return selection;
@@ -458,7 +465,7 @@ export default function planetsComponent() {
         highlighted = [...highlighted, ...ids];
         containerG.selectAll("g.planet")
             .filter(d => ids.includes(d.id))
-            .call(updateHighlighted, shouldIncreaseSize);
+            .call(updateHighlighted, shouldIncreaseSize, true);
 
         return planets;
     };
@@ -469,7 +476,7 @@ export default function planetsComponent() {
         //why not filtering back to 0?, could always pass it through
         containerG.selectAll("g.planet")
             .filter(d => ids.includes(d.id))
-            .call(updateHighlighted);
+            .call(updateHighlighted, false, true);
 
         return planets;
     };

@@ -52,7 +52,7 @@ export default function journeyComponent() {
 
     let measuresOpen;
     let measuresBarHeight;
-    let formData;
+    let modalData;
 
     function updateDimns(){
         contentsWidth = width - margin.left - margin.right;
@@ -100,7 +100,8 @@ export default function journeyComponent() {
     let addLink = function(){};
     let deleteLink = function(){};
     let updateChannel = function(){};
-    let setFormData = function(){};
+    let setModalData = function(){};
+    let setImportingMeasures= function(){};
     let setZoom = function(){};
     let onStartEditPlanet = function (){};
     let onEndEditPlanet = function (){};
@@ -229,7 +230,7 @@ export default function journeyComponent() {
                             updateSelected(undefined);
                         }
                         //editing = undefined;
-                        //setFormData(undefined);
+                        //setModalData(undefined);
                     }
                     currentZoom = e.transform;
                     setZoom(currentZoom);
@@ -429,8 +430,12 @@ export default function journeyComponent() {
                     .call(measuresBar
                         .width(contentsWidth)
                         .height(measuresBarHeight)
-                        .openNewMeasureForm((e) => { 
-                            setFormData({ measureOnly: true });
+                        .openNewMeasureForm(() => { 
+                            setModalData({ measureOnly: true });
+                        })
+                        .openImportMeasuresComponent(() => {
+                            //note - eventually will have option to pass in filter settings eg tags like fitness, or groupId
+                            setModalData({ importing: true, filters:[] })
                         })
                         .onUpdateSelected(selectedMeasure => {
                             updatePlanets();
@@ -487,10 +492,10 @@ export default function journeyComponent() {
                 //open name form too, but as selected rather than editing
                 const measureIsOnPlanet = d.measures.find(d => d.id === measuresBar.selected());
                 const measure = measureIsOnPlanet && measuresOpen?.find(m => m.id === measuresBar.selected());
-                const formData = measure ? { planetD:d, measure, targOnly: true } : { planetD: d, nameOnly:true };
-                setFormData(formData)
+                const modalData = measure ? { planetD:d, measure, targOnly: true } : { planetD: d, nameOnly:true };
+                setModalData(modalData)
             }else{
-                setFormData(undefined);
+                setModalData(undefined);
             }
             update();
         }
@@ -500,7 +505,7 @@ export default function journeyComponent() {
         applyZoomY = y => (y + currentZoom.y) / currentZoom.k;
         onStartEditPlanet = (d) => {
             //hide nameform immediately
-            setFormData(undefined)
+            setModalData(undefined)
             editing = d;
             updateSelected(undefined);
             preEditZoom = currentZoom;
@@ -529,12 +534,12 @@ export default function journeyComponent() {
                 ))
                 .on("end", () => {
                     //error - this now uses currentZoom instead of the new position
-                    setFormData({ planetId:d.id })
+                    setModalData({ planetId:d.id })
                 })
         }
 
         onEndEditPlanet = (d) => {
-            setFormData(undefined)
+            setModalData(undefined)
             editing = undefined;
             //zoom is only applied for full edit, not if its nameOnly
             if(preEditZoom){
@@ -644,10 +649,17 @@ export default function journeyComponent() {
         }
         return journey;
     };
-    journey.setFormData = function (value) {
-        if (!arguments.length) { return setFormData; }
+    journey.setModalData = function (value) {
+        if (!arguments.length) { return setModalData; }
         if(typeof value === "function"){
-            setFormData = value;
+            setModalData = value;
+        }
+        return journey;
+    };
+    journey.setImportingMeasures = function (value) {
+        if (!arguments.length) { return setImportingMeasures; }
+        if(typeof value === "function"){
+            setImportingMeasures = value;
         }
         return journey;
     };
