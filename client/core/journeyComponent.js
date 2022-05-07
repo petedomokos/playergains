@@ -534,7 +534,7 @@ export default function journeyComponent() {
                 ))
                 .on("end", () => {
                     //error - this now uses currentZoom instead of the new position
-                    setModalData({ planetId:d.id })
+                    setModalData({ planetD:d })
                 })
         }
 

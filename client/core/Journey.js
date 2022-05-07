@@ -63,6 +63,7 @@ const mockMeasures = [
 const Journey = ({dimns}) => {
   const [journey, setJourney] = useState(undefined)
   //@todo - put into one state object to avoid multiple updates
+  const [aims, setAims] = useState([])
   const [planetState, setPlanetState] = useState([]);
   const [linkState, setLinkState] = useState([]);
   const [channelState, setChannelState] = useState(initChannels);
@@ -71,7 +72,7 @@ const Journey = ({dimns}) => {
   const [measures, setMeasures] = useState(mockMeasures);
   const [measuresBarIsOpen, setMeasuresBarIsOpen] = useState(false);
   //console.log("planetState", planetState)
-  // console.log("modalData", modalData)
+  //console.log("modalData", modalData)
 
   const { screenWidth, screenHeight } = dimns;
   let styleProps = {}

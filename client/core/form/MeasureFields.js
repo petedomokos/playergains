@@ -77,8 +77,6 @@ const useStyles = makeStyles(theme => ({
 }))
 
 function MeasureFields({ planetMeasureData, availableMeasures, addNewMeasure }) {
-    console.log("measures", planetMeasureData)
-    console.log("available", availableMeasures)
     const getMeasure = planetMeasure => availableMeasures.find(m => m.id === planetMeasure.measureId);
     const styleProps = { };
     const classes = useStyles(styleProps);
@@ -95,8 +93,6 @@ function MeasureFields({ planetMeasureData, availableMeasures, addNewMeasure }) 
     const saveNewMeasure = (details) => {
         console.log("saving measure", details)
     }
-
-    console.log("measures", planetMeasureData)
 
     return (
         <div className={classes.root}>

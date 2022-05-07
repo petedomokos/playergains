@@ -76,7 +76,7 @@ const useStyles = makeStyles(theme => ({
 }))
 
 export default function Form({ data, onUpdate, onClose, availableMeasures, addNewMeasure }) {
-    console.log("Form", data)
+    //console.log("Form", data)
     const { planet } = data;
     const styleProps = { };
     const classes = useStyles(styleProps) 
