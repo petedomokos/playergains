@@ -16,19 +16,11 @@ import menuComponent from './menuComponent';
 */
 export default function planetsComponent() {
     // dimensions
-    let margin = {left:5, right:5, top: 5, bottom:5};
-    let width = 60;
-    let height = 60;
-    let contentsWidth;
-    let contentsHeight;
+    let width = 800;
+    let height = 600;
     let fontSize = 9;
     const DEFAULT_PLANET_RX = 50;
     const DEFAULT_PLANET_RY = 50;
-
-    function updateDimns(){
-        contentsWidth = width - margin.left - margin.right;
-        contentsHeight = height - margin.top - margin.bottom;
-    };
 
     let timeScale = x => 0;
     let yScale = x => 0;
@@ -90,12 +82,10 @@ export default function planetsComponent() {
 
     function planets(selection, options={}) {
         const { transitionEnter, transitionUpdate } = options;
-        updateDimns();
         // expression elements
         selection.each(function (data) {
             containerG = d3.select(this);
-            //console.log("planets", data)
-
+            //console.log("planets", containerG.attr("class"))
             withClick.onClick(onClick)
             const planetDrag = d3.drag()
                 .on("start", withClick(onPlanetDragStart))
@@ -147,8 +137,8 @@ export default function planetsComponent() {
                 })
                 .merge(planetG)
                 .each(function(d){
-                    const rx = d.rx ? d.rx(contentsWidth) : DEFAULT_PLANET_RX;
-                    const ry =  d.ry ? d.ry(contentsHeight) : DEFAULT_PLANET_RY; 
+                    const rx = d.rx ? d.rx(width) : DEFAULT_PLANET_RX;
+                    const ry =  d.ry ? d.ry(height) : DEFAULT_PLANET_RY; 
                     //ENTER AND UPDATE
                     const contentsG = d3.select(this).select("g.contents")
                     //ellipse
@@ -208,8 +198,8 @@ export default function planetsComponent() {
                 //@todo - use mask to make it a donut and put on top
                 .call(withRing ? 
                     ring
-                        .rx(d => d.ringRx(contentsWidth))
-                        .ry(d => d.ringRy(contentsHeight))
+                        .rx(d => d.ringRx(width))
+                        .ry(d => d.ringRy(height))
                         .fill((d, hovered) => hovered ? COLOURS.potentialLinkPlanet : "transparent")
                         .stroke("none")
                         .onDragStart(onRingDragStart)
@@ -238,7 +228,7 @@ export default function planetsComponent() {
                                 .attr("opacity", 1);*/
                     
                     menuGEnter.merge(menuG)
-                        .attr("transform", "translate(0," + (d.rx(contentsWidth) * 0.8) +")")
+                        .attr("transform", "translate(0," + (d.rx(width) * 0.8) +")")
                         .call(menus[d.id]
                             .onClick((opt) => {
                                 switch(opt.key){
@@ -402,8 +392,8 @@ export default function planetsComponent() {
 
     function updateHighlighted(selection, shouldIncreaseSize, shouldTransition){
         selection.each(function(d){
-            const rx = d => d.rx ? d.rx(contentsWidth) : DEFAULT_PLANET_RX;
-            const ry = d => d.ry ? d.ry(contentsHeight) : DEFAULT_PLANET_RY;
+            const rx = d => d.rx ? d.rx(width) : DEFAULT_PLANET_RX;
+            const ry = d => d.ry ? d.ry(height) : DEFAULT_PLANET_RY;
             if(shouldTransition){
                 d3.select(this).select("ellipse.core")
                     .transition()
@@ -423,11 +413,6 @@ export default function planetsComponent() {
     }
     
     //api
-    planets.margin = function (value) {
-        if (!arguments.length) { return margin; }
-        margin = { ...margin, ...value};
-        return planets;
-    };
     planets.width = function (value) {
         if (!arguments.length) { return width; }
         width = value;

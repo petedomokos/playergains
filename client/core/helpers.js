@@ -145,5 +145,5 @@ export function createId(existingIds=[]){
             return check(idToCheck + 1)
         }
     }
-    return check(0);
+    return check(1);
 }

@@ -73,7 +73,7 @@ const Journey = ({dimns}) => {
   const [measuresBarIsOpen, setMeasuresBarIsOpen] = useState(false);
   //console.log("planets", planets)
   //console.log("modalData", modalData)
-  console.log("aims", aims)
+  //console.log("aims", aims)
 
   const { screenWidth, screenHeight } = dimns;
   let styleProps = {}
@@ -131,9 +131,24 @@ const Journey = ({dimns}) => {
         .withCompletionPaths(withCompletionPaths)
         .measuresOpen(measuresBarIsOpen ? measures.filter(m => m.isOpen) : undefined)
         //@todo - make createId handle prefixes so all ids are unique
-        .createAim(function(aim){
-          setAims(prevState => ([ ...prevState, 
-            { id: createId(prevState.map(a => a.id)), ...aim }]))
+        .createAim(function(aim, initPlanetsTargetDate, initPlanetsYPCs){
+          const id = createId(aims.map(a => a.id));
+          setAims(prevState => ([ ...prevState, { id , ...aim }]))
+          
+          //create 3 planets with aimId = id
+          const newPlanets = [1,2,3].map((nr,i) => ({
+            id:"p"+ (nrPlanetsCreated.current + nr),
+            aimId:id,
+            targetDate:initPlanetsTargetDate,
+            yPC:initPlanetsYPCs[i],
+            dataType:"planet",
+            measures:[]
+
+          }));
+
+          setPlanets(prevState => [...prevState, ...newPlanets]);
+          //setNrPlanetsCreated(prevState => prevState + 1);
+          nrPlanetsCreated.current = nrPlanetsCreated.current + 3;
         })
         .createPlanet((targetDate, yPC) => {
           const newPlanet = {

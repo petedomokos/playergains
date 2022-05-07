@@ -254,6 +254,7 @@ export default function journeyComponent() {
             const { trueX, pointChannel } = channelsData;
 
             let planetsData;
+            let nonAimPlanetsData;
             let aimsData;
             let linksData;
             updatePlanetsData();
@@ -273,7 +274,7 @@ export default function journeyComponent() {
                     .channelsData(channelsData);
 
                 planetsData = myPlanetsLayout(state.planets);
-
+                nonAimPlanetsData = planetsData.filter(p => !p.aimId)
             }
 
             function updateAimsData(){
@@ -356,7 +357,7 @@ export default function journeyComponent() {
                     .convertToAim(convertGoalToAim)
 
                 //render
-                const planetsG = canvasG.selectAll("g.planets").data([planetsData]);
+                const planetsG = canvasG.selectAll("g.planets").data([nonAimPlanetsData]);
                 planetsG.enter()
                     .append("g")
                     .attr("class", "planets")
@@ -608,6 +609,7 @@ export default function journeyComponent() {
         }
 
         convertGoalToAim = function(d){
+            deletePlanet(d.id);
             //A. remove this planet - transition out should be handled by update in planetsComponent automatically
             
 
@@ -619,18 +621,22 @@ export default function journeyComponent() {
             const goalWidth = ringRX * 2;
             const goalHeight = ringRY * 2;
             const vertGap = DIMNS.aim.vertPlanetGap;
-            const aimMargin = aims.margin();
+            const aimMargin = aims.aimMargin();
             const aim = {
                 //id:createAimId(aims), do id in Journey
                 name:d.name,
                 //goals: add in Journey
                 x: d.x - goalWidth/2 - aimMargin.left,
-                y:d.y - goalHeight - vertGap - aimMargin.top,
+                y:d.y - (goalHeight * 1.5) - vertGap - aimMargin.top,
                 width:goalWidth + aimMargin.left + aimMargin.right,
                 height:3 * goalHeight + 2 * vertGap + aimMargin.top + aimMargin.bottom
             }
-            createAim(aim);
-            deletePlanet(d.id);
+            const yPCs = [
+                yScale.invert(d.y - goalHeight - vertGap),
+                d.yPC,
+                yScale.invert(d.y + goalHeight + vertGap)
+            ]
+            createAim(aim, d.targetDate, yPCs);
             
 
             //C: add aim to state with init pos to wrapped around the 3 new planets -> this will be drawn on automatically on update aimsComponent

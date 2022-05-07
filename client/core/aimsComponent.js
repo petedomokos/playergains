@@ -11,21 +11,16 @@ import { OPEN_CHANNEL_EXT_WIDTH } from './constants';
 import dragEnhancements from './enhancedDragHandler';
 import { timeMonth, timeWeek } from "d3-time";
 import menuComponent from './menuComponent';
+import planetsComponent from './planetsComponent';
 /*
 
 */
 export default function aimsComponent() {
     // dimensions
-    let margin = {left:5, right:5, top: 5, bottom:5};
-    let width = 60;
-    let height = 60;
-    let contentsWidth;
-    let contentsHeight;
+    let width = 800;
+    let height = 600;
 
-    function updateDimns(){
-        contentsWidth = width - margin.left - margin.right;
-        contentsHeight = height - margin.top - margin.bottom;
-    };
+    let aimMargin = { left: 5, right:5, top: 5, bottom: 5 };
 
     let timeScale = x => 0;
     let yScale = x => 0;
@@ -46,6 +41,7 @@ export default function aimsComponent() {
     let withClick = dragEnhancements();
 
     //components
+    let planets = {};
     let menus = {};
     let menuOptions = [
         { key: "edit", label:"Edit" },
@@ -56,12 +52,48 @@ export default function aimsComponent() {
     let containerG;
 
     function aims(selection, options={}) {
-        updateDimns();
         // expression elements
         selection.each(function (data) {
             console.log("update aims", data)
             containerG = d3.select(this);
-            //const aimG = container
+            const aimG = containerG.selectAll("g.aim").data(data);
+            aimG.enter()
+                .append("g")
+                    .attr("class", "aim")
+                    .each(function(d){
+                        const aimG = d3.select(this);
+
+                        aimG.append("rect")
+                            .attr("stroke", "grey")
+                            .attr("fill", "transparent");
+                        
+                        planets[d.id] = planetsComponent();
+
+                    })
+                    .merge(aimG)
+                    .each(function(d){
+                        const aimG = d3.select(this);
+
+                        aimG.select("rect")
+                            .attr("x", d.x)
+                            .attr("y", d.y)
+                            .attr("width", d.width)
+                            .attr("height", d.height)
+
+                        //todo - find out why planets are being rendered too big - 
+                        //it must be todo with zoom scale or scale or something
+
+
+                        const planetsG = aimG.selectAll("g.planets").data([d.planets]);
+                        planetsG.enter()
+                            .append("g")
+                                .attr("class", "planets planets-"+d.id)
+                                .merge(planetsG)
+                                .call(planets[d.id], options.planets)
+
+                    })
+
+            aimG.exit().remove();
 
 
 
@@ -72,11 +104,6 @@ export default function aimsComponent() {
     }
     
     //api
-    aims.margin = function (value) {
-        if (!arguments.length) { return margin; }
-        margin = { ...margin, ...value};
-        return aims;
-    };
     aims.width = function (value) {
         if (!arguments.length) { return width; }
         width = value;
@@ -85,6 +112,11 @@ export default function aimsComponent() {
     aims.height = function (value) {
         if (!arguments.length) { return height; }
         height = value;
+        return aims;
+    };
+    aims.aimMargin = function (value) {
+        if (!arguments.length) { return aimMargin; }
+        aimMargin = { ...aimMargin, ...value};
         return aims;
     };
     aims.onClick = function (value) {
