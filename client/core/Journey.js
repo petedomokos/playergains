@@ -64,15 +64,16 @@ const Journey = ({dimns}) => {
   const [journey, setJourney] = useState(undefined)
   //@todo - put into one state object to avoid multiple updates
   const [aims, setAims] = useState([])
-  const [planetState, setPlanetState] = useState([]);
-  const [linkState, setLinkState] = useState([]);
-  const [channelState, setChannelState] = useState(initChannels);
+  const [planets, setPlanets] = useState([]);
+  const [links, setLinks] = useState([]);
+  const [channels, setChannels] = useState(initChannels);
   const [withCompletionPaths, setWithCompletionPath] = useState(false);
   const [modalData, setModalData] = useState(undefined);
   const [measures, setMeasures] = useState(mockMeasures);
   const [measuresBarIsOpen, setMeasuresBarIsOpen] = useState(false);
-  //console.log("planetState", planetState)
+  //console.log("planets", planets)
   //console.log("modalData", modalData)
+  console.log("aims", aims)
 
   const { screenWidth, screenHeight } = dimns;
   let styleProps = {}
@@ -97,7 +98,7 @@ const Journey = ({dimns}) => {
   const modalDimnsRef = useRef({ width:500, height:700 });
  
   //const [nrPlanetsCreated, setNrPlanetsCreated] = useState(0);
-  //console.log("linkState", linkState)
+  //console.log("links", links)
   //console.log("withcomp?", withCompletionPaths)
   const nrPlanetsCreated = useRef(0);
   //const goals = getGoalsData().map(g => {
@@ -129,7 +130,12 @@ const Journey = ({dimns}) => {
     journey
         .withCompletionPaths(withCompletionPaths)
         .measuresOpen(measuresBarIsOpen ? measures.filter(m => m.isOpen) : undefined)
-        .addPlanet((targetDate, yPC) => {
+        //@todo - make createId handle prefixes so all ids are unique
+        .createAim(function(aim){
+          setAims(prevState => ([ ...prevState, 
+            { id: createId(prevState.map(a => a.id)), ...aim }]))
+        })
+        .createPlanet((targetDate, yPC) => {
           const newPlanet = {
               id:"p"+ (nrPlanetsCreated.current + 1),
               targetDate,
@@ -138,25 +144,25 @@ const Journey = ({dimns}) => {
               measures:[]
               //goals
           }
-          setPlanetState(prevState => [...prevState, newPlanet]);
+          setPlanets(prevState => [...prevState, newPlanet]);
           //setNrPlanetsCreated(prevState => prevState + 1);
           nrPlanetsCreated.current = nrPlanetsCreated.current + 1;
         })
         .updatePlanet(props => {
-          setPlanetState(prevState => updatedState(prevState, props))
+          setPlanets(prevState => updatedState(prevState, props))
         })
         .addMeasureToPlanet((planetId, measureId) => {
-            const planetToUpdate = planetState.find(p => p.id === planetId);
+            const planetToUpdate = planets.find(p => p.id === planetId);
             //@todo - create a transFormForState fuciton which always runs in reducers 9or before going into useState in this
             //case, to make sure eg targ is a string. Because theoretically, a calc could update a targ and so it copuld be a number
             const measures = [ ...planetToUpdate.measures, { id: measureId }]
-            setPlanetState(prevState => updatedState(prevState, { id: planetId, measures }))
+            setPlanets(prevState => updatedState(prevState, { id: planetId, measures }))
         })
         .deletePlanet(id => {
           setModalData(undefined);
           //must delete link first, but when state is put together this wont matter
-          setLinkState(prevState => prevState.filter(l => l.src !== id && l.targ !== id));
-          setPlanetState(prevState => prevState.filter(p => p.id !== id));
+          setLinks(prevState => prevState.filter(l => l.src !== id && l.targ !== id));
+          setPlanets(prevState => prevState.filter(p => p.id !== id));
         })
         .addLink(props => {
           const newLink = {
@@ -164,13 +170,13 @@ const Journey = ({dimns}) => {
             id:props.src + "-" + props.targ,
             dataType:"link"
           }
-          setLinkState(prevState => ([ ...prevState, newLink]))
+          setLinks(prevState => ([ ...prevState, newLink]))
         })
         .deleteLink(id => {
-          setLinkState(prevState => prevState.filter(l => l.id !== id));
+          setLinks(prevState => prevState.filter(l => l.id !== id));
         })
         .updateChannel(props => {
-          setChannelState(prevState => updatedState(prevState, props, (other, updated) => other.nr < updated.nr))
+          setChannels(prevState => updatedState(prevState, props, (other, updated) => other.nr < updated.nr))
         })
         .setModalData(setModalData)
         .setZoom(zoom => {
@@ -182,7 +188,7 @@ const Journey = ({dimns}) => {
 
     d3.select(containerRef.current)
       ////.datum(data)
-      .datum({ planets: planetState, links: linkState, channels: channelState, measures })
+      .datum({ aims, planets, links , channels, measures })
       .call(journey
         ////.margin({left: screenWidth * 0.1, right: screenWidth * 0.1, top: screenHeight * 0.1, bottom:40})
         .width(screenWidth - 20)
@@ -245,7 +251,7 @@ const Journey = ({dimns}) => {
 
   const onUpdatePlanetForm = modalType => (name, value) => {
     const { planetD, measure } = modalData;
-    const planet = planetState.find(p => p.id === planetD.id);
+    const planet = planets.find(p => p.id === planetD.id);
     let props;
     if(modalType === "targOnly"){
       //for now, the only planetMeasureData that can  be updated is that targ.  Everything else that is updated is on the measure itself.
@@ -253,7 +259,7 @@ const Journey = ({dimns}) => {
     }else{
       props = { id:planetD.id, [name]: value };
     }
-    setPlanetState(prevState => updatedState(prevState, props));
+    setPlanets(prevState => updatedState(prevState, props));
   }
 
   const onSaveMeasureForm = (details, planetId, isNew) => {
@@ -281,9 +287,9 @@ const Journey = ({dimns}) => {
     
     if(planetId){
       //measure is also set on a particular planet
-      const planet = planetState.find(p => p.id === planetId);
+      const planet = planets.find(p => p.id === planetId);
       const planetMeasureData = { measureId:newMeasureId, targ: details.targ};
-      setPlanetState(prevState => {
+      setPlanets(prevState => {
         const props = { id: planetId, measures:[...planet.measures, planetMeasureData]};
         return updatedState(prevState, props);
       })
@@ -305,10 +311,10 @@ const Journey = ({dimns}) => {
         {modalData && 
           <div ref={modalRef} className={classes.modal}>
             {modalData.nameOnly &&
-              <NameForm data={{ ...modalData, planet:planetState.find(p => p.id === modalData.planetD?.id) }}
+              <NameForm data={{ ...modalData, planet:planets.find(p => p.id === modalData.planetD?.id) }}
                 onUpdate={onUpdatePlanetForm("nameOnly")} onClose={onClosePlanetForm} />}
             {modalData.targOnly &&
-              <TargetForm data={{ ...modalData, planet:planetState.find(p => p.id === modalData.planetD?.id) }}
+              <TargetForm data={{ ...modalData, planet:planets.find(p => p.id === modalData.planetD?.id) }}
                 onUpdate={onUpdatePlanetForm("targOnly")} onClose={onClosePlanetForm} />}
               
             {modalData.importing &&
@@ -316,13 +322,13 @@ const Journey = ({dimns}) => {
                 onSave={importMeasures} onClose={() => setModalData(undefined)} />}
 
             {modalData.measureOnly && 
-              <MeasureForm data={{ ...modalData, planet:planetState.find(p => p.id === modalData.planetD?.id) }}
+              <MeasureForm data={{ ...modalData, planet:planets.find(p => p.id === modalData.planetD?.id) }}
               onSave={onSaveMeasureForm} onCancel={() => setModalData(undefined)}
               existingMeasures={measures} />}
 
             {modalData && !modalData.nameOnly && !modalData.measureOnly && !modalData.targOnly && !modalData.importing &&
               <Form 
-                  data={{ ...modalData, planet:planetState.find(p => p.id === modalData.planetD?.id) }} 
+                  data={{ ...modalData, planet:planets.find(p => p.id === modalData.planetD?.id) }} 
                   onUpdate={onUpdatePlanetForm("full")} 
                   onClose={onClosePlanetForm}
                   availableMeasures={measures}

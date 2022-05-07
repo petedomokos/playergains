@@ -64,7 +64,7 @@ export default function planetsComponent() {
     }
 
     //api
-    let addPlanet = function(){};
+    let createPlanet = function(){};
     let updatePlanet = function(){};
     let startEditPlanet = function(){};
     let convertToAim = function(){};
@@ -536,10 +536,10 @@ export default function planetsComponent() {
         }
         return planets;
     };
-    planets.addPlanet = function (value) {
-        if (!arguments.length) { return addPlanet; }
+    planets.createPlanet = function (value) {
+        if (!arguments.length) { return createPlanet; }
         if(typeof value === "function"){
-            addPlanet = value;
+            createPlanet = value;
         }
         return planets;
     };

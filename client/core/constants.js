@@ -7,6 +7,9 @@ export const DIMNS = {
     planet:{
         width:85,
         height:60
+    },
+    aim:{
+        vertPlanetGap:3,
     }
 }
 export const COLOURS = {

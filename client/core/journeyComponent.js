@@ -4,12 +4,14 @@ import channelsLayout from "./channelsLayout";
 import axesLayout from "./axesLayout";
 import linksLayout from "./linksLayout";
 import planetsLayout from "./planetsLayout";
+import aimsLayout from './aimsLayout';
 import axesComponent from "./axesComponent";
 import linksComponent from "./linksComponent";
 import planetsComponent from "./planetsComponent";
+import aimsComponent from './aimsComponent';
 import measuresBarComponent from './measuresBarComponent';
 import { calcChartHeight, findFuturePlanets, findFirstFuturePlanet, findNearestDate, getTransformationFromTrans,
-    calcTrueX, calcAdjX, findPointChannel, findDateChannel, findNearestChannelByEndDate } from './helpers';
+    calcTrueX, calcAdjX, findPointChannel, findDateChannel, findNearestChannelByEndDate, createId } from './helpers';
 //import { COLOURS, DIMNS } from "./constants";
 import { addMonths, addWeeks } from "../util/TimeHelpers"
 import { ellipse } from "./ellipse";
@@ -80,10 +82,13 @@ export default function journeyComponent() {
     const myAxesLayout = axesLayout();
     const myLinksLayout = linksLayout();
     const myPlanetsLayout = planetsLayout();
+    const myAimsLayout = aimsLayout();
 
     const axes = axesComponent();
     const links = linksComponent();
     const planets = planetsComponent();
+    //@todo - planetsComponent is rendered inside each aim, but with same cood system so aimg is just a vertical layer
+    const aims = aimsComponent();
     const openedLinks = {};
     const measuresBar = measuresBarComponent();
 
@@ -92,7 +97,8 @@ export default function journeyComponent() {
     let editing;
     let preEditZoom;
 
-    let addPlanet = function(){};
+    let createAim = function(){};
+    let createPlanet = function(){};
     //@todo - change name to updatePlanetState and so on to distinguish from dom changes eg updateplanets could be either
     let updatePlanet = function(){};
     let addMeasureToPlanet = function(){};
@@ -105,7 +111,7 @@ export default function journeyComponent() {
     let setZoom = function(){};
     let onStartEditPlanet = function (){};
     let onEndEditPlanet = function (){};
-    let convertPlanetToAim = function (){};
+    let convertGoalToAim = function (){};
 
     //dom
     let svg;
@@ -200,7 +206,7 @@ export default function journeyComponent() {
                         updateSelected(undefined);
                     //if measuresBar open, we dont want the click to propagate through
                     }else{
-                        addPlanet(zoomedTimeScale.invert(trueX(e.sourceEvent.layerX)), zoomedYScale.invert(e.sourceEvent.layerY))
+                        createPlanet(zoomedTimeScale.invert(trueX(e.sourceEvent.layerX)), zoomedYScale.invert(e.sourceEvent.layerY))
                     }
                 })
                 .onLongpressStart(function(e,d){
@@ -248,11 +254,14 @@ export default function journeyComponent() {
             const { trueX, pointChannel } = channelsData;
 
             let planetsData;
+            let aimsData;
             let linksData;
             updatePlanetsData();
+            updateAimsData();
             updateLinksData();
 
             updatePlanets();
+            updateAims();
             updateLinks();
 
             function updatePlanetsData(){
@@ -266,6 +275,18 @@ export default function journeyComponent() {
                 planetsData = myPlanetsLayout(state.planets);
 
             }
+
+            function updateAimsData(){
+                myAimsLayout
+                    .planetsData(planetsData)
+                    .currentZoom(currentZoom)
+                    .timeScale(zoomedTimeScale)
+                    .yScale(zoomedYScale)
+                    .channelsData(channelsData);
+                
+                aimsData = myAimsLayout(state.aims)
+            }
+
 
             function updateLinksData(){
                 //data
@@ -332,7 +353,7 @@ export default function journeyComponent() {
                         deletePlanet(id);
                     })
                     .startEditPlanet(onStartEditPlanet)
-                    .convertToAim(convertPlanetToAim)
+                    .convertToAim(convertGoalToAim)
 
                 //render
                 const planetsG = canvasG.selectAll("g.planets").data([planetsData]);
@@ -341,6 +362,17 @@ export default function journeyComponent() {
                     .attr("class", "planets")
                     .merge(planetsG)
                     .call(planets, options.planets)
+            }
+
+            function updateAims(){
+                //render
+                const aimsG = canvasG.selectAll("g.aims").data([aimsData]);
+                aimsG.enter()
+                    .append("g")
+                    .attr("class", "aims")
+                    .merge(aimsG)
+                    .call(aims, options.aims)
+
             }
 
             function updateLinks(){
@@ -575,8 +607,46 @@ export default function journeyComponent() {
             preEditZoom = undefined;
         }
 
-        convertPlanetToAim = function(d){
-            console.log("conv to aim", this)
+        convertGoalToAim = function(d){
+            //A. remove this planet - transition out should be handled by update in planetsComponent automatically
+            
+
+            //B. add 3 planets stacked, same targetDate as planet removed, y value of middle planet is same as target, 
+            //y value of top[ planet will be -(2*ry + gap), and bottom will be +2*ry + gap but need to innvert to yPC
+            //entry transitiopn handled in planetsComp auto
+            const ringRX = +d3.select(this).select("ellipse.ring").attr("rx");
+            const ringRY = +d3.select(this).select("ellipse.ring").attr("ry");
+            const goalWidth = ringRX * 2;
+            const goalHeight = ringRY * 2;
+            const vertGap = DIMNS.aim.vertPlanetGap;
+            const aimMargin = aims.margin();
+            const aim = {
+                //id:createAimId(aims), do id in Journey
+                name:d.name,
+                //goals: add in Journey
+                x: d.x - goalWidth/2 - aimMargin.left,
+                y:d.y - goalHeight - vertGap - aimMargin.top,
+                width:goalWidth + aimMargin.left + aimMargin.right,
+                height:3 * goalHeight + 2 * vertGap + aimMargin.top + aimMargin.bottom
+            }
+            createAim(aim);
+            deletePlanet(d.id);
+            
+
+            //C: add aim to state with init pos to wrapped around the 3 new planets -> this will be drawn on automatically on update aimsComponent
+            //ach aim just needs an x,y,width,height values, plus id, name (which is the removed planet name)
+            //Note - any measures of the removed planet are just removed. Only gioals can have measures, but if a goal inside and aim has a measure src
+            //goal outside teh aim, the connecting line is drawn to the aim when zoomed out
+
+            //@todo- consider, do we need to refactor so all planets are under one g for an aim, so we just dragg that g
+            //what was teh benefit of having in Designer the planets separate from the clusters?
+            //if its just the force, this could be applied to aims anyway. - if need be, each free top-level planet could be wrapped in its opwn sub-aim
+            //which is just the bbox of he ellipse pretty much
+            //BUT it may complicate the cood system? unless we keep using the same one cood system? but tehn no point in nesting
+            //we can store in state separately, but the layout could convcert to nested structure.
+
+            //could have best of both worlds - a separate g for each aim and its planets, but not positioned, so the cood systems and scales etc are same for all planets and aims
+            //cant use it for drag, but it can be used to stack aims, 
         }
 
         return selection;
@@ -613,10 +683,17 @@ export default function journeyComponent() {
         withCompletionPaths = value;
         return journey;
     };
-    journey.addPlanet = function (value) {
-        if (!arguments.length) { return addPlanet; }
+    journey.createAim = function (value) {
+        if (!arguments.length) { return createAim; }
         if(typeof value === "function"){
-            addPlanet = value;
+            createAim = value;
+        }
+        return journey;
+    };
+    journey.createPlanet = function (value) {
+        if (!arguments.length) { return createPlanet; }
+        if(typeof value === "function"){
+            createPlanet = value;
         }
         return journey;
     };
