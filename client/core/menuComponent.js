@@ -23,9 +23,9 @@ export default function menuComponent() {
 
     let optWrapperWidth;
     let optDimns = {
-        width:25,
+        width:40,
         height:10,
-        spacing:5
+        spacing:0
     }
 
     let bg = {
@@ -34,13 +34,14 @@ export default function menuComponent() {
     }
     let optBg = {
         fill: "transparent",
-        stroke: grey10(7)
+        stroke: grey10(7),
+        strokeWidth:0.3
     }
     let optText = {
         stroke: grey10(7),
         fill:grey10(7),
-        fontSize:7,
-        strokeWidth:0.5
+        fontSize:6,
+        strokeWidth:0.3
     }
 
     let onClick = () => {};
@@ -50,7 +51,8 @@ export default function menuComponent() {
             //specified total width
             contentsWidth = width - margin.left - margin.right;
             optWrapperWidth = contentsWidth / data.length;
-            optDimns.spacing = 3 + optWrapperWidth * 0.2;
+            //optDimns.spacing = 3 + optWrapperWidth * 0.2;
+            optDimns.spacing = optWrapperWidth * 0.1;
             optDimns.width = optWrapperWidth - optDimns.spacing;
         }else{
             //adjustable total width
@@ -123,7 +125,8 @@ export default function menuComponent() {
                                 .attr("width", optDimns.width)
                                 .attr("height", optDimns.height)
                                 .attr("fill", optBg.fill)
-                                .attr("stroke", optBg.stroke);
+                                .attr("stroke", optBg.stroke)
+                                .attr("stroke-width", optBg.strokeWidth);
 
                             //opt-text
                             d3.select(this).select("text")

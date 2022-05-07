@@ -67,6 +67,7 @@ export default function planetsComponent() {
     let addPlanet = function(){};
     let updatePlanet = function(){};
     let startEditPlanet = function(){};
+    let convertToAim = function(){};
     let deletePlanet = function(){};
     let addLink = function(){};
     let onClick = function(){};
@@ -77,6 +78,7 @@ export default function planetsComponent() {
     const ring = ellipse().className("ring");
     let menus = {};
     let menuOptions = [
+        { key: "aim", label:"Make Aim" },
         { key: "edit", label:"Edit" },
         { key: "delete", label:"Delete" },
          //put goals on planet, and only show it in bar chart when it is 
@@ -241,12 +243,16 @@ export default function planetsComponent() {
                             .onClick((opt) => {
                                 switch(opt.key){
                                     case "delete": { 
-                                        deletePlanet(d.id);
+                                        deletePlanet.call(this, d.id);
                                         break;
                                     };
                                     //for goals
                                     case "edit": { 
-                                        startEditPlanet(d);
+                                        startEditPlanet.call(this, d);
+                                        break; 
+                                    };
+                                    case "aim": { 
+                                        convertToAim.call(this, d);
                                         break; 
                                     };
                                     default:{};
@@ -545,9 +551,16 @@ export default function planetsComponent() {
         return planets;
     };
     planets.startEditPlanet = function (value) {
-        if (!arguments.length) { return Planet; }
+        if (!arguments.length) { return startEditPlanet; }
         if(typeof value === "function"){
             startEditPlanet = value;
+        }
+        return planets;
+    };
+    planets.convertToAim = function (value) {
+        if (!arguments.length) { return convertToAim; }
+        if(typeof value === "function"){
+            convertToAim = value;
         }
         return planets;
     };

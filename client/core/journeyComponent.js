@@ -105,6 +105,7 @@ export default function journeyComponent() {
     let setZoom = function(){};
     let onStartEditPlanet = function (){};
     let onEndEditPlanet = function (){};
+    let convertPlanetToAim = function (){};
 
     //dom
     let svg;
@@ -331,6 +332,7 @@ export default function journeyComponent() {
                         deletePlanet(id);
                     })
                     .startEditPlanet(onStartEditPlanet)
+                    .convertToAim(convertPlanetToAim)
 
                 //render
                 const planetsG = canvasG.selectAll("g.planets").data([planetsData]);
@@ -571,6 +573,10 @@ export default function journeyComponent() {
             updateSelected(undefined);
             //reset
             preEditZoom = undefined;
+        }
+
+        convertPlanetToAim = function(d){
+            console.log("conv to aim", this)
         }
 
         return selection;
