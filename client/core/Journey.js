@@ -63,7 +63,7 @@ const mockMeasures = [
 const Journey = ({dimns}) => {
   const [journey, setJourney] = useState(undefined)
   //@todo - put into one state object to avoid multiple updates
-  const [aims, setAims] = useState([])
+  const [aims, setAims] = useState([]);
   const [planets, setPlanets] = useState([]);
   const [links, setLinks] = useState([]);
   const [channels, setChannels] = useState(initChannels);

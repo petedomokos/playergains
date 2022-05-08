@@ -6,15 +6,26 @@ export default function aimsLayout(){
     let currentZoom = d3.zoomIdentity;
     let channelsData;
     let planetsData = [];
+    let canvasDimns = { width:800, height:600 };
 
     function update(data){
-        return data.map(aim => {
+        const aims = data.map(aim => {
             return {
                ...aim,
                //note - planets have alreayd been configured for the visual
-               planets:planetsData.filter(p => p.aimId = aim.id)
+               planets:planetsData.filter(p => p.aimId === aim.id)
             }
         })
+        const mainAim = {
+            id:"main",
+            planets:planetsData.filter(p => !p.aimId),
+            x:0,
+            y:0,
+            width:canvasDimns.width,
+            height:canvasDimns.height
+        }
+
+        return [ mainAim, ...aims ];
     }
     update.planetsData = function (value) {
         if (!arguments.length) { return planetsData; }
@@ -39,6 +50,11 @@ export default function aimsLayout(){
     update.currentZoom = function (value) {
         if (!arguments.length) { return currentZoom; }
         currentZoom = value;
+        return update;
+    };
+    update.canvasDimns = function (value) {
+        if (!arguments.length) { return canvasDimns; }
+        canvasDimns = { ...canvasDimns, ...value };
         return update;
     };
 

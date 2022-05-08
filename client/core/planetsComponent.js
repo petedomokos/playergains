@@ -5,7 +5,7 @@ import { calcTrueX, calcAdjX, findPointChannel, findDateChannel, findNearestChan
 //import { COLOURS, DIMNS } from "./constants";
 import { addWeeks } from "../util/TimeHelpers"
 import { ellipse } from "./ellipse";
-import { grey10, COLOURS } from "./constants";
+import { grey10, COLOURS, DIMNS } from "./constants";
 import { findNearestPlanet, distanceBetweenPoints, channelContainsPoint, channelContainsDate } from './geometryHelpers';
 import { OPEN_CHANNEL_EXT_WIDTH } from './constants';
 import dragEnhancements from './enhancedDragHandler';
@@ -16,8 +16,9 @@ import menuComponent from './menuComponent';
 */
 export default function planetsComponent() {
     // dimensions
-    let width = 800;
-    let height = 600;
+    let width = DIMNS.planet.width;
+    let height = DIMNS.planet.height;
+
     let fontSize = 9;
     const DEFAULT_PLANET_RX = 50;
     const DEFAULT_PLANET_RY = 50;
@@ -211,7 +212,7 @@ export default function planetsComponent() {
                         selection.selectAll("ellipse.ring").remove();
                         return selection; 
                     }
-                ) 
+                )
                 .each(function(d){
                     //helper
                     //dont show menu if targOnly form open is if planet has the selectedMeasure on it

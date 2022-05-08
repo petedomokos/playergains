@@ -41,20 +41,8 @@ export default function journeyComponent() {
     let canvasWidth;
     let canvasHeight;
 
-    let planetWidth = DIMNS.planet.width;
-    let planetHeight = DIMNS.planet.height;
-    let planetContentsWidth;
-    let planetContentsHeight;
-
-    let chartWidth;
-    let chartHeight;
-    const planetWrapperHeight = isOpen => isOpen ? planetHeight + chartHeight : planetHeight;
-    
-    const TIME_AXIS_WIDTH = 50;
-
     let measuresOpen;
     let measuresBarHeight;
-    let modalData;
 
     function updateDimns(){
         contentsWidth = width - margin.left - margin.right;
@@ -63,15 +51,6 @@ export default function journeyComponent() {
         measuresBarHeight = measuresOpen ? 70 : 0
         //note- for some reason, reducing canvasHeight doesnt seem to move axis properly, so instead just subtract measuresBarHeight for axis translateY
         canvasHeight = contentsHeight;// - measuresBarHeight; //this should be lrge enough for all planets, and rest can be accesed via pan
-
-
-        
-        planetContentsWidth = planetWidth - planetMargin.left - planetMargin.right;
-        planetContentsHeight = planetHeight - planetMargin.top - planetMargin.bottom;
-
-        chartWidth = planetWidth;
-        //we want enough space on screen for two planets and 1 chart
-        chartHeight = calcChartHeight(height, planetHeight);
     };
 
     let withCompletionPaths = false;
@@ -109,8 +88,8 @@ export default function journeyComponent() {
     let setModalData = function(){};
     let setImportingMeasures= function(){};
     let setZoom = function(){};
-    let onStartEditPlanet = function (){};
-    let onEndEditPlanet = function (){};
+    let startEditPlanet = function (){};
+    let endEditPlanet = function (){};
     let convertGoalToAim = function (){};
 
     //dom
@@ -193,13 +172,14 @@ export default function journeyComponent() {
                 .call(axes);
 
             // Zoom configuration
-            const extent = [[0,0],[chartWidth, chartHeight]];
+            //@todo - check extent is correct
+            const extent = [[0,0],[canvasWidth, canvasHeight]];
             enhancedZoom
                 //.dragThreshold(200) //dont get why this has to be so large
                 //.beforeAll(() => { updateSelected(undefined); })
                 .onClick((e,d) => {
                     if(editing){
-                        onEndEditPlanet(d);
+                        endEditPlanet(d);
                     }
                     //note - on start editing, selected is already set to undefined
                     else if(selected){
@@ -231,7 +211,7 @@ export default function journeyComponent() {
                         //user has manually zoomed so close selected/editing
                         //selected = undefined;
                         if(editing){
-                            onEndEditPlanet(undefined);
+                            endEditPlanet(undefined);
                         }
                         if(selected){
                             updateSelected(undefined);
@@ -253,17 +233,16 @@ export default function journeyComponent() {
             //helpers
             const { trueX, pointChannel } = channelsData;
 
+            //data
             let planetsData;
-            let nonAimPlanetsData;
             let aimsData;
             let linksData;
             updatePlanetsData();
             updateAimsData();
-            updateLinksData();
-
-            updatePlanets();
+            //updateLinksData();
+            //components
             updateAims();
-            updateLinks();
+            //updateLinks();
 
             function updatePlanetsData(){
                 myPlanetsLayout
@@ -274,7 +253,6 @@ export default function journeyComponent() {
                     .channelsData(channelsData);
 
                 planetsData = myPlanetsLayout(state.planets);
-                nonAimPlanetsData = planetsData.filter(p => !p.aimId)
             }
 
             function updateAimsData(){
@@ -283,9 +261,10 @@ export default function journeyComponent() {
                     .currentZoom(currentZoom)
                     .timeScale(zoomedTimeScale)
                     .yScale(zoomedYScale)
-                    .channelsData(channelsData);
+                    .channelsData(channelsData)
+                    .canvasDimns({ width:canvasWidth, height: canvasHeight });
                 
-                aimsData = myAimsLayout(state.aims)
+                aimsData = myAimsLayout([...state.aims])
             }
 
 
@@ -300,20 +279,24 @@ export default function journeyComponent() {
                 linksData = myLinksLayout(state.links);
 
             }
-           
-            function updatePlanets(){
-                //component
-                planets
-                    .width(planetWidth)
-                    .height(planetHeight)
+
+            function updateAims(){
+                aims
                     .selectedMeasure(measuresOpen?.find(m => m.id === measuresBar.selected()))
-                    .channelsData(channelsData)
-                    .linksData(linksData)
                     .timeScale(zoomedTimeScale)
                     .yScale(zoomedYScale)
-                    .fontSize(k * 9)
-                    .onClick((e,d) => { updateSelected(d);})
-                    .onDrag(function(e , d){
+                    .channelsData(channelsData)
+                    .linksData(linksData)
+                    .planetFontSize(k * 9)
+                    //.onClick(() => {})
+                    //.onDragStart(() => {})
+                    //.onDrag(() => {})
+                    //.onDragEnd(() => {})
+                    //.onMouseover(() => {})
+                    //.onMouseout(() => {})
+                    .onClickGoal((e,d) => { updateSelected(d);})
+                    //.onDragGoalStart(function(){})
+                    .onDragGoal(function(e , d){ //pass in onDragGoal
                         updateSelected(undefined); //warning - may interrupt drag handling with touch
                         //links layout needs updated planet position and targetDate
                         state.planets = state.planets.map(p => { return p.id === d.id ? d : p });
@@ -327,45 +310,34 @@ export default function journeyComponent() {
                             .call(links) //no transitions
 
                     })
-                    .onDragEnd(function(e , d){
+                    .onDragGoalEnd(function(e , d){
                         selected = undefined;
                         //targetDate must be based on trueX
                         //updatePlanet({ id:d.id, targetDate:timeScale.invert(trueX(d.x)), yPC:yScale.invert(d.y) });
                         updatePlanet({ id:d.id, targetDate:zoomedTimeScale.invert(trueX(d.x)), yPC:zoomedYScale.invert(d.y) });
                     })
-                    .onMouseover(function(e,d){
+                    .onMouseoverGoal(function(e,d){
                         const selectedMeasureIsInPlanet = !!d.measures.find(m => m.id === measuresBar.selected());
                         if(measuresBar.selected() && (selectedMeasureIsInPlanet || measuresBar.dragged())){
                             hoveredPlanetId = d.id;
                             planets.highlight(hoveredPlanetId, measuresBar.dragged());
                         }
                     })
-                    .onMouseout(function(e,d){
+                    .onMouseoutGoal(function(e,d){
                         if(hoveredPlanetId){
                             hoveredPlanetId = undefined;
                             planets.unhighlight(d.id);
                         }
                     })
-                    .addLink(addLink)
-                    .updatePlanet(updatePlanet)
                     .deletePlanet(id => {
                         selected = undefined;
                         editing = undefined;
                         deletePlanet(id);
                     })
-                    .startEditPlanet(onStartEditPlanet)
-                    .convertToAim(convertGoalToAim)
+                    .updatePlanet(updatePlanet)
+                    .startEditPlanet(startEditPlanet)
+                    .convertGoalToAim(convertGoalToAim)
 
-                //render
-                const planetsG = canvasG.selectAll("g.planets").data([nonAimPlanetsData]);
-                planetsG.enter()
-                    .append("g")
-                    .attr("class", "planets")
-                    .merge(planetsG)
-                    .call(planets, options.planets)
-            }
-
-            function updateAims(){
                 //render
                 const aimsG = canvasG.selectAll("g.aims").data([aimsData]);
                 aimsG.enter()
@@ -392,15 +364,20 @@ export default function journeyComponent() {
                     .onClick((e,d) => { updateSelected(d);})
 
                 //render
+                //@todo - prob need to move links to above aims but below planets somehow
+                //otherwise they will be hidden by any background of the aims
+                //or maybe have a separate links component for each aim, unless we are allowing links from a goal
+                //in one aim to a goal in another aim
                 const linksG = canvasG.selectAll("g.links").data([linksData])
                 linksG.enter()
-                    .insert("g", "g.planets")
+                    .insert("g", "g.aims")
                         .attr("class", "links")
                         .merge(linksG)
                         .call(links, options.links)
             }
             
             //openedLink
+            /*
             const openedLinkWidth = 80 * k;
             const openedLinkHeight = 30 * k;
             const openedLinkG = canvasG.selectAll("g.opened-link").data(linksData.filter(l => l.isOpen), l => l.id)
@@ -499,6 +476,8 @@ export default function journeyComponent() {
             
             measuresBarG.exit().remove();
 
+            */
+
         
         }
 
@@ -538,7 +517,7 @@ export default function journeyComponent() {
         //helpers
         applyZoomX = x => (x + currentZoom.x) / currentZoom.k;
         applyZoomY = y => (y + currentZoom.y) / currentZoom.k;
-        onStartEditPlanet = (d) => {
+        startEditPlanet = (d) => {
             //hide nameform immediately
             setModalData(undefined)
             editing = d;
@@ -573,7 +552,7 @@ export default function journeyComponent() {
                 })
         }
 
-        onEndEditPlanet = (d) => {
+        endEditPlanet = (d) => {
             setModalData(undefined)
             editing = undefined;
             //zoom is only applied for full edit, not if its nameOnly
@@ -766,6 +745,6 @@ export default function journeyComponent() {
         }
         return journey;
     };
-    journey.endEditPlanet = function(){ onEndEditPlanet() }
+    journey.endEditPlanet = function(){ endEditPlanet() }
     return journey;
 }
