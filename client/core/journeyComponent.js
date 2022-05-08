@@ -20,6 +20,7 @@ import { findNearestPlanet, distanceBetweenPoints, channelContainsPoint, channel
 import dragEnhancements from './enhancedDragHandler';
 import { timeMonth, timeWeek } from "d3-time";
 import openedLinkComponent from './openedLinkComponent';
+import { pointIsInRect } from "./geometryHelpers";
 
 
 /*
@@ -312,9 +313,19 @@ export default function journeyComponent() {
                     })
                     .onDragGoalEnd(function(e , d){
                         selected = undefined;
+                        //if goal no longer inside aim rect, update aimId
+                        const aim = aimsData
+                            .filter(a => a.id !== "main")
+                            .find(a => pointIsInRect(d, a))
+
                         //targetDate must be based on trueX
                         //updatePlanet({ id:d.id, targetDate:timeScale.invert(trueX(d.x)), yPC:yScale.invert(d.y) });
-                        updatePlanet({ id:d.id, targetDate:zoomedTimeScale.invert(trueX(d.x)), yPC:zoomedYScale.invert(d.y) });
+                        updatePlanet({ 
+                            id:d.id,
+                            aimId:aim?.id,
+                            targetDate:zoomedTimeScale.invert(trueX(d.x)), 
+                            yPC:zoomedYScale.invert(d.y)
+                        });
                     })
                     .onMouseoverGoal(function(e,d){
                         const selectedMeasureIsInPlanet = !!d.measures.find(m => m.id === measuresBar.selected());

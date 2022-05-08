@@ -1,3 +1,9 @@
+export function pointIsInRect(pt, rect){
+    const { x, y, width, height } = rect;
+    return pt.x > x && pt.x < (x + width) && pt.y > y && pt.y < (y + height);
+}
+
+
 export function channelContainsPoint(pt, channel){
     //console.log("ccp pt", channel)
     //console.log("contains?", channel.startX <= pt.x && pt.x < channel.endX)

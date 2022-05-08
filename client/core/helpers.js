@@ -147,3 +147,8 @@ export function createId(existingIds=[]){
     }
     return check(1);
 }
+
+const COLOURS = ["red", "blue", "orange", "yellow", "olive"]
+export function createColour(nrPrevColours){
+    return COLOURS[nrPrevColours % COLOURS.length]
+}

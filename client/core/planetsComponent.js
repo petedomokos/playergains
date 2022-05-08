@@ -40,6 +40,10 @@ export default function planetsComponent() {
     let withRing = true;
     let highlighted = [];
 
+    let colours = {
+        planet:COLOURS.planet
+    }
+
     //handlers
     let onDragStart = function() {};
     let onDrag = function() {};
@@ -106,10 +110,11 @@ export default function planetsComponent() {
                         .attr("class", "contents")
 
                     //ellipse
+                    console.log("col", colours.planet)
                     contentsG
                         .append("ellipse")
                             .attr("class", "core")
-                            .attr("fill", COLOURS.planet)
+                            .attr("fill", colours.planet)
                             .attr("cursor", "pointer")
                     
                     //title text
@@ -422,6 +427,11 @@ export default function planetsComponent() {
     planets.height = function (value) {
         if (!arguments.length) { return height; }
         height = value;
+        return planets;
+    };
+    planets.colours = function (value) {
+        if (!arguments.length) { return colours; }
+        colours = { ...colours, ...value };
         return planets;
     };
     planets.selectedMeasure = function (value) {

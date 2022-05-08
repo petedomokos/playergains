@@ -3,7 +3,7 @@ import * as d3 from 'd3';
 import { makeStyles } from '@material-ui/core/styles'
 import Button from '@material-ui/core/Button'
 import { getPlanetsData, getGoalsData, getStarData } from '../data/planets'
-import { createId, findFirstFuturePlanet, updatedState } from './helpers';
+import { createId, createColour, findFirstFuturePlanet, updatedState } from './helpers';
 import journeyComponent from "./journeyComponent"
 import { addMonths, startOfMonth, idFromDates } from '../util/TimeHelpers';
 import { channelContainsDate } from './geometryHelpers';
@@ -133,7 +133,8 @@ const Journey = ({dimns}) => {
         //@todo - make createId handle prefixes so all ids are unique
         .createAim(function(aim, initPlanetsTargetDate, initPlanetsYPCs){
           const id = createId(aims.map(a => a.id));
-          setAims(prevState => ([ ...prevState, { id , ...aim }]))
+          const colour = createColour(aims.length);
+          setAims(prevState => ([ ...prevState, { id , colour, ...aim }]))
           
           //create 3 planets with aimId = id
           const newPlanets = [1,2,3].map((nr,i) => ({

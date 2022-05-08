@@ -78,8 +78,8 @@ export default function aimsComponent() {
 
                         aimG.append("rect")
                             .attr("stroke", grey10(9))
-                            //.attr("fill", "transparent")
-                            .attr("fill", d.id === "main" ? "transparent" : grey10(2));
+                            .attr("fill", d.colour || "transparent")
+                            .attr("fill-opacity", 0.3);
                         
                         planets[d.id] = planetsComponent();
 
@@ -100,6 +100,7 @@ export default function aimsComponent() {
                                 .attr("class", "planets planets-"+d.id)
                                 .merge(planetsG)
                                 .call(planets[d.id]
+                                    .colours({ planet: d.colour || COLOURS.planet })
                                     .selectedMeasure(selectedMeasure)
                                     .channelsData(channelsData) 
                                     .linksData(linksData) 
