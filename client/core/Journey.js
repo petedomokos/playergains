@@ -167,6 +167,9 @@ const Journey = ({dimns}) => {
         .updatePlanet(props => {
           setPlanets(prevState => updatedState(prevState, props))
         })
+        .updateAim(props => {
+          setAims(prevState => updatedState(prevState, props))
+        })
         .addMeasureToPlanet((planetId, measureId) => {
             const planetToUpdate = planets.find(p => p.id === planetId);
             //@todo - create a transFormForState fuciton which always runs in reducers 9or before going into useState in this

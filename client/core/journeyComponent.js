@@ -78,6 +78,7 @@ export default function journeyComponent() {
     let preEditZoom;
 
     let createAim = function(){};
+    let updateAim = function(){};
     let createPlanet = function(){};
     //@todo - change name to updatePlanetState and so on to distinguish from dom changes eg updateplanets could be either
     let updatePlanet = function(){};
@@ -280,6 +281,19 @@ export default function journeyComponent() {
                 linksData = myLinksLayout(state.links);
 
             }
+            /*
+            todo
+            leave links and measures turned off whilst
+                - make aim have rounded corners
+                -  drag an aim -> todo - expose planetsComponent draghandlers and call them directly from aim.
+                ORRRRR move them up to aimComponent completely, so they can just be called from multiple places, ie 
+                can be called when a planet ids dragged or when an aim is draged
+                - change dimensions of an aim (drag corner handle)
+                - integrate aim with zoom
+                - integrate aim with open channel (and fix the existing bug around this)
+                - aim menu (delete option only)
+                */
+
 
             function updateAims(){
                 aims
@@ -289,10 +303,11 @@ export default function journeyComponent() {
                     .channelsData(channelsData)
                     .linksData(linksData)
                     .planetFontSize(k * 9)
+                    //.onUpdateAim(function(){ })
                     //.onClick(() => {})
-                    //.onDragStart(() => {})
-                    //.onDrag(() => {})
-                    //.onDragEnd(() => {})
+                    //.onDragStart(function(e, d){})
+                    //.onDrag(function(e, d){})
+                    .onDragEnd(function(e, d){ updateAim({ id:d.id, x: d.x, y: d.y }) })
                     //.onMouseover(() => {})
                     //.onMouseout(() => {})
                     .onClickGoal((e,d) => { updateSelected(d);})
@@ -683,6 +698,13 @@ export default function journeyComponent() {
         if (!arguments.length) { return createAim; }
         if(typeof value === "function"){
             createAim = value;
+        }
+        return journey;
+    };
+    journey.updateAim = function (value) {
+        if (!arguments.length) { return updateAim; }
+        if(typeof value === "function"){
+            updateAim = value;
         }
         return journey;
     };

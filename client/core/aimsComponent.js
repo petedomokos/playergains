@@ -65,9 +65,15 @@ export default function aimsComponent() {
     let containerG;
 
     function aims(selection, options={}) {
+        withClick.onClick(onClick)
+        const drag = d3.drag()
+            .filter(d => d.id !== "main")
+            .on("start", withClick(dragStart))
+            .on("drag", withClick(dragged))
+            .on("end", withClick(dragEnd));
         // expression elements
         selection.each(function (data) {
-            //console.log("aims", data)
+            console.log("aims", data)
             containerG = d3.select(this);
             const aimG = containerG.selectAll("g.aim").data(data);
             aimG.enter()
@@ -76,10 +82,20 @@ export default function aimsComponent() {
                     .each(function(d){
                         const aimG = d3.select(this);
 
-                        aimG.append("rect")
-                            .attr("stroke", grey10(9))
-                            .attr("fill", d.colour || "transparent")
-                            .attr("fill-opacity", 0.3);
+                        const controlledContentsG = aimG.append("g").attr("class", "controlled-contents");
+                        controlledContentsG
+                            .append("rect")
+                                .attr("stroke", "none")
+                                .attr("fill", d.colour || "transparent")
+                                .attr("fill-opacity", 0.3);
+
+                        const titleG = controlledContentsG.append("g").attr("class", "title");
+                        titleG
+                            .append("text")
+                                .attr("class", "main")
+                                .attr("font-size", d.id === "main" ? 8 : 6)
+                                .attr("stroke", grey10(2))
+                                .attr("stroke-width", 0.1)
                         
                         planets[d.id] = planetsComponent();
 
@@ -87,12 +103,20 @@ export default function aimsComponent() {
                     .merge(aimG)
                     .each(function(d){
                         const aimG = d3.select(this);
+                        const controlledContentsG = aimG.select("g.controlled-contents")
+                            .attr("transform", "translate(" + d.x +"," + d.y +")")
 
+                        //bg
                         aimG.select("rect")
-                            .attr("x", d.x)
-                            .attr("y", d.y)
                             .attr("width", d.width)
                             .attr("height", d.height)
+
+                        //title
+                        const titleG = controlledContentsG.select("g.title")
+                            .attr("transform", "translate(" + (d.id === "main" ? 40 : 5) + "," + (d.id === "main" ? 15 : 7.5) +")")
+                        
+                        titleG.select("text.main")
+                            .text(d.name || (d.id === "main" ? "unnamed canvas" : "unnamed group"))
 
                         const planetsG = aimG.selectAll("g.planets").data([d.planets]);
                         planetsG.enter()
@@ -123,17 +147,45 @@ export default function aimsComponent() {
                         planetsG.exit().remove();
 
                     })
+                    //temp till I see how to apply filter to d3 drag
+                    d3.selectAll("g.aim").filter(d => d.id !== "main")
+                        .call(drag);
 
             aimG.exit().remove();
-
-
 
             prevData = data;
         })
 
+        function dragStart(e , d){
+            d3.select(this).raise();
+        
+            onDragStart.call(this, e, d)
+        }
+        function dragged(e , d){
+            //console.log("drg", d.x)
+            //rect
+            d.x += e.dx;
+            d.y += e.dy;
+            d3.select(this).select("rect")
+                .attr("x", d.x)
+                .attr("y", d.y)
+            
+            //goals
+            d3.select(this).selectAll("g.planet")
+                
+    
+            onDrag.call(this, e, d)
+        }
+
+        //note: newX and Y should be stored as d.x and d.y
+        function dragEnd(e, d){
+            if(withClick.isClick()) { return; }
+            onDragEnd.call(this, e, d);
+        }
+
         return selection;
     }
-    
+
     //api
     aims.width = function (value) {
         if (!arguments.length) { return width; }

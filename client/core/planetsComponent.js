@@ -74,13 +74,15 @@ export default function planetsComponent() {
     //components
     const ring = ellipse().className("ring");
     let menus = {};
-    let menuOptions = [
-        { key: "aim", label:"Make Aim" },
-        { key: "edit", label:"Edit" },
-        { key: "delete", label:"Delete" },
+    let menuOptions = (d) => {
+        const basicOpts = [
+            { key: "edit", label:"Edit" },
+            { key: "delete", label:"Delete" }
+        ]
+        return d.aimId ? basicOpts : [ { key: "aim", label:"Make Aim" }, ...basicOpts ];
          //put goals on planet, and only show it in bar chart when it is 
         //also on src planet. BUT it does mean we need to also put it on src. Could have a goals library, or just use the dataset library (1 goal per dataset for now)
-    ];
+    };
 
     //dom
     let containerG;
@@ -110,7 +112,6 @@ export default function planetsComponent() {
                         .attr("class", "contents")
 
                     //ellipse
-                    console.log("col", colours.planet)
                     contentsG
                         .append("ellipse")
                             .attr("class", "core")
@@ -222,7 +223,7 @@ export default function planetsComponent() {
                     //helper
                     //dont show menu if targOnly form open is if planet has the selectedMeasure on it
                     const showContextMenu = d => d.isSelected && !d.measures.find(m => m.id === selectedMeasure?.id);
-                    const menuG = d3.select(this).selectAll("g.menu").data(showContextMenu(d) ? [menuOptions] : [], d => d.key);
+                    const menuG = d3.select(this).selectAll("g.menu").data(showContextMenu(d) ? [menuOptions(d)] : [], d => d.key);
                     const menuGEnter = menuG.enter()
                         .append("g")
                             .attr("class", "menu")
