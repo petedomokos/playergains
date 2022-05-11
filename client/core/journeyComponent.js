@@ -27,6 +27,8 @@ leave links and measures turned off whilst
     - make aim have rounded corners
     - integrate aim with open channel (and fix the existing bug around this)
     - aim menu (delete option only)
+    - turn links back on and check works
+    - turn measures back on and check works
 
     //todo - consider the issue when draggin aim when a channel is open, planets at different locations in the aim may be conflicted about 
     //whether to slide left or right to get to nearest channel. if all channels closed, this wont happen.
@@ -324,14 +326,20 @@ export default function journeyComponent() {
                         updatePlanets(planetsToUpdate);
                         updateAim({ id:d.id, actualX: d.displayX, y: d.y }) 
                     })
-                    .onResizeDragEnd(function(e, d, planetDs){
+                    .onResizeDragEnd(function(e, aim, planetDs){
                         //use the latest planetDs from dom, as the aim d.planets have not been updated
                         const planetsToUpdate = planetDs.map(p => ({ id:p.id, aimId:p.aimId }));
 
                         //update aim
                         //updatePlanets(planetsToUpdate);
                         //we now set the actual width to be the displaywidth which was set to be users drag
-                        updateAim({ id:d.id, width: d.displayWidth, height: d.height }) 
+                        updateAim({ 
+                            id:aim.id, 
+                            width: aim.displayWidth, 
+                            height: aim.height, 
+                            actualX: aim.displayX,
+                            y:aim.y 
+                        }) 
                     })
                     //.onMouseover(() => {})
                     //.onMouseout(() => {})
@@ -356,7 +364,7 @@ export default function journeyComponent() {
 
                     })
                     .onDragGoalEnd(function(e , d){
-                        console.log("journey drgGoalEnd", d.id, d.x)
+                        //console.log("journey drgGoalEnd", d.id, d.x)
                         selected = undefined;
 
                         //targetDate must be based on trueX

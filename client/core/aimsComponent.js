@@ -87,31 +87,13 @@ export default function aimsComponent() {
 
                         const controlledContentsG = aimG.append("g").attr("class", "controlled-contents");
 
-                        if(d.id !== "main"){
-                            controlledContentsG
-                                .append("rect")
-                                    .attr("class", "bg")
-                                    .attr("stroke", "none")
-                                    .attr("fill", d.colour || "transparent")
-                                    .attr("fill-opacity", 0.3);
-
-                            controlledContentsG
-                                .append("g")
-                                    .attr("class", "resize")
-                                        .append("rect")
-                                            .attr("fill", "transparent")
-                                            .attr("stroke", grey10(4))
-                                            .attr("stroke-width", 0.4)
-                                            .attr("stroke-dasharray", 1)
-                                            .style("cursor", "pointer")
-                                            .attr("opacity", 0)
-                                            .on("mouseover", function(){
-                                                d3.select(this).attr("opacity", 1);
-                                            })
-                                            .on("mouseout", function(){
-                                                d3.select(this).attr("opacity", 0);
-                                            });
-                        }
+                        controlledContentsG
+                            .append("rect")
+                                .attr("class", "bg")
+                                .attr("stroke", "none")
+                                .attr("display", d.id === "main" ? "none" : null)
+                                .attr("fill", d.colour || "transparent")
+                                .attr("fill-opacity", 0.15);
 
                         const titleG = controlledContentsG.append("g").attr("class", "title");
                         titleG
@@ -131,48 +113,98 @@ export default function aimsComponent() {
                             .attr("transform", "translate(" + (d.displayX) +"," + d.y +")")
                             .call(drag);
 
-                        if(d.id !== "main"){
-                            //bg
-                            aimG.selectAll("rect.bg")
-                                .attr("width", d.displayWidth)
-                                .attr("height", d.height);
+                        //bg
+                        aimG.selectAll("rect.bg")
+                            .attr("width", d.displayWidth)
+                            .attr("height", d.height);
 
-                            //resize handle
-                            const handleWidth = 30;
-                            const handleHeight = 30;
-                            controlledContentsG.select("g.resize rect")
-                                .attr("display", d.id === "main" ? "none" : null)
-                                .attr("x", d.displayWidth - handleWidth/2)
-                                .attr("y", d.height - handleHeight/2)
-                                .attr("width", handleWidth)
-                                .attr("height", handleHeight);
+                        //resize handle
+                        //note - d is aim
+                        const resizeDrag = d3.drag()
+                            .on("start", function(e, resizeD) { resizeDragStart.call(this.parentNode.parentNode, e, resizeD.loc, d); })
+                            .on("drag", function(e, resizeD) { resizeDragged.call(this.parentNode.parentNode, e, resizeD.loc, d); })
+                            .on("end", function(e, resizeD) { resizeDragEnd.call(this.parentNode.parentNode, e, d); })
 
-                            const resizeDrag = d3.drag()
-                                .on("start", function(e, d) { resizeDragStart.call(this.parentNode.parentNode, e, d); })
-                                .on("drag", function(e, d) { resizeDragged.call(this.parentNode.parentNode, e, d); })
-                                .on("end", function(e, d) { resizeDragEnd.call(this.parentNode.parentNode, e, d); })
+                        const handleWidth = 30;
+                        const handleHeight = 30;
+                        const resizeData = [
+                            //{ x: 0, y: 0 },
+                            { loc:"top-left", x: -handleWidth/2, y: -handleHeight/2 }, 
+                            { loc:"top-right", x: d.displayWidth - handleWidth/2, y: -handleHeight/2 }, 
+                            { loc:"bot-right", x: d.displayWidth - handleWidth/2, y: d.height - handleHeight/2 }, 
+                            { loc:"bot-left", x: -handleWidth/2, y: d.height - handleHeight/2}
+                        ];
 
-                            controlledContentsG.select("g.resize").call(resizeDrag)
+                        const resizeG = controlledContentsG.selectAll("g.resize").data(d.id === "main" ? [] : resizeData);
+                        resizeG.enter()
+                            .append("g")
+                                .attr("class", "resize")
+                                .each(function(d, i){
+                                    d3.select(this)
+                                        .append("rect")
+                                            .attr("width", handleWidth)
+                                            .attr("height", handleHeight)
+                                            .attr("fill", "transparent")
+                                            .attr("stroke", grey10(4))
+                                            .attr("stroke-width", 0.4)
+                                            .attr("stroke-dasharray", 1)
+                                            .style("cursor", "pointer")
+                                            .attr("opacity", 0)
+                                            .on("mouseover", function(){ d3.select(this).attr("opacity", 1); })
+                                            .on("mouseout", function(){ d3.select(this).attr("opacity", 0); });
+                                })
+                                .merge(resizeG)
+                                .attr("transform", d => "translate("+d.x +"," +d.y +")")
+                                .call(resizeDrag)
+                        
+                        function resizeDragStart(e, d){
+                        }
+
+                        function resizeDragged(e, loc, aim){
+                            if(loc === "top-left"){
+                                //reduce width (but dx < 0 this will be an increase) and increase x pos (which is decrease if dx < 0)
+                                aim.displayWidth -= e.dx;
+                                aim.displayX += e.dx;
+                                //reduce height (but dy < 0 this will be an increase) and increase y pos (which is decrease if dy < 0)
+                                aim.height -= e.dy;
+                                aim.y += e.dy;
+
+                            } else if(loc === "top-right"){
+                                //increase width only
+                                aim.displayWidth += e.dx;
+                                //reduce height (but dy < 0 this will be an increase) and increase y pos (which is decrease if dy < 0)
+                                aim.height -= e.dy;
+                                aim.y += e.dy;
+
+                            } else if(loc === "bot-right"){
+                                //increase width and height only
+                                aim.displayWidth += e.dx;
+                                aim.height += e.dy;
+
+                            } else {
+                                //bot-left
+                                //reduce width (but dx < 0 this will be an increase) and increase x pos (which is decrease if dx < 0)
+                                aim.displayWidth -= e.dx;
+                                aim.displayX += e.dx;
+                                //increase height only
+                                aim.height += e.dy;
+
+                            }
+
+                            d3.select(this).select("g.controlled-contents")
+                                .attr("transform", "translate(" + (aim.displayX) +"," + aim.y +")");
+
+                            d3.select(this).select("rect")
+                                .attr("width", aim.displayWidth)
+                                .attr("height", aim.height);
                             
-                            function resizeDragStart(e, d){
-                            }
+                            d3.select(this).call(updateAimGoals, aim);
+                        }
 
-                            function resizeDragged(e, d){
-                                d.displayWidth += e.dx;
-                                d.height += e.dy;
-                                d3.select(this).select("rect")
-                                    .attr("width", d.displayWidth)
-                                    .attr("height", d.height);
-                                
-                                d3.select(this).call(updateAimGoals, d);
-                            }
-
-                            function resizeDragEnd(e, d){
-                                //d.planets were not updated in dragged so need to pass the planetDs from dom
-                                const planetDs = d3.select(this).selectAll("g.planet").data();
-                                onResizeDragEnd.call(this, e, d, planetDs);
-                            }
-
+                        function resizeDragEnd(e, d){
+                            //d.planets were not updated in dragged so need to pass the planetDs from dom
+                            const planetDs = d3.select(this).selectAll("g.planet").data();
+                            onResizeDragEnd.call(this, e, d, planetDs);
                         }
 
                         //title
@@ -183,6 +215,7 @@ export default function aimsComponent() {
                             .text(d.name || (d.id === "main" ? "unnamed canvas" : "unnamed group"))
 
                         //planets
+                        //todo - find out why all the d values that were updated in onResizeDragEnd are undefined
                         const planetsG = aimG.selectAll("g.planets").data([d.planets]);
                         planetsG.enter()
                             .append("g") // @todo - chqnge to insert so its before resize and drag handles so they arent blocked
@@ -221,31 +254,31 @@ export default function aimsComponent() {
             prevData = data;
         })
 
-        function updateAimGoals(containerG, aimD){
+        function updateAimGoals(containerG, aim){
             containerG.selectAll("g.planet")
-                .each(function(planetD){
-                    if(pointIsInRect(planetD, { x: aimD.displayX, y:aimD.y, width: aimD.displayWidth, height:aimD.height })){
+                .each(function(planet){
+                    if(pointIsInRect(planet, { x: aim.displayX, y:aim.y, width: aim.displayWidth, height:aim.height })){
                         //set the aim id
-                        planetD.aimId = aimD.id;
-                    }else if(planetD.aimId === aimD.id){
+                        planet.aimId = aim.id;
+                    }else if(planet.aimId === aim.id){
                         //remove the aim id
-                        planetD.aimId = undefined;
+                        planet.aimId = undefined;
                     }
 
                     //dom - update in this aim or left this aim
                     const coreEllipse = d3.select(this).select("ellipse.core");
-                    if(planetD.aimId === aimD.id){ coreEllipse.attr("fill", aimD.colour || COLOURS.planet); }
-                    if(!planetD.aimId){ coreEllipse.attr("fill", COLOURS.planet); }
+                    if(planet.aimId === aim.id){ coreEllipse.attr("fill", aim.colour || COLOURS.planet); }
+                    if(!planet.aimId){ coreEllipse.attr("fill", COLOURS.planet); }
                 })
         }
 
-        function updateGoalAim(planetG, planetD){
+        function updateGoalAim(planetG, planet){
             const newAim = prevData
                 .filter(a => a.id !== "main")
-                .find(a => pointIsInRect(planetD, { x: a.displayX, y:a.y, width: a.displayWidth, height:a.height }))
+                .find(a => pointIsInRect(planet, { x: a.displayX, y:a.y, width: a.displayWidth, height:a.height }))
             
-            if(newAim?.id !== planetD.aimId){
-                planetD.aimId = newAim?.id;
+            if(newAim?.id !== planet.aimId){
+                planet.aimId = newAim?.id;
                 //@todo - think about how .colours is used, rather tan doing it manually here again
 
                 //dom
