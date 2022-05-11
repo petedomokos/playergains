@@ -12,6 +12,7 @@ import dragEnhancements from './enhancedDragHandler';
 import { timeMonth, timeWeek } from "d3-time";
 import menuComponent from './menuComponent';
 import planetsComponent from './planetsComponent';
+import { pointIsInRect } from "./geometryHelpers";
 /*
 
 */
@@ -73,7 +74,7 @@ export default function aimsComponent() {
             .on("end", withClick(dragEnd));
         // expression elements
         selection.each(function (data) {
-            console.log("aims", data)
+            // console.log("aims", data)
             containerG = d3.select(this);
             const aimG = containerG.selectAll("g.aim").data(data);
             aimG.enter()
@@ -104,12 +105,12 @@ export default function aimsComponent() {
                     .each(function(d){
                         const aimG = d3.select(this);
                         const controlledContentsG = aimG.select("g.controlled-contents")
-                            .attr("transform", "translate(" + d.x +"," + d.y +")")
+                            .attr("transform", "translate(" + (d.displayX) +"," + d.y +")")
                             .call(drag);
 
                         //bg
                         aimG.select("rect")
-                            .attr("width", d.width)
+                            .attr("width", d.displayWidth)
                             .attr("height", d.height)
 
                         //title
@@ -158,6 +159,7 @@ export default function aimsComponent() {
         })
 
         function dragGoalStart(e , d){
+            console.log("drag goal start")
             d3.select(this).raise();
             //note - called on click too - could improve enhancedDrag by preveting dragStart event
             //until a drag event has also been recieved, so stroe it and then release when first drag event comes through
@@ -167,6 +169,19 @@ export default function aimsComponent() {
         function draggedGoal(e , d, shouldUpdateSelected){
             d.x += e.dx;
             d.y += e.dy;
+
+            //if goal no longer inside aim rect, update colour
+            const newAim = prevData
+                .filter(a => a.id !== "main")
+                .find(a => pointIsInRect(d, { x: a.displayX, y:a.y, width: a.displayWidth, height:a.height }))
+            
+            if(newAim?.id !== d.aimId){
+                d.aimId = newAim?.id;
+                //manually update dom
+                //@todo - think about how .colours is used, rather tan doing it manually here again
+                d3.select(this).select("ellipse.core")
+                    .attr("fill", newAim?.colour || COLOURS.planet);
+            }
 
             //obv need to tidy up teh way trueX is added in planetslayout too
             //but first look at why link line
@@ -185,16 +200,17 @@ export default function aimsComponent() {
         }
 
         function dragStart(e , d){
-            d3.select(this).raise();
+            console.log("drag aim start")
+            d3.select(this.parentNode).raise();
 
             //onDragStart does nothing
             onDragStart.call(this, e, d)
         }
         function dragged(e , d){
             //rect
-            d.x += e.dx;
+            d.displayX += e.dx;
             d.y += e.dy;
-            d3.select(this).attr("transform", "translate(" + d.x +"," + d.y +")")
+            d3.select(this).attr("transform", "translate(" + d.displayX +"," + d.y +")")
             
             //goals
 

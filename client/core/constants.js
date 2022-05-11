@@ -2,6 +2,8 @@ export const grey10 = (i) => ["#FFFFFF", "#E8E8E8","#D3D3D3", "#BEBEBE", "#A8A8A
 
 export const OPEN_CHANNEL_EXT_WIDTH = 50;
 export const DEFAULT_D3_TICK_SIZE = 6;
+export const DEFAULT_PLANET_RX = 50;
+export const DEFAULT_PLANET_RY = 50;
 
 export const DIMNS = {
     planet:{
@@ -10,6 +12,7 @@ export const DIMNS = {
     },
     aim:{
         vertPlanetGap:3,
+        margin:{ left: 5, right: 5, top: 5, bottom: 5 }
     }
 }
 export const COLOURS = {

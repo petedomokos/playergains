@@ -20,7 +20,6 @@ import { findNearestPlanet, distanceBetweenPoints, channelContainsPoint, channel
 import dragEnhancements from './enhancedDragHandler';
 import { timeMonth, timeWeek } from "d3-time";
 import openedLinkComponent from './openedLinkComponent';
-import { pointIsInRect } from "./geometryHelpers";
 
 
 /*
@@ -285,13 +284,12 @@ export default function journeyComponent() {
             /*
             todo
             leave links and measures turned off whilst
-                - change aims so they store targetDate and 
-                - make aim have rounded corners
                 - change dimensions of an aim (drag corner handle)
                 - integrate aim with zoom
+                - make aim have rounded corners
                 - integrate aim with open channel (and fix the existing bug around this)
                 - aim menu (delete option only)
-                
+
                 //todo - consider the issue when draggin aim when a channel is open, planets at different locations in the aim may be conflicted about 
                 //whether to slide left or right to get to nearest channel. if all channels closed, this wont happen.
                 But in this case we simply slide teh channel wider too, and then when channel is closed, aim shortens too.
@@ -326,7 +324,7 @@ export default function journeyComponent() {
 
                         //update aim
                         updatePlanets(planetsToUpdate);
-                        updateAim({ id:d.id, x: d.x, y: d.y }) 
+                        updateAim({ id:d.id, actualX: d.displayX, y: d.y }) 
                     })
                     //.onMouseover(() => {})
                     //.onMouseout(() => {})
@@ -353,16 +351,12 @@ export default function journeyComponent() {
                     .onDragGoalEnd(function(e , d){
                         console.log("journey drgGoalEnd", d.id, d.x)
                         selected = undefined;
-                        //if goal no longer inside aim rect, update aimId
-                        const aim = aimsData
-                            .filter(a => a.id !== "main")
-                            .find(a => pointIsInRect(d, a))
 
                         //targetDate must be based on trueX
                         //updatePlanet({ id:d.id, targetDate:timeScale.invert(trueX(d.x)), yPC:yScale.invert(d.y) });
                         updatePlanet({ 
                             id:d.id,
-                            aimId:aim?.id,
+                            aimId:d.aimId,
                             targetDate:zoomedTimeScale.invert(trueX(d.x)), 
                             yPC:zoomedYScale.invert(d.y)
                         });
@@ -656,7 +650,8 @@ export default function journeyComponent() {
                 //id:createAimId(aims), do id in Journey
                 name:d.name,
                 //goals: add in Journey
-                x: d.x - goalWidth/2 - aimMargin.left,
+                // the displayed x and y may transition if planets transition
+                actualX: d.targetX - goalWidth/2 - aimMargin.left,
                 y:d.y - (goalHeight * 1.5) - vertGap - aimMargin.top,
                 width:goalWidth + aimMargin.left + aimMargin.right,
                 height:3 * goalHeight + 2 * vertGap + aimMargin.top + aimMargin.bottom

@@ -5,7 +5,7 @@ import { calcTrueX, calcAdjX, findPointChannel, findDateChannel, findNearestChan
 //import { COLOURS, DIMNS } from "./constants";
 import { addWeeks } from "../util/TimeHelpers"
 import { ellipse } from "./ellipse";
-import { grey10, COLOURS, DIMNS } from "./constants";
+import { grey10, COLOURS, DIMNS, DEFAULT_PLANET_RX, DEFAULT_PLANET_RY } from "./constants";
 import { findNearestPlanet, distanceBetweenPoints, channelContainsPoint, channelContainsDate } from './geometryHelpers';
 import { OPEN_CHANNEL_EXT_WIDTH } from './constants';
 import dragEnhancements from './enhancedDragHandler';
@@ -20,8 +20,6 @@ export default function planetsComponent() {
     let height = DIMNS.planet.height;
 
     let fontSize = 9;
-    const DEFAULT_PLANET_RX = 50;
-    const DEFAULT_PLANET_RY = 50;
 
     let timeScale = x => 0;
     let yScale = x => 0;
