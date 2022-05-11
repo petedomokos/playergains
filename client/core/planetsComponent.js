@@ -92,12 +92,14 @@ export default function planetsComponent() {
         // expression elements
         selection.each(function (data) {
             containerG = d3.select(this);
-            //console.log("planets", containerG.attr("class"))
             withClick.onClick(onClick)
             const planetDrag = d3.drag()
-                .on("start", withClick(onPlanetDragStart))
-                .on("drag", withClick(onPlanetDrag))
-                .on("end", withClick(onPlanetDragEnd));
+                .on("start", withClick(onDragStart))
+                .on("drag", withClick(onDrag))
+                .on("end", withClick(function(e,d){
+                    if(withClick.isClick()) { return; }
+                    onDragEnd.call(this, e, d);
+                }));;
 
             const planetG = containerG.selectAll("g.planet").data(data, p => p.id);
             planetG.enter()
@@ -298,36 +300,6 @@ export default function planetsComponent() {
                             .on("end", function() { d3.select(this).remove() });
                 }
             }) 
-     
-            function onPlanetDragStart(e , d){
-                d3.select(this).raise();
-                //note - called on click too - could improve enhancedDrag by preveting dragStart event
-                //until a drag event has also been recieved, so stroe it and then release when first drag event comes through
-                onDragStart.call(this, e, d)
-            }
-            function onPlanetDrag(e , d){
-                d.x += e.dx;
-                d.y += e.dy;
-
-                //obv need to tidy up teh way trueX is added in planetslayout too
-                //but first look at why link line
-                //becomes short and what happens to bar charts
-                const targetDate = timeScale.invert(d.channel.trueX(d.x))
-                const yPC = yScale.invert(d.y)
-
-                //UPDATE DOM
-                //planet
-                d3.select(this).attr("transform", "translate("+(d.x) +"," +(d.y) +")");
-
-                onDrag.call(this, e, { ...d, targetDate, yPC, unaligned:true })
-
-            }
-
-            //note: newX and Y should be stored as d.x and d.y
-            function onPlanetDragEnd(e, d){
-                if(withClick.isClick()) { return; }
-                onDragEnd.call(this, e, d);
-            }
 
             //ring
             let linkPlanets = [];

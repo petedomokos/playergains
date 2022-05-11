@@ -67,7 +67,7 @@ export default function aimsComponent() {
     function aims(selection, options={}) {
         withClick.onClick(onClick)
         const drag = d3.drag()
-            .filter(d => d.id !== "main")
+            .filter((e,d) => d.id !== "main")
             .on("start", withClick(dragStart))
             .on("drag", withClick(dragged))
             .on("end", withClick(dragEnd));
@@ -105,6 +105,7 @@ export default function aimsComponent() {
                         const aimG = d3.select(this);
                         const controlledContentsG = aimG.select("g.controlled-contents")
                             .attr("transform", "translate(" + d.x +"," + d.y +")")
+                            .call(drag);
 
                         //bg
                         aimG.select("rect")
@@ -131,9 +132,12 @@ export default function aimsComponent() {
                                     .timeScale(timeScale)
                                     .yScale(yScale)
                                     .fontSize(planetFontSize)
+
                                     .onClick(onClickGoal)
-                                    .onDrag(onDragGoal)
-                                    .onDragEnd(onDragGoalEnd)
+                                    .onDragStart(dragGoalStart)
+                                    .onDrag(draggedGoal)
+                                    .onDragEnd(dragGoalEnd)
+
                                     .onMouseover(onMouseoverGoal)
                                     .onMouseout(onMouseoutGoal)
                                     .addLink(addLink)
@@ -146,40 +150,70 @@ export default function aimsComponent() {
                             
                         planetsG.exit().remove();
 
-                    })
-                    //temp till I see how to apply filter to d3 drag
-                    d3.selectAll("g.aim").filter(d => d.id !== "main")
-                        .call(drag);
+                    });
 
             aimG.exit().remove();
 
             prevData = data;
         })
 
+        function dragGoalStart(e , d){
+            d3.select(this).raise();
+            //note - called on click too - could improve enhancedDrag by preveting dragStart event
+            //until a drag event has also been recieved, so stroe it and then release when first drag event comes through
+            onDragGoalStart.call(this, e, d)
+
+        }
+        function draggedGoal(e , d, shouldUpdateSelected){
+            d.x += e.dx;
+            d.y += e.dy;
+
+            //obv need to tidy up teh way trueX is added in planetslayout too
+            //but first look at why link line
+            //becomes short and what happens to bar charts
+            const targetDate = timeScale.invert(d.channel.trueX(d.x))
+            const yPC = yScale.invert(d.y)
+
+            //UPDATE DOM
+            //planet
+            d3.select(this).attr("transform", "translate("+(d.x) +"," +(d.y) +")");
+
+            onDragGoal.call(this, e, { ...d, targetDate, yPC, unaligned:true }, shouldUpdateSelected)
+        }
+        function dragGoalEnd(e, d){
+            onDragGoalEnd.call(this, e, d);
+        }
+
         function dragStart(e , d){
             d3.select(this).raise();
-        
+
+            //onDragStart does nothing
             onDragStart.call(this, e, d)
         }
         function dragged(e , d){
-            //console.log("drg", d.x)
             //rect
             d.x += e.dx;
             d.y += e.dy;
-            d3.select(this).select("rect")
-                .attr("x", d.x)
-                .attr("y", d.y)
+            d3.select(this).attr("transform", "translate(" + d.x +"," + d.y +")")
             
             //goals
-            d3.select(this).selectAll("g.planet")
-                
+
+            d3.select(this.parentNode).selectAll("g.planet")
+                .each(function(planetD){
+                    planetD.x += e.dx;
+                    planetD.y += e.dy;
+                    d3.select(this).attr("transform", "translate(" + planetD.x +"," + planetD.y +")")
+
+                })
     
+            //onDrag does nothing
             onDrag.call(this, e, d)
         }
 
         //note: newX and Y should be stored as d.x and d.y
         function dragEnd(e, d){
             if(withClick.isClick()) { return; }
+
             onDragEnd.call(this, e, d);
         }
 

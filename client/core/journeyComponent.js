@@ -82,6 +82,7 @@ export default function journeyComponent() {
     let createPlanet = function(){};
     //@todo - change name to updatePlanetState and so on to distinguish from dom changes eg updateplanets could be either
     let updatePlanet = function(){};
+    let updatePlanets = function(){};
     let addMeasureToPlanet = function(){};
     let deletePlanet = function (){};
     let addLink = function(){};
@@ -284,14 +285,17 @@ export default function journeyComponent() {
             /*
             todo
             leave links and measures turned off whilst
+                - change aims so they store targetDate and 
                 - make aim have rounded corners
-                -  drag an aim -> todo - expose planetsComponent draghandlers and call them directly from aim.
-                ORRRRR move them up to aimComponent completely, so they can just be called from multiple places, ie 
-                can be called when a planet ids dragged or when an aim is draged
                 - change dimensions of an aim (drag corner handle)
                 - integrate aim with zoom
                 - integrate aim with open channel (and fix the existing bug around this)
                 - aim menu (delete option only)
+                
+                //todo - consider the issue when draggin aim when a channel is open, planets at different locations in the aim may be conflicted about 
+                //whether to slide left or right to get to nearest channel. if all channels closed, this wont happen.
+                But in this case we simply slide teh channel wider too, and then when channel is closed, aim shortens too.
+                I mean that is what should happen for an open channel anyway
                 */
 
 
@@ -305,16 +309,36 @@ export default function journeyComponent() {
                     .planetFontSize(k * 9)
                     //.onUpdateAim(function(){ })
                     //.onClick(() => {})
-                    //.onDragStart(function(e, d){})
-                    //.onDrag(function(e, d){})
-                    .onDragEnd(function(e, d){ updateAim({ id:d.id, x: d.x, y: d.y }) })
+                    .onDragStart(function(e, d){
+                        //aim is raised already in aimComponent
+                    })
+                    .onDrag(function(e, d){
+                        //update the links and call the linksComponent again
+                    })
+                    .onDragEnd(function(e, d){
+                        //grab the latest planet x and y's from dom, as teh aim d.planets have not been updated
+                        const planetsToUpdate = d3.select(this.parentNode).selectAll("g.planet").data()
+                            .map(p => ({
+                                id:p.id,
+                                targetDate:zoomedTimeScale.invert(trueX(p.x)), 
+                                yPC:zoomedYScale.invert(p.y)
+                            }));
+
+                        //update aim
+                        updatePlanets(planetsToUpdate);
+                        updateAim({ id:d.id, x: d.x, y: d.y }) 
+                    })
                     //.onMouseover(() => {})
                     //.onMouseout(() => {})
                     .onClickGoal((e,d) => { updateSelected(d);})
                     //.onDragGoalStart(function(){})
-                    .onDragGoal(function(e , d){ //pass in onDragGoal
-                        updateSelected(undefined); //warning - may interrupt drag handling with touch
-                        //links layout needs updated planet position and targetDate
+                    .onDragGoal(function(e , d, shouldUpdateSelected = true){ //pass in onDragGoal
+                        console.log("journey drgGoal")
+                        if(shouldUpdateSelected){
+                            //updateSelected(undefined);
+                            //warning - may interrupt drag handling with touch
+                            //links layout needs updated planet position and targetDate
+                        }
                         state.planets = state.planets.map(p => { return p.id === d.id ? d : p });
                         const newPlanetsData = myPlanetsLayout(state.planets);
                         myLinksLayout.planetsData(newPlanetsData);
@@ -327,6 +351,7 @@ export default function journeyComponent() {
 
                     })
                     .onDragGoalEnd(function(e , d){
+                        console.log("journey drgGoalEnd", d.id, d.x)
                         selected = undefined;
                         //if goal no longer inside aim rect, update aimId
                         const aim = aimsData
@@ -719,6 +744,13 @@ export default function journeyComponent() {
         if (!arguments.length) { return updatePlanet; }
         if(typeof value === "function"){
             updatePlanet = value;
+        }
+        return journey;
+    };
+    journey.updatePlanets = function (value) {
+        if (!arguments.length) { return updatePlanets; }
+        if(typeof value === "function"){
+            updatePlanets = value;
         }
         return journey;
     };

@@ -167,6 +167,12 @@ const Journey = ({dimns}) => {
         .updatePlanet(props => {
           setPlanets(prevState => updatedState(prevState, props))
         })
+        .updatePlanets(planetsToUpdate => {
+          setPlanets(prevState => prevState.map(p => {
+              const propsToUpdate = planetsToUpdate.find(planet => planet.id === p.id) || {};
+              return { ...p, ...propsToUpdate }
+          }));
+        })
         .updateAim(props => {
           setAims(prevState => updatedState(prevState, props))
         })
