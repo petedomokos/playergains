@@ -46,6 +46,8 @@ export default function aimsComponent() {
     let onMouseoverGoal = function(){};
     let onMouseoutGoal = function(){};
 
+    let onResizeDragEnd = function() {};
+
     let deletePlanet = function(){};
     let updatePlanet = function(){};
     let addLink = function(){};
@@ -84,19 +86,40 @@ export default function aimsComponent() {
                         const aimG = d3.select(this);
 
                         const controlledContentsG = aimG.append("g").attr("class", "controlled-contents");
-                        controlledContentsG
-                            .append("rect")
-                                .attr("stroke", "none")
-                                .attr("fill", d.colour || "transparent")
-                                .attr("fill-opacity", 0.3);
+
+                        if(d.id !== "main"){
+                            controlledContentsG
+                                .append("rect")
+                                    .attr("class", "bg")
+                                    .attr("stroke", "none")
+                                    .attr("fill", d.colour || "transparent")
+                                    .attr("fill-opacity", 0.3);
+
+                            controlledContentsG
+                                .append("g")
+                                    .attr("class", "resize")
+                                        .append("rect")
+                                            .attr("fill", "transparent")
+                                            .attr("stroke", grey10(4))
+                                            .attr("stroke-width", 0.4)
+                                            .attr("stroke-dasharray", 1)
+                                            .style("cursor", "pointer")
+                                            .attr("opacity", 0)
+                                            .on("mouseover", function(){
+                                                d3.select(this).attr("opacity", 1);
+                                            })
+                                            .on("mouseout", function(){
+                                                d3.select(this).attr("opacity", 0);
+                                            });
+                        }
 
                         const titleG = controlledContentsG.append("g").attr("class", "title");
                         titleG
                             .append("text")
                                 .attr("class", "main")
-                                .attr("font-size", d.id === "main" ? 8 : 6)
-                                .attr("stroke", grey10(2))
-                                .attr("stroke-width", 0.1)
+                                .attr("font-size", d.id === "main" ? 7 : 6)
+                                .attr("stroke", grey10(1))
+                                .attr("stroke-width", 0.1);
                         
                         planets[d.id] = planetsComponent();
 
@@ -108,10 +131,49 @@ export default function aimsComponent() {
                             .attr("transform", "translate(" + (d.displayX) +"," + d.y +")")
                             .call(drag);
 
-                        //bg
-                        aimG.select("rect")
-                            .attr("width", d.displayWidth)
-                            .attr("height", d.height)
+                        if(d.id !== "main"){
+                            //bg
+                            aimG.selectAll("rect.bg")
+                                .attr("width", d.displayWidth)
+                                .attr("height", d.height);
+
+                            //resize handle
+                            const handleWidth = 30;
+                            const handleHeight = 30;
+                            controlledContentsG.select("g.resize rect")
+                                .attr("display", d.id === "main" ? "none" : null)
+                                .attr("x", d.displayWidth - handleWidth/2)
+                                .attr("y", d.height - handleHeight/2)
+                                .attr("width", handleWidth)
+                                .attr("height", handleHeight);
+
+                            const resizeDrag = d3.drag()
+                                .on("start", function(e, d) { resizeDragStart.call(this.parentNode, e, d); })
+                                .on("drag", function(e, d) { resizeDragged.call(this.parentNode, e, d); })
+                                .on("end", function(e, d) { resizeDragEnd.call(this.parentNode, e, d); })
+
+                            controlledContentsG.select("g.resize").call(resizeDrag)
+                            
+                            function resizeDragStart(e, d){
+                            }
+
+                            function resizeDragged(e, d){
+                                d.displayWidth += e.dx;
+                                d.height += e.dy;
+                                d3.select(this).select("rect")
+                                    .attr("width", d.displayWidth)
+                                    .attr("height", d.height);
+                                
+                                d3.select(this).call(updateAimGoals, d);
+                            }
+
+                            function resizeDragEnd(e, d){
+                                //d.planets were not updated in dragged so need to pass the planetDs from dom
+                                const planetDs = d3.select(this).selectAll("g.planet").data();
+                                onResizeDragEnd.call(this, e, d, planetDs);
+                            }
+
+                        }
 
                         //title
                         const titleG = controlledContentsG.select("g.title")
@@ -120,9 +182,10 @@ export default function aimsComponent() {
                         titleG.select("text.main")
                             .text(d.name || (d.id === "main" ? "unnamed canvas" : "unnamed group"))
 
+                        //planets
                         const planetsG = aimG.selectAll("g.planets").data([d.planets]);
                         planetsG.enter()
-                            .append("g")
+                            .append("g") // @todo - chqnge to insert so its before resize and drag handles so they arent blocked
                                 .attr("class", "planets planets-"+d.id)
                                 .merge(planetsG)
                                 .call(planets[d.id]
@@ -158,8 +221,41 @@ export default function aimsComponent() {
             prevData = data;
         })
 
+        function updateAimGoals(containerG, aimD){
+            containerG.selectAll("g.planet")
+                .each(function(planetD){
+                    if(pointIsInRect(planetD, { x: aimD.displayX, y:aimD.y, width: aimD.displayWidth, height:aimD.height })){
+                        //set the aim id
+                        planetD.aimId = aimD.id;
+                    }else if(planetD.aimId === aimD.id){
+                        //remove the aim id
+                        planetD.aimId = undefined;
+                    }
+
+                    //dom - update in this aim or left this aim
+                    const coreEllipse = d3.select(this).select("ellipse.core");
+                    if(planetD.aimId === aimD.id){ coreEllipse.attr("fill", aimD.colour || COLOURS.planet); }
+                    if(!planetD.aimId){ coreEllipse.attr("fill", COLOURS.planet); }
+                })
+        }
+
+        function updateGoalAim(planetG, planetD){
+            const newAim = prevData
+                .filter(a => a.id !== "main")
+                .find(a => pointIsInRect(planetD, { x: a.displayX, y:a.y, width: a.displayWidth, height:a.height }))
+            
+            if(newAim?.id !== planetD.aimId){
+                planetD.aimId = newAim?.id;
+                //@todo - think about how .colours is used, rather tan doing it manually here again
+
+                //dom
+                planetG.select("ellipse.core")
+                    .attr("fill", newAim?.colour || COLOURS.planet);
+            }
+        }
+
         function dragGoalStart(e , d){
-            console.log("drag goal start")
+            //console.log("drag goal start")
             d3.select(this).raise();
             //note - called on click too - could improve enhancedDrag by preveting dragStart event
             //until a drag event has also been recieved, so stroe it and then release when first drag event comes through
@@ -170,28 +266,15 @@ export default function aimsComponent() {
             d.x += e.dx;
             d.y += e.dy;
 
-            //if goal no longer inside aim rect, update colour
-            const newAim = prevData
-                .filter(a => a.id !== "main")
-                .find(a => pointIsInRect(d, { x: a.displayX, y:a.y, width: a.displayWidth, height:a.height }))
-            
-            if(newAim?.id !== d.aimId){
-                d.aimId = newAim?.id;
-                //manually update dom
-                //@todo - think about how .colours is used, rather tan doing it manually here again
-                d3.select(this).select("ellipse.core")
-                    .attr("fill", newAim?.colour || COLOURS.planet);
-            }
+            d3.select(this)
+                .attr("transform", "translate("+(d.x) +"," +(d.y) +")")
+                .call(updateGoalAim, d);
 
             //obv need to tidy up teh way trueX is added in planetslayout too
             //but first look at why link line
             //becomes short and what happens to bar charts
             const targetDate = timeScale.invert(d.channel.trueX(d.x))
             const yPC = yScale.invert(d.y)
-
-            //UPDATE DOM
-            //planet
-            d3.select(this).attr("transform", "translate("+(d.x) +"," +(d.y) +")");
 
             onDragGoal.call(this, e, { ...d, targetDate, yPC, unaligned:true }, shouldUpdateSelected)
         }
@@ -200,7 +283,7 @@ export default function aimsComponent() {
         }
 
         function dragStart(e , d){
-            console.log("drag aim start")
+            //console.log("drag aim start", this)
             d3.select(this.parentNode).raise();
 
             //onDragStart does nothing
@@ -213,7 +296,6 @@ export default function aimsComponent() {
             d3.select(this).attr("transform", "translate(" + d.displayX +"," + d.y +")")
             
             //goals
-
             d3.select(this.parentNode).selectAll("g.planet")
                 .each(function(planetD){
                     planetD.x += e.dx;
@@ -368,6 +450,13 @@ export default function aimsComponent() {
         if (!arguments.length) { return onMouseoutGoal; }
         if(typeof value === "function"){
             onMouseoutGoal = value;
+        }
+        return aims;
+    };
+    aims.onResizeDragEnd = function (value) {
+        if (!arguments.length) { return onResizeDragEnd; }
+        if(typeof value === "function"){
+            onResizeDragEnd = value;
         }
         return aims;
     };

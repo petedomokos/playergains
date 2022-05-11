@@ -281,10 +281,12 @@ export default function journeyComponent() {
                 linksData = myLinksLayout(state.links);
 
             }
+    
+            //todo
             /*
-            todo
             leave links and measures turned off whilst
-                - change dimensions of an aim (drag corner handle)
+                - BUGS - 1. aim drag no longer working - it just does resize drag
+                    - 2. planet drag switches off after an aim drag 
                 - integrate aim with zoom
                 - make aim have rounded corners
                 - integrate aim with open channel (and fix the existing bug around this)
@@ -326,12 +328,21 @@ export default function journeyComponent() {
                         updatePlanets(planetsToUpdate);
                         updateAim({ id:d.id, actualX: d.displayX, y: d.y }) 
                     })
+                    .onResizeDragEnd(function(e, d, planetDs){
+                        //use the latest planetDs from dom, as the aim d.planets have not been updated
+                        const planetsToUpdate = planetDs.map(p => ({ id:p.id, aimId:p.aimId }));
+
+                        //update aim
+                        //updatePlanets(planetsToUpdate);
+                        //we now set the actual width to be the displaywidth which was set to be users drag
+                        updateAim({ id:d.id, width: d.displayWidth, height: d.height }) 
+                    })
                     //.onMouseover(() => {})
                     //.onMouseout(() => {})
                     .onClickGoal((e,d) => { updateSelected(d);})
                     //.onDragGoalStart(function(){})
                     .onDragGoal(function(e , d, shouldUpdateSelected = true){ //pass in onDragGoal
-                        console.log("journey drgGoal")
+                        //console.log("journey drgGoal")
                         if(shouldUpdateSelected){
                             //updateSelected(undefined);
                             //warning - may interrupt drag handling with touch
