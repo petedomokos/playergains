@@ -21,6 +21,19 @@ import dragEnhancements from './enhancedDragHandler';
 import { timeMonth, timeWeek } from "d3-time";
 import openedLinkComponent from './openedLinkComponent';
 
+ /*
+leave links and measures turned off whilst
+    - integrate aim with zoom
+    - make aim have rounded corners
+    - integrate aim with open channel (and fix the existing bug around this)
+    - aim menu (delete option only)
+
+    //todo - consider the issue when draggin aim when a channel is open, planets at different locations in the aim may be conflicted about 
+    //whether to slide left or right to get to nearest channel. if all channels closed, this wont happen.
+    But in this case we simply slide teh channel wider too, and then when channel is closed, aim shortens too.
+    I mean that is what should happen for an open channel anyway
+    */
+
 
 /*
 
@@ -281,23 +294,6 @@ export default function journeyComponent() {
                 linksData = myLinksLayout(state.links);
 
             }
-    
-            //todo
-            /*
-            leave links and measures turned off whilst
-                - BUGS - 1. aim drag no longer working - it just does resize drag
-                    - 2. planet drag switches off after an aim drag 
-                - integrate aim with zoom
-                - make aim have rounded corners
-                - integrate aim with open channel (and fix the existing bug around this)
-                - aim menu (delete option only)
-
-                //todo - consider the issue when draggin aim when a channel is open, planets at different locations in the aim may be conflicted about 
-                //whether to slide left or right to get to nearest channel. if all channels closed, this wont happen.
-                But in this case we simply slide teh channel wider too, and then when channel is closed, aim shortens too.
-                I mean that is what should happen for an open channel anyway
-                */
-
 
             function updateAims(){
                 aims

@@ -148,9 +148,9 @@ export default function aimsComponent() {
                                 .attr("height", handleHeight);
 
                             const resizeDrag = d3.drag()
-                                .on("start", function(e, d) { resizeDragStart.call(this.parentNode, e, d); })
-                                .on("drag", function(e, d) { resizeDragged.call(this.parentNode, e, d); })
-                                .on("end", function(e, d) { resizeDragEnd.call(this.parentNode, e, d); })
+                                .on("start", function(e, d) { resizeDragStart.call(this.parentNode.parentNode, e, d); })
+                                .on("drag", function(e, d) { resizeDragged.call(this.parentNode.parentNode, e, d); })
+                                .on("end", function(e, d) { resizeDragEnd.call(this.parentNode.parentNode, e, d); })
 
                             controlledContentsG.select("g.resize").call(resizeDrag)
                             

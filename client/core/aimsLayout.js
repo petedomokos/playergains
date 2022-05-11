@@ -18,7 +18,7 @@ export default function aimsLayout(){
 
     function update(data){
         const aims = data.map(aim => {
-            console.log("aimlayout", aim)
+            //console.log("aimlayout", aim)
             /*
             note - if all channels are closed, then planet s will all slide together (because distances are the same)
             so in that case, we dont need to use max and min, we can just apply the same slide
