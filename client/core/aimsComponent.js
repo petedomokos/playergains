@@ -21,7 +21,7 @@ export default function aimsComponent() {
     let width = 800;
     let height = 600;
 
-    let aimMargin = { left: 5, right:5, top: 5, bottom: 5 };
+    let aimFontSize = 7;
     let planetFontSize = 6;
 
     let timeScale = x => 0;
@@ -86,6 +86,7 @@ export default function aimsComponent() {
                         const aimG = d3.select(this);
 
                         const controlledContentsG = aimG.append("g").attr("class", "controlled-contents");
+                        const dragHandlesG = aimG.append("g").attr("class", "drag-handles")
 
                         controlledContentsG
                             .append("rect")
@@ -99,7 +100,6 @@ export default function aimsComponent() {
                         titleG
                             .append("text")
                                 .attr("class", "main")
-                                .attr("font-size", d.id === "main" ? 7 : 6)
                                 .attr("stroke", grey10(1))
                                 .attr("stroke-width", 0.1);
                         
@@ -112,11 +112,25 @@ export default function aimsComponent() {
                         const controlledContentsG = aimG.select("g.controlled-contents")
                             .attr("transform", "translate(" + (d.displayX) +"," + d.y +")")
                             .call(drag);
+                        
+                        //drag handlers must not be in ctrolled components else they will be moved during the drag, causing a flicker
+                        const dragHandlesG = aimG.select("g.drag-handles")
+                            .attr("transform", "translate(" + (d.displayX) +"," + d.y +")")
+
 
                         //bg
-                        aimG.selectAll("rect.bg")
+                        controlledContentsG.selectAll("rect.bg")
                             .attr("width", d.displayWidth)
                             .attr("height", d.height);
+                            
+                        //title
+                        const titleG = controlledContentsG.select("g.title")
+                            .attr("transform", "translate(" + (d.id === "main" ? 40 : 5) + "," + (d.id === "main" ? 15 : 7.5) +")")
+                            .attr("transform", "translate(" + (d.width * 0.05 +(d.id === "main" ? 15 : 0)) + "," + (d.height * 0.05) +")")
+                        
+                        titleG.select("text.main")
+                            .attr("font-size", d.id === "main" ? aimFontSize * 1.1 : aimFontSize)
+                            .text(d.name || (d.id === "main" ? "unnamed canvas" : "unnamed group"))
 
                         //resize handle
                         //note - d is aim
@@ -135,7 +149,7 @@ export default function aimsComponent() {
                             { loc:"bot-left", x: -handleWidth/2, y: d.height - handleHeight/2}
                         ];
 
-                        const resizeG = controlledContentsG.selectAll("g.resize").data(d.id === "main" ? [] : resizeData);
+                        const resizeG = dragHandlesG.selectAll("g.resize").data(d.id === "main" ? [] : resizeData);
                         resizeG.enter()
                             .append("g")
                                 .attr("class", "resize")
@@ -158,15 +172,16 @@ export default function aimsComponent() {
                                 .call(resizeDrag)
                         
                         function resizeDragStart(e, d){
+                            d3.select(this).select("g.drag-handles").attr("opacity", 0)
                         }
 
                         function resizeDragged(e, loc, aim){
                             if(loc === "top-left"){
                                 //reduce width (but dx < 0 this will be an increase) and increase x pos (which is decrease if dx < 0)
-                                aim.displayWidth -= e.dx;
+                                //aim.displayWidth -= e.dx;
                                 aim.displayX += e.dx;
                                 //reduce height (but dy < 0 this will be an increase) and increase y pos (which is decrease if dy < 0)
-                                aim.height -= e.dy;
+                                //aim.height -= e.dy;
                                 aim.y += e.dy;
 
                             } else if(loc === "top-right"){
@@ -191,10 +206,12 @@ export default function aimsComponent() {
 
                             }
 
+                            //dom
+                            // note - we will get flickering if we move the drag handle during the drag.
                             d3.select(this).select("g.controlled-contents")
                                 .attr("transform", "translate(" + (aim.displayX) +"," + aim.y +")");
 
-                            d3.select(this).select("rect")
+                            d3.select(this).select("g.controlled-contents").select("rect")
                                 .attr("width", aim.displayWidth)
                                 .attr("height", aim.height);
                             
@@ -202,17 +219,11 @@ export default function aimsComponent() {
                         }
 
                         function resizeDragEnd(e, d){
+                            d3.select(this).select("g.drag-handles").attr("opacity", 1)
                             //d.planets were not updated in dragged so need to pass the planetDs from dom
                             const planetDs = d3.select(this).selectAll("g.planet").data();
                             onResizeDragEnd.call(this, e, d, planetDs);
                         }
-
-                        //title
-                        const titleG = controlledContentsG.select("g.title")
-                            .attr("transform", "translate(" + (d.id === "main" ? 40 : 5) + "," + (d.id === "main" ? 15 : 7.5) +")")
-                        
-                        titleG.select("text.main")
-                            .text(d.name || (d.id === "main" ? "unnamed canvas" : "unnamed group"))
 
                         //planets
                         //todo - find out why all the d values that were updated in onResizeDragEnd are undefined
@@ -362,9 +373,9 @@ export default function aimsComponent() {
         height = value;
         return aims;
     };
-    aims.aimMargin = function (value) {
-        if (!arguments.length) { return aimMargin; }
-        aimMargin = { ...aimMargin, ...value};
+    aims.aimFontSize= function (value) {
+        if (!arguments.length) { return aimFontSize; }
+        aimFontSize = value;
         return aims;
     };
     aims.planetFontSize= function (value) {

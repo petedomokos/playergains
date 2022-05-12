@@ -1,5 +1,6 @@
 import * as d3 from 'd3';
-import { DEFAULT_PLANET_RX, DEFAULT_PLANET_RY, DIMNS } from './constants';
+import { getStartDate } from '../data/planets';
+import { DIMNS } from './constants';
 
 export default function aimsLayout(){
     let timeScale = x => 0;
@@ -10,14 +11,10 @@ export default function aimsLayout(){
     let canvasDimns = { width:800, height:600 };
 
     const aimMargin = DIMNS.aim.margin;
-    const planetRX = DEFAULT_PLANET_RX;
-    const planetRY = DEFAULT_PLANET_RY
-    const defaultAimWidth = 2 * planetRX + aimMargin.left + aimMargin.right;
-    const defaultAimHeight = 2 * planetRY + aimMargin.top + aimMargin.bottom;
-
 
     function update(data){
         const aims = data.map(aim => {
+            const { startDate, endDate, startYPC, endYPC } = aim;
             //console.log("aimlayout", aim)
             /*
             note - if all channels are closed, then planet s will all slide together (because distances are the same)
@@ -27,31 +24,42 @@ export default function aimsLayout(){
             so for now, we just extend the space if necc, and user can reduce it 
             */
 
+            //assume all planets same size
+            let planetRX = planetsData[0]?.rx(DIMNS.planet.width) || 0;
+            let planetRY = planetsData[0]?.ry(DIMNS.planet.height) || 0;
+
             const planets = planetsData.filter(p => p.aimId === aim.id);
             //console.log("planets", planets)
             const planetExtent = d3.extent(planets, p => p.x);
             //console.log("ext", planetExtent)
-            const aimBounds = [
+            const planetBounds = [
                 planetExtent[0] - planetRX - aimMargin.left, 
                 planetExtent[1] + planetRX + aimMargin.right
             ];
+            const actualX = timeScale(startDate);
+            const y = yScale(startYPC);
+            const width = timeScale(endDate) - actualX;
+            const height = yScale(endYPC) - y;
             //console.log("aimBounds", aimBounds)
-
             //increase aim size if planets dont fit in when displayed
-            const displayX = d3.min([aim.actualX, aimBounds[0]]);
-            const displayWidth = d3.max([aim.width, aimBounds[1] - displayX])
+            const displayX = d3.min([actualX, planetBounds[0]]);
+            const displayWidth = d3.max([width, planetBounds[1] - displayX])
             //console.log("displayX", displayX)
             //console.log("displayWidth", displayWidth)
-
-
             return {
                ...aim,
-               displayX,//:aimBounds[0],
-               displayWidth,//: aimBounds[1] - aimBounds[0],
+               actualX,
+               y,
+               width,
+               height,
+               displayX,//:planetBounds[0],
+               displayWidth,//: planetBounds[1] - planetBounds[0],
                //note - planets have alreayd been configured for the visual
                planets,
             }
         })
+        //todo - check it works to render the aim
+         //amend the dragEnd handlers that update aim, so they send the inverted values to state
         const mainAim = {
             id:"main",
             planets:planetsData.filter(p => !p.aimId),

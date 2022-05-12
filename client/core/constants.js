@@ -4,6 +4,7 @@ export const OPEN_CHANNEL_EXT_WIDTH = 50;
 export const DEFAULT_D3_TICK_SIZE = 6;
 export const DEFAULT_PLANET_RX = 50;
 export const DEFAULT_PLANET_RY = 50;
+export const PLANET_RING_MULTIPLIER = 1.3;
 
 export const DIMNS = {
     planet:{
@@ -12,7 +13,7 @@ export const DIMNS = {
     },
     aim:{
         vertPlanetGap:3,
-        margin:{ left: 5, right: 5, top: 5, bottom: 5 }
+        margin:{ left: 5, right: 5, top: 10, bottom: 5 }
     }
 }
 export const COLOURS = {

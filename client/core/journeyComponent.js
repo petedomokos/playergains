@@ -15,7 +15,7 @@ import { calcChartHeight, findFuturePlanets, findFirstFuturePlanet, findNearestD
 //import { COLOURS, DIMNS } from "./constants";
 import { addMonths, addWeeks } from "../util/TimeHelpers"
 import { ellipse } from "./ellipse";
-import { grey10, DEFAULT_D3_TICK_SIZE, COLOURS, DIMNS } from "./constants";
+import { grey10, DEFAULT_D3_TICK_SIZE, COLOURS, DIMNS, PLANET_RING_MULTIPLIER } from "./constants";
 import { findNearestPlanet, distanceBetweenPoints, channelContainsPoint, channelContainsDate } from './geometryHelpers';
 import dragEnhancements from './enhancedDragHandler';
 import { timeMonth, timeWeek } from "d3-time";
@@ -24,6 +24,7 @@ import openedLinkComponent from './openedLinkComponent';
  /*
 leave links and measures turned off whilst
     - integrate aim with zoom
+    
     - make aim have rounded corners
     - integrate aim with open channel (and fix the existing bug around this)
     - aim menu (delete option only)
@@ -119,7 +120,9 @@ export default function journeyComponent() {
     let state;
 
     let timeScale;
+    let zoomedTimeScale;
     let yScale;
+    let zoomedYScale;
 
     let zoom;
     let applyZoomX;
@@ -171,8 +174,8 @@ export default function journeyComponent() {
             ]
             timeScale = d3.scaleTime().domain(domain).range(range)
 
-            const zoomedTimeScale = currentZoom.rescaleX(timeScale);
-            const zoomedYScale = currentZoom.rescaleY(yScale);
+            zoomedTimeScale = currentZoom.rescaleX(timeScale);
+            zoomedYScale = currentZoom.rescaleY(yScale);
 
             myChannelsLayout.scale(zoomedTimeScale).currentZoom(currentZoom).contentsWidth(contentsWidth);
             channelsData = myChannelsLayout(state.channels);
@@ -304,7 +307,8 @@ export default function journeyComponent() {
                     .yScale(zoomedYScale)
                     .channelsData(channelsData)
                     .linksData(linksData)
-                    .planetFontSize(k * 9)
+                    .aimFontSize(k * 7)
+                    .planetFontSize(k * 6.5)
                     //.onUpdateAim(function(){ })
                     //.onClick(() => {})
                     .onDragStart(function(e, d){
@@ -312,8 +316,11 @@ export default function journeyComponent() {
                     })
                     .onDrag(function(e, d){
                         //update the links and call the linksComponent again
+                        console.log("aim drg displayX", d.displayX)
                     })
                     .onDragEnd(function(e, d){
+                        const { id, displayWidth, height, displayX, y } = d;
+
                         //grab the latest planet x and y's from dom, as teh aim d.planets have not been updated
                         const planetsToUpdate = d3.select(this.parentNode).selectAll("g.planet").data()
                             .map(p => ({
@@ -322,23 +329,38 @@ export default function journeyComponent() {
                                 yPC:zoomedYScale.invert(p.y)
                             }));
 
+                        const endX = displayX + displayWidth;
+                        const endY = y + height;
+
                         //update aim
                         updatePlanets(planetsToUpdate);
-                        updateAim({ id:d.id, actualX: d.displayX, y: d.y }) 
+                        updateAim({ 
+                            id:d.id,
+                            startDate:zoomedTimeScale.invert(displayX),
+                            endDate:zoomedTimeScale.invert(endX),
+                            startYPC:zoomedYScale.invert(y),
+                            endYPC:zoomedYScale.invert(endY)
+                        }) 
                     })
                     .onResizeDragEnd(function(e, aim, planetDs){
                         //use the latest planetDs from dom, as the aim d.planets have not been updated
                         const planetsToUpdate = planetDs.map(p => ({ id:p.id, aimId:p.aimId }));
 
                         //update aim
+                        const { id, displayWidth, height, displayX, y } = aim;
                         //updatePlanets(planetsToUpdate);
                         //we now set the actual width to be the displaywidth which was set to be users drag
+                        const endX = displayX + displayWidth;
+                        const endY = y + height;
+
+                        //problem - startDate not updating
+                        
                         updateAim({ 
                             id:aim.id, 
-                            width: aim.displayWidth, 
-                            height: aim.height, 
-                            actualX: aim.displayX,
-                            y:aim.y 
+                            startDate:zoomedTimeScale.invert(displayX),
+                            endDate:zoomedTimeScale.invert(endX),
+                            startYPC:zoomedYScale.invert(y),
+                            endYPC:zoomedYScale.invert(endY)
                         }) 
                     })
                     //.onMouseover(() => {})
@@ -657,26 +679,34 @@ export default function journeyComponent() {
             //entry transitiopn handled in planetsComp auto
             const ringRX = +d3.select(this).select("ellipse.ring").attr("rx");
             const ringRY = +d3.select(this).select("ellipse.ring").attr("ry");
+            //const unzoomedGoalRingWidth = DIMNS.planet.width * PLANET_RING_MULTIPLIER;
+            //const unzoomedGoalRingHeight = DIMNS.planet.height * PLANET_RING_MULTIPLIER;
             const goalWidth = ringRX * 2;
             const goalHeight = ringRY * 2;
+
             const vertGap = DIMNS.aim.vertPlanetGap;
-            const aimMargin = aims.aimMargin();
+            const aimMargin = DIMNS.aim.margin;
+            //actualX and y are both zoomed, but when we apply zoomedTiomeScale.invert, it will store them as dates and yPC
+            const actualX = d.targetX - goalWidth/2 - aimMargin.left;
+            const y = d.y - (goalHeight * 1.5) - vertGap - aimMargin.top;
+            const width = goalWidth + aimMargin.left + aimMargin.right;
+            const height = 3 * goalHeight + 2 * vertGap + aimMargin.top + aimMargin.bottom;
             const aim = {
                 //id:createAimId(aims), do id in Journey
                 name:d.name,
-                //goals: add in Journey
-                // the displayed x and y may transition if planets transition
-                actualX: d.targetX - goalWidth/2 - aimMargin.left,
-                y:d.y - (goalHeight * 1.5) - vertGap - aimMargin.top,
-                width:goalWidth + aimMargin.left + aimMargin.right,
-                height:3 * goalHeight + 2 * vertGap + aimMargin.top + aimMargin.bottom
+                //store pre-scale values so independent of zoom
+
+                startDate:zoomedTimeScale.invert(actualX),
+                endDate:zoomedTimeScale.invert(actualX + width),
+                startYPC:zoomedYScale.invert(y),
+                endYPC:zoomedYScale.invert(y + height)
             }
-            const yPCs = [
+            const yPCsForInitGoals = [
                 yScale.invert(d.y - goalHeight - vertGap),
                 d.yPC,
                 yScale.invert(d.y + goalHeight + vertGap)
             ]
-            createAim(aim, d.targetDate, yPCs);
+            createAim(aim, d.targetDate, yPCsForInitGoals);
             
 
             //C: add aim to state with init pos to wrapped around the 3 new planets -> this will be drawn on automatically on update aimsComponent

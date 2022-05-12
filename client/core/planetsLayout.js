@@ -1,4 +1,5 @@
 import * as d3 from 'd3';
+import { PLANET_RING_MULTIPLIER } from './constants';
 import { findNearestChannelByEndDate } from "./helpers";
 
 export default function planetsLayout(){
@@ -47,8 +48,8 @@ export default function planetsLayout(){
                 targetX,
                 rx,
                 ry,
-                ringRx:contentsWidth => rx(contentsWidth) * 1.3,
-                ringRy:contentsHeight => ry(contentsHeight) * 1.3,
+                ringRx:contentsWidth => rx(contentsWidth) * PLANET_RING_MULTIPLIER,
+                ringRy:contentsHeight => ry(contentsHeight) * PLANET_RING_MULTIPLIER,
                 isSelected:selected === p.id,
                 measures
             }
