@@ -139,8 +139,8 @@ export default function aimsComponent() {
                             .on("drag", function(e, resizeD) { resizeDragged.call(this.parentNode.parentNode, e, resizeD.loc, d); })
                             .on("end", function(e, resizeD) { resizeDragEnd.call(this.parentNode.parentNode, e, d); })
 
-                        const handleWidth = 30;
-                        const handleHeight = 30;
+                        const handleWidth = d3.min([d3.max([d.width * 0.1, d.height * 0.1, 12.5]), 25]);
+                        const handleHeight = handleWidth;
                         const resizeData = [
                             //{ x: 0, y: 0 },
                             { loc:"top-left", x: -handleWidth/2, y: -handleHeight/2 }, 
@@ -156,8 +156,6 @@ export default function aimsComponent() {
                                 .each(function(d, i){
                                     d3.select(this)
                                         .append("rect")
-                                            .attr("width", handleWidth)
-                                            .attr("height", handleHeight)
                                             .attr("fill", "transparent")
                                             .attr("stroke", grey10(4))
                                             .attr("stroke-width", 0.4)
@@ -165,10 +163,16 @@ export default function aimsComponent() {
                                             .style("cursor", "pointer")
                                             .attr("opacity", 0)
                                             .on("mouseover", function(){ d3.select(this).attr("opacity", 1); })
-                                            .on("mouseout", function(){ d3.select(this).attr("opacity", 0); });
+                                            .on("mouseout", function(){ d3.select(this).attr("opacity", 0); })
+                                            ;
                                 })
                                 .merge(resizeG)
                                 .attr("transform", d => "translate("+d.x +"," +d.y +")")
+                                .each(function(){
+                                    d3.select(this).select("rect")
+                                        .attr("width", handleWidth)
+                                        .attr("height", handleHeight)
+                                })
                                 .call(resizeDrag)
                         
                         function resizeDragStart(e, d){
