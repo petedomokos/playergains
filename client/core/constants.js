@@ -13,7 +13,7 @@ export const DIMNS = {
     },
     aim:{
         vertPlanetGap:3,
-        margin:{ left: 5, right: 5, top: 10, bottom: 5 }
+        margin:{ left: 5, right: 5, top: 15, bottom: 5 }
     }
 }
 export const COLOURS = {

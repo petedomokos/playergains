@@ -91,6 +91,7 @@ export default function aimsComponent() {
                         controlledContentsG
                             .append("rect")
                                 .attr("class", "bg")
+                                .attr("rx", 15)
                                 .attr("stroke", "none")
                                 .attr("display", d.id === "main" ? "none" : null)
                                 .attr("fill", d.colour || "transparent")
@@ -126,10 +127,10 @@ export default function aimsComponent() {
                         //title
                         const titleG = controlledContentsG.select("g.title")
                             .attr("transform", "translate(" + (d.id === "main" ? 40 : 5) + "," + (d.id === "main" ? 15 : 7.5) +")")
-                            .attr("transform", "translate(" + (d.width * 0.05 +(d.id === "main" ? 15 : 0)) + "," + (d.height * 0.05) +")")
+                            .attr("transform", "translate(" + (d.width * 0.07 +(d.id === "main" ? 10 : 0)) + "," + (d.height ** 0.4  + 5) +")")
                         
                         titleG.select("text.main")
-                            .attr("font-size", d.id === "main" ? aimFontSize * 1.1 : aimFontSize)
+                            .attr("font-size", d.id === "main" ? 7 : aimFontSize)
                             .text(d.name || (d.id === "main" ? "unnamed canvas" : "unnamed group"))
 
                         //resize handle
@@ -143,10 +144,10 @@ export default function aimsComponent() {
                         const handleHeight = handleWidth;
                         const resizeData = [
                             //{ x: 0, y: 0 },
-                            { loc:"top-left", x: -handleWidth/2, y: -handleHeight/2 }, 
-                            { loc:"top-right", x: d.displayWidth - handleWidth/2, y: -handleHeight/2 }, 
-                            { loc:"bot-right", x: d.displayWidth - handleWidth/2, y: d.height - handleHeight/2 }, 
-                            { loc:"bot-left", x: -handleWidth/2, y: d.height - handleHeight/2}
+                            { loc:"top-left", x: -handleWidth * 0.33, y: -handleHeight * 0.33 }, 
+                            { loc:"top-right", x: d.displayWidth - handleWidth * 0.66, y: -handleHeight * 0.33 }, 
+                            { loc:"bot-right", x: d.displayWidth - handleWidth * 0.66, y: d.height - handleHeight * 0.66 }, 
+                            { loc:"bot-left", x: -handleWidth * 0.33, y: d.height - handleHeight * 0.66}
                         ];
 
                         const resizeG = dragHandlesG.selectAll("g.resize").data(d.id === "main" ? [] : resizeData);
