@@ -64,7 +64,7 @@ export default function planetsComponent() {
     let startEditPlanet = function(){};
     let convertToAim = function(){};
     let deletePlanet = function(){};
-    let addLink = function(){};
+    let onAddLink = function(){};
     let onClick = function(){};
 
     let withClick = dragEnhancements();
@@ -199,6 +199,7 @@ export default function planetsComponent() {
                 //how did i resolve this in expression builder?
                 .on("mouseover", function(e,d){
                     d3.select(this).raise();
+                    console.log("mo goal")
                     onMouseover.call(this, e,d);
                 })
                 .on("mouseout", onMouseout)
@@ -329,10 +330,12 @@ export default function planetsComponent() {
 
                 //find nearest planet and if dist is below threshold, set planet as target candidate
                 const LINK_THRESHOLD = 100;
-                const availablePlanets = data
+                //const availablePlanets = data
+                //need all planets not just ones in this aim
+                const availablePlanets = d3.selectAll("g.planet")
                     .filter(p => p.id !== d.id)
                     .filter(p => !linksData.find(l => l.id.includes(d.id) && l.id.includes(p.id)))
-                    .map(p => ({ ...p, x:timeScale(p.displayDate), y:yScale(p.yPC)}))
+                    .data();
 
                 const nearestPlanet = findNearestPlanet(e, availablePlanets);
                 //console.log("near", nearestPlanet)
@@ -357,7 +360,7 @@ export default function planetsComponent() {
                 if(linkPlanets.length === 2){
                     const sortedLinks = linkPlanets.sort((a, b) => d3.ascending(a.x, b.x))
                     //save link
-                    addLink({ src:sortedLinks[0].id, targ:sortedLinks[1].id })
+                    onAddLink({ src:sortedLinks[0].id, targ:sortedLinks[1].id })
                 }
             }
 
@@ -538,10 +541,10 @@ export default function planetsComponent() {
         }
         return planets;
     };
-    planets.addLink = function (value) {
-        if (!arguments.length) { return addLink; }
+    planets.onAddLink = function (value) {
+        if (!arguments.length) { return onAddLink; }
         if(typeof value === "function"){
-            addLink = value;
+            onAddLink = value;
         }
         return planets;
     };

@@ -50,7 +50,7 @@ export default function aimsComponent() {
 
     let deletePlanet = function(){};
     let updatePlanet = function(){};
-    let addLink = function(){};
+    let onAddLink = function(){};
     let startEditPlanet = function(){};
     let convertGoalToAim = function(){};
 
@@ -78,7 +78,7 @@ export default function aimsComponent() {
         selection.each(function (data) {
             // console.log("aims", data)
             containerG = d3.select(this);
-            const aimG = containerG.selectAll("g.aim").data(data);
+            const aimG = containerG.selectAll("g.aim").data(data, d => d.id);
             aimG.enter()
                 .append("g")
                     .attr("class", d => "aim aim-"+d.id)
@@ -253,10 +253,10 @@ export default function aimsComponent() {
 
                                     .onMouseover(onMouseoverGoal)
                                     .onMouseout(onMouseoutGoal)
-                                    .addLink(addLink)
+                                    .onAddLink(onAddLink)
                                     .updatePlanet(updatePlanet)
                                     .deletePlanet(deletePlanet)
-                                    .addLink(addLink)
+                                    .onAddLink(onAddLink)
                                     .startEditPlanet(startEditPlanet)
                                     .convertToAim(convertGoalToAim), 
                                     options.planets)
@@ -523,10 +523,10 @@ export default function aimsComponent() {
         }
         return aims;
     };
-    aims.addLink = function (value) {
-        if (!arguments.length) { return addLink; }
+    aims.onAddLink = function (value) {
+        if (!arguments.length) { return onAddLink; }
         if(typeof value === "function"){
-            addLink = value;
+            onAddLink = value;
         }
         return aims;
     };

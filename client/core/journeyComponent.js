@@ -23,24 +23,35 @@ import openedLinkComponent from './openedLinkComponent';
 
  /*
 leave links and measures turned off whilst
-    - integrate aim with zoom - DONE
+    - turn links back on and check works
+       
+
+    - turn measures back on and check works
+    - aim menu (delete option only)
+    - semantic zoom of aims - on zoom out, name goes to centre and just see rect, no goals, and links are replaced
+    by a single link to the aim, and completion is calculated same, as all link measures are moved onto the one link for the whole aim
+    - integrate aim with open channel (and fix the existing bug around this)
+    (note - need to think about how it will work in context of aims - maybe it just stays the same - but what if zoomed out so 
+        goals not displayed, just aim title displayed?)
+
     NEXT
     consider removing the whole thing of planets sliding into neaest channel end. Instead, do it like inDesign, where the user is in charge but
     //we help them by highlighting the slot when they get near it, and if its near it then it slides in, and that becomes it's actual date 
     // rather than having an actual and a display date. can do same with others. 
     //basically also we highlight alignments like two aims so they cn be aligned in same way.
     This reduces complexity as we only have to deal with zoom and open channels, but ech goal and aim only has 1 value for each position.
-
-    - turn links back on and check works
-    - turn measures back on and check works
-    - make aim have rounded corners
-    - integrate aim with open channel (and fix the existing bug around this)
-    - aim menu (delete option only)
+    BUT... leave for now coz the benefit of current approach is as user zooms int o get a weekly view, we can show it meanignfully
+    so eventually we will be miving between daily, weekly, monthly an deven annual views.
 
     //todo - consider the issue when draggin aim when a channel is open, planets at different locations in the aim may be conflicted about 
     //whether to slide left or right to get to nearest channel. if all channels closed, this wont happen.
     But in this case we simply slide teh channel wider too, and then when channel is closed, aim shortens too.
     I mean that is what should happen for an open channel anyway
+
+     - BACKLOG:
+     when dragging from a ring, the targ candidate ring should stay lit up even when planet is hovered (not just when ring is hovered)
+      - need to move libnk into side of aim when turning a goal with a link into an aim (or vice versa)
+      - ABLE TO CREATE A LINK FRO A GOLA TO AN AIM, OR VICE VERSA
     */
 
 
@@ -106,7 +117,7 @@ export default function journeyComponent() {
     let updatePlanets = function(){};
     let addMeasureToPlanet = function(){};
     let deletePlanet = function (){};
-    let addLink = function(){};
+    let onAddLink = function(){};
     let deleteLink = function(){};
     let updateChannel = function(){};
     let setModalData = function(){};
@@ -265,10 +276,10 @@ export default function journeyComponent() {
             let linksData;
             updatePlanetsData();
             updateAimsData();
-            //updateLinksData();
+            updateLinksData();
             //components
             updateAims();
-            //updateLinks();
+            updateLinks();
 
             function updatePlanetsData(){
                 myPlanetsLayout
@@ -425,6 +436,7 @@ export default function journeyComponent() {
                     .updatePlanet(updatePlanet)
                     .startEditPlanet(startEditPlanet)
                     .convertGoalToAim(convertGoalToAim)
+                    .onAddLink(onAddLink)
 
                 //render
                 const aimsG = canvasG.selectAll("g.aims").data([aimsData]);
@@ -814,10 +826,10 @@ export default function journeyComponent() {
         }
         return journey;
     };
-    journey.addLink = function (value) {
-        if (!arguments.length) { return addLink; }
+    journey.onAddLink = function (value) {
+        if (!arguments.length) { return onAddLink; }
         if(typeof value === "function"){
-            addLink = value;
+            onAddLink = value;
         }
         return journey;
     };

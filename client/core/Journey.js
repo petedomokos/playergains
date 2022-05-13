@@ -72,6 +72,7 @@ const Journey = ({dimns}) => {
   const [measures, setMeasures] = useState(mockMeasures);
   const [measuresBarIsOpen, setMeasuresBarIsOpen] = useState(false);
   //console.log("planets", planets)
+  //console.log("links", links)
   //console.log("modalData", modalData)
   // console.log("aims", aims)
 
@@ -189,7 +190,7 @@ const Journey = ({dimns}) => {
           setLinks(prevState => prevState.filter(l => l.src !== id && l.targ !== id));
           setPlanets(prevState => prevState.filter(p => p.id !== id));
         })
-        .addLink(props => {
+        .onAddLink(props => {
           const newLink = {
             ...props,
             id:props.src + "-" + props.targ,
