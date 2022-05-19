@@ -581,57 +581,47 @@ export default function planetsComponent() {
     //functions
     planets.showAvailabilityStatus = function (goal, measureId, cb) {
         //const goal = prevData.find(g => g.id === goalId);
-        const rx = d => d.rx ? d.rx(width) : DEFAULT_PLANET_RX;
-        const ry = d => d.ry ? d.ry(height) : DEFAULT_PLANET_RY;
+        const ellipse = containerG.select("g.planet-"+goal.id).select("ellipse.core");
 
         if(!goal.measures.find(m => m.id === measureId)){
             //show available
-            containerG.select("g.planet-"+goal.id)
-            .transition()
-                .duration(200)
-                .attr("opacity", planetOpacity.available);
-
             containerG.select("g.planet-"+goal.id).select("ellipse.core")
                 .transition()
                     .duration(200)
-                    .attr("rx", rx(goal) * availablePlanetSizeMultiplier)
-                    .attr("ry", ry(goal) * availablePlanetSizeMultiplier)
-                    .on("end", cb);
+                    .attr("opacity", planetOpacity.available)
+                    .attr("rx", +ellipse.attr("rx") * availablePlanetSizeMultiplier)
+                    .attr("ry", +ellipse.attr("ry") * availablePlanetSizeMultiplier)
+                        .on("end", cb);
         }else{
             //show unavailable
-            containerG.select("g.planet-"+goal.id)
+            ellipse
                 .transition()
                     .duration(200)
                     .attr("opacity", planetOpacity.unavailable)
-                    .on("end", cb);
+                        .on("end", cb);
         }
         return planets;
     };
     planets.stopShowingAvailabilityStatus = function (goal, measureId, cb) {
         //const goal = prevData.find(g => g.id === goalId);
-        const rx = d => d.rx ? d.rx(width) : DEFAULT_PLANET_RX;
-        const ry = d => d.ry ? d.ry(height) : DEFAULT_PLANET_RY;
+        const ellipse = containerG.select("g.planet-"+goal.id).select("ellipse.core");
 
         if(!goal.measures.find(m => m.id === measureId)){
             //stop showing available
-            containerG.select("g.planet-"+goal.id)
+            ellipse
                 .transition()
                     .duration(200)
-                    .attr("opacity", planetOpacity.normal);
-
-            containerG.select("g.planet-"+goal.id).select("ellipse.core")
-                .transition()
-                    .duration(200)
-                        .attr("rx", rx(goal))
-                        .attr("ry", ry(goal))
-                        .on("end", cb);
+                        .attr("opacity", planetOpacity.normal)
+                        .attr("rx", +ellipse.attr("rx") / availablePlanetSizeMultiplier)
+                        .attr("ry", +ellipse.attr("ry") / availablePlanetSizeMultiplier)
+                            .on("end", cb);
         }else{
             //stop showing unavailable
-            containerG.select("g.planet-"+goal.id)
+            ellipse
                 .transition()
                     .duration(200)
                     .attr("opacity", planetOpacity.normal)
-                    .on("end", cb);
+                        .on("end", cb);
         }
         return planets;
     };

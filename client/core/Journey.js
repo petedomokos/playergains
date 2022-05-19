@@ -71,7 +71,7 @@ const Journey = ({dimns}) => {
   const [modalData, setModalData] = useState(undefined);
   const [measures, setMeasures] = useState(mockMeasures);
   const [measuresBarIsOpen, setMeasuresBarIsOpen] = useState(false);
-  //console.log("planets", planets)
+  console.log("planets", planets)
   //console.log("links", links)
   //console.log("modalData", modalData)
   // console.log("aims", aims)
@@ -169,7 +169,7 @@ const Journey = ({dimns}) => {
           setPlanets(prevState => updatedState(prevState, props))
         })
         .updatePlanets(planetsToUpdate => {
-          console.log("Journey updatePlanets", planetsToUpdate)
+          //console.log("Journey updatePlanets", planetsToUpdate)
           setPlanets(prevState => prevState.map(p => {
               const propsToUpdate = planetsToUpdate.find(planet => planet.id === p.id) || {};
               return { ...p, ...propsToUpdate }
@@ -180,7 +180,7 @@ const Journey = ({dimns}) => {
         })
         .addMeasureToPlanet((planetId, measureId) => {
             const planetToUpdate = planets.find(p => p.id === planetId);
-            console.log("addMeasureToPlanet", planetToUpdate)
+            //console.log("addMeasureToPlanet", planetToUpdate)
             //@todo - create a transFormForState fuciton which always runs in reducers 9or before going into useState in this
             //case, to make sure eg targ is a string. Because theoretically, a calc could update a targ and so it copuld be a number
             const measures = [ ...planetToUpdate.measures, { id: measureId }]

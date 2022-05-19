@@ -24,7 +24,12 @@ import openedLinkComponent from './openedLinkComponent';
  /*
 leave links and measures turned off whilst
     - turn measures back on and check works
+         - add measure  - done
+         - planet opacity - put back on ellipse so name is not reduced
+         - update target text when measuresBar.selected() changes
+         - show target form when measure added
 
+    - show name form when new planet created
     - aim menu (delete option only)
     - semantic zoom of aims - on zoom out, name goes to centre and just see rect, no goals, and links are replaced
     by a single link to the aim, and completion is calculated same, as all link measures are moved onto the one link for the whole aim
