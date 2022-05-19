@@ -51,6 +51,8 @@ export function distanceToPlanet(pt, planet, timeScale, yScale){
  *
  */
 export function distanceBetweenPoints(p1, p2) {
+    //console.log("dbp p1", p1.x, p1.y);
+    //console.log("dbp p2", p2.x, p2.y);
     if (!p1 || !p2) { return undefined; }
     if (p1[0] && !p2[0]) {
         // convert p1 to object

@@ -1,4 +1,5 @@
 import * as d3 from 'd3';
+import "snapsvg-cjs";
 //import "d3-selection-multi";
 import channelsLayout from "./channelsLayout";
 import axesLayout from "./axesLayout";
@@ -7,7 +8,6 @@ import planetsLayout from "./planetsLayout";
 import aimsLayout from './aimsLayout';
 import axesComponent from "./axesComponent";
 import linksComponent from "./linksComponent";
-import planetsComponent from "./planetsComponent";
 import aimsComponent from './aimsComponent';
 import measuresBarComponent from './measuresBarComponent';
 import { calcChartHeight, findFuturePlanets, findFirstFuturePlanet, findNearestDate, getTransformationFromTrans,
@@ -23,14 +23,12 @@ import openedLinkComponent from './openedLinkComponent';
 
  /*
 leave links and measures turned off whilst
-    - turn links back on and check works
-       
-
     - turn measures back on and check works
+
     - aim menu (delete option only)
     - semantic zoom of aims - on zoom out, name goes to centre and just see rect, no goals, and links are replaced
     by a single link to the aim, and completion is calculated same, as all link measures are moved onto the one link for the whole aim
-    - integrate aim with open channel (and fix the existing bug around this)
+    - integrate aim with open channel (and fix the existing bug around this) (and turn openLinks back on)
     (note - need to think about how it will work in context of aims - maybe it just stays the same - but what if zoomed out so 
         goals not displayed, just aim title displayed?)
 
@@ -98,8 +96,6 @@ export default function journeyComponent() {
 
     const axes = axesComponent();
     const links = linksComponent();
-    const planets = planetsComponent();
-    //@todo - planetsComponent is rendered inside each aim, but with same cood system so aimg is just a vertical layer
     const aims = aimsComponent();
     const openedLinks = {};
     const measuresBar = measuresBarComponent();
@@ -415,11 +411,16 @@ export default function journeyComponent() {
                             yPC:zoomedYScale.invert(d.y)
                         });
                     })
+                    //todo - move to aims - planet has seelctedmeasure so when it is hovered, it can work out 
+                    //whetehr or not to highlight. so no need fro journeyComponwnt to know about a mouseoverGoal
+                    //can be doen in planetsComponent, just need to pass it draggedMeasure too. ATM it only has selectedMeasure.
+                    /*
                     .onMouseoverGoal(function(e,d){
                         const selectedMeasureIsInPlanet = !!d.measures.find(m => m.id === measuresBar.selected());
                         if(measuresBar.selected() && (selectedMeasureIsInPlanet || measuresBar.dragged())){
                             hoveredPlanetId = d.id;
-                            planets.highlight(hoveredPlanetId, measuresBar.dragged());
+                            //planets.highlight(hoveredPlanetId, measuresBar.dragged());
+                            aim.highlightPlanet(hoveredPlanetId);
                         }
                     })
                     .onMouseoutGoal(function(e,d){
@@ -428,6 +429,7 @@ export default function journeyComponent() {
                             planets.unhighlight(d.id);
                         }
                     })
+                    */
                     .deletePlanet(id => {
                         selected = undefined;
                         editing = undefined;
@@ -522,6 +524,8 @@ export default function journeyComponent() {
                     .attr("opacity", 0)
                     .on("end", function(){ d3.select(this).remove() });
 
+            */
+
             //todo - enter measuresG here with measures component.
             //transition it in and out with data([measuresOpen]) or soemthing like that so its empty
             //and removes if no measuresOpen. Note, could be all measuires open or just one goals' measures
@@ -531,6 +535,10 @@ export default function journeyComponent() {
                 subtitle:"All", //this will show the goal or path etc if restricted
                 measures:measuresOpen
             }
+
+            let prevDraggedOverPlanet;
+            //const goalContainsMeasure = measure => goal => !!goal.measures.find(m => m.id === measure.id);
+            //let goalIsAvailable;
             const measuresBarG = contentsG.selectAll("g.measures-bar").data(measuresOpen ? [measuresData] : [])
             measuresBarG.enter()
                 .append("g")
@@ -550,35 +558,44 @@ export default function journeyComponent() {
                             setModalData({ importing: true, filters:[] })
                         })
                         .onUpdateSelected(selectedMeasure => {
-                            updatePlanets();
+                            //console.log("journey.measure.updateSelected", selectedMeasure)
+                            //updatePlanets();
                         })
-                        .onMeasureDragStart(() => {
-                            planets.withRing(false);
+                        .onMeasureDragStart((e, m) => {
+                            //goalIsAvailable = !goalContainsMeasure(m);
+                            //todo - move to aims, and work out why measure not being added to goal
+                            //planets.withRing(false);
                         })
-                        .onMeasureDragEnd(m => {
+                        .onMeasureDrag((e, m) => {
+                            //for now, offsetX and y are used to convert sourceEvent pos to canvas pos
+                            const pt = { x: e.sourceEvent.offsetX, y: e.sourceEvent.offsetY };
+                            const planetInnerCircleRadius = d3.min([DIMNS.planet.width, DIMNS.planet.height]);
+                            const draggedOverPlanet = planetsData.find(p => distanceBetweenPoints(pt, p) < planetInnerCircleRadius);
+                            //console.log("oMD draggedOverPlanet", !!draggedOverPlanet);
+                            //PREV
+                            if(prevDraggedOverPlanet && prevDraggedOverPlanet.id !== draggedOverPlanet?.id){
+                                aims.stopShowingAvailabilityStatus(prevDraggedOverPlanet, m.id);
+                            }
+                            //NEW
+                            if(draggedOverPlanet && draggedOverPlanet.id !== prevDraggedOverPlanet?.id){
+                                aims.showAvailabilityStatus(draggedOverPlanet, m.id);
+                            }
+                            //update
+                            prevDraggedOverPlanet = draggedOverPlanet;
                             //todo - lookinti what m is  -and follow teh updateProcess to see why measures stays as []
-                            planets.withRing(true);
-                            if(hoveredPlanetId){
-                                //add measure to goal
-                                // keep measure selected so targets show on goal for each planet that has it
-                                // the goal that has just been added to has target form open over it
-                                const hoveredPlanet = planetsData.find(p => p.id === hoveredPlanetId);
-                                if(hoveredPlanet.measures.find(me => me.id === m.id)){
-                                    alert("This measure is already added to this planet")
-                                }else{
-                                    addMeasureToPlanet(hoveredPlanetId, m.id);
-                                    //@todo - tidy up how we save selected, but for nowwe dd the measure manuaklly to that here too
-                                    const measures = [...hoveredPlanet.measures, { id: m.id }];
-                                    updateSelected({ ...hoveredPlanet, measures })
-                                }
+                            //planets.withRing(true);
+                        })
+                        .onMeasureDragEnd((e,m) => {
+                            //need to first stopShowingAvailability, then save state on callback
+                            //todo - return a Promise instead of using cbs
+                            if(prevDraggedOverPlanet){
+                                aims.stopShowingAvailabilityStatus(prevDraggedOverPlanet, m.id, () => {
+                                    addMeasureToPlanet(prevDraggedOverPlanet.id, m.id)
+                                })
                             }
                         }))
             
-            measuresBarG.exit().remove();
-
-            */
-
-        
+            measuresBarG.exit().remove();        
         }
 
         function init(){

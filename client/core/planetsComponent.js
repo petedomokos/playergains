@@ -15,6 +15,7 @@ import menuComponent from './menuComponent';
 
 */
 export default function planetsComponent() {
+    //API SETTINGS
     // dimensions
     let width = DIMNS.planet.width;
     let height = DIMNS.planet.height;
@@ -42,12 +43,31 @@ export default function planetsComponent() {
         planet:COLOURS.planet
     }
 
-    //handlers
+    const planetOpacity = {
+        normal: 0.5,
+        available: 1,
+        unavailable: 0.2
+    }
+    const availablePlanetSizeMultiplier = 1.3;
+
+    //API FUNCTIONS
+    let showAvailabilityStatus = function() {};
+    let stopShowingAvailabilityStatus = function() {};
+
+    //API CALLBACKS
+    let onClick = function(){};
     let onDragStart = function() {};
     let onDrag = function() {};
     let onDragEnd = function() {};
     let onMouseover = function(){};
     let onMouseout = function(){};
+
+    let createPlanet = function(){};
+    let updatePlanet = function(){};
+    let startEditPlanet = function(){};
+    let convertToAim = function(){};
+    let deletePlanet = function(){};
+    let onAddLink = function(){};
 
     function updateChannelsData(newChannelsData){
         channelsData = newChannelsData;
@@ -59,13 +79,7 @@ export default function planetsComponent() {
     }
 
     //api
-    let createPlanet = function(){};
-    let updatePlanet = function(){};
-    let startEditPlanet = function(){};
-    let convertToAim = function(){};
-    let deletePlanet = function(){};
-    let onAddLink = function(){};
-    let onClick = function(){};
+
 
     let withClick = dragEnhancements();
 
@@ -104,7 +118,6 @@ export default function planetsComponent() {
                 .append("g")
                 .attr("class", d => "planet planet-"+d.id)
                 .attr("id", d => "planet-"+d.id)
-                .attr("opacity", 1) //for now, just transition out not in
                 .each(function(d,i){
                     //ENTER
                     const contentsG = d3.select(this)
@@ -143,16 +156,17 @@ export default function planetsComponent() {
 
                 })
                 .merge(planetG)
+                .attr("opacity", planetOpacity.normal) 
                 .each(function(d){
                     const rx = d.rx ? d.rx(width) : DEFAULT_PLANET_RX;
                     const ry =  d.ry ? d.ry(height) : DEFAULT_PLANET_RY; 
                     //ENTER AND UPDATE
                     const contentsG = d3.select(this).select("g.contents")
                     //ellipse
-                    //contentsG.select("ellipse.core")
-                        //.attr("opacity", 0.5)
-                        //.attr("rx", rx)
-                        //.attr("ry", ry)
+                    contentsG.select("ellipse.core")
+                        //.attr("opacity", planetOpacity.normal)
+                        .attr("rx", rx)
+                        .attr("ry", ry)
                     //title
                     contentsG.select("text")
                         .attr("font-size", fontSize)
@@ -190,17 +204,30 @@ export default function planetsComponent() {
                     targG.exit().remove();
                             
                 })
-                .call(updateHighlighted)
+                //.call(updateHighlighted)
                 .call(planetDrag)
                 //note-  could just store the planetId in here when mousedover ie 
                 //ie stored as active or something
-                //the current approach when measure is dragged doesnt work
+                //the current approach when measure is  doesnt work
                 //becuase it covers up teh pointer-event so mouseover isnt called.
                 //how did i resolve this in expression builder?
+                /*
                 .on("mouseover", function(e,d){
                     d3.select(this).raise();
-                    console.log("mo goal")
-                    onMouseover.call(this, e,d);
+                    //console.log("mo goal")
+                    //const selectedMeasureIsInPlanet = !!d.measures.find(m => m.id === selectedMeasure);
+                    //if(measuresBar.selected() && (selectedMeasureIsInPlanet || measuresBar.dragged())){
+                    if(selectedMeasure){
+                        //in all cases where a measure is selected (eg could be dragged)
+                        //then whether or not planet has meaure already, we highlight.
+                        //But the two cass are diffrernt.. need to clarify teh behaviour we want when measure
+                        //is already in planet compared to when not is when being dragged on
+                    //do we need to stored hoveredPlanet anywhere????
+                        //hoveredPlanetId = d.id;
+                        //planets.highlight(hoveredPlanetId, measuresBar.dragged());
+                        highlight(hoveredPlanetId);
+                    }
+                    //onMouseover.call(this, e,d);
                 })
                 .on("mouseout", onMouseout)
                 //@todo - use mask to make it a donut and put on top
@@ -220,6 +247,7 @@ export default function planetsComponent() {
                         return selection; 
                     }
                 )
+                */
                 .each(function(d){
                     //helper
                     //dont show menu if targOnly form open is if planet has the selectedMeasure on it
@@ -291,7 +319,7 @@ export default function planetsComponent() {
             //EXIT
             planetG.exit().each(function(d){
                 //will be multiple exits because of the delay in removing
-                if(d3.select(this).attr("opacity") == 1){
+                if(d3.select(this).attr("opacity") !== "0"){
                     d3.select(this)
                         .transition()
                             .duration(200)
@@ -370,7 +398,7 @@ export default function planetsComponent() {
         return selection;
     }
 
-    function updateHighlighted(selection, shouldIncreaseSize, shouldTransition){
+    /*function updateHighlighted(selection, shouldIncreaseSize, shouldTransition){
         selection.each(function(d){
             const rx = d => d.rx ? d.rx(width) : DEFAULT_PLANET_RX;
             const ry = d => d.ry ? d.ry(height) : DEFAULT_PLANET_RY;
@@ -390,7 +418,7 @@ export default function planetsComponent() {
         })
 
         return selection;
-    }
+    }*/
     
     //api
     planets.width = function (value) {
@@ -416,7 +444,9 @@ export default function planetsComponent() {
     planets.withRing = function (value) {
         if (!arguments.length) { return withRing; }
         withRing = value;
-        containerG.call(planets);
+        if(containerG){
+            containerG.call(planets);
+        }
 
         return planets;
     };
@@ -435,6 +465,7 @@ export default function planetsComponent() {
         yScale = value;
         return planets;
     };
+    /*
     planets.highlight = function (value, shouldIncreaseSize) {
         if (!arguments.length) { return yScale; }
         const ids = Array.isArray(value) ? value : [value];
@@ -456,6 +487,7 @@ export default function planetsComponent() {
 
         return planets;
     };
+    */
     planets.fontSize = function (value) {
         if (!arguments.length) { return fontSize; }
         fontSize = value;
@@ -543,8 +575,63 @@ export default function planetsComponent() {
     };
     planets.onAddLink = function (value) {
         if (!arguments.length) { return onAddLink; }
-        if(typeof value === "function"){
-            onAddLink = value;
+        if(typeof value === "function"){ onAddLink = value; }
+        return planets;
+    };
+    //functions
+    planets.showAvailabilityStatus = function (goal, measureId, cb) {
+        //const goal = prevData.find(g => g.id === goalId);
+        const rx = d => d.rx ? d.rx(width) : DEFAULT_PLANET_RX;
+        const ry = d => d.ry ? d.ry(height) : DEFAULT_PLANET_RY;
+
+        if(!goal.measures.find(m => m.id === measureId)){
+            //show available
+            containerG.select("g.planet-"+goal.id)
+            .transition()
+                .duration(200)
+                .attr("opacity", planetOpacity.available);
+
+            containerG.select("g.planet-"+goal.id).select("ellipse.core")
+                .transition()
+                    .duration(200)
+                    .attr("rx", rx(goal) * availablePlanetSizeMultiplier)
+                    .attr("ry", ry(goal) * availablePlanetSizeMultiplier)
+                    .on("end", cb);
+        }else{
+            //show unavailable
+            containerG.select("g.planet-"+goal.id)
+                .transition()
+                    .duration(200)
+                    .attr("opacity", planetOpacity.unavailable)
+                    .on("end", cb);
+        }
+        return planets;
+    };
+    planets.stopShowingAvailabilityStatus = function (goal, measureId, cb) {
+        //const goal = prevData.find(g => g.id === goalId);
+        const rx = d => d.rx ? d.rx(width) : DEFAULT_PLANET_RX;
+        const ry = d => d.ry ? d.ry(height) : DEFAULT_PLANET_RY;
+
+        if(!goal.measures.find(m => m.id === measureId)){
+            //stop showing available
+            containerG.select("g.planet-"+goal.id)
+                .transition()
+                    .duration(200)
+                    .attr("opacity", planetOpacity.normal);
+
+            containerG.select("g.planet-"+goal.id).select("ellipse.core")
+                .transition()
+                    .duration(200)
+                        .attr("rx", rx(goal))
+                        .attr("ry", ry(goal))
+                        .on("end", cb);
+        }else{
+            //stop showing unavailable
+            containerG.select("g.planet-"+goal.id)
+                .transition()
+                    .duration(200)
+                    .attr("opacity", planetOpacity.normal)
+                    .on("end", cb);
         }
         return planets;
     };

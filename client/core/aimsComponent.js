@@ -13,6 +13,7 @@ import { timeMonth, timeWeek } from "d3-time";
 import menuComponent from './menuComponent';
 import planetsComponent from './planetsComponent';
 import { pointIsInRect } from "./geometryHelpers";
+import "snapsvg-cjs";
 /*
 
 */
@@ -32,7 +33,11 @@ export default function aimsComponent() {
     let linksData = [];
     let channelsData = [];
 
-    //handlers
+    //API FUNCTIONS
+    let showAvailabilityStatus = function() {};
+    let stopShowingAvailabilityStatus = function() {};
+
+    //API CALLBACKS
     let onClick = function(){};
     let onDragStart = function() {};
     let onDrag = function() {};
@@ -304,7 +309,10 @@ export default function aimsComponent() {
         }
 
         function dragGoalStart(e , d){
-            //console.log("drag goal start")
+            console.log("drag goal start", e)
+            const s = Snap(this);
+            //console.log("bbox", s.getBBox())
+            //works - will use the inner circle
             d3.select(this).raise();
             //note - called on click too - could improve enhancedDrag by preveting dragStart event
             //until a drag event has also been recieved, so stroe it and then release when first drag event comes through
@@ -542,6 +550,15 @@ export default function aimsComponent() {
         if(typeof value === "function"){
             convertGoalToAim = value;
         }
+        return aims;
+    };
+    //functions
+    aims.showAvailabilityStatus = function (goal, measureId, cb) {
+        planets[goal.aimId || "main"].showAvailabilityStatus(goal, measureId, cb);
+        return aims;
+    };
+    aims.stopShowingAvailabilityStatus = function (goal, measureId, cb) {
+        planets[goal.aimId || "main"].stopShowingAvailabilityStatus(goal, measureId, cb);
         return aims;
     };
     return aims;
