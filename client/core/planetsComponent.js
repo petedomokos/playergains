@@ -99,6 +99,10 @@ export default function planetsComponent() {
     //dom
     let containerG;
 
+    //local state
+    let removingGoal = false;
+    let removingMenu = false;
+
     function planets(selection, options={}) {
         const { transitionEnter, transitionUpdate } = options;
         // expression elements
@@ -287,12 +291,16 @@ export default function planetsComponent() {
 
                     menuG.exit().each(function(d){
                         //will be multiple exits because of the delay in removing
-                        if(d3.select(this).attr("opacity") == 1){
+                        if(!removingMenu){
+                            removingMenu = true;
                             d3.select(this)
                                 .transition()
                                     .duration(100)
                                     .attr("opacity", 0)
-                                    .on("end", function() { d3.select(this).remove() });
+                                    .on("end", function() { 
+                                        d3.select(this).remove();
+                                        removingMenu = false; 
+                                    });
                         }
                     }) 
                 })
@@ -319,13 +327,16 @@ export default function planetsComponent() {
             //EXIT
             planetG.exit().each(function(d){
                 //will be multiple exits because of the delay in removing
-                //planetG op is always 1
-                if(d3.select(this).attr("opacity") !== "1"){
+                if(!removingGoal){
+                    removingGoal = true;
                     d3.select(this)
                         .transition()
                             .duration(200)
                             .attr("opacity", 0)
-                            .on("end", function() { d3.select(this).remove() });
+                            .on("end", function() { 
+                                d3.select(this).remove();
+                                removingGoal = false; 
+                            });
                 }
             }) 
 

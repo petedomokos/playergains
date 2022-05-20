@@ -309,8 +309,7 @@ export default function aimsComponent() {
         }
 
         function dragGoalStart(e , d){
-            console.log("drag goal start", e)
-            const s = Snap(this);
+            //const s = Snap(this);
             //console.log("bbox", s.getBBox())
             //works - will use the inner circle
             d3.select(this).raise();

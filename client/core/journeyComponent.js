@@ -24,8 +24,6 @@ import openedLinkComponent from './openedLinkComponent';
  /*
 leave links and measures turned off whilst
     - turn measures back on and check works
-         - planet opacity - put back on ellipse so name is not reduced - not I have put planetG op back to 1, 
-         and this seems to make whole planet darker
          - delete planet not working
          - update target text when measuresBar.selected() changes
          - show target form when measure added
@@ -386,7 +384,9 @@ export default function journeyComponent() {
                     })
                     //.onMouseover(() => {})
                     //.onMouseout(() => {})
-                    .onClickGoal((e,d) => { updateSelected(d);})
+                    .onClickGoal((e,d) => {
+                        updateSelected(d);
+                    })
                     //.onDragGoalStart(function(){})
                     .onDragGoal(function(e , d, shouldUpdateSelected = true){ //pass in onDragGoal
                         //console.log("journey drgGoal")
