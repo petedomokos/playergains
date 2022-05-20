@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react'
+//import { useStateWithCallbackLazy } from 'use-state-with-callback';
 import * as d3 from 'd3';
 import { makeStyles } from '@material-ui/core/styles'
 import Button from '@material-ui/core/Button'
@@ -64,7 +65,7 @@ const Journey = ({dimns}) => {
   const [journey, setJourney] = useState(undefined)
   //@todo - put into one state object to avoid multiple updates
   const [aims, setAims] = useState([]);
-  const [planets, setPlanets] = useState([]);
+  const [planets, setPlanets] =  useState([]);
   const [links, setLinks] = useState([]);
   const [channels, setChannels] = useState(initChannels);
   const [withCompletionPaths, setWithCompletionPath] = useState(false);
@@ -73,7 +74,7 @@ const Journey = ({dimns}) => {
   const [measuresBarIsOpen, setMeasuresBarIsOpen] = useState(false);
   //console.log("planets", planets)
   //console.log("links", links)
-  //console.log("modalData", modalData)
+  console.log("modalData", modalData)
   // console.log("aims", aims)
 
   const { screenWidth, screenHeight } = dimns;
@@ -161,9 +162,14 @@ const Journey = ({dimns}) => {
               measures:[]
               //goals
           }
+          //useStateWithCallback doesnt work as this is called before journeyComponent is updated in the new call to this useEffect
           setPlanets(prevState => [...prevState, newPlanet]);
+          journey.selected(newPlanet.id);
           //setNrPlanetsCreated(prevState => prevState + 1);
           nrPlanetsCreated.current = nrPlanetsCreated.current + 1;
+          //todo -0 consider just setting it as selected in state, and handling this in journey ie
+          //ie if a planet is selected, then updateSelected if not set as selected
+          //the below approach may cause an issue if planets hasnt updated yet from the setPlanets call above
         })
         .updatePlanet(props => {
           setPlanets(prevState => updatedState(prevState, props))
@@ -254,10 +260,9 @@ const Journey = ({dimns}) => {
         console.log("inner rect bBox", innerRect.node().getBBox())
       }
       */
-      
-
-
   })
+
+
 
   const toggleCompletion = () => {
       setWithCompletionPath(prevState => !prevState)

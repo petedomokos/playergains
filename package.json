@@ -69,6 +69,7 @@
     "snap": "^1.1.0",
     "snapsvg": "^0.5.1",
     "snapsvg-cjs": "0.0.6",
-    "style-loader": "^0.23.1"
+    "style-loader": "^0.23.1",
+    "use-state-with-callback": "^3.0.2"
   }
 }

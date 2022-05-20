@@ -24,7 +24,6 @@ import openedLinkComponent from './openedLinkComponent';
  /*
 leave links and measures turned off whilst
     - turn measures back on and check works
-         - delete planet not working
          - update target text when measuresBar.selected() changes
          - show target form when measure added
 
@@ -107,6 +106,7 @@ export default function journeyComponent() {
     const measuresBar = measuresBarComponent();
 
     //api
+    let selectedPending;
     let selected;
     let editing;
     let preEditZoom;
@@ -128,6 +128,7 @@ export default function journeyComponent() {
     let startEditPlanet = function (){};
     let endEditPlanet = function (){};
     let convertGoalToAim = function (){};
+    let updateSelected = function (){};
 
     //dom
     let svg;
@@ -147,7 +148,12 @@ export default function journeyComponent() {
     let applyZoomX;
     let applyZoomY;
     let currentZoom = d3.zoomIdentity;
+
+    //data
     let channelsData;
+    let planetsData;
+    let aimsData;
+    let linksData;
 
     //state
     let hoveredPlanetId;
@@ -156,7 +162,7 @@ export default function journeyComponent() {
         updateDimns();
         selection.each(function (journeyState) {
             state = journeyState;
-            //console.log("state", state)
+            //console.log("state", selectedPending)
             if(!svg){
                 //enter
                 init.call(this);
@@ -169,7 +175,7 @@ export default function journeyComponent() {
 
         function update(options={}){
             //console.log("measuresbarh", measuresBarHeight)
-            //Journey.log("canvash", canvasHeight)
+            //console.log("journey update", selectedPending)
             svg
                 .attr("width", width)
                 .attr("height", height)
@@ -273,15 +279,19 @@ export default function journeyComponent() {
             const { trueX, pointChannel } = channelsData;
 
             //data
-            let planetsData;
-            let aimsData;
-            let linksData;
             updatePlanetsData();
             updateAimsData();
             updateLinksData();
             //components
             updateAims();
             updateLinks();
+
+            //if adding a new planet, we must select on next update once x and y pos are defined, as they are used for form position
+            if(selectedPending){
+                const goal = planetsData.find(p => p.id === selectedPending);
+                selectedPending = undefined;
+                updateSelected(goal);
+            }
 
             function updatePlanetsData(){
                 myPlanetsLayout
@@ -626,7 +636,7 @@ export default function journeyComponent() {
             axesG = contentsG.append("g").attr("class", "axes")
         }
 
-        function updateSelected(d){
+        updateSelected = (d) => {
             selected = d;
             if(d?.dataType === "planet"){
                 //open name form too, but as selected rather than editing
@@ -788,9 +798,15 @@ export default function journeyComponent() {
         height = value;
         return journey;
     };
-    journey.selected = function (value) {
+    journey.selected = function (goalId, selectOnNextUpdate = true) {
         if (!arguments.length) { return selected; }
-        selected = value;
+        //note - must get goal from planetsData so it has x and y
+        if(selectOnNextUpdate){
+            selectedPending = goalId;
+        }else{
+            updateSelected(planetsData.find(g => g.id === goalId));
+        }
+        //selected = value;
         return journey;
     };
     journey.measuresOpen = function (value) {
