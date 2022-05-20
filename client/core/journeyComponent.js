@@ -24,12 +24,12 @@ import openedLinkComponent from './openedLinkComponent';
  /*
 leave links and measures turned off whilst
     - turn measures back on and check works
+        - show unavailable for all unavail planets whenever a measure is dragged
          - update target text when measuresBar.selected() changes
+         - update planet opacity too - same as unavailable when selected measure is not in. Note may need to also change opacity of text
          - show target form when measure added
 
-    - make forms have focus as soonas they appear
-    - show name form when new planet created
-    - user clicks planet should see nameform - check
+    - make forms have focus as soonas they appearck
     - aim menu (delete option only)
     - semantic zoom of aims - on zoom out, name goes to centre and just see rect, no goals, and links are replaced
     by a single link to the aim, and completion is calculated same, as all link measures are moved onto the one link for the whole aim
@@ -345,7 +345,7 @@ export default function journeyComponent() {
                     })
                     .onDrag(function(e, d){
                         //update the links and call the linksComponent again
-                        console.log("aim drg displayX", d.displayX)
+                        //console.log("aim drg displayX", d.displayX)
                     })
                     .onDragEnd(function(e, d){
                         const { id, displayWidth, height, displayX, y } = d;
@@ -555,6 +555,8 @@ export default function journeyComponent() {
             }
 
             let prevDraggedOverPlanet;
+            let goalIsAvailable = () => {};
+            let measureWasMoved = false;
             //const goalContainsMeasure = measure => goal => !!goal.measures.find(m => m.id === measure.id);
             //let goalIsAvailable;
             const measuresBarG = contentsG.selectAll("g.measures-bar").data(measuresOpen ? [measuresData] : [])
@@ -580,38 +582,53 @@ export default function journeyComponent() {
                             //updatePlanets();
                         })
                         .onMeasureDragStart((e, m) => {
+                            goalIsAvailable = planet => !planet.measures.find(meas => meas.id === m.id);
                             //goalIsAvailable = !goalContainsMeasure(m);
                             //todo - move to aims, and work out why measure not being added to goal
                             //planets.withRing(false);
                         })
                         .onMeasureDrag((e, m) => {
+                            //firstly, all unavailable planets should be shown as unavailable
+                            //@todo - fix enhancedDrag so it only calls dragStart when its a drag, then can do the following in dragStart
+                            if(!measureWasMoved){
+                                //console.log("unavail planets", planetsData.filter(p => !goalIsAvailable(p)))
+                                aims.showAvailabilityStatus(planetsData.filter(p => !goalIsAvailable(p)), m.id);
+                            }
+                            measureWasMoved = true;
+
                             //for now, offsetX and y are used to convert sourceEvent pos to canvas pos
                             const pt = { x: e.sourceEvent.offsetX, y: e.sourceEvent.offsetY };
                             const planetInnerCircleRadius = d3.min([DIMNS.planet.width, DIMNS.planet.height]);
                             const draggedOverPlanet = planetsData.find(p => distanceBetweenPoints(pt, p) < planetInnerCircleRadius);
                             //console.log("oMD draggedOverPlanet", !!draggedOverPlanet);
                             //PREV
-                            if(prevDraggedOverPlanet && prevDraggedOverPlanet.id !== draggedOverPlanet?.id){
-                                aims.stopShowingAvailabilityStatus(prevDraggedOverPlanet, m.id);
+                            //stop showing status of available draggedOverPlanet
+                            if(prevDraggedOverPlanet && goalIsAvailable(prevDraggedOverPlanet) && prevDraggedOverPlanet.id !== draggedOverPlanet?.id){
+                                aims.stopShowingAvailabilityStatus([prevDraggedOverPlanet], m.id);
                             }
                             //NEW
-                            if(draggedOverPlanet && draggedOverPlanet.id !== prevDraggedOverPlanet?.id){
-                                aims.showAvailabilityStatus(draggedOverPlanet, m.id);
+                            //show draggedOverPlanet as available if it is
+                            if(draggedOverPlanet && goalIsAvailable(draggedOverPlanet) && draggedOverPlanet.id !== prevDraggedOverPlanet?.id){
+                                aims.showAvailabilityStatus([draggedOverPlanet], m.id);
                             }
                             //update
                             prevDraggedOverPlanet = draggedOverPlanet;
                             //todo - lookinti what m is  -and follow teh updateProcess to see why measures stays as []
                             //planets.withRing(true);
                         })
-                        .onMeasureDragEnd((e,m) => {
+                        .onMeasureDragEnd((e, m) => {
+                            //stop showing unavailability
+                            aims.stopShowingAvailabilityStatus(planetsData.filter(p => !goalIsAvailable(p)), m.id);
+                            //stop showing availability of draggedOverPlanet
                             //todo - return a Promise instead of using cbs
-                            if(prevDraggedOverPlanet){
-                                aims.stopShowingAvailabilityStatus(prevDraggedOverPlanet, m.id, () => {
+                            if(prevDraggedOverPlanet && goalIsAvailable(prevDraggedOverPlanet)){
+                                aims.stopShowingAvailabilityStatus([prevDraggedOverPlanet], m.id, () => {
                                    addMeasureToPlanet(prevDraggedOverPlanet.id, m.id);
                                    //clean-up
                                    prevDraggedOverPlanet = undefined;
                                 })
                             }
+                            measureWasMoved = false;
                         }))
             
             measuresBarG.exit().remove();        

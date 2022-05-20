@@ -581,14 +581,14 @@ export default function planetsComponent() {
                     .attr("opacity", planetOpacity.available)
                     .attr("rx", +ellipse.attr("rx") * availablePlanetSizeMultiplier)
                     .attr("ry", +ellipse.attr("ry") * availablePlanetSizeMultiplier)
-                        .on("end", cb);
+                        .on("end", () => cb(goal.id. measureId));
         }else{
             //show unavailable
             ellipse
                 .transition()
                     .duration(200)
                     .attr("opacity", planetOpacity.unavailable)
-                        .on("end", cb);
+                        .on("end", () => cb(goal.id. measureId));
         }
         
         return planets;
@@ -605,14 +605,14 @@ export default function planetsComponent() {
                         .attr("opacity", planetOpacity.normal)
                         .attr("rx", +ellipse.attr("rx") / availablePlanetSizeMultiplier)
                         .attr("ry", +ellipse.attr("ry") / availablePlanetSizeMultiplier)
-                            .on("end", cb);
+                            .on("end", () => cb(goal.id. measureId));
         }else{
             //stop showing unavailable
             ellipse
                 .transition()
                     .duration(200)
                     .attr("opacity", planetOpacity.normal)
-                        .on("end", cb);
+                        .on("end", () => cb(goal.id. measureId));
         }
         
         return planets;

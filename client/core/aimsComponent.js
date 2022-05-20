@@ -552,12 +552,12 @@ export default function aimsComponent() {
         return aims;
     };
     //functions
-    aims.showAvailabilityStatus = function (goal, measureId, cb) {
-        planets[goal.aimId || "main"].showAvailabilityStatus(goal, measureId, cb);
+    aims.showAvailabilityStatus = function (goals, measureId, cb) {
+        goals.forEach(g => { planets[g.aimId || "main"].showAvailabilityStatus(g, measureId, cb); });
         return aims;
     };
-    aims.stopShowingAvailabilityStatus = function (goal, measureId, cb) {
-        planets[goal.aimId || "main"].stopShowingAvailabilityStatus(goal, measureId, cb);
+    aims.stopShowingAvailabilityStatus = function (goals, measureId, cb) {
+        goals.forEach(g => { planets[g.aimId || "main"].stopShowingAvailabilityStatus(g, measureId, cb); });
         return aims;
     };
     return aims;
