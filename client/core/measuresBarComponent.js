@@ -136,6 +136,8 @@ export default function measuresBarComponent() {
                                     clicked = d.id;
                                 })
                                 .onDragStart((e,d) => {
+                                    //cant rely on mouseover as may be touch
+                                    selected = d.id;
                                     //and if clicked, measure stays selected until anoither measure is clicked,
                                     //or measure bar is closed or measurebackground clicked
                                     dragged = d.id;
@@ -143,6 +145,7 @@ export default function measuresBarComponent() {
                                 })
                                 .onDrag(onMeasureDrag)
                                 .onDragEnd((e,d) => {
+                                    //note - measure stays selected after drag until mouseout or another is clicked
                                     dragged = undefined;
                                     onMeasureDragEnd.call(this, e, d)
                                 }));

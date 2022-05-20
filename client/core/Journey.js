@@ -175,7 +175,6 @@ const Journey = ({dimns}) => {
           setPlanets(prevState => updatedState(prevState, props))
         })
         .updatePlanets(planetsToUpdate => {
-          //console.log("Journey updatePlanets", planetsToUpdate)
           setPlanets(prevState => prevState.map(p => {
               const propsToUpdate = planetsToUpdate.find(planet => planet.id === p.id) || {};
               return { ...p, ...propsToUpdate }
@@ -184,6 +183,8 @@ const Journey = ({dimns}) => {
         .updateAim(props => {
           setAims(prevState => updatedState(prevState, props))
         })
+        /*
+        done in journeyComp instead
         .addMeasureToPlanet((planetId, measureId) => {
             const planetToUpdate = planets.find(p => p.id === planetId);
             //console.log("addMeasureToPlanet", planetToUpdate)
@@ -191,7 +192,10 @@ const Journey = ({dimns}) => {
             //case, to make sure eg targ is a string. Because theoretically, a calc could update a targ and so it copuld be a number
             const measures = [ ...planetToUpdate.measures, { id: measureId }]
             setPlanets(prevState => updatedState(prevState, { id: planetId, measures }))
+            //after this is done, show form for measure
+            //setModalData(form stuff)
         })
+        */
         .deletePlanet(id => {
           setModalData(undefined);
           //must delete link first, but when state is put together this wont matter

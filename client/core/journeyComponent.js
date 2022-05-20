@@ -24,11 +24,12 @@ import openedLinkComponent from './openedLinkComponent';
  /*
 leave links and measures turned off whilst
     - turn measures back on and check works
-        - show unavailable for all unavail planets whenever a measure is dragged
-         - update target text when measuresBar.selected() changes
-         - update planet opacity too - same as unavailable when selected measure is not in. Note may need to also change opacity of text
-         - show target form when measure added
+         - update planet opacity too - same as unavailable when selected measure is not in. (maybe adjust planet name opacity a little too)
+            so we deselect all goals that dont have measure when a measure is selected - ie show unavailable - but name form still comes up
+    basically we want user to be abke to keep measure selected and still change a planets name
+        - maybe.... split name and target clicks using to hitboxes on planet??? or just both come up if a measure is selected too?
 
+        however, nameform still comes up if user clicks name hitbox. But if they hiot target hitbox, nothing happens
     - make forms have focus as soonas they appearck
     - aim menu (delete option only)
     - semantic zoom of aims - on zoom out, name goes to centre and just see rect, no goals, and links are replaced
@@ -577,10 +578,7 @@ export default function journeyComponent() {
                             //note - eventually will have option to pass in filter settings eg tags like fitness, or groupId
                             setModalData({ importing: true, filters:[] })
                         })
-                        .onUpdateSelected(selectedMeasure => {
-                            //console.log("journey.measure.updateSelected", selectedMeasure)
-                            //updatePlanets();
-                        })
+                        .onUpdateSelected(updateAims)
                         .onMeasureDragStart((e, m) => {
                             goalIsAvailable = planet => !planet.measures.find(meas => meas.id === m.id);
                             //goalIsAvailable = !goalContainsMeasure(m);
@@ -623,9 +621,14 @@ export default function journeyComponent() {
                             //todo - return a Promise instead of using cbs
                             if(prevDraggedOverPlanet && goalIsAvailable(prevDraggedOverPlanet)){
                                 aims.stopShowingAvailabilityStatus([prevDraggedOverPlanet], m.id, () => {
-                                   addMeasureToPlanet(prevDraggedOverPlanet.id, m.id);
-                                   //clean-up
-                                   prevDraggedOverPlanet = undefined;
+                                    //@todo - add
+                                    const { id, measures } = prevDraggedOverPlanet;
+                                    const updatedPlanetMeasures = [ ...measures, { id: m.id}]
+                                    //addMeasureToPlanet(prevDraggedOverPlanet.id, m.id);
+                                    updatePlanet({ id, measures:updatedPlanetMeasures });
+                                    updateSelected({ ...prevDraggedOverPlanet, measures:updatedPlanetMeasures })
+                                    //clean-up
+                                    prevDraggedOverPlanet = undefined;
                                 })
                             }
                             measureWasMoved = false;
@@ -635,14 +638,14 @@ export default function journeyComponent() {
         }
 
         function init(){
-            svg = d3.select(this).style("border", "solid")
+            svg = d3.select(this).style("border", "solid");
 
             contentsG = svg
                 .append("g")
                     .attr("class", "contents")
-                    .attr("transform", "translate(" +margin.left +"," +margin.top +")")
+                    .attr("transform", "translate(" +margin.left +"," +margin.top +")");
 
-            canvasG = contentsG.append("g").attr("class", "canvas")
+            canvasG = contentsG.append("g").attr("class", "canvas");
 
             canvasRect = canvasG 
                 .append("rect")
@@ -650,17 +653,20 @@ export default function journeyComponent() {
                     .attr("height", canvasHeight * 5)
                     .attr("fill", COLOURS?.canvas || "#FAEBD7");
 
-            axesG = contentsG.append("g").attr("class", "axes")
+            axesG = contentsG.append("g").attr("class", "axes");
         }
 
         updateSelected = (d) => {
+            console.log("us...d", d)
             selected = d;
             if(d?.dataType === "planet"){
                 //open name form too, but as selected rather than editing
                 const measureIsOnPlanet = d.measures.find(d => d.id === measuresBar.selected());
+                console.log("us...measureIsOnPlanet", measureIsOnPlanet)
                 const measure = measureIsOnPlanet && measuresOpen?.find(m => m.id === measuresBar.selected());
+                console.log("us...measure", measure)
                 const modalData = measure ? { planetD:d, measure, targOnly: true } : { planetD: d, nameOnly:true };
-                setModalData(modalData)
+                setModalData(modalData);
             }else{
                 setModalData(undefined);
             }
@@ -672,7 +678,7 @@ export default function journeyComponent() {
         applyZoomY = y => (y + currentZoom.y) / currentZoom.k;
         startEditPlanet = (d) => {
             //hide nameform immediately
-            setModalData(undefined)
+            setModalData(undefined);
             editing = d;
             updateSelected(undefined);
             preEditZoom = currentZoom;
@@ -681,17 +687,17 @@ export default function journeyComponent() {
                 .filter(p => p.id !== d.id)
                 .transition()
                     .duration(200)
-                    .attr("opacity", 0)
+                    .attr("opacity", 0);
 
             svg.selectAll("g.link")
                 .transition()
                     .duration(200)
-                    .attr("opacity", 0)
+                    .attr("opacity", 0);
             
             svg.selectAll("g.opened-link")
                 .transition()
                     .duration(200)
-                    .attr("opacity", 0)
+                    .attr("opacity", 0);
 
             svg.transition().duration(750).call(
                 zoom.transform, 
@@ -701,7 +707,7 @@ export default function journeyComponent() {
                 ))
                 .on("end", () => {
                     //error - this now uses currentZoom instead of the new position
-                    setModalData({ planetD:d })
+                    setModalData({ planetD:d });
                 })
         }
 

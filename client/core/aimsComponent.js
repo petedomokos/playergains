@@ -13,7 +13,7 @@ import { timeMonth, timeWeek } from "d3-time";
 import menuComponent from './menuComponent';
 import planetsComponent from './planetsComponent';
 import { pointIsInRect } from "./geometryHelpers";
-import "snapsvg-cjs";
+//import "snapsvg-cjs";
 /*
 
 */
@@ -79,9 +79,9 @@ export default function aimsComponent() {
             .on("start", withClick(dragStart))
             .on("drag", withClick(dragged))
             .on("end", withClick(dragEnd));
+
         // expression elements
         selection.each(function (data) {
-            // console.log("aims", data)
             containerG = d3.select(this);
             const aimG = containerG.selectAll("g.aim").data(data, d => d.id);
             aimG.enter()
@@ -122,7 +122,6 @@ export default function aimsComponent() {
                         //drag handlers must not be in ctrolled components else they will be moved during the drag, causing a flicker
                         const dragHandlesG = aimG.select("g.drag-handles")
                             .attr("transform", "translate(" + (d.displayX) +"," + d.y +")")
-
 
                         //bg
                         controlledContentsG.selectAll("rect.bg")
@@ -169,8 +168,7 @@ export default function aimsComponent() {
                                             .style("cursor", "pointer")
                                             .attr("opacity", 0)
                                             .on("mouseover", function(){ d3.select(this).attr("opacity", 1); })
-                                            .on("mouseout", function(){ d3.select(this).attr("opacity", 0); })
-                                            ;
+                                            .on("mouseout", function(){ d3.select(this).attr("opacity", 0); });
                                 })
                                 .merge(resizeG)
                                 .attr("transform", d => "translate("+d.x +"," +d.y +")")
@@ -264,7 +262,7 @@ export default function aimsComponent() {
                                     .onAddLink(onAddLink)
                                     .startEditPlanet(startEditPlanet)
                                     .convertToAim(convertGoalToAim), 
-                                    options.planets)
+                                    options.planets);
                             
                         planetsG.exit().remove();
 
@@ -549,6 +547,11 @@ export default function aimsComponent() {
         if(typeof value === "function"){
             convertGoalToAim = value;
         }
+        return aims;
+    };
+    aims.selectedMeasure = function (value) {
+        if (!arguments.length) { return selectedMeasure; }
+        selectedMeasure = value;
         return aims;
     };
     //functions
