@@ -113,7 +113,7 @@ export default function planetsComponent() {
                     onDragEnd.call(this, e, d);
                 }));;
 
-            const planetG = containerG.selectAll("g.planet").data(data, p => p.id);
+            const planetG = containerG.selectAll("g.planet").data(data, d => d.id);
             planetG.enter()
                 .append("g")
                 .attr("class", d => "planet planet-"+d.id)
@@ -156,7 +156,7 @@ export default function planetsComponent() {
 
                 })
                 .merge(planetG)
-                .attr("opacity", planetOpacity.normal) 
+                .attr("opacity", 1)
                 .each(function(d){
                     const rx = d.rx ? d.rx(width) : DEFAULT_PLANET_RX;
                     const ry =  d.ry ? d.ry(height) : DEFAULT_PLANET_RY; 
@@ -164,7 +164,7 @@ export default function planetsComponent() {
                     const contentsG = d3.select(this).select("g.contents")
                     //ellipse
                     contentsG.select("ellipse.core")
-                        //.attr("opacity", planetOpacity.normal)
+                        .attr("opacity", planetOpacity.normal)
                         .attr("rx", rx)
                         .attr("ry", ry)
                     //title
@@ -319,7 +319,8 @@ export default function planetsComponent() {
             //EXIT
             planetG.exit().each(function(d){
                 //will be multiple exits because of the delay in removing
-                if(d3.select(this).attr("opacity") !== "0"){
+                //planetG op is always 1
+                if(d3.select(this).attr("opacity") !== "1"){
                     d3.select(this)
                         .transition()
                             .duration(200)
@@ -397,28 +398,6 @@ export default function planetsComponent() {
 
         return selection;
     }
-
-    /*function updateHighlighted(selection, shouldIncreaseSize, shouldTransition){
-        selection.each(function(d){
-            const rx = d => d.rx ? d.rx(width) : DEFAULT_PLANET_RX;
-            const ry = d => d.ry ? d.ry(height) : DEFAULT_PLANET_RY;
-            if(shouldTransition){
-                d3.select(this).select("ellipse.core")
-                    .transition()
-                        .duration(200)
-                        .attr("rx", highlighted.includes(d.id) && shouldIncreaseSize ? rx(d) * 1.5 : rx(d))
-                        .attr("ry", highlighted.includes(d.id) && shouldIncreaseSize ? ry(d) * 1.5 : ry(d))
-                        .attr("opacity", highlighted.includes(d.id) ? 0.5 : 1);
-            }else{
-                d3.select(this).select("ellipse.core")
-                        .attr("rx", highlighted.includes(d.id) && shouldIncreaseSize ? rx(d) * 1.5 : rx(d))
-                        .attr("ry", highlighted.includes(d.id) && shouldIncreaseSize ? ry(d) * 1.5 : ry(d))
-                        .attr("opacity", highlighted.includes(d.id) ? 0.5 : 1);
-            }
-        })
-
-        return selection;
-    }*/
     
     //api
     planets.width = function (value) {
@@ -579,13 +558,13 @@ export default function planetsComponent() {
         return planets;
     };
     //functions
-    planets.showAvailabilityStatus = function (goal, measureId, cb) {
+    planets.showAvailabilityStatus = function (goal, measureId, cb = () => {}) {
         //const goal = prevData.find(g => g.id === goalId);
-        const ellipse = containerG.select("g.planet-"+goal.id).select("ellipse.core");
-
+        //todo - find out why if we reference containeG instead of d3 here, it causes a new enter of planetG!
+        const ellipse = d3.select("g.planet-"+goal.id).select("ellipse.core");
         if(!goal.measures.find(m => m.id === measureId)){
             //show available
-            containerG.select("g.planet-"+goal.id).select("ellipse.core")
+            ellipse
                 .transition()
                     .duration(200)
                     .attr("opacity", planetOpacity.available)
@@ -600,12 +579,13 @@ export default function planetsComponent() {
                     .attr("opacity", planetOpacity.unavailable)
                         .on("end", cb);
         }
+        
         return planets;
     };
-    planets.stopShowingAvailabilityStatus = function (goal, measureId, cb) {
+    planets.stopShowingAvailabilityStatus = function (goal, measureId, cb = () => {}) {
         //const goal = prevData.find(g => g.id === goalId);
-        const ellipse = containerG.select("g.planet-"+goal.id).select("ellipse.core");
-
+        //tofo -see above - why cant use containerG instead of d3
+        const ellipse = d3.select("g.planet-"+goal.id).select("ellipse.core");
         if(!goal.measures.find(m => m.id === measureId)){
             //stop showing available
             ellipse
@@ -623,6 +603,7 @@ export default function planetsComponent() {
                     .attr("opacity", planetOpacity.normal)
                         .on("end", cb);
         }
+        
         return planets;
     };
     return planets;

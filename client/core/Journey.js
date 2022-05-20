@@ -71,7 +71,7 @@ const Journey = ({dimns}) => {
   const [modalData, setModalData] = useState(undefined);
   const [measures, setMeasures] = useState(mockMeasures);
   const [measuresBarIsOpen, setMeasuresBarIsOpen] = useState(false);
-  console.log("planets", planets)
+  //console.log("planets", planets)
   //console.log("links", links)
   //console.log("modalData", modalData)
   // console.log("aims", aims)
