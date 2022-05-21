@@ -24,12 +24,7 @@ import openedLinkComponent from './openedLinkComponent';
  /*
 leave links and measures turned off whilst
 
-         - selected measure change => update planet opacity too - same as unavailable when selected measure is not in. (maybe adjust planet name opacity a little too)
-            so we deselect all goals that dont have measure when a measure is selected - ie show unavailable - but name form still comes up
-    basically we want user to be abke to keep measure selected and still change a planets name
-        - maybe.... split name and target clicks using to hitboxes on planet??? or just both come up if a measure is selected too?
-
-        however, nameform still comes up if user clicks name hitbox. But if they hiot target hitbox, nothing happens
+    - for planets with selected measure, both name and targ forms come up
     - make forms have focus as soonas they appearck
     - aim menu (delete option only)
     - semantic zoom of aims - on zoom out, name goes to centre and just see rect, no goals, and links are replaced
@@ -665,7 +660,7 @@ export default function journeyComponent() {
                 //open name form too, but as selected rather than editing
                 const measureIsOnPlanet = d.measures.find(d => d.id === measuresBar.selected());
                 const measure = measureIsOnPlanet && measuresOpen?.find(m => m.id === measuresBar.selected());
-                const modalData = measure ? { planetD:d, measure, targOnly: true } : { planetD: d, nameOnly:true };
+                const modalData = measure ? { planetD:d, measure, nameAndTargOnly: true } : { planetD: d, nameOnly:true };
                 setModalData(modalData);
             }else{
                 setModalData(undefined);

@@ -24,9 +24,16 @@ const useStyles = makeStyles((theme) => ({
     //position:"absolute"
   },
   modal:{
+      position:"absolute",
+      left:props => props.modal?.left,
+      top:props => props.modal?.top,
+      width:props => props.modal?.width, 
+      height:props => props.modal?.height
+  },
+  targModal:{
     position:"absolute",
-    left:props => props.modal?.left,
-    top:props => props.modal?.top,
+    left:0,
+    top:props => props.modal?.targTop,
     width:props => props.modal?.width, 
     height:props => props.modal?.height
   },
@@ -81,16 +88,17 @@ const Journey = ({dimns}) => {
   let styleProps = {}
 
   if(modalData) {
-    const { nameOnly, targOnly, planetD } = modalData;
-    const width = nameOnly || targOnly ? DIMNS.planet.width : d3.min([screenWidth * 0.725, 500]); 
-    const height = nameOnly || targOnly ? DIMNS.planet.height/4 : d3.min([screenHeight * 0.725, 700]);
+    const { nameOnly, nameAndTargOnly, planetD } = modalData;
+    const width = nameOnly || nameAndTargOnly ? DIMNS.planet.width : d3.min([screenWidth * 0.725, 500]); 
+    const height = nameOnly || nameAndTargOnly ? DIMNS.planet.height/4 : d3.min([screenHeight * 0.725, 700]);
     styleProps = {
       modal:{
         width,
         height,
-        left: (nameOnly || targOnly ? planetD.x - width/2 : ((screenWidth - width) / 2)) + "px",
+        left: (nameOnly || nameAndTargOnly ? planetD.x - width/2 : ((screenWidth - width) / 2)) + "px",
         //@todo - use zoomScale to determine the correct shift down
-        top: (nameOnly ? planetD.y - height/2 : (targOnly ? planetD.y - height/2 + 20 :  ((screenHeight - height) / 2))) + "px"
+        top: (nameOnly || nameAndTargOnly? planetD.y - height/2 : (screenHeight - height) / 2) +"px",
+        targTop:/*planetD.y - height/2 + 20 + */"20px",
       }
     }
   };
@@ -347,13 +355,16 @@ const Journey = ({dimns}) => {
         </div>
         {modalData && 
           <div ref={modalRef} className={classes.modal}>
-            {modalData.nameOnly &&
+            {(modalData.nameOnly || modalData.nameAndTargOnly) &&
               <NameForm data={{ ...modalData, planet:planets.find(p => p.id === modalData.planetD?.id) }}
                 onUpdate={onUpdatePlanetForm("nameOnly")} onClose={onClosePlanetForm} />}
-            {modalData.targOnly &&
-              <TargetForm data={{ ...modalData, planet:planets.find(p => p.id === modalData.planetD?.id) }}
-                onUpdate={onUpdatePlanetForm("targOnly")} onClose={onClosePlanetForm} />}
-              
+
+            {modalData.nameAndTargOnly &&
+              <div className={classes.targModal}>
+                <TargetForm data={{ ...modalData, planet:planets.find(p => p.id === modalData.planetD?.id) }}
+                  onUpdate={onUpdatePlanetForm("targOnly")} onClose={onClosePlanetForm} />
+              </div>}
+
             {modalData.importing &&
               <ImportMeasures data={modalData} existing={measures} available={[]}
                 onSave={importMeasures} onClose={() => setModalData(undefined)} />}
@@ -363,7 +374,7 @@ const Journey = ({dimns}) => {
               onSave={onSaveMeasureForm} onCancel={() => setModalData(undefined)}
               existingMeasures={measures} />}
 
-            {modalData && !modalData.nameOnly && !modalData.measureOnly && !modalData.targOnly && !modalData.importing &&
+            {modalData && !modalData.nameOnly && !modalData.measureOnly && !modalData.nameAndTargOnly && !modalData.importing &&
               <Form 
                   data={{ ...modalData, planet:planets.find(p => p.id === modalData.planetD?.id) }} 
                   onUpdate={onUpdatePlanetForm("full")} 
