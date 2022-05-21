@@ -22,11 +22,9 @@ import { timeMonth, timeWeek } from "d3-time";
 import openedLinkComponent from './openedLinkComponent';
 
  /*
-leave links and measures turned off whilst
-
-    - for planets with selected measure, both name and targ forms come up
-    - make forms have focus as soonas they appearck
+leave links turned off whilst
     - aim menu (delete option only)
+    - links - not working!
     - semantic zoom of aims (use let contentsToShow) - on zoom out, name goes to centre and just see rect, no goals, and links are replaced
     by a single link to the aim, and completion is calculated same, as all link measures are moved onto the one link for the whole aim
     - integrate aim with open channel (and fix the existing bug around this) (and turn openLinks back on)

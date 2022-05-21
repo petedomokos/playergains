@@ -104,6 +104,7 @@ export default function Form({ data, onUpdate, onClose, availableMeasures, addNe
                     id="name" type="name" placeholder="Goal Name" 
                     className={classes.textField} 
                     autoComplete='off'
+                    autoFocus={true}
                     value={values.name} 
                     onChange={handleChange('name')}
                     onKeyDown={handleKeyDown}

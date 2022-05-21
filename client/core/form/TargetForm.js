@@ -69,6 +69,7 @@ export default function TargetForm({ data, onUpdate, onClose }) {
                 id="targ" type="targ" placeholder="Target"
                 className={classes.textField} 
                 autoComplete='off'
+                autoFocus={true}
                 value={values.targ} 
                 onChange={handleChange('targ')}
                 onKeyDown={handleKeyDown}

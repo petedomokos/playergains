@@ -38,8 +38,8 @@ const useStyles = makeStyles(theme => ({
 }))
 
 export default function NameForm({ data, onUpdate, onClose }) {
-    const { planet } = data;
-    //console.log("NameForm", data)
+    const { planet, nameOnly, nameAndTargOnly } = data;
+    console.log("NameForm", data)
     const styleProps = { };
     const classes = useStyles(styleProps) 
     const [values, setValues] = useState({
@@ -66,6 +66,7 @@ export default function NameForm({ data, onUpdate, onClose }) {
                 id="name" type="name" placeholder="Name"
                 className={classes.textField} 
                 autoComplete='off'
+                autoFocus={nameAndTargOnly ? false : true}
                 value={values.name} 
                 onChange={handleChange('name')}
                 onKeyDown={handleKeyDown}
