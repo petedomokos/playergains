@@ -131,6 +131,7 @@ export default function measureProfileComponent() {
         //after wasMoved is triggered, and dragend is only called if not click
         //change wasMoved to isDrag, and call dragStart when it changes to true, and 
         //only call dragEnd on end event if isDrag=true
+
         function dragStart(e,d){
             const { translateX, translateY } = getTransformation(d3.select(this))
             clonePos = [translateX, translateY];
@@ -138,6 +139,9 @@ export default function measureProfileComponent() {
                 .clone(true)
                 .classed("clone-"+d.id, true)
                 .attr("pointer-events", "none");
+
+            cloneG.select("rect.bg")
+                .attr("fill", COLOURS.selectedMeasure) //need this as bgSettings havnt been changed yet at this point
 
             onDragStart.call(this, e, d);
         }

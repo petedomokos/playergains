@@ -130,7 +130,7 @@ export default function measuresBarComponent() {
                     .each(function(d){
                         d3.select(this)
                             .call(measureProfiles[d.id]
-                                .bgSettings({ fill: d.isSelected ? "aqua" : "none" })
+                                .bgSettings({ fill: d.isSelected ? COLOURS.selectedMeasure : COLOURS.measure })
                                 .width(measureWidth)
                                 .height(measureHeight)
                                 .margin({ left: 5, right: 5, top: 0, bottom: 0 })
@@ -139,11 +139,17 @@ export default function measuresBarComponent() {
                                     clicked = d.id;
                                 })
                                 .onDragStart((e,d) => {
+                                    dragged = d.id;
                                     //cant rely on mouseover as may be touch
-                                    selected = d.id;
+                                    //@todo - this is a problem as measure bg doesnt change colour as it does for mouseover
+                                    if(selected !==  d.id){
+                                        selected = d.id;
+                                        update(prevData)
+                                        //pass to journey to update planets
+                                        onUpdateSelected(d.id)
+                                    }
                                     //and if clicked, measure stays selected until anoither measure is clicked,
                                     //or measure bar is closed or measurebackground clicked
-                                    dragged = d.id;
                                     onMeasureDragStart.call(this, e, d)
                                 })
                                 .onDrag(onMeasureDrag)
@@ -156,6 +162,7 @@ export default function measuresBarComponent() {
                     .on("mouseover", function(e, d){
                         //if a measure is being dragged, we dont want mouseover to work in case its dragged over another measure
                         if(dragged) { return ; }
+
                         selected = d.id;
                         update(prevData)
                         //pass to journey to update planets

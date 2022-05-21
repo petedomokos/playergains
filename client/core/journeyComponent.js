@@ -25,9 +25,11 @@ import openedLinkComponent from './openedLinkComponent';
 leave links turned off whilst
  - onMeasureDrag, when draggedOverPlanet stops, planet opacity should go back to its correct state based on whether or not 
  measure is in planet, not necc normal!!
- 
+ - STILL NOT FUCKING WORKING - PLANETS KEEP REDUCING TO TINY 
+
     - aim menu (delete option only)
     - links - not working!
+    - bug -form doesnt disappear on goal drag start
     - semantic zoom of aims (use let contentsToShow) - on zoom out, name goes to centre and just see rect, no goals, and links are replaced
     by a single link to the aim, and completion is calculated same, as all link measures are moved onto the one link for the whole aim
     - integrate aim with open channel (and fix the existing bug around this) (and turn openLinks back on)
@@ -581,34 +583,36 @@ export default function journeyComponent() {
                         })
                         .onUpdateSelected(updateAims)
                         .onMeasureDragStart((e, m) => {
-                            goalIsAvailable = planet => !planet.measures.find(meas => meas.id === m.id);
+                            aims.stopShowingAvailabilityStatus(planetsData);
                             //goalIsAvailable = !goalContainsMeasure(m);
                             //todo - move to aims, and work out why measure not being added to goal
                             //planets.withRing(false);
                         })
                         .onMeasureDrag((e, m) => {
-                            //firstly, all unavailable planets should be shown as unavailable
-                            //@todo - fix enhancedDrag so it only calls dragStart when its a drag, then can do the following in dragStart
-                            if(!measureWasMoved){
-                                //console.log("unavail planets", planetsData.filter(p => !goalIsAvailable(p)))
-                                aims.showAvailabilityStatus(planetsData.filter(p => !goalIsAvailable(p)), m.id);
-                            }
-                            measureWasMoved = true;
-
                             //for now, offsetX and y are used to convert sourceEvent pos to canvas pos
                             const pt = { x: e.sourceEvent.offsetX, y: e.sourceEvent.offsetY };
                             const planetInnerCircleRadius = d3.min([DIMNS.planet.width, DIMNS.planet.height]);
                             const draggedOverPlanet = planetsData.find(p => distanceBetweenPoints(pt, p) < planetInnerCircleRadius);
-                            //console.log("oMD draggedOverPlanet", !!draggedOverPlanet);
+
+                            //@todo - fix enhancedDrag so it only calls dragStart when its a drag, then can do the following in dragStart
+                            if(!measureWasMoved){
+                                //first drag event
+                                aims.stopShowingAvailabilityStatus(planetsData);
+                                measureWasMoved = true;
+                                prevDraggedOverPlanet = draggedOverPlanet;
+                                return;
+                            }
+
+                            //next drag events
                             //PREV
                             //stop showing status of available draggedOverPlanet
-                            if(prevDraggedOverPlanet && goalIsAvailable(prevDraggedOverPlanet) && prevDraggedOverPlanet.id !== draggedOverPlanet?.id){
-                                aims.stopShowingAvailabilityStatus([prevDraggedOverPlanet], m.id);
+                            if(prevDraggedOverPlanet && prevDraggedOverPlanet.id !== draggedOverPlanet?.id){
+                                aims.stopShowingAvailabilityStatus([prevDraggedOverPlanet]);
                             }
                             //NEW
                             //show draggedOverPlanet as available if it is
-                            if(draggedOverPlanet && goalIsAvailable(draggedOverPlanet) && draggedOverPlanet.id !== prevDraggedOverPlanet?.id){
-                                aims.showAvailabilityStatus([draggedOverPlanet], m.id);
+                            if(draggedOverPlanet && draggedOverPlanet.id !== prevDraggedOverPlanet?.id){
+                                aims.showAvailabilityStatus([draggedOverPlanet]);
                             }
                             //update
                             prevDraggedOverPlanet = draggedOverPlanet;
@@ -617,12 +621,12 @@ export default function journeyComponent() {
                         })
                         .onMeasureDragEnd((e, m) => {
                             //stop showing unavailability
-                            aims.stopShowingAvailabilityStatus(planetsData.filter(p => !goalIsAvailable(p)), m.id);
+                            //aims.stopShowingAvailabilityStatus(planetsData.filter(p => !goalIsAvailable(p)));
                             //stop showing availability of draggedOverPlanet
                             //todo - return a Promise instead of using cbs
-                            if(prevDraggedOverPlanet && goalIsAvailable(prevDraggedOverPlanet)){
-                                aims.stopShowingAvailabilityStatus([prevDraggedOverPlanet], m.id, () => {
-                                    //@todo - add
+                            aims.stopShowingAvailabilityStatus(planetsData, () => {
+                                //@todo - add
+                                if(prevDraggedOverPlanet){
                                     const { id, measures } = prevDraggedOverPlanet;
                                     const updatedPlanetMeasures = [ ...measures, { id: m.id}]
                                     //addMeasureToPlanet(prevDraggedOverPlanet.id, m.id);
@@ -630,8 +634,8 @@ export default function journeyComponent() {
                                     updateSelected({ ...prevDraggedOverPlanet, measures:updatedPlanetMeasures })
                                     //clean-up
                                     prevDraggedOverPlanet = undefined;
-                                })
-                            }
+                                }
+                            })
                             measureWasMoved = false;
                         }))
             

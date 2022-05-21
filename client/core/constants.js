@@ -22,6 +22,8 @@ export const COLOURS = {
     link:grey10(5),
     potentialLinkPlanet:grey10(3),
     potentialLink:grey10(3),
+    measure:"none",
+    selectedMeasure:"aqua"
 }
 
 export const SMALL_FONT = 9;
