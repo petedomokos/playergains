@@ -32,6 +32,9 @@ export default function aimsComponent() {
     let prevData = [];
     let linksData = [];
     let channelsData = [];
+    //contents to show can be none, nameOnly, "basic", "all".
+    let contentsToShow = aim => "basic";
+    let goalContentsToShow = goal => "basic";
 
     //API FUNCTIONS
     let showAvailabilityStatus = function() {};
@@ -242,6 +245,7 @@ export default function aimsComponent() {
                                 .merge(planetsG)
                                 .call(planets[d.id]
                                     .colours({ planet: d.colour || COLOURS.planet })
+                                    .contentsToShow(goalContentsToShow)
                                     .selectedMeasure(selectedMeasure)
                                     .channelsData(channelsData) 
                                     .linksData(linksData) 
@@ -391,6 +395,16 @@ export default function aimsComponent() {
     aims.planetFontSize= function (value) {
         if (!arguments.length) { return planetFontSize; }
         planetFontSize = value;
+        return aims;
+    };
+    aims.contentsToShow = function (value) {
+        if (!arguments.length) { return contentsToShow; }
+        contentsToShow = value;
+        return aims;
+    };
+    aims.goalContentsToShow = function (value) {
+        if (!arguments.length) { return goalContentsToShow; }
+        goalContentsToShow = value;
         return aims;
     };
     aims.selectedMeasure = function (value) {

@@ -27,7 +27,7 @@ leave links and measures turned off whilst
     - for planets with selected measure, both name and targ forms come up
     - make forms have focus as soonas they appearck
     - aim menu (delete option only)
-    - semantic zoom of aims - on zoom out, name goes to centre and just see rect, no goals, and links are replaced
+    - semantic zoom of aims (use let contentsToShow) - on zoom out, name goes to centre and just see rect, no goals, and links are replaced
     by a single link to the aim, and completion is calculated same, as all link measures are moved onto the one link for the whole aim
     - integrate aim with open channel (and fix the existing bug around this) (and turn openLinks back on)
     (note - need to think about how it will work in context of aims - maybe it just stays the same - but what if zoomed out so 
@@ -153,6 +153,7 @@ export default function journeyComponent() {
     let planetsData;
     let aimsData;
     let linksData;
+    let modalData;
 
     //state
     let hoveredPlanetId;
@@ -331,6 +332,7 @@ export default function journeyComponent() {
             function updateAims(){
                 aims
                     .selectedMeasure(measuresOpen?.find(m => m.id === measuresBar.selected()))
+                    .goalContentsToShow(g => modalData?.planetD.id === g.id ? "none" : "basic")
                     .timeScale(zoomedTimeScale)
                     .yScale(zoomedYScale)
                     .channelsData(channelsData)
@@ -830,6 +832,11 @@ export default function journeyComponent() {
     journey.measuresOpen = function (value) {
         if (!arguments.length) { return measuresOpen; }
         measuresOpen = value;
+        return journey;
+    };
+    journey.modalData = function (value) {
+        if (!arguments.length) { return modalData; }
+        modalData = value;
         return journey;
     };
     journey.withCompletionPaths = function (value) {

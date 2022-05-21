@@ -140,6 +140,7 @@ const Journey = ({dimns}) => {
     journey
         .withCompletionPaths(withCompletionPaths)
         .measuresOpen(measuresBarIsOpen ? measures.filter(m => m.isOpen) : undefined)
+        .modalData(modalData)
         //@todo - make createId handle prefixes so all ids are unique
         .createAim(function(aim, initPlanetsTargetDate, initPlanetsYPCs){
           const id = createId(aims.map(a => a.id));

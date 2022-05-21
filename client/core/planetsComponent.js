@@ -39,6 +39,8 @@ export default function planetsComponent() {
 
     let withRing = true;
     let highlighted = [];
+    //contents to show can be none, nameOnly, targOnly, "basic", "all"
+    let contentsToShow = goal => "basic";
 
     let colours = {
         planet:COLOURS.planet
@@ -167,6 +169,10 @@ export default function planetsComponent() {
                     const ry =  d.ry ? d.ry(height) : DEFAULT_PLANET_RY; 
                     //ENTER AND UPDATE
                     const contentsG = d3.select(this).select("g.contents")
+
+                    //for now, we assume all contents are text, and dont btoher with transition.
+                    //so to turn off contents, set display to none
+                    contentsG.selectAll("text").attr("display", contentsToShow(d) === "none" ? "none" : null);
                     //ellipse
                     contentsG.select("ellipse.core")
                     //@todo - add transition to this opacity change
@@ -486,6 +492,11 @@ export default function planetsComponent() {
     planets.fontSize = function (value) {
         if (!arguments.length) { return fontSize; }
         fontSize = value;
+        return planets;
+    };
+    planets.contentsToShow = function (value) {
+        if (!arguments.length) { return contentsToShow; }
+        contentsToShow = value;
         return planets;
     };
     planets.timeScale = function (value) {
