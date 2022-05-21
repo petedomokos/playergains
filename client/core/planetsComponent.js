@@ -39,6 +39,7 @@ export default function planetsComponent() {
 
     let withRing = true;
     let highlighted = [];
+    const bgColour = COLOURS.canvas;
     //contents to show can be none, nameOnly, targOnly, "basic", "all"
     let contentsToShow = goal => "basic";
 
@@ -131,10 +132,17 @@ export default function planetsComponent() {
                         .append("g")
                         .attr("class", "contents")
 
+                    //bg ellipse (stops elements under it showing through when opacity < 1)
+                    contentsG
+                        .append("ellipse")
+                            .attr("class", "bg core-goal")
+                            .attr("fill", bgColour)
+                            .attr("cursor", "pointer")
+
                     //ellipse
                     contentsG
                         .append("ellipse")
-                            .attr("class", "core")
+                            .attr("class", "core core-goal")
                             .attr("fill", colours.planet)
                             .attr("cursor", "pointer")
                     
@@ -173,6 +181,11 @@ export default function planetsComponent() {
                     //for now, we assume all contents are text, and dont btoher with transition.
                     //so to turn off contents, set display to none
                     contentsG.selectAll("text").attr("display", contentsToShow(d) === "none" ? "none" : null);
+
+                    //bg ellipse
+                    contentsG.select("ellipse.bg")
+                        .attr("rx", rx)
+                        .attr("ry", ry)
                     //ellipse
                     contentsG.select("ellipse.core")
                     //@todo - add transition to this opacity change
@@ -244,6 +257,7 @@ export default function planetsComponent() {
                     //onMouseover.call(this, e,d);
                 })
                 .on("mouseout", onMouseout)
+                */
                 //@todo - use mask to make it a donut and put on top
                 .call(withRing ? 
                     ring
@@ -261,7 +275,6 @@ export default function planetsComponent() {
                         return selection; 
                     }
                 )
-                */
                 .each(function(d){
                     //helper
                     //dont show menu if targOnly form open is if planet has the selectedMeasure on it
@@ -588,50 +601,87 @@ export default function planetsComponent() {
     planets.showAvailabilityStatus = function (goal, measureId, cb = () => {}) {
         //const goal = prevData.find(g => g.id === goalId);
         //todo - find out why if we reference containeG instead of d3 here, it causes a new enter of planetG!
-        const ellipse = d3.select("g.planet-"+goal.id).select("ellipse.core")//.select("g.contents").selectAll("*");
+        const planetG = d3.select("g.planet-"+goal.id);
+        const bgEllipse = planetG.select("ellipse.bg");
+        const coreEllipse = planetG.select("ellipse.core");
+        console.log("planetG", planetG.node())
+        console.log("bg", bgEllipse.node())
         //const name = d3.select("g.planet-"+goal.id).select("ellipse.core");
-        const nameText = d3.select("g.planet-"+goal.id).select("text.title")
+
         if(!goal.measures.find(m => m.id === measureId)){
             //show available
-            ellipse
+            //text
+            console.log("a")
+            planetG.selectAll("text")
+                .transition()
+                    .duration(200)
+                    .attr("opacity", planetOpacity.available);
+            console.log("b")
+            //ellipses
+            bgEllipse
+                .transition()
+                    .duration(200)
+                    .attr("rx", +bgEllipse.attr("rx") * availablePlanetSizeMultiplier)
+                    .attr("ry", +bgEllipse.attr("ry") * availablePlanetSizeMultiplier);
+                    console.log("c")
+            coreEllipse
                 .transition()
                     .duration(200)
                     .attr("opacity", planetOpacity.available)
-                    .attr("rx", +ellipse.attr("rx") * availablePlanetSizeMultiplier)
-                    .attr("ry", +ellipse.attr("ry") * availablePlanetSizeMultiplier)
+                    .attr("rx", +coreEllipse.attr("rx") * availablePlanetSizeMultiplier)
+                    .attr("ry", +coreEllipse.attr("ry") * availablePlanetSizeMultiplier)
                         .on("end", () => cb(goal.id. measureId));
-            nameText.attr("opacity", planetOpacity.available)
+
         }else{
+            //text
+            console.log("A")
+            planetG.selectAll("text")
+                .transition()
+                    .duration(200)
+                    .attr("opacity", planetOpacity.unavailable);
+
+            //ellipses
             //show unavailable
-            ellipse
+            console.log("B")
+            coreEllipse
                 .transition()
                     .duration(200)
                     .attr("opacity", planetOpacity.unavailable)
                         .on("end", () => cb(goal.id. measureId));
-
-            nameText.attr("opacity", planetOpacity.unavailable)
         }
         
         return planets;
     };
     planets.stopShowingAvailabilityStatus = function (goal, measureId, cb = () => {}) {
         //const goal = prevData.find(g => g.id === goalId);
-        //tofo -see above - why cant use containerG instead of d3
-        const ellipse = d3.select("g.planet-"+goal.id).select("ellipse.core");
-        const text = d3.select("g.planet-"+goal.id).selectAll("text")
-            .attr("opacity", planetOpacity.normal)
+        //todo -see above - why cant use containerG instead of d3
+        const planetG = d3.select("g.planet-"+goal.id);
+        //text
+        planetG.selectAll("text")
+            .transition()
+                .duration(200)
+                .attr("opacity", planetOpacity.normal);
+
+        //ellipses
+        const bgEllipse = planetG.select("ellipse.bg");
+        const coreEllipse = planetG.select("ellipse.core");
         if(!goal.measures.find(m => m.id === measureId)){
             //stop showing available
-            ellipse
+            bgEllipse
+                .transition()
+                    .duration(200)
+                        .attr("rx", +bgEllipse.attr("rx") / availablePlanetSizeMultiplier)
+                        .attr("ry", +bgEllipse.attr("ry") / availablePlanetSizeMultiplier)
+            coreEllipse
                 .transition()
                     .duration(200)
                         .attr("opacity", planetOpacity.normal)
-                        .attr("rx", +ellipse.attr("rx") / availablePlanetSizeMultiplier)
-                        .attr("ry", +ellipse.attr("ry") / availablePlanetSizeMultiplier)
+                        .attr("rx", +coreEllipse.attr("rx") / availablePlanetSizeMultiplier)
+                        .attr("ry", +coreEllipse.attr("ry") / availablePlanetSizeMultiplier)
                             .on("end", () => cb(goal.id. measureId));
         }else{
             //stop showing unavailable
-            ellipse
+            coreEllipse
                 .transition()
                     .duration(200)
                     .attr("opacity", planetOpacity.normal)

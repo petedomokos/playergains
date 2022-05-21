@@ -23,6 +23,9 @@ import openedLinkComponent from './openedLinkComponent';
 
  /*
 leave links turned off whilst
+ - onMeasureDrag, when draggedOverPlanet stops, planet opacity should go back to its correct state based on whether or not 
+ measure is in planet, not necc normal!!
+ 
     - aim menu (delete option only)
     - links - not working!
     - semantic zoom of aims (use let contentsToShow) - on zoom out, name goes to centre and just see rect, no goals, and links are replaced
