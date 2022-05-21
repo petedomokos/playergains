@@ -74,7 +74,7 @@ const Journey = ({dimns}) => {
   const [measuresBarIsOpen, setMeasuresBarIsOpen] = useState(false);
   //console.log("planets", planets)
   //console.log("links", links)
-  console.log("modalData", modalData)
+  // console.log("modalData", modalData)
   // console.log("aims", aims)
 
   const { screenWidth, screenHeight } = dimns;

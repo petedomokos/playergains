@@ -39,6 +39,8 @@ leave links and measures turned off whilst
         goals not displayed, just aim title displayed?)
     - ipad testing
 
+    -bug - when naming a planet, click anuva, and old name still shows
+
     NEXT
     consider removing the whole thing of planets sliding into neaest channel end. Instead, do it like inDesign, where the user is in charge but
     //we help them by highlighting the slot when they get near it, and if its near it then it slides in, and that becomes it's actual date 

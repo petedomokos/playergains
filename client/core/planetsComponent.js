@@ -45,7 +45,7 @@ export default function planetsComponent() {
     }
 
     const planetOpacity = {
-        normal: 0.5,
+        normal: 0.7,
         available: 1,
         unavailable: 0.2
     }
@@ -175,6 +175,7 @@ export default function planetsComponent() {
                         .attr("ry", ry)
                     //title
                     contentsG.select("text")
+                        .attr("opacity", !selectedMeasure || selectedMeasureIsInGoal(d) ? planetOpacity.normal : planetOpacity.unavailable)
                         .attr("font-size", fontSize)
                         .text(d.name || d.id.slice(-1))
                         //.text(d.name || "enter name")
@@ -202,7 +203,8 @@ export default function planetsComponent() {
                             .merge(targG)
                             .attr("transform", "translate(0, " +ry/2 +")")
                             .each(function(m){
-                                d3.select(this).select("text").text("targ")
+                                d3.select(this).select("text")
+                                    .attr("opacity", !selectedMeasure || selectedMeasureIsInGoal(d) ? planetOpacity.normal : planetOpacity.unavailable)
                                     .text("target "+(typeof m.targ === "number" ? m.targ : "not set"))
 
                             })
@@ -575,7 +577,9 @@ export default function planetsComponent() {
     planets.showAvailabilityStatus = function (goal, measureId, cb = () => {}) {
         //const goal = prevData.find(g => g.id === goalId);
         //todo - find out why if we reference containeG instead of d3 here, it causes a new enter of planetG!
-        const ellipse = d3.select("g.planet-"+goal.id).select("ellipse.core");
+        const ellipse = d3.select("g.planet-"+goal.id).select("ellipse.core")//.select("g.contents").selectAll("*");
+        //const name = d3.select("g.planet-"+goal.id).select("ellipse.core");
+        const nameText = d3.select("g.planet-"+goal.id).select("text.title")
         if(!goal.measures.find(m => m.id === measureId)){
             //show available
             ellipse
@@ -585,6 +589,7 @@ export default function planetsComponent() {
                     .attr("rx", +ellipse.attr("rx") * availablePlanetSizeMultiplier)
                     .attr("ry", +ellipse.attr("ry") * availablePlanetSizeMultiplier)
                         .on("end", () => cb(goal.id. measureId));
+            nameText.attr("opacity", planetOpacity.available)
         }else{
             //show unavailable
             ellipse
@@ -592,6 +597,8 @@ export default function planetsComponent() {
                     .duration(200)
                     .attr("opacity", planetOpacity.unavailable)
                         .on("end", () => cb(goal.id. measureId));
+
+            nameText.attr("opacity", planetOpacity.unavailable)
         }
         
         return planets;
@@ -600,6 +607,8 @@ export default function planetsComponent() {
         //const goal = prevData.find(g => g.id === goalId);
         //tofo -see above - why cant use containerG instead of d3
         const ellipse = d3.select("g.planet-"+goal.id).select("ellipse.core");
+        const text = d3.select("g.planet-"+goal.id).selectAll("text")
+            .attr("opacity", planetOpacity.normal)
         if(!goal.measures.find(m => m.id === measureId)){
             //stop showing available
             ellipse
@@ -617,6 +626,8 @@ export default function planetsComponent() {
                     .attr("opacity", planetOpacity.normal)
                         .on("end", () => cb(goal.id. measureId));
         }
+
+
         
         return planets;
     };
