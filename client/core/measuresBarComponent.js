@@ -19,10 +19,12 @@ export default function measuresBarComponent() {
     const btnWidth = 30;
     const btnGap = 5;
     const btnHeight = 10;
+
     let measuresHeight;
-    let measureWidth = 50;
+    //width constant
+    const measureWidth = 60;
+    //height varies
     let measureHeight;
-    const measureMarginRight = 10;
 
 
     function updateDimns(){
@@ -124,13 +126,14 @@ export default function measuresBarComponent() {
                     .attr("pointer-events", "all")
                     .each(function(d){ measureProfiles[d.id] = measureProfileComponent(); })
                     .merge(measureG)
-                    .attr("transform", (d,i) =>  "translate("+(i * (measureWidth + measureMarginRight)) +",0)")
+                    .attr("transform", (d,i) =>  "translate("+(i * measureWidth) +",0)")
                     .each(function(d){
                         d3.select(this)
                             .call(measureProfiles[d.id]
                                 .bgSettings({ fill: d.isSelected ? "aqua" : "none" })
                                 .width(measureWidth)
                                 .height(measureHeight)
+                                .margin({ left: 5, right: 5, top: 0, bottom: 0 })
                                 .onClick(function(e, d){
                                     dragged = undefined;
                                     clicked = d.id;
@@ -151,14 +154,15 @@ export default function measuresBarComponent() {
                                 }));
                     })
                     .on("mouseover", function(e, d){
+                        //if a measure is being dragged, we dont want mouseover to work in case its dragged over another measure
+                        if(dragged) { return ; }
                         selected = d.id;
                         update(prevData)
                         //pass to journey to update planets
                         onUpdateSelected(d.id)
                     })
                     .on("mouseout", function(e, d){
-                        //keep it selected if its being dragged
-                        if(dragged === d.id || clicked === d.id) { return; }
+                        if(dragged || clicked === d.id ) { return ; }
                         selected = undefined;
                         update(prevData);
                         //pass to journey to update planets

@@ -26,6 +26,7 @@ export default function planetsComponent() {
     let yScale = x => 0;
 
     let selectedMeasure;
+    let selectedMeasureIsInGoal = goal => false;
 
     let prevData = [];
     let linksData = [];
@@ -168,7 +169,8 @@ export default function planetsComponent() {
                     const contentsG = d3.select(this).select("g.contents")
                     //ellipse
                     contentsG.select("ellipse.core")
-                        .attr("opacity", planetOpacity.normal)
+                    //@todo - add transition to this opacity change
+                        .attr("opacity", !selectedMeasure || selectedMeasureIsInGoal(d) ? planetOpacity.normal : planetOpacity.unavailable)
                         .attr("rx", rx)
                         .attr("ry", ry)
                     //title
@@ -179,12 +181,12 @@ export default function planetsComponent() {
 
                     //targ
                     let targData = [];
-                    if(selectedMeasure){
+                    //getting error when doing this
+                    if(selectedMeasureIsInGoal(d)){
                         const planetMeasureData = d.measures.find(m => m.id === selectedMeasure.id);
-                        if(planetMeasureData){
-                            targData.push({ ...selectedMeasure, ...planetMeasureData })
-                        }
+                        targData.push({ ...selectedMeasure, ...planetMeasureData });
                     }
+
                     const targG = contentsG.selectAll("g.targ").data(targData)
                     targG.enter()
                         .append("g")
@@ -429,6 +431,7 @@ export default function planetsComponent() {
     planets.selectedMeasure = function (value) {
         if (!arguments.length) { return selectedMeasure; }
         selectedMeasure = value;
+        selectedMeasureIsInGoal = goal => selectedMeasure && goal.measures.find(m => m.id === selectedMeasure.id);
         return planets;
     };
     planets.withRing = function (value) {

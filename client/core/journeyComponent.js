@@ -23,8 +23,8 @@ import openedLinkComponent from './openedLinkComponent';
 
  /*
 leave links and measures turned off whilst
-    - turn measures back on and check works
-         - update planet opacity too - same as unavailable when selected measure is not in. (maybe adjust planet name opacity a little too)
+
+         - selected measure change => update planet opacity too - same as unavailable when selected measure is not in. (maybe adjust planet name opacity a little too)
             so we deselect all goals that dont have measure when a measure is selected - ie show unavailable - but name form still comes up
     basically we want user to be abke to keep measure selected and still change a planets name
         - maybe.... split name and target clicks using to hitboxes on planet??? or just both come up if a measure is selected too?
@@ -37,6 +37,7 @@ leave links and measures turned off whilst
     - integrate aim with open channel (and fix the existing bug around this) (and turn openLinks back on)
     (note - need to think about how it will work in context of aims - maybe it just stays the same - but what if zoomed out so 
         goals not displayed, just aim title displayed?)
+    - ipad testing
 
     NEXT
     consider removing the whole thing of planets sliding into neaest channel end. Instead, do it like inDesign, where the user is in charge but
@@ -657,14 +658,11 @@ export default function journeyComponent() {
         }
 
         updateSelected = (d) => {
-            console.log("us...d", d)
             selected = d;
             if(d?.dataType === "planet"){
                 //open name form too, but as selected rather than editing
                 const measureIsOnPlanet = d.measures.find(d => d.id === measuresBar.selected());
-                console.log("us...measureIsOnPlanet", measureIsOnPlanet)
                 const measure = measureIsOnPlanet && measuresOpen?.find(m => m.id === measuresBar.selected());
-                console.log("us...measure", measure)
                 const modalData = measure ? { planetD:d, measure, targOnly: true } : { planetD: d, nameOnly:true };
                 setModalData(modalData);
             }else{
