@@ -81,27 +81,46 @@ const Journey = ({dimns}) => {
   const [measuresBarIsOpen, setMeasuresBarIsOpen] = useState(false);
   //console.log("planets", planets)
   //console.log("links", links)
-  // console.log("modalData", modalData)
+  console.log("modalData", modalData)
   // console.log("aims", aims)
 
   const { screenWidth, screenHeight } = dimns;
   let styleProps = {}
 
   if(modalData) {
-    const { nameOnly, nameAndTargOnly, planetD } = modalData;
-    const width = nameOnly || nameAndTargOnly ? DIMNS.planet.width : d3.min([screenWidth * 0.725, 500]); 
-    const height = nameOnly || nameAndTargOnly ? DIMNS.planet.height/4 : d3.min([screenHeight * 0.725, 700]);
-    styleProps = {
-      modal:{
-        width,
-        height,
-        left: (nameOnly || nameAndTargOnly ? planetD.x - width/2 : ((screenWidth - width) / 2)) + "px",
-        //@todo - use zoomScale to determine the correct shift down
-        top: (nameOnly || nameAndTargOnly? planetD.y - height/2 : (screenHeight - height) / 2) +"px",
-        targTop:/*planetD.y - height/2 + 20 + */"20px",
+      //todo - handle aim nameOnly case
+      const { nameOnly, nameAndTargOnly, d } = modalData;
+
+      if(nameOnly || nameAndTargOnly){
+            //could be aim or planet, but use planet width and height as a guide for both
+            //@todo - have more rigorous dimns 
+            const { width, height } = DIMNS.form.single;
+            styleProps = {
+                modal:{
+                  width,
+                  height,
+                  //@todo - sort this out...for now, planet has x whereas aim has displayX
+                  left:(d.dataType === "planet" ? d.x - width/2 : d.displayX - width/2) + "px",
+                  top:d.y - height/2 + "px",
+                  targTop:"20px"
+                }
+            }
+      }else{
+            //full form
+            const width = d3.min([screenWidth * 0.725, 500]); 
+            const height = d3.min([screenHeight * 0.725, 700]);
+            styleProps = {
+                modal:{
+                  width,
+                  height,
+                  left:((screenWidth - width) / 2) + "px",
+                  top:((screenHeight - height) / 2) +"px",
+                }
+            }
       }
-    }
   };
+
+  //console.log("styleProps", styleProps)
   const classes = useStyles(styleProps) 
   const containerRef = useRef(null);
   const modalRef = useRef(null);
@@ -145,7 +164,7 @@ const Journey = ({dimns}) => {
         .createAim(function(aim, initPlanetsTargetDate, initPlanetsYPCs){
           const id = createId(aims.map(a => a.id));
           const colour = createColour(aims.length);
-          setAims(prevState => ([ ...prevState, { id , colour, ...aim }]))
+          setAims(prevState => ([ ...prevState, { id , colour, dataType:"aim", ...aim }]))
           
           //create 3 planets with aimId = id
           const newPlanets = [1,2,3].map((nr,i) => ({
@@ -205,6 +224,13 @@ const Journey = ({dimns}) => {
             //setModalData(form stuff)
         })
         */
+       .onDeleteAim(aim => {
+          //@todo - create a Dialog to see if user wants goals deleted too (if aiim has goals), or to cancel
+          setModalData(undefined);
+          //first, move all planets that are in the aim to the main aim
+          setPlanets(prevState => prevState.map(p => ({ ...p, aimId: p.aimid === aim.id ? "main" : p.aimId })))
+          setAims(prevState => prevState.filter(a => a.id !== id));
+       })
         .deletePlanet(id => {
           setModalData(undefined);
           //must delete link first, but when state is put together this wont matter
@@ -296,16 +322,23 @@ const Journey = ({dimns}) => {
 }, [measures]);
 
   const onUpdatePlanetForm = modalType => (name, value) => {
-    const { planetD, measure } = modalData;
-    const planet = planets.find(p => p.id === planetD.id);
+    const { d , measure } = modalData;
+    const planet = planets.find(p => p.id === d.id);
     let props;
     if(modalType === "targOnly"){
       //for now, the only planetMeasureData that can  be updated is that targ.  Everything else that is updated is on the measure itself.
-      props = { id:planetD.id, measures: planet.measures.map(m => m.id === measure.id ? { ...m, targ:value } : m) };
+      props = { id:d.id, measures: planet.measures.map(m => m.id === measure.id ? { ...m, targ:value } : m) };
     }else{
-      props = { id:planetD.id, [name]: value };
+      props = { id:d.id, [name]: value };
     }
     setPlanets(prevState => updatedState(prevState, props));
+  }
+
+  const onUpdateAimForm = (name, value) => {
+    const { d } = modalData;
+    const aim = aims.find(a => a.id === d.id);
+    const props = { id:d.id, [name]: value };
+    setAims(prevState => updatedState(prevState, props));
   }
 
   const onSaveMeasureForm = (details, planetId, isNew) => {
@@ -321,6 +354,11 @@ const Journey = ({dimns}) => {
 
   const onClosePlanetForm = () => {
     journey.endEditPlanet();
+    setModalData(undefined);
+  }
+
+  const onCloseAimForm = () => {
+    //@todo - journey.endEditAim();
     setModalData(undefined);
   }
 
@@ -356,13 +394,17 @@ const Journey = ({dimns}) => {
         </div>
         {modalData && 
           <div ref={modalRef} className={classes.modal}>
-            {(modalData.nameOnly || modalData.nameAndTargOnly) &&
-              <NameForm data={{ ...modalData, planet:planets.find(p => p.id === modalData.planetD?.id) }}
+             {modalData.d.dataType === "aim" && modalData.nameOnly && 
+              <NameForm data={{ ...modalData, aim:aims.find(a => a.id === modalData.d.id) }}
+                onUpdate={onUpdateAimForm} onClose={onCloseAimForm} />}
+
+            {modalData.d.dataType === "planet" && (modalData.nameOnly || modalData.nameAndTargOnly) &&
+              <NameForm data={{ ...modalData, planet:planets.find(p => p.id === modalData.d?.id) }}
                 onUpdate={onUpdatePlanetForm("nameOnly")} onClose={onClosePlanetForm} />}
 
             {modalData.nameAndTargOnly &&
               <div className={classes.targModal}>
-                <TargetForm data={{ ...modalData, planet:planets.find(p => p.id === modalData.planetD?.id) }}
+                <TargetForm data={{ ...modalData, planet:planets.find(p => p.id === modalData.d?.id) }}
                   onUpdate={onUpdatePlanetForm("targOnly")} onClose={onClosePlanetForm} />
               </div>}
 
@@ -371,13 +413,13 @@ const Journey = ({dimns}) => {
                 onSave={importMeasures} onClose={() => setModalData(undefined)} />}
 
             {modalData.measureOnly && 
-              <MeasureForm data={{ ...modalData, planet:planets.find(p => p.id === modalData.planetD?.id) }}
+              <MeasureForm data={{ ...modalData, planet:planets.find(p => p.id === modalData.d?.id) }}
               onSave={onSaveMeasureForm} onCancel={() => setModalData(undefined)}
               existingMeasures={measures} />}
 
             {modalData && !modalData.nameOnly && !modalData.measureOnly && !modalData.nameAndTargOnly && !modalData.importing &&
               <Form 
-                  data={{ ...modalData, planet:planets.find(p => p.id === modalData.planetD?.id) }} 
+                  data={{ ...modalData, planet:planets.find(p => p.id === modalData.d?.id) }} 
                   onUpdate={onUpdatePlanetForm("full")} 
                   onClose={onClosePlanetForm}
                   availableMeasures={measures}

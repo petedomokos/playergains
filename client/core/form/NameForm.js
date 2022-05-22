@@ -38,12 +38,12 @@ const useStyles = makeStyles(theme => ({
 }))
 
 export default function NameForm({ data, onUpdate, onClose }) {
-    const { planet, nameOnly, nameAndTargOnly } = data;
+    const { aim, planet, nameOnly, nameAndTargOnly } = data;
     console.log("NameForm", data)
     const styleProps = { };
     const classes = useStyles(styleProps) 
     const [values, setValues] = useState({
-        name: planet?.name || "",
+        name: aim? (aim.name || "") : (planet?.name || ""),
         error: ""
     })
 

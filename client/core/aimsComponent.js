@@ -62,15 +62,19 @@ export default function aimsComponent() {
     let startEditPlanet = function(){};
     let convertGoalToAim = function(){};
 
+    let onDeleteAim = function() {};
+
     let withClick = dragEnhancements();
 
     //components
     let planets = {};
     let menus = {};
-    let menuOptions = [
-        { key: "edit", label:"Edit" },
-        { key: "delete", label:"Delete" }
-    ];
+    let menuOptions = (d) => {
+        const basicOpts = [
+            { key: "delete", label:"Delete" }
+        ]
+        return basicOptions;
+    };
 
     //dom
     let containerG;
@@ -112,8 +116,9 @@ export default function aimsComponent() {
                                 .attr("stroke", grey10(1))
                                 .attr("stroke-width", 0.1);
                         
+                        //components        
                         planets[d.id] = planetsComponent();
-
+                        menus[d.id] = menuComponent();
                     })
                     .merge(aimG)
                     .each(function(d){
@@ -269,6 +274,47 @@ export default function aimsComponent() {
                                     options.planets);
                             
                         planetsG.exit().remove();
+
+                        //menu
+                        const showContextMenu = d => d.isSelected;// && !d.measures.find(m => m.id === selectedMeasure?.id);
+                        const menuG = controlledContentsG.selectAll("g.menu").data(showContextMenu(d) ? [menuOptions(d)] : [], d => d.key);
+                        const menuGEnter = menuG.enter()
+                            .append("g")
+                                .attr("class", "menu")
+                                .attr("opacity", 1)
+                                /*
+                                .attr("opacity", 0)
+                                .transition()
+                                    .duration(200)
+                                    .attr("opacity", 1);*/
+                        
+                        menuGEnter.merge(menuG)
+                            //.attr("transform", "translate(0," + (d.width) * 0.5) +")")
+                            .call(menus[d.id]
+                                .onClick((opt) => {
+                                    switch(opt.key){
+                                        case "delete": { 
+                                            onDeleteAim.call(this, d.id);
+                                            break;
+                                        };
+                                        default:{};
+                                    }
+                                }))
+    
+                        menuG.exit().each(function(d){
+                            //will be multiple exits because of the delay in removing
+                            if(!removingMenu){
+                                removingMenu = true;
+                                d3.select(this)
+                                    .transition()
+                                        .duration(100)
+                                        .attr("opacity", 0)
+                                        .on("end", function() { 
+                                            d3.select(this).remove();
+                                            removingMenu = false; 
+                                        });
+                            }
+                        }) 
 
                     });
 
@@ -539,6 +585,13 @@ export default function aimsComponent() {
         if (!arguments.length) { return updatePlanet; }
         if(typeof value === "function"){
             updatePlanet = value;
+        }
+        return aims;
+    };
+    aims.onDeleteAim = function (value) {
+        if (!arguments.length) { return onDeleteAim; }
+        if(typeof value === "function"){
+            onDeleteAim = value;
         }
         return aims;
     };

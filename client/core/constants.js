@@ -14,6 +14,12 @@ export const DIMNS = {
     aim:{
         vertPlanetGap:3,
         margin:{ left: 5, right: 5, top: 15, bottom: 5 }
+    },
+    form:{
+        single:{
+            width:85,
+            height:15
+        }
     }
 }
 export const COLOURS = {

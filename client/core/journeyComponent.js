@@ -22,12 +22,12 @@ import { timeMonth, timeWeek } from "d3-time";
 import openedLinkComponent from './openedLinkComponent';
 
  /*
-leave links turned off whilst
- - onMeasureDrag, when draggedOverPlanet stops, planet opacity should go back to its correct state based on whether or not 
- measure is in planet, not necc normal!!
- - STILL NOT FUCKING WORKING - PLANETS KEEP REDUCING TO TINY 
-
-    - aim menu (delete option only)
+leave links turned off whilst§  `
+    BUG - made some changes to form, now planet name not showing in dom!
+    - delete aim
+    - edit aim (name only)
+    - when dragging a measure, selectedGoal is deselected
+    - get rid of teh planets when an aim is created - just have it empty
     - links - not working!
     - bug -form doesnt disappear on goal drag start
     - semantic zoom of aims (use let contentsToShow) - on zoom out, name goes to centre and just see rect, no goals, and links are replaced
@@ -115,6 +115,7 @@ export default function journeyComponent() {
 
     let createAim = function(){};
     let updateAim = function(){};
+    let onDeleteAim = function(){};
     let createPlanet = function(){};
     //@todo - change name to updatePlanetState and so on to distinguish from dom changes eg updateplanets could be either
     let updatePlanet = function(){};
@@ -335,17 +336,25 @@ export default function journeyComponent() {
             function updateAims(){
                 aims
                     .selectedMeasure(measuresOpen?.find(m => m.id === measuresBar.selected()))
-                    .goalContentsToShow(g => modalData?.planetD.id === g.id ? "none" : "basic")
+                    .goalContentsToShow(g => modalData?.d.id === g.id ? "none" : "basic")
                     .timeScale(zoomedTimeScale)
                     .yScale(zoomedYScale)
                     .channelsData(channelsData)
                     .linksData(linksData)
                     .aimFontSize(k * 7)
                     .planetFontSize(k * 6.5)
+                    .onDeleteAim((aim) => {
+                        selected = undefined;
+                        editing = undefined;
+                        onDeleteAim(id);
+                    })
                     //.onUpdateAim(function(){ })
                     //.onClick(() => {})
                     .onDragStart(function(e, d){
                         //aim is raised already in aimComponent
+                    })
+                    .onClick((e,d) => {
+                        updateSelected(d);
                     })
                     .onDrag(function(e, d){
                         //update the links and call the linksComponent again
@@ -663,16 +672,21 @@ export default function journeyComponent() {
 
         updateSelected = (d) => {
             selected = d;
-            if(d?.dataType === "planet"){
-                //open name form too, but as selected rather than editing
-                const measureIsOnPlanet = d.measures.find(d => d.id === measuresBar.selected());
-                const measure = measureIsOnPlanet && measuresOpen?.find(m => m.id === measuresBar.selected());
-                const modalData = measure ? { planetD:d, measure, nameAndTargOnly: true } : { planetD: d, nameOnly:true };
-                setModalData(modalData);
-            }else{
+            if(!d){
                 setModalData(undefined);
+                //update(); not needed
+                return;
             }
-            update();
+
+            //open name form too, but as selected rather than editing
+            const measureIsOnPlanet = d.dataType === "planet"? d.measures.find(d => d.id === measuresBar.selected()) : false;
+            const measure = measureIsOnPlanet && measuresOpen?.find(m => m.id === measuresBar.selected());
+            //could be an aim or a planet
+            const modalData = measure ? { d, measure, nameAndTargOnly: true } : { d, nameOnly:true };
+            setModalData(modalData);
+            return;
+
+            //update(); not needed
         }
 
         //helpers
@@ -709,7 +723,7 @@ export default function journeyComponent() {
                 ))
                 .on("end", () => {
                     //error - this now uses currentZoom instead of the new position
-                    setModalData({ planetD:d });
+                    setModalData(d);
                 })
         }
 
@@ -860,6 +874,13 @@ export default function journeyComponent() {
         if (!arguments.length) { return updateAim; }
         if(typeof value === "function"){
             updateAim = value;
+        }
+        return journey;
+    };
+    journey.onDeleteAim = function (value) {
+        if (!arguments.length) { return onDeleteAim; }
+        if(typeof value === "function"){
+            onDeleteAim = value;
         }
         return journey;
     };
