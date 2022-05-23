@@ -25,6 +25,7 @@ import openedLinkComponent from './openedLinkComponent';
 leave links turned off whilst§  `
     BUG - made some changes to form, now planet name not showing in dom!
     - delete aim
+    - hide aim name text when form open
     - edit aim (name only)
     - when dragging a measure, selectedGoal is deselected
     - get rid of teh planets when an aim is created - just have it empty
@@ -335,7 +336,9 @@ export default function journeyComponent() {
 
             function updateAims(){
                 aims
+                    .selected(selected)
                     .selectedMeasure(measuresOpen?.find(m => m.id === measuresBar.selected()))
+                    .contentsToShow(aim => modalData?.d.id === aim.id ? "none" : "basic")
                     .goalContentsToShow(g => modalData?.d.id === g.id ? "none" : "basic")
                     .timeScale(zoomedTimeScale)
                     .yScale(zoomedYScale)
@@ -343,10 +346,10 @@ export default function journeyComponent() {
                     .linksData(linksData)
                     .aimFontSize(k * 7)
                     .planetFontSize(k * 6.5)
-                    .onDeleteAim((aim) => {
+                    .onDeleteAim((aimId) => {
                         selected = undefined;
                         editing = undefined;
-                        onDeleteAim(id);
+                        onDeleteAim(aimId);
                     })
                     //.onUpdateAim(function(){ })
                     //.onClick(() => {})
@@ -794,12 +797,7 @@ export default function journeyComponent() {
                 startYPC:zoomedYScale.invert(y),
                 endYPC:zoomedYScale.invert(y + height)
             }
-            const yPCsForInitGoals = [
-                yScale.invert(d.y - goalHeight - vertGap),
-                d.yPC,
-                yScale.invert(d.y + goalHeight + vertGap)
-            ]
-            createAim(aim, d.targetDate, yPCsForInitGoals);
+            createAim(aim);
             
 
             //C: add aim to state with init pos to wrapped around the 3 new planets -> this will be drawn on automatically on update aimsComponent

@@ -5,7 +5,7 @@ import { calcTrueX, calcAdjX, findPointChannel, findDateChannel, findNearestChan
 //import { COLOURS, DIMNS } from "./constants";
 import { addWeeks } from "../util/TimeHelpers"
 import { ellipse } from "./ellipse";
-import { grey10, COLOURS } from "./constants";
+import { grey10, COLOURS, DIMNS } from "./constants";
 import { findNearestPlanet, distanceBetweenPoints, channelContainsPoint, channelContainsDate } from './geometryHelpers';
 import { OPEN_CHANNEL_EXT_WIDTH } from './constants';
 import dragEnhancements from './enhancedDragHandler';
@@ -27,6 +27,10 @@ export default function aimsComponent() {
 
     let timeScale = x => 0;
     let yScale = x => 0;
+
+    let selectedAim;
+    let selectedGoal;
+    let selectedLink;
     let selectedMeasure;
 
     let prevData = [];
@@ -73,7 +77,7 @@ export default function aimsComponent() {
         const basicOpts = [
             { key: "delete", label:"Delete" }
         ]
-        return basicOptions;
+        return basicOpts;
     };
 
     //dom
@@ -126,8 +130,11 @@ export default function aimsComponent() {
                         const controlledContentsG = aimG.select("g.controlled-contents")
                             .attr("transform", "translate(" + (d.displayX) +"," + d.y +")")
                             .call(drag);
+
+                        //hide contents if necc eg if aim form open
+                        controlledContentsG.selectAll("text").attr("display", contentsToShow(d) === "none" ? "none" : null);
                         
-                        //drag handlers must not be in ctrolled components else they will be moved during the drag, causing a flicker
+                        //drag handlers must not be in controlled components else they will be moved during the drag, causing a flicker
                         const dragHandlesG = aimG.select("g.drag-handles")
                             .attr("transform", "translate(" + (d.displayX) +"," + d.y +")")
 
@@ -243,6 +250,7 @@ export default function aimsComponent() {
 
                         //planets
                         //todo - find out why all the d values that were updated in onResizeDragEnd are undefined
+                        console.log("d.planets for "+d.id, d.planets)
                         const planetsG = aimG.selectAll("g.planets").data([d.planets]);
                         planetsG.enter()
                             .append("g") // @todo - chqnge to insert so its before resize and drag handles so they arent blocked
@@ -251,6 +259,7 @@ export default function aimsComponent() {
                                 .call(planets[d.id]
                                     .colours({ planet: d.colour || COLOURS.planet })
                                     .contentsToShow(goalContentsToShow)
+                                    .selected(selectedGoal)
                                     .selectedMeasure(selectedMeasure)
                                     .channelsData(channelsData) 
                                     .linksData(linksData) 
@@ -276,8 +285,7 @@ export default function aimsComponent() {
                         planetsG.exit().remove();
 
                         //menu
-                        const showContextMenu = d => d.isSelected;// && !d.measures.find(m => m.id === selectedMeasure?.id);
-                        const menuG = controlledContentsG.selectAll("g.menu").data(showContextMenu(d) ? [menuOptions(d)] : [], d => d.key);
+                        const menuG = controlledContentsG.selectAll("g.menu").data(selectedAim?.id === d.id ? [menuOptions(d)] : [], opt => opt.key);
                         const menuGEnter = menuG.enter()
                             .append("g")
                                 .attr("class", "menu")
@@ -287,9 +295,10 @@ export default function aimsComponent() {
                                 .transition()
                                     .duration(200)
                                     .attr("opacity", 1);*/
+
                         
                         menuGEnter.merge(menuG)
-                            //.attr("transform", "translate(0," + (d.width) * 0.5) +")")
+                            .attr("transform", "translate(" +DIMNS.form.single.width/2 +"," + -20 +")")
                             .call(menus[d.id]
                                 .onClick((opt) => {
                                     switch(opt.key){
@@ -301,6 +310,7 @@ export default function aimsComponent() {
                                     }
                                 }))
     
+                        let removingMenu = false;
                         menuG.exit().each(function(d){
                             //will be multiple exits because of the delay in removing
                             if(!removingMenu){
@@ -456,6 +466,29 @@ export default function aimsComponent() {
     aims.selectedMeasure = function (value) {
         if (!arguments.length) { return selectedMeasure; }
         selectedMeasure = value;
+        return aims;
+    };
+    aims.selected = function (value) {
+        if (!arguments.length) { return { selectedAim, selectedGoal }; }
+        if(value?.dataType === "aim"){
+            selectedAim = value;
+            selectedGoal = undefined;
+            selectedLink = undefined;
+        }else if(value?.dataType === "planet"){
+            selectedAim = undefined;
+            selectedGoal = value;
+            selectedLink = undefined;
+        }else if(value?.dataType === "link"){
+            selectedAim = undefined;
+            selectedGoal = undefined;
+            selectedLink = value;
+        }else{
+            //reset as no value
+            selectedAim = undefined;
+            selectedGoal = undefined;
+            selectedLink = undefined;
+
+        }
         return aims;
     };
     aims.withRing = function (value) {
@@ -614,11 +647,6 @@ export default function aimsComponent() {
         if(typeof value === "function"){
             convertGoalToAim = value;
         }
-        return aims;
-    };
-    aims.selectedMeasure = function (value) {
-        if (!arguments.length) { return selectedMeasure; }
-        selectedMeasure = value;
         return aims;
     };
     //functions

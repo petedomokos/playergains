@@ -79,10 +79,11 @@ const Journey = ({dimns}) => {
   const [modalData, setModalData] = useState(undefined);
   const [measures, setMeasures] = useState(mockMeasures);
   const [measuresBarIsOpen, setMeasuresBarIsOpen] = useState(false);
-  //console.log("planets", planets)
-  //console.log("links", links)
-  console.log("modalData", modalData)
-  // console.log("aims", aims)
+
+  console.log("aims", aims)
+  console.log("planets", planets)
+  // console.log("links", links)
+  // console.log("modalData", modalData)
 
   const { screenWidth, screenHeight } = dimns;
   let styleProps = {}
@@ -100,8 +101,8 @@ const Journey = ({dimns}) => {
                   width,
                   height,
                   //@todo - sort this out...for now, planet has x whereas aim has displayX
-                  left:(d.dataType === "planet" ? d.x - width/2 : d.displayX - width/2) + "px",
-                  top:d.y - height/2 + "px",
+                  left:(d.dataType === "planet" ? d.x - width/2 : d.displayX) + "px",
+                  top:(d.dataType === "planet" ? d.y - height/2 : d.y) + "px",
                   targTop:"20px"
                 }
             }
@@ -165,21 +166,6 @@ const Journey = ({dimns}) => {
           const id = createId(aims.map(a => a.id));
           const colour = createColour(aims.length);
           setAims(prevState => ([ ...prevState, { id , colour, dataType:"aim", ...aim }]))
-          
-          //create 3 planets with aimId = id
-          const newPlanets = [1,2,3].map((nr,i) => ({
-            id:"p"+ (nrPlanetsCreated.current + nr),
-            aimId:id,
-            targetDate:initPlanetsTargetDate,
-            yPC:initPlanetsYPCs[i],
-            dataType:"planet",
-            measures:[]
-
-          }));
-
-          setPlanets(prevState => [...prevState, ...newPlanets]);
-          //setNrPlanetsCreated(prevState => prevState + 1);
-          nrPlanetsCreated.current = nrPlanetsCreated.current + 3;
         })
         .createPlanet((targetDate, yPC) => {
           const newPlanet = {
@@ -224,12 +210,12 @@ const Journey = ({dimns}) => {
             //setModalData(form stuff)
         })
         */
-       .onDeleteAim(aim => {
+       .onDeleteAim(aimId => {
+          //this doesnt work - it deltes a planet instead!
           //@todo - create a Dialog to see if user wants goals deleted too (if aiim has goals), or to cancel
           setModalData(undefined);
-          //first, move all planets that are in the aim to the main aim
-          setPlanets(prevState => prevState.map(p => ({ ...p, aimId: p.aimid === aim.id ? "main" : p.aimId })))
-          setAims(prevState => prevState.filter(a => a.id !== id));
+          setAims(prevState => prevState.filter(a => a.id !== aimId));
+          setPlanets(prevState => prevState.map(p => ({ ...p, aimId: p.aimId === aimId ? undefined : p.aimId })));
        })
         .deletePlanet(id => {
           setModalData(undefined);

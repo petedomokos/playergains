@@ -62,7 +62,7 @@ export default function aimsLayout(){
          //amend the dragEnd handlers that update aim, so they send the inverted values to state
         const mainAim = {
             id:"main",
-            planets:planetsData.filter(p => !p.aimId),
+            planets:planetsData.filter(p => !p.aimId || p.aimId === "main"),
             actualX:0,
             displayX:0,
             y:0,

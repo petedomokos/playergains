@@ -25,6 +25,7 @@ export default function planetsComponent() {
     let timeScale = x => 0;
     let yScale = x => 0;
 
+    let selected;
     let selectedMeasure;
     let selectedMeasureIsInGoal = goal => false;
 
@@ -111,6 +112,7 @@ export default function planetsComponent() {
         const { transitionEnter, transitionUpdate } = options;
         // expression elements
         selection.each(function (data) {
+            console.log("planets", data)
             containerG = d3.select(this);
             withClick.onClick(onClick)
             const planetDrag = d3.drag()
@@ -127,6 +129,7 @@ export default function planetsComponent() {
                 .attr("class", d => "planet planet-"+d.id)
                 .attr("id", d => "planet-"+d.id)
                 .each(function(d,i){
+                    console.log("enter", d.id)
                     //ENTER
                     const contentsG = d3.select(this)
                         .append("g")
@@ -278,7 +281,7 @@ export default function planetsComponent() {
                 .each(function(d){
                     //helper
                     //dont show menu if targOnly form open is if planet has the selectedMeasure on it
-                    const showContextMenu = d => d.isSelected && !d.measures.find(m => m.id === selectedMeasure?.id);
+                    const showContextMenu = d => selected?.id === d.id;// && !d.measures.find(m => m.id === selectedMeasure?.id);
                     const menuG = d3.select(this).selectAll("g.menu").data(showContextMenu(d) ? [menuOptions(d)] : [], d => d.key);
                     const menuGEnter = menuG.enter()
                         .append("g")
@@ -447,6 +450,11 @@ export default function planetsComponent() {
     planets.colours = function (value) {
         if (!arguments.length) { return colours; }
         colours = { ...colours, ...value };
+        return planets;
+    };
+    planets.selected = function (value) {
+        if (!arguments.length) { return selected; }
+        selected = value;
         return planets;
     };
     planets.selectedMeasure = function (value) {
