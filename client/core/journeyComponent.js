@@ -806,6 +806,7 @@ export default function journeyComponent() {
                 endYPC:zoomedYScale.invert(y + height)
             }
             createAim(aim);
+            updateSelected(undefined);
             
 
             //C: add aim to state with init pos to wrapped around the 3 new planets -> this will be drawn on automatically on update aimsComponent
