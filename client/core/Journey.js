@@ -71,6 +71,7 @@ const mockMeasures = [
 const Journey = ({dimns}) => {
   const [journey, setJourney] = useState(undefined)
   //@todo - put into one state object to avoid multiple updates
+  const [canvas, setCanvas] = useState({});
   const [aims, setAims] = useState([]);
   const [planets, setPlanets] =  useState([]);
   const [links, setLinks] = useState([]);
@@ -81,7 +82,7 @@ const Journey = ({dimns}) => {
   const [measuresBarIsOpen, setMeasuresBarIsOpen] = useState(false);
 
   console.log("aims", aims)
-  console.log("planets", planets)
+  //console.log("planets", planets)
   // console.log("links", links)
   // console.log("modalData", modalData)
 
@@ -91,6 +92,7 @@ const Journey = ({dimns}) => {
   if(modalData) {
       //todo - handle aim nameOnly case
       const { nameOnly, nameAndTargOnly, d } = modalData;
+      console.log("modal", modalData)
 
       if(nameOnly || nameAndTargOnly){
             //could be aim or planet, but use planet width and height as a guide for both
@@ -101,8 +103,8 @@ const Journey = ({dimns}) => {
                   width,
                   height,
                   //@todo - sort this out...for now, planet has x whereas aim has displayX
-                  left:(d.dataType === "planet" ? d.x - width/2 : d.displayX) + "px",
-                  top:(d.dataType === "planet" ? d.y - height/2 : d.y) + "px",
+                  left:(d.dataType === "planet" ? d.x - width/2 : (d.id === "main" ? d.displayX + 35: d.displayX)) + "px",
+                  top:(d.dataType === "planet" ? d.y - height/2 : (d.id === "main" ? d.y + 10 : d.y)) + "px",
                   targTop:"20px"
                 }
             }
@@ -119,6 +121,7 @@ const Journey = ({dimns}) => {
                 }
             }
       }
+      console.log("styleProps", styleProps)
   };
 
   //console.log("styleProps", styleProps)
@@ -247,7 +250,7 @@ const Journey = ({dimns}) => {
 
     d3.select(containerRef.current)
       ////.datum(data)
-      .datum({ aims, planets, links , channels, measures })
+      .datum({ canvas, aims, planets, links, channels, measures })
       .call(journey
         ////.margin({left: screenWidth * 0.1, right: screenWidth * 0.1, top: screenHeight * 0.1, bottom:40})
         .width(screenWidth - 20)
@@ -322,9 +325,12 @@ const Journey = ({dimns}) => {
 
   const onUpdateAimForm = (name, value) => {
     const { d } = modalData;
-    const aim = aims.find(a => a.id === d.id);
-    const props = { id:d.id, [name]: value };
-    setAims(prevState => updatedState(prevState, props));
+    if(d.id === "main"){
+      setCanvas(prevState => ({ ...prevState, [name]: value }))
+    }else{
+      const props = { id:d.id, [name]: value };
+      setAims(prevState => updatedState(prevState, props));
+    }
   }
 
   const onSaveMeasureForm = (details, planetId, isNew) => {

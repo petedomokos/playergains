@@ -112,7 +112,7 @@ export default function planetsComponent() {
         const { transitionEnter, transitionUpdate } = options;
         // expression elements
         selection.each(function (data) {
-            console.log("planets", data)
+            //console.log("planets", data)
             containerG = d3.select(this);
             withClick.onClick(onClick)
             const planetDrag = d3.drag()
@@ -129,7 +129,6 @@ export default function planetsComponent() {
                 .attr("class", d => "planet planet-"+d.id)
                 .attr("id", d => "planet-"+d.id)
                 .each(function(d,i){
-                    console.log("enter", d.id)
                     //ENTER
                     const contentsG = d3.select(this)
                         .append("g")

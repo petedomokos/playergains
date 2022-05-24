@@ -6,6 +6,7 @@ export default function aimsLayout(){
     let timeScale = x => 0;
     let yScale = x => 0;
     let currentZoom = d3.zoomIdentity;
+    let canvas = {};
     let channelsData;
     let planetsData = [];
     let canvasDimns = { width:800, height:600 };
@@ -62,6 +63,8 @@ export default function aimsLayout(){
          //amend the dragEnd handlers that update aim, so they send the inverted values to state
         const mainAim = {
             id:"main",
+            name:canvas.name,
+            dataType:"aim",
             planets:planetsData.filter(p => !p.aimId || p.aimId === "main"),
             actualX:0,
             displayX:0,
@@ -72,6 +75,11 @@ export default function aimsLayout(){
 
         return [ mainAim, ...aims ];
     }
+    update.canvas = function (value) {
+        if (!arguments.length) { return canvas; }
+        canvas = value;
+        return update;
+    };
     update.planetsData = function (value) {
         if (!arguments.length) { return planetsData; }
         planetsData = value;

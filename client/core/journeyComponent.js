@@ -22,15 +22,18 @@ import { timeMonth, timeWeek } from "d3-time";
 import openedLinkComponent from './openedLinkComponent';
 
  /*
-leave links turned off whilst§  `
-    BUG - made some changes to form, now planet name not showing in dom!
-    - delete aim
-    - hide aim name text when form open
-    - edit aim (name only)
-    - when dragging a measure, selectedGoal is deselected
-    - get rid of teh planets when an aim is created - just have it empty
+leave links turned off whilst...
+    AIMS
+    - deselect aim when creating it, unless it is unnamed, in which case, NameForm should show
+    - select an aim by clicking an invisible background of aim name
+        - also need to prevent canvas picking up click on mian aim name - it still goes through in that case because the main aim g has]
+        has pointer events none - need to either prevent propagation of the click handler, or use enhancedDrag.withClick which prevents it anyway
+    - when creating a new planet inside an aim, it should recognise the aimId straight away and hence pick up the correct colour
+    OTHER
+    - when dragging a measure, selectedGoal should be deselected
+    - get rid of the planets when an aim is created - just have it empty
     - links - not working!
-    - bug -form doesnt disappear on goal drag start
+    - bug - form doesnt disappear on goal drag start
     - semantic zoom of aims (use let contentsToShow) - on zoom out, name goes to centre and just see rect, no goals, and links are replaced
     by a single link to the aim, and completion is calculated same, as all link measures are moved onto the one link for the whole aim
     - integrate aim with open channel (and fix the existing bug around this) (and turn openLinks back on)
@@ -311,6 +314,7 @@ export default function journeyComponent() {
 
             function updateAimsData(){
                 myAimsLayout
+                    .canvas(state.canvas)
                     .planetsData(planetsData)
                     .currentZoom(currentZoom)
                     .timeScale(zoomedTimeScale)
@@ -344,7 +348,12 @@ export default function journeyComponent() {
                     .yScale(zoomedYScale)
                     .channelsData(channelsData)
                     .linksData(linksData)
-                    .aimFontSize(k * 7)
+                    .nameSettings(d => ({
+                        fontSize: d.id === "main" ? 7 : k * 7, 
+                        width: d.id === "main" ? 100 : k * 60, 
+                        height: d.id === "main" ? 25 : k * 15,
+                        margin: d.id === "main" ? { left: 35, right: 0, top: 15, bottom: 0 } : { left: 0, right: 0, top: 0, bottom: 0 }
+                    }))
                     .planetFontSize(k * 6.5)
                     .onDeleteAim((aimId) => {
                         selected = undefined;
@@ -356,9 +365,7 @@ export default function journeyComponent() {
                     .onDragStart(function(e, d){
                         //aim is raised already in aimComponent
                     })
-                    .onClick((e,d) => {
-                        updateSelected(d);
-                    })
+                    .onClick((e,d) => { updateSelected(d); })
                     .onDrag(function(e, d){
                         //update the links and call the linksComponent again
                         //console.log("aim drg displayX", d.displayX)
@@ -674,6 +681,7 @@ export default function journeyComponent() {
         }
 
         updateSelected = (d) => {
+            console.log("uS", d)
             selected = d;
             if(!d){
                 setModalData(undefined);

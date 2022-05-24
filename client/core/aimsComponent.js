@@ -22,7 +22,14 @@ export default function aimsComponent() {
     let width = 800;
     let height = 600;
 
-    let aimFontSize = 7;
+    let defaultNameSettings = {
+        fontSize: 7,
+        width: 100,
+        height: 20,
+        margin:{ left: 5, right: 5, top:3, bottom: 3 }
+    }
+    let nameSettings = d => defaultNameSettings;
+
     let planetFontSize = 6;
 
     let timeScale = x => 0;
@@ -93,12 +100,15 @@ export default function aimsComponent() {
 
         // expression elements
         selection.each(function (data) {
+            //console.log("aims", data)
             containerG = d3.select(this);
             const aimG = containerG.selectAll("g.aim").data(data, d => d.id);
             aimG.enter()
                 .append("g")
                     .attr("class", d => "aim aim-"+d.id)
                     .each(function(d){
+                        const titleWidth = 100;
+                        const titleHeight = 20;
                         const aimG = d3.select(this);
 
                         const controlledContentsG = aimG.append("g").attr("class", "controlled-contents");
@@ -111,12 +121,15 @@ export default function aimsComponent() {
                                 .attr("stroke", "none")
                                 .attr("display", d.id === "main" ? "none" : null)
                                 .attr("fill", d.colour || "transparent")
+                                .attr("pointer-events", "none")
                                 .attr("fill-opacity", 0.15);
 
                         const titleG = controlledContentsG.append("g").attr("class", "title");
+                        titleG.append("rect").attr("class", "bg");
                         titleG
                             .append("text")
                                 .attr("class", "main")
+                                .attr("dominant-baseline", "central")
                                 .attr("stroke", grey10(1))
                                 .attr("stroke-width", 0.1);
                         
@@ -132,7 +145,7 @@ export default function aimsComponent() {
                             .call(drag);
 
                         //hide contents if necc eg if aim form open
-                        controlledContentsG.selectAll("text").attr("display", contentsToShow(d) === "none" ? "none" : null);
+                        controlledContentsG.select("text.name").attr("display", contentsToShow(d) === "none" ? "none" : null);
                         
                         //drag handlers must not be in controlled components else they will be moved during the drag, causing a flicker
                         const dragHandlesG = aimG.select("g.drag-handles")
@@ -144,12 +157,22 @@ export default function aimsComponent() {
                             .attr("height", d.height);
                             
                         //title
+                        const name = nameSettings(d);
                         const titleG = controlledContentsG.select("g.title")
-                            .attr("transform", "translate(" + (d.id === "main" ? 40 : 5) + "," + (d.id === "main" ? 15 : 7.5) +")")
-                            .attr("transform", "translate(" + (d.width * 0.07 +(d.id === "main" ? 10 : 0)) + "," + (d.height ** 0.4  + 5) +")")
+                            .attr("transform", "translate(" + name.margin.left + "," +name.margin.top +")")
+                            .attr("cursor", "pointer")
+                            .call(d3.drag()) //need drag just to prevent canvas receiving the click - dont know why
+                            .on("click", onClick)
                         
+                        titleG.select("rect.bg")
+                            .attr("width", name.contentsWidth)
+                            .attr("height", name.contentsHeight)
+                            .attr("fill", "transparent");
+
                         titleG.select("text.main")
-                            .attr("font-size", d.id === "main" ? 7 : aimFontSize)
+                            .attr("x", 5)
+                            .attr("y", name.contentsHeight / 2)
+                            .attr("font-size", name.fontSize)
                             .text(d.name || (d.id === "main" ? "unnamed canvas" : "unnamed group"))
 
                         //resize handle
@@ -250,7 +273,6 @@ export default function aimsComponent() {
 
                         //planets
                         //todo - find out why all the d values that were updated in onResizeDragEnd are undefined
-                        console.log("d.planets for "+d.id, d.planets)
                         const planetsG = aimG.selectAll("g.planets").data([d.planets]);
                         planetsG.enter()
                             .append("g") // @todo - chqnge to insert so its before resize and drag handles so they arent blocked
@@ -443,9 +465,16 @@ export default function aimsComponent() {
         height = value;
         return aims;
     };
-    aims.aimFontSize= function (value) {
-        if (!arguments.length) { return aimFontSize; }
-        aimFontSize = value;
+    aims.nameSettings = function (f) {
+        if (!arguments.length) { return nameSettings; }
+        nameSettings = d => { 
+            const settings = { ...defaultNameSettings, ...f(d) };
+            return {
+                ...settings,
+                contentsWidth: settings.width - settings.margin.left - settings.margin.right,
+                contentsHeight: settings.height - settings.margin.top - settings.margin.bottom,
+            }
+        }
         return aims;
     };
     aims.planetFontSize= function (value) {
