@@ -24,10 +24,11 @@ import openedLinkComponent from './openedLinkComponent';
  /*
 leave links turned off whilst...
     AIMS
-    - deselect aim when creating it, unless it is unnamed, in which case, NameForm should show
-    - select an aim by clicking an invisible background of aim name
-        - also need to prevent canvas picking up click on mian aim name - it still goes through in that case because the main aim g has]
-        has pointer events none - need to either prevent propagation of the click handler, or use enhancedDrag.withClick which prevents it anyway
+    //bug when calling handleCanvas click instead
+    //but - create aiim over a planet - cant drag planet anymore!
+    - need to enable drag on aim, if poss, but only pick up drags not clicks. if its a click, we create a planet
+     - aims flashes after deselecting and on drag end
+
     - when creating a new planet inside an aim, it should recognise the aimId straight away and hence pick up the correct colour
     OTHER
     - when dragging a measure, selectedGoal should be deselected
@@ -41,7 +42,7 @@ leave links turned off whilst...
         goals not displayed, just aim title displayed?)
     - ipad testing
 
-    -bug - when naming a planet, click anuva, and old name still shows
+   BUGs - when naming a planet, click anuva, and old name still shows
 
     NEXT
     consider removing the whole thing of planets sliding into neaest channel end. Instead, do it like inDesign, where the user is in charge but
@@ -61,6 +62,7 @@ leave links turned off whilst...
      when dragging from a ring, the targ candidate ring should stay lit up even when planet is hovered (not just when ring is hovered)
       - need to move libnk into side of aim when turning a goal with a link into an aim (or vice versa)
       - ABLE TO CREATE A LINK FRO A GOLA TO AN AIM, OR VICE VERSA
+      - show aim Nameform when converting it from planet if it is unnamed perhaps
     */
 
 
@@ -230,18 +232,7 @@ export default function journeyComponent() {
             enhancedZoom
                 //.dragThreshold(200) //dont get why this has to be so large
                 //.beforeAll(() => { updateSelected(undefined); })
-                .onClick((e,d) => {
-                    if(editing){
-                        endEditPlanet(d);
-                    }
-                    //note - on start editing, selected is already set to undefined
-                    else if(selected){
-                        updateSelected(undefined);
-                    //if measuresBar open, we dont want the click to propagate through
-                    }else{
-                        createPlanet(zoomedTimeScale.invert(trueX(e.sourceEvent.layerX)), zoomedYScale.invert(e.sourceEvent.layerY))
-                    }
-                })
+                .onClick(handleCanvasClick)
                 .onLongpressStart(function(e,d){
                     if(!enhancedZoom.wasMoved()){
                         //longpress toggles isOpen
@@ -281,6 +272,20 @@ export default function journeyComponent() {
             //svg.call(zoom)
             contentsG.call(zoom)
             //.on("wheel.zoom", null)
+
+            function handleCanvasClick(e, d){
+                console.log("canvas click")
+                if(editing){
+                    endEditPlanet(d);
+                }
+                //note - on start editing, selected is already set to undefined
+                else if(selected){
+                    updateSelected(undefined);
+                //if measuresBar open, we dont want the click to propagate through
+                }else{
+                    createPlanet(zoomedTimeScale.invert(trueX(e.sourceEvent.layerX)), zoomedYScale.invert(e.sourceEvent.layerY))
+                }
+            }
 
             //ELEMENTS
             //helpers
@@ -361,11 +366,11 @@ export default function journeyComponent() {
                         onDeleteAim(aimId);
                     })
                     //.onUpdateAim(function(){ })
-                    //.onClick(() => {})
+                    .onClick(handleCanvasClick)
                     .onDragStart(function(e, d){
                         //aim is raised already in aimComponent
                     })
-                    .onClick((e,d) => { updateSelected(d); })
+                    .onClickName((e,d) => { updateSelected(d); })
                     .onDrag(function(e, d){
                         //update the links and call the linksComponent again
                         //console.log("aim drg displayX", d.displayX)
@@ -681,7 +686,6 @@ export default function journeyComponent() {
         }
 
         updateSelected = (d) => {
-            console.log("uS", d)
             selected = d;
             if(!d){
                 setModalData(undefined);

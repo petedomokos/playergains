@@ -58,6 +58,7 @@ export default function aimsComponent() {
     let onDragEnd = function() {};
     let onMouseover = function(){};
     let onMouseout = function(){};
+    let onClickName = function(){};
     let onClickGoal = function(){};
     let onDragGoalStart = function() {};
     let onDragGoal = function() {};
@@ -121,7 +122,7 @@ export default function aimsComponent() {
                                 .attr("stroke", "none")
                                 .attr("display", d.id === "main" ? "none" : null)
                                 .attr("fill", d.colour || "transparent")
-                                .attr("pointer-events", "none")
+                                //.attr("pointer-events", d.id === "main" ? "none" : "all")
                                 .attr("fill-opacity", 0.15);
 
                         const titleG = controlledContentsG.append("g").attr("class", "title");
@@ -162,7 +163,7 @@ export default function aimsComponent() {
                             .attr("transform", "translate(" + name.margin.left + "," +name.margin.top +")")
                             .attr("cursor", "pointer")
                             .call(d3.drag()) //need drag just to prevent canvas receiving the click - dont know why
-                            .on("click", onClick)
+                            .on("click", onClickName)
                         
                         titleG.select("rect.bg")
                             .attr("width", name.contentsWidth)
@@ -587,6 +588,11 @@ export default function aimsComponent() {
         if(typeof value === "function"){
             onMouseout = value;
         }
+        return aims;
+    };
+    aims.onClickName = function (value) {
+        if (!arguments.length) { return onClickName; }
+        onClickName = value;
         return aims;
     };
     aims.onClickGoal = function (value) {

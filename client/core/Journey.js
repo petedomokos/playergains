@@ -81,7 +81,7 @@ const Journey = ({dimns}) => {
   const [measures, setMeasures] = useState(mockMeasures);
   const [measuresBarIsOpen, setMeasuresBarIsOpen] = useState(false);
 
-  console.log("aims", aims)
+  //console.log("aims", aims)
   //console.log("planets", planets)
   // console.log("links", links)
   // console.log("modalData", modalData)
@@ -92,7 +92,6 @@ const Journey = ({dimns}) => {
   if(modalData) {
       //todo - handle aim nameOnly case
       const { nameOnly, nameAndTargOnly, d } = modalData;
-      console.log("modal", modalData)
 
       if(nameOnly || nameAndTargOnly){
             //could be aim or planet, but use planet width and height as a guide for both
@@ -121,7 +120,6 @@ const Journey = ({dimns}) => {
                 }
             }
       }
-      console.log("styleProps", styleProps)
   };
 
   //console.log("styleProps", styleProps)
