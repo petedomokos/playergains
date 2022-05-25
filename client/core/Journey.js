@@ -81,8 +81,8 @@ const Journey = ({dimns}) => {
   const [measures, setMeasures] = useState(mockMeasures);
   const [measuresBarIsOpen, setMeasuresBarIsOpen] = useState(false);
 
-  //console.log("aims", aims)
-  //console.log("planets", planets)
+  // console.log("aims", aims)
+  // console.log("planets", planets)
   // console.log("links", links)
   // console.log("modalData", modalData)
 
@@ -168,9 +168,10 @@ const Journey = ({dimns}) => {
           const colour = createColour(aims.length);
           setAims(prevState => ([ ...prevState, { id , colour, dataType:"aim", ...aim }]))
         })
-        .createPlanet((targetDate, yPC) => {
+        .createPlanet((targetDate, yPC, aimId) => {
           const newPlanet = {
               id:"p"+ (nrPlanetsCreated.current + 1),
+              aimId,
               targetDate,
               yPC,
               dataType:"planet",

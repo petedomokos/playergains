@@ -16,7 +16,7 @@ import { calcChartHeight, findFuturePlanets, findFirstFuturePlanet, findNearestD
 import { addMonths, addWeeks } from "../util/TimeHelpers"
 import { ellipse } from "./ellipse";
 import { grey10, DEFAULT_D3_TICK_SIZE, COLOURS, DIMNS, PLANET_RING_MULTIPLIER } from "./constants";
-import { findNearestPlanet, distanceBetweenPoints, channelContainsPoint, channelContainsDate } from './geometryHelpers';
+import { pointIsInRect, findNearestPlanet, distanceBetweenPoints, channelContainsPoint, channelContainsDate } from './geometryHelpers';
 import dragEnhancements from './enhancedDragHandler';
 import { timeMonth, timeWeek } from "d3-time";
 import openedLinkComponent from './openedLinkComponent';
@@ -24,10 +24,7 @@ import openedLinkComponent from './openedLinkComponent';
  /*
 leave links turned off whilst...
     AIMS
-    //bug when calling handleCanvas click instead
-    //but - create aiim over a planet - cant drag planet anymore!
-    - need to enable drag on aim, if poss, but only pick up drags not clicks. if its a click, we create a planet
-     - aims flashes after deselecting and on drag end
+     - bug - aims flashes after deselecting and on drag end
 
     - when creating a new planet inside an aim, it should recognise the aimId straight away and hence pick up the correct colour
     OTHER
@@ -274,7 +271,6 @@ export default function journeyComponent() {
             //.on("wheel.zoom", null)
 
             function handleCanvasClick(e, d){
-                console.log("canvas click")
                 if(editing){
                     endEditPlanet(d);
                 }
@@ -283,7 +279,13 @@ export default function journeyComponent() {
                     updateSelected(undefined);
                 //if measuresBar open, we dont want the click to propagate through
                 }else{
-                    createPlanet(zoomedTimeScale.invert(trueX(e.sourceEvent.layerX)), zoomedYScale.invert(e.sourceEvent.layerY))
+                    const x = e.sourceEvent.layerX;
+                    const y = e.sourceEvent.layerY; 
+                    const goalAim = aimsData
+                        .filter(a => a.id !== "main")
+                        .find(a => pointIsInRect({ x, y }, { x: a.displayX, y:a.y, width: a.displayWidth, height:a.height }))
+
+                    createPlanet(zoomedTimeScale.invert(trueX(e.sourceEvent.layerX)), zoomedYScale.invert(e.sourceEvent.layerY), goalAim?.id)
                 }
             }
 
@@ -375,11 +377,11 @@ export default function journeyComponent() {
                         //update the links and call the linksComponent again
                         //console.log("aim drg displayX", d.displayX)
                     })
-                    .onDragEnd(function(e, d){
+                    .onDragEnd(function(e, d, outsidePlanetsToUpdate){
                         const { id, displayWidth, height, displayX, y } = d;
 
                         //grab the latest planet x and y's from dom, as teh aim d.planets have not been updated
-                        const planetsToUpdate = d3.select(this.parentNode).selectAll("g.planet").data()
+                        const insidePlanetsToUpdate = d3.select(this.parentNode).selectAll("g.planet").data()
                             .map(p => ({
                                 id:p.id,
                                 targetDate:zoomedTimeScale.invert(trueX(p.x)), 
@@ -390,7 +392,7 @@ export default function journeyComponent() {
                         const endY = y + height;
 
                         //update aim
-                        updatePlanets(planetsToUpdate);
+                        updatePlanets([ ...insidePlanetsToUpdate, ...outsidePlanetsToUpdate ]);
                         updateAim({ 
                             id:d.id,
                             startDate:zoomedTimeScale.invert(displayX),
@@ -402,10 +404,10 @@ export default function journeyComponent() {
                     .onResizeDragEnd(function(e, aim, planetDs){
                         //use the latest planetDs from dom, as the aim d.planets have not been updated
                         const planetsToUpdate = planetDs.map(p => ({ id:p.id, aimId:p.aimId }));
+                        updatePlanets(planetsToUpdate);
 
                         //update aim
                         const { id, displayWidth, height, displayX, y } = aim;
-                        //updatePlanets(planetsToUpdate);
                         //we now set the actual width to be the displaywidth which was set to be users drag
                         const endX = displayX + displayWidth;
                         const endY = y + height;
@@ -426,13 +428,13 @@ export default function journeyComponent() {
                         updateSelected(d);
                     })
                     //.onDragGoalStart(function(){})
-                    .onDragGoal(function(e , d, shouldUpdateSelected = true){ //pass in onDragGoal
+                    .onDragGoal(function(e , d, /*shouldUpdateSelected = true*/){ //pass in onDragGoal
                         //console.log("journey drgGoal")
-                        if(shouldUpdateSelected){
+                        //if(shouldUpdateSelected){
                             //updateSelected(undefined);
                             //warning - may interrupt drag handling with touch
                             //links layout needs updated planet position and targetDate
-                        }
+                        //}
                         state.planets = state.planets.map(p => { return p.id === d.id ? d : p });
                         const newPlanetsData = myPlanetsLayout(state.planets);
                         myLinksLayout.planetsData(newPlanetsData);

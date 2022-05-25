@@ -104,10 +104,6 @@ export default function planetsComponent() {
     //dom
     let containerG;
 
-    //local state
-    let removingGoal = false;
-    let removingMenu = false;
-
     function planets(selection, options={}) {
         const { transitionEnter, transitionUpdate } = options;
         // expression elements
@@ -316,16 +312,13 @@ export default function planetsComponent() {
 
                     menuG.exit().each(function(d){
                         //will be multiple exits because of the delay in removing
-                        if(!removingMenu){
-                            removingMenu = true;
+                        if(!d3.select(this).attr("class").includes("exiting")){
                             d3.select(this)
+                                .classed("exiting", true)
                                 .transition()
                                     .duration(100)
                                     .attr("opacity", 0)
-                                    .on("end", function() { 
-                                        d3.select(this).remove();
-                                        removingMenu = false; 
-                                    });
+                                    .on("end", function() { d3.select(this).remove(); });
                         }
                     }) 
                 })
@@ -352,16 +345,13 @@ export default function planetsComponent() {
             //EXIT
             planetG.exit().each(function(d){
                 //will be multiple exits because of the delay in removing
-                if(!removingGoal){
-                    removingGoal = true;
+                if(!d3.select(this).attr("class").includes("exiting")){
                     d3.select(this)
+                        .classed("exiting", true)
                         .transition()
                             .duration(200)
                             .attr("opacity", 0)
-                            .on("end", function() { 
-                                d3.select(this).remove();
-                                removingGoal = false; 
-                            });
+                            .on("end", function() { d3.select(this).remove(); });
                 }
             }) 
 

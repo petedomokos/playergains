@@ -41,7 +41,6 @@ export default function linksComponent() {
     let menuOptions = [
         { key: "delete", label:"Delete" }
     ];
-
     let hovered;
 
     function links(selection, options={}) {
@@ -164,9 +163,9 @@ export default function linksComponent() {
                                 }))
     
                         menuG.exit().each(function(d){
-                            //will be multiple exits because of the delay in removing
-                            if(d3.select(this).attr("opacity") == 1){
+                            if(!d3.select(this).attr("class").includes("exiting")){
                                 d3.select(this)
+                                    .classed("exiting", true)
                                     .transition()
                                         .duration(200)
                                         .attr("opacity", 0)
@@ -217,9 +216,9 @@ export default function linksComponent() {
 
             //EXIT
             linkG.exit().each(function(d){
-                //will be multiple exits because of the delay in removing
-                if(d3.select(this).attr("opacity") == 1){
+                if(!d3.select(this).attr("class").includes("exiting")){
                     d3.select(this)
+                        .classed("exiting", true)
                         .transition()
                             .duration(200)
                             .attr("opacity", 0)

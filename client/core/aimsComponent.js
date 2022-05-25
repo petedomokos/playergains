@@ -253,6 +253,9 @@ export default function aimsComponent() {
 
                             }
 
+                            //check all planets if aim has changed, including those outside
+                            d3.selectAll("g.planet").call(updateGoalAims);
+
                             //dom
                             // note - we will get flickering if we move the drag handle during the drag.
                             d3.select(this).select("g.controlled-contents")
@@ -262,14 +265,11 @@ export default function aimsComponent() {
                                 .attr("width", aim.displayWidth)
                                 .attr("height", aim.height);
                             
-                            d3.select(this).call(updateAimGoals, aim);
                         }
 
                         function resizeDragEnd(e, d){
                             d3.select(this).select("g.drag-handles").attr("opacity", 1)
-                            //d.planets were not updated in dragged so need to pass the planetDs from dom
-                            const planetDs = d3.select(this).selectAll("g.planet").data();
-                            onResizeDragEnd.call(this, e, d, planetDs);
+                            onResizeDragEnd.call(this, e, d, d3.selectAll("g.planet").data());
                         }
 
                         //planets
@@ -333,19 +333,14 @@ export default function aimsComponent() {
                                     }
                                 }))
     
-                        let removingMenu = false;
                         menuG.exit().each(function(d){
                             //will be multiple exits because of the delay in removing
-                            if(!removingMenu){
-                                removingMenu = true;
+                            if(!d3.select(this).attr("class").includes("exiting")){
                                 d3.select(this)
                                     .transition()
                                         .duration(100)
                                         .attr("opacity", 0)
-                                        .on("end", function() { 
-                                            d3.select(this).remove();
-                                            removingMenu = false; 
-                                        });
+                                        .on("end", function() { d3.select(this).remove(); });
                             }
                         }) 
 
@@ -356,37 +351,20 @@ export default function aimsComponent() {
             prevData = data;
         })
 
-        function updateAimGoals(containerG, aim){
-            containerG.selectAll("g.planet")
-                .each(function(planet){
-                    if(pointIsInRect(planet, { x: aim.displayX, y:aim.y, width: aim.displayWidth, height:aim.height })){
-                        //set the aim id
-                        planet.aimId = aim.id;
-                    }else if(planet.aimId === aim.id){
-                        //remove the aim id
-                        planet.aimId = undefined;
-                    }
-
-                    //dom - update in this aim or left this aim
-                    const coreEllipse = d3.select(this).select("ellipse.core");
-                    if(planet.aimId === aim.id){ coreEllipse.attr("fill", aim.colour || COLOURS.planet); }
-                    if(!planet.aimId){ coreEllipse.attr("fill", COLOURS.planet); }
-                })
-        }
-
-        function updateGoalAim(planetG, planet){
-            const newAim = prevData
-                .filter(a => a.id !== "main")
-                .find(a => pointIsInRect(planet, { x: a.displayX, y:a.y, width: a.displayWidth, height:a.height }))
+        function updateGoalAims(planetGs){
+            planetGs.each(function(g){
+                const newAim = prevData
+                    .filter(a => a.id !== "main")
+                    .find(a => pointIsInRect(g, { x: a.displayX, y:a.y, width: a.displayWidth, height:a.height }))
             
-            if(newAim?.id !== planet.aimId){
-                planet.aimId = newAim?.id;
-                //@todo - think about how .colours is used, rather tan doing it manually here again
-
-                //dom
-                planetG.select("ellipse.core")
-                    .attr("fill", newAim?.colour || COLOURS.planet);
-            }
+                if(newAim?.id !== g.aimId){
+                    g.aimId = newAim?.id;
+                    //@todo - think about how .colours is used, rather tan doing it manually here again
+                    //dom
+                    d3.select(this).select("ellipse.core")
+                        .attr("fill", newAim?.colour || COLOURS.planet);
+                }
+            })
         }
 
         function dragGoalStart(e , d){
@@ -405,7 +383,7 @@ export default function aimsComponent() {
 
             d3.select(this)
                 .attr("transform", "translate("+(d.x) +"," +(d.y) +")")
-                .call(updateGoalAim, d);
+                .call(updateGoalAims);
 
             //obv need to tidy up teh way trueX is added in planetslayout too
             //but first look at why link line
@@ -419,9 +397,13 @@ export default function aimsComponent() {
             onDragGoalEnd.call(this, e, d);
         }
 
+        let planetGsStartingOutsideAim;
+
         function dragStart(e , d){
             //console.log("drag aim start", this)
             d3.select(this.parentNode).raise();
+
+            planetGsStartingOutsideAim = d3.selectAll("g.planet").filter(g => g.id !== d.id);
 
             //onDragStart does nothing
             onDragStart.call(this, e, d)
@@ -433,13 +415,19 @@ export default function aimsComponent() {
             d3.select(this).attr("transform", "translate(" + d.displayX +"," + d.y +")")
             
             //goals
+            //one inside aim
             d3.select(this.parentNode).selectAll("g.planet")
                 .each(function(planetD){
                     planetD.x += e.dx;
                     planetD.y += e.dy;
-                    d3.select(this).attr("transform", "translate(" + planetD.x +"," + planetD.y +")")
+                    d3.select(this)
+                        .attr("transform", "translate(" + planetD.x +"," + planetD.y +")")
 
                 })
+            //goals outside aim  - check aimid
+            //note - we select in dragStart so that it continues to update those which become part of aim and then go out of
+            //it again as user drags aim around
+            planetGsStartingOutsideAim.call(updateGoalAims)
     
             //onDrag does nothing
             onDrag.call(this, e, d)
@@ -449,7 +437,12 @@ export default function aimsComponent() {
         function dragEnd(e, d){
             if(withClick.isClick()) { return; }
 
-            onDragEnd.call(this, e, d);
+            const outsidePlanetsToUpdate = planetGsStartingOutsideAim
+                .filter(p => p.aimId === d.id)
+                .data()
+                .map(g => ({ id: g.id, aimId: g.aimId }));
+
+            onDragEnd.call(this, e, d, outsidePlanetsToUpdate);
         }
 
         return selection;
