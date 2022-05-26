@@ -10,6 +10,7 @@ export default function planetsLayout(){
     let selected;
 
     let channelsData;
+    let aimsData;
     let trueX = x => x;
     let adjX = x => x;
     let pointChannel = () => {};
@@ -20,6 +21,10 @@ export default function planetsLayout(){
         channelsData = newChannelsData;
         nearestChannelByEndDate = findNearestChannelByEndDate(channelsData);
     }
+
+    //const aimId = g => aimsData
+        //.filter(a => a.id !== "main")
+        //.find(a => pointIsInRect(g, { x: a.displayX, y:a.y, width: a.displayWidth, height:a.height }))
 
     function update(data){
         return data.map(p => {
@@ -41,6 +46,7 @@ export default function planetsLayout(){
             })
             return {
                 ...p,
+                //aimId:aimId(p),
                 channel,
                 displayDate:p.unaligned ? p.targetDate : channel.endDate,
                 x:p.unaligned ? targetX : channel.endX, //planets positioned on channel end line
@@ -68,6 +74,11 @@ export default function planetsLayout(){
     update.channelsData = function (value) {
         if (!arguments.length) { return channelsData; }
         updateChannelsData(value);
+        return update;
+    };
+    update.aimsData = function (value) {
+        if (!arguments.length) { return aimsData; }
+        aimsData = value;
         return update;
     };
     update.currentZoom = function (value) {

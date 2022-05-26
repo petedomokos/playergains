@@ -25,10 +25,8 @@ export default function aimsLayout(){
             so for now, we just extend the space if necc, and user can reduce it 
             */
 
-            //assume all planets same size
+            //assume all planets same size, using dimns.planet.width for planet contentsWidth
             let planetRX = planetsData[0]?.rx(DIMNS.planet.width) || 0;
-            let planetRY = planetsData[0]?.ry(DIMNS.planet.height) || 0;
-
             const planets = planetsData.filter(p => p.aimId === aim.id);
             //console.log("planets", planets)
             const planetExtent = d3.extent(planets, p => p.x);

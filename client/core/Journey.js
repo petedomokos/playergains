@@ -163,10 +163,11 @@ const Journey = ({dimns}) => {
         .measuresOpen(measuresBarIsOpen ? measures.filter(m => m.isOpen) : undefined)
         .modalData(modalData)
         //@todo - make createId handle prefixes so all ids are unique
-        .createAim(function(aim, initPlanetsTargetDate, initPlanetsYPCs){
+        .createAim(function(aim, planetIds){
           const id = createId(aims.map(a => a.id));
           const colour = createColour(aims.length);
           setAims(prevState => ([ ...prevState, { id , colour, dataType:"aim", ...aim }]))
+          setPlanets(prevState => prevState.map(p => planetIds.includes(p.id) ? { ...p, aimId: id } : p))
         })
         .createPlanet((targetDate, yPC, aimId) => {
           const newPlanet = {

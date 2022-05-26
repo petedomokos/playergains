@@ -46,6 +46,7 @@ export default function aimsComponent() {
     //contents to show can be none, nameOnly, "basic", "all".
     let contentsToShow = aim => "basic";
     let goalContentsToShow = goal => "basic";
+    let updateAimForGoals = function(){};
 
     //API FUNCTIONS
     let showAvailabilityStatus = function() {};
@@ -254,7 +255,7 @@ export default function aimsComponent() {
                             }
 
                             //check all planets if aim has changed, including those outside
-                            d3.selectAll("g.planet").call(updateGoalAims);
+                            d3.selectAll("g.planet").call(updateAimForGoals);
 
                             //dom
                             // note - we will get flickering if we move the drag handle during the drag.
@@ -351,7 +352,7 @@ export default function aimsComponent() {
             prevData = data;
         })
 
-        function updateGoalAims(planetGs){
+        updateAimForGoals = function(planetGs){
             planetGs.each(function(g){
                 const newAim = prevData
                     .filter(a => a.id !== "main")
@@ -383,7 +384,7 @@ export default function aimsComponent() {
 
             d3.select(this)
                 .attr("transform", "translate("+(d.x) +"," +(d.y) +")")
-                .call(updateGoalAims);
+                .call(updateAimForGoals);
 
             //obv need to tidy up teh way trueX is added in planetslayout too
             //but first look at why link line
@@ -427,7 +428,7 @@ export default function aimsComponent() {
             //goals outside aim  - check aimid
             //note - we select in dragStart so that it continues to update those which become part of aim and then go out of
             //it again as user drags aim around
-            planetGsStartingOutsideAim.call(updateGoalAims)
+            planetGsStartingOutsideAim.call(updateAimForGoals)
     
             //onDrag does nothing
             onDrag.call(this, e, d)
@@ -686,5 +687,6 @@ export default function aimsComponent() {
         goals.forEach(g => { planets[g.aimId || "main"].stopShowingAvailabilityStatus(g, cb); });
         return aims;
     };
+    aims.updateAimForGoals = updateAimForGoals;
     return aims;
 }

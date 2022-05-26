@@ -24,12 +24,11 @@ import openedLinkComponent from './openedLinkComponent';
  /*
 leave links turned off whilst...
     AIMS
-     - bug - aims flashes after deselecting and on drag end
+    - when creating a new aim that goes over an existing planet, the planet immediately gets added to aim
+     - bug - aim flashes after deselecting and on drag end
 
-    - when creating a new planet inside an aim, it should recognise the aimId straight away and hence pick up the correct colour
     OTHER
     - when dragging a measure, selectedGoal should be deselected
-    - get rid of the planets when an aim is created - just have it empty
     - links - not working!
     - bug - form doesnt disappear on goal drag start
     - semantic zoom of aims (use let contentsToShow) - on zoom out, name goes to centre and just see rect, no goals, and links are replaced
@@ -309,6 +308,10 @@ export default function journeyComponent() {
             }
 
             function updatePlanetsData(){
+            //first check aimids dont need updating
+            //eg ....
+            //d3.selectAll("g.planet").call(aims.updateAimForGoals, aimsData)
+
                 myPlanetsLayout
                     .selected(selected?.id)
                     .currentZoom(currentZoom)
@@ -801,6 +804,7 @@ export default function journeyComponent() {
             const y = d.y - (goalHeight * 1.5) - vertGap - aimMargin.top;
             const width = goalWidth + aimMargin.left + aimMargin.right;
             const height = 3 * goalHeight + 2 * vertGap + aimMargin.top + aimMargin.bottom;
+
             const aim = {
                 //id:createAimId(aims), do id in Journey
                 name:d.name,
@@ -811,9 +815,16 @@ export default function journeyComponent() {
                 startYPC:zoomedYScale.invert(y),
                 endYPC:zoomedYScale.invert(y + height)
             }
-            createAim(aim);
-            updateSelected(undefined);
-            
+
+            //calculate here which planets are in based on the actual x (not displayX)
+            const planetIdsInAim = d3.selectAll("g.planet")
+                .filter(g => g.id !== d.id) //this one has been converted to aim
+                .filter(g => pointIsInRect(g, { x: actualX, y, width, height }))
+                .data()
+                .map(g => g.id);
+
+            createAim(aim, planetIdsInAim);
+            updateSelected(undefined);          
 
             //C: add aim to state with init pos to wrapped around the 3 new planets -> this will be drawn on automatically on update aimsComponent
             //ach aim just needs an x,y,width,height values, plus id, name (which is the removed planet name)
