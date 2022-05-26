@@ -59,7 +59,7 @@ export default function NameForm({ data, onUpdate, onClose }) {
     }
 
     return (
-        <Card className={classes.card}>
+        <Card className={classes.card} key={aim?.id || planet?.id}>
             <CardContent className={classes.cardContent}>
             <TextField
                 type="submit"
