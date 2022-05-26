@@ -26,9 +26,7 @@ leave links turned off whilst...
     AIMS
 
     BUGS/ISSUES
-    - when dragging a measure, selectedGoal should be deselected
     - links - not working!
-    - bug - form doesnt disappear on goal drag start
      - when naming a planet, click anuva, and old name still shows
 
     - semantic zoom of aims (use let contentsToShow) - on zoom out, name goes to centre and just see rect, no goals, and links are replaced
@@ -433,7 +431,8 @@ export default function journeyComponent() {
                     .onClickGoal((e,d) => {
                         updateSelected(d);
                     })
-                    //.onDragGoalStart(function(){})
+                    //@TODO WARNING - may cause touch issues as drag handlers are updated - need this to not update planetsComp or at least not teh drag handlers
+                    .onDragGoalStart(function(){ updateSelected(undefined); })
                     .onDragGoal(function(e , d, /*shouldUpdateSelected = true*/){ //pass in onDragGoal
                         //console.log("journey drgGoal")
                         //if(shouldUpdateSelected){
