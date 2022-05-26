@@ -15,6 +15,7 @@ import Form from "./form/Form";
 import ImportMeasures from './ImportMeasures';
 import { DIMNS } from './constants';
 import EditMeasureFields from './form/EditMeasureFields';
+import { ColorizeRounded } from '@material-ui/icons';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -80,6 +81,7 @@ const Journey = ({dimns}) => {
   const [modalData, setModalData] = useState(undefined);
   const [measures, setMeasures] = useState(mockMeasures);
   const [measuresBarIsOpen, setMeasuresBarIsOpen] = useState(false);
+  const shouldD3UpdateRef = useRef(true);
 
   // console.log("aims", aims)
   // console.log("planets", planets)
@@ -158,6 +160,12 @@ const Journey = ({dimns}) => {
 
   useEffect(() => {
     if(!containerRef.current || !journey){return; }
+    if(!shouldD3UpdateRef.current){
+      //reset so always true by default on next state update
+      shouldD3UpdateRef.current = true;
+      return;
+    }
+
     journey
         .withCompletionPaths(withCompletionPaths)
         .measuresOpen(measuresBarIsOpen ? measures.filter(m => m.isOpen) : undefined)
@@ -197,7 +205,8 @@ const Journey = ({dimns}) => {
               return { ...p, ...propsToUpdate }
           }));
         })
-        .updateAim(props => {
+        .updateAim((props, shouldD3Update=true) => {
+          if(!shouldD3Update){ shouldD3UpdateRef.current = shouldD3Update; }
           setAims(prevState => updatedState(prevState, props))
         })
         /*
@@ -257,37 +266,6 @@ const Journey = ({dimns}) => {
         .height(screenHeight - 35))
         ////.onSetOpenPlanet(setOpenPlanet))
 
-        /*
-      if(d3.select(containerRef.current).select("*").empty()){
-        const svg = d3.select(containerRef.current)
-          .attr("stroke", "black")
-          .attr("width", 300)
-          .attr("height", 300)
-
-        const outerRect = svg
-          .append("rect")
-            .attr("class", "outer")
-            .attr("x", 0)
-            .attr("y", 0)
-            .attr("width", 300)
-            .attr("height", 300)
-            .attr("fill", "red")
-
-          //.attr("transform", "translate(50,50)");
-        const innerRect = svg
-          .append("rect")
-            .attr("class", "inner")
-            .attr("transform", "translate(50,50)")
-            .attr("x", 0)
-            .attr("y", 100)
-            .attr("width", 100)
-            .attr("height", 100)
-            .attr("fill", "yellow")
-
-        console.log("outer rect bBox", outerRect.node().getBBox())
-        console.log("inner rect bBox", innerRect.node().getBBox())
-      }
-      */
   })
 
 

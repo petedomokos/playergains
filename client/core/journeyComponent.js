@@ -24,8 +24,9 @@ import openedLinkComponent from './openedLinkComponent';
  /*
 leave links turned off whilst...
     AIMS
-    - when creating a new aim that goes over an existing planet, the planet immediately gets added to aim
      - bug - aim flashes after deselecting and on drag end
+        - drag aim, it has an extra update at its old pos first before the one at new pos
+        down to order of state updates
 
     OTHER
     - when dragging a measure, selectedGoal should be deselected
@@ -55,6 +56,7 @@ leave links turned off whilst...
     I mean that is what should happen for an open channel anyway
 
      - BACKLOG:
+      - when dragging aims, need to smoothly transition positions of aim and planets
      when dragging from a ring, the targ candidate ring should stay lit up even when planet is hovered (not just when ring is hovered)
       - need to move libnk into side of aim when turning a goal with a link into an aim (or vice versa)
       - ABLE TO CREATE A LINK FRO A GOLA TO AN AIM, OR VICE VERSA
@@ -395,14 +397,18 @@ export default function journeyComponent() {
                         const endY = y + height;
 
                         //update aim
-                        updatePlanets([ ...insidePlanetsToUpdate, ...outsidePlanetsToUpdate ]);
+                        //problem - which we update first, the other will have an update with old data!
+                        // unless we specify useEffect dependencies,
+                        // or just have one state object
                         updateAim({ 
                             id:d.id,
                             startDate:zoomedTimeScale.invert(displayX),
                             endDate:zoomedTimeScale.invert(endX),
                             startYPC:zoomedYScale.invert(y),
                             endYPC:zoomedYScale.invert(endY)
-                        }) 
+                        }, false)
+
+                        updatePlanets([ ...insidePlanetsToUpdate, ...outsidePlanetsToUpdate ]);
                     })
                     .onResizeDragEnd(function(e, aim, planetDs){
                         //use the latest planetDs from dom, as the aim d.planets have not been updated
