@@ -15,7 +15,7 @@ import { calcChartHeight, findFuturePlanets, findFirstFuturePlanet, findNearestD
 //import { COLOURS, DIMNS } from "./constants";
 import { addMonths, addWeeks } from "../util/TimeHelpers"
 import { ellipse } from "./ellipse";
-import { grey10, DEFAULT_D3_TICK_SIZE, COLOURS, DIMNS, PLANET_RING_MULTIPLIER } from "./constants";
+import { grey10, zoomLevel, DEFAULT_D3_TICK_SIZE, COLOURS, DIMNS, PLANET_RING_MULTIPLIER } from "./constants";
 import { pointIsInRect, findNearestPlanet, distanceBetweenPoints, channelContainsPoint, channelContainsDate } from './geometryHelpers';
 import dragEnhancements from './enhancedDragHandler';
 import { timeMonth, timeWeek } from "d3-time";
@@ -24,16 +24,19 @@ import openedLinkComponent from './openedLinkComponent';
  /*
 leave links turned off whilst...
     AIMS
-
-    BUGS/ISSUES
-    - links - not working!
-     - when naming a planet, click anuva, and old name still shows
-
     - semantic zoom of aims (use let contentsToShow) - on zoom out, name goes to centre and just see rect, no goals, and links are replaced
     by a single link to the aim, and completion is calculated same, as all link measures are moved onto the one link for the whole aim
+         - update centered names on aim drag and resize (note - try doing with state updates but draghandlers not 
+            updating ie not call(drag) and as long as we only deal with e and d then why do we need to rebind drag handlers???
+            worth testing once more)
+
+    - BUG - sometimes cliking 'Make Aim' does nothing
+    
+    
     - integrate aim with open channel (and fix the existing bug around this) (and turn openLinks back on)
     (note - need to think about how it will work in context of aims - maybe it just stays the same - but what if zoomed out so 
         goals not displayed, just aim title displayed?)
+
     - ipad testing
 
     NEXT
@@ -51,11 +54,13 @@ leave links turned off whilst...
     I mean that is what should happen for an open channel anyway
 
      - BACKLOG:
+     - BUG - make some links in aims. drag planets around - sometimes teh links refuse to update - seems t be when src-targ flips, or when we have circular refs
       - when dragging aims, need to smoothly transition positions of aim and planets
      when dragging from a ring, the targ candidate ring should stay lit up even when planet is hovered (not just when ring is hovered)
       - need to move libnk into side of aim when turning a goal with a link into an aim (or vice versa)
       - ABLE TO CREATE A LINK FRO A GOLA TO AN AIM, OR VICE VERSA
       - show aim Nameform when converting it from planet if it is unnamed perhaps
+      - if not allowing links to be created from aims, then replace the drag handle corners with just a boundary all the way around each aim
     */
 
 
@@ -346,7 +351,22 @@ export default function journeyComponent() {
             }
 
             function updateAims(){
+                //helper
+                const getView = (zoomK) => {
+                    return { name: true, goals:{}}
+                    /*
+                    const viewZoomLevel = zoomLevel(zoomK);
+                    switch(viewZoomLevel){
+                        case -1:{ return { name: true }; }
+                        case 0:{ return { name: true, goals:{}} }
+                        case 1 :{ return { name: true, goals: { details: true }} }
+                        default:{ return; }
+                    }
+                    */
+                }
+    
                 aims
+                    .view(getView(currentZoom.k))
                     .selected(selected)
                     .selectedMeasure(measuresOpen?.find(m => m.id === measuresBar.selected()))
                     .contentsToShow(aim => modalData?.d.id === aim.id ? "none" : "basic")

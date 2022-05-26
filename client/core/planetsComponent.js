@@ -292,6 +292,7 @@ export default function planetsComponent() {
                         .attr("transform", "translate(0," + (d.rx(width) * 0.8) +")")
                         .call(menus[d.id]
                             .onClick((opt) => {
+                                console.log("click", opt.key)
                                 switch(opt.key){
                                     case "delete": { 
                                         deletePlanet.call(this, d.id);

@@ -17,6 +17,7 @@ import { pointIsInRect } from "./geometryHelpers";
 /*
 
 */
+
 export default function aimsComponent() {
     // dimensions
     let width = 800;
@@ -34,6 +35,8 @@ export default function aimsComponent() {
 
     let timeScale = x => 0;
     let yScale = x => 0;
+
+    let view = { name: true, goals: { details: true }};
 
     let selectedAim;
     let selectedGoal;
@@ -109,8 +112,8 @@ export default function aimsComponent() {
                 .append("g")
                     .attr("class", d => "aim aim-"+d.id)
                     .each(function(d){
-                        const titleWidth = 100;
-                        const titleHeight = 20;
+                        const nameWidth = 100;
+                        const nameHeight = 20;
                         const aimG = d3.select(this);
 
                         const controlledContentsG = aimG.append("g").attr("class", "controlled-contents");
@@ -126,9 +129,9 @@ export default function aimsComponent() {
                                 //.attr("pointer-events", d.id === "main" ? "none" : "all")
                                 .attr("fill-opacity", 0.15);
 
-                        const titleG = controlledContentsG.append("g").attr("class", "title");
-                        titleG.append("rect").attr("class", "bg");
-                        titleG
+                        const nameG = controlledContentsG.append("g").attr("class", "name");
+                        nameG.append("rect").attr("class", "bg");
+                        nameG
                             .append("text")
                                 .attr("class", "main")
                                 .attr("dominant-baseline", "central")
@@ -158,23 +161,37 @@ export default function aimsComponent() {
                             .attr("width", d.displayWidth)
                             .attr("height", d.height);
                             
-                        //title
+                        //name
+                        //console.log("width", width)
+                        //console.log("height", height)
+                        const nameCentred = !view.goals && d.id !== "main";
                         const name = nameSettings(d);
-                        const titleG = controlledContentsG.select("g.title")
-                            .attr("transform", "translate(" + name.margin.left + "," +name.margin.top +")")
+
+                        const tX = nameCentred ? d.width / 2 : name.margin.left;
+                        const tY = nameCentred ? d.height / 2: name.margin.top;
+
+                        const nameG = controlledContentsG.select("g.name")
+                            .attr("transform", "translate(" + tX + "," +tY +")")
                             .attr("cursor", "pointer")
                             .call(d3.drag()) //need drag just to prevent canvas receiving the click - dont know why
                             .on("click", onClickName)
                         
-                        titleG.select("rect.bg")
-                            .attr("width", name.contentsWidth)
-                            .attr("height", name.contentsHeight)
-                            .attr("fill", "transparent");
+                        const centredRectWidth = name.contentsWidth * 2.2;
+                        const centredRectHeight = name.contentsHeight * 1.4;
+                        nameG.select("rect.bg")
+                            .attr("x", nameCentred ? (d.width - centredRectWidth)/2 : 0)
+                            .attr("y", nameCentred ? (d.height - centredRectHeight)/2 : 0)
+                            .attr("width", nameCentred ? centredRectWidth : name.contentsWidth)
+                            .attr("height", nameCentred ? centredRectHeight :  name.contentsHeight)
+                            .attr("fill", "yellow");
+                            //.attr("fill", "transparent");
 
-                        titleG.select("text.main")
-                            .attr("x", 5)
-                            .attr("y", name.contentsHeight / 2)
-                            .attr("font-size", name.fontSize)
+                        nameG.select("text.main")
+                            .attr("x", nameCentred ? 0 : 5)
+                            .attr("y", nameCentred ? 0 : name.contentsHeight / 2)
+                            .attr("text-anchor", nameCentred ? "middle" : "start")
+                            .attr("dominant-baseline", "central")
+                            .attr("font-size", nameCentred ? name.fontSize * 3 : name.fontSize)
                             .text(d.name || (d.id === "main" ? "unnamed canvas" : "unnamed group"))
 
                         //resize handle
@@ -544,6 +561,12 @@ export default function aimsComponent() {
         timeScale = value;
         return aims;
     };
+    aims.view = function (value) {
+        if (!arguments.length) { return view; }
+        view = value;
+        return aims;
+    };
+
     aims.onClick = function (value) {
         if (!arguments.length) { return onClick; }
         onClick = value;
