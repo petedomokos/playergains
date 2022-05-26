@@ -24,22 +24,19 @@ import openedLinkComponent from './openedLinkComponent';
  /*
 leave links turned off whilst...
     AIMS
-     - bug - aim flashes after deselecting and on drag end
-        - drag aim, it has an extra update at its old pos first before the one at new pos
-        down to order of state updates
 
-    OTHER
+    BUGS/ISSUES
     - when dragging a measure, selectedGoal should be deselected
     - links - not working!
     - bug - form doesnt disappear on goal drag start
+     - when naming a planet, click anuva, and old name still shows
+
     - semantic zoom of aims (use let contentsToShow) - on zoom out, name goes to centre and just see rect, no goals, and links are replaced
     by a single link to the aim, and completion is calculated same, as all link measures are moved onto the one link for the whole aim
     - integrate aim with open channel (and fix the existing bug around this) (and turn openLinks back on)
     (note - need to think about how it will work in context of aims - maybe it just stays the same - but what if zoomed out so 
         goals not displayed, just aim title displayed?)
     - ipad testing
-
-   BUGs - when naming a planet, click anuva, and old name still shows
 
     NEXT
     consider removing the whole thing of planets sliding into neaest channel end. Instead, do it like inDesign, where the user is in charge but
@@ -618,6 +615,7 @@ export default function journeyComponent() {
                         })
                         .onUpdateSelected(updateAims)
                         .onMeasureDragStart((e, m) => {
+                            updateSelected(undefined);
                             aims.stopShowingAvailabilityStatus(planetsData);
                             //goalIsAvailable = !goalContainsMeasure(m);
                             //todo - move to aims, and work out why measure not being added to goal
