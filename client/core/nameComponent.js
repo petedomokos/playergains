@@ -25,6 +25,7 @@ export default function nameComponent(containerG, options={}){
                     nameG
                         .attr("opacity", 0)
                         .transition()
+                            .delay(200)
                             .duration(300)
                             .attr("opacity", 1);
 

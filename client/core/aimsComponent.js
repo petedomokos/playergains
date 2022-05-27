@@ -302,6 +302,13 @@ export default function aimsComponent() {
                         planetsG.enter()
                             .append("g") // @todo - chqnge to insert so its before resize and drag handles so they arent blocked
                                 .attr("class", "planets planets-"+d.id)
+                                .each(function(){
+                                    d3.select(this)
+                                        .attr("opacity", 0)
+                                        .transition()
+                                            .duration(300)
+                                            .attr("opacity", 1)
+                                })
                                 .merge(planetsG)
                                 .call(planets[d.id]
                                     .colours({ planet: d.colour || COLOURS.planet })
@@ -329,7 +336,17 @@ export default function aimsComponent() {
                                     .convertToAim(convertGoalToAim), 
                                     options.planets);
                             
-                        planetsG.exit().remove();
+                        planetsG.exit().each(function(d){
+                            //will be multiple exits because of the delay in removing
+                            if(!d3.select(this).attr("class").includes("exiting")){
+                                d3.select(this)
+                                    .classed("exiting", true)
+                                    .transition()
+                                        .duration(300)
+                                        .attr("opacity", 0)
+                                        .on("end", function() { d3.select(this).remove(); });
+                            }
+                        })
 
                         //menu
                         const menuG = controlledContentsG.selectAll("g.menu").data(selectedAim?.id === d.id ? [menuOptions(d)] : [], opt => opt.key);
