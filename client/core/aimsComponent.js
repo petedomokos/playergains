@@ -13,6 +13,7 @@ import { timeMonth, timeWeek } from "d3-time";
 import menuComponent from './menuComponent';
 import planetsComponent from './planetsComponent';
 import { pointIsInRect } from "./geometryHelpers";
+import nameComponent from "./nameComponent";
 //import "snapsvg-cjs";
 /*
 
@@ -128,15 +129,6 @@ export default function aimsComponent() {
                                 .attr("fill", d.colour || "transparent")
                                 //.attr("pointer-events", d.id === "main" ? "none" : "all")
                                 .attr("fill-opacity", 0.15);
-
-                        const nameG = controlledContentsG.append("g").attr("class", "name");
-                        nameG.append("rect").attr("class", "bg");
-                        nameG
-                            .append("text")
-                                .attr("class", "main")
-                                .attr("dominant-baseline", "central")
-                                .attr("stroke", grey10(1))
-                                .attr("stroke-width", 0.1);
                         
                         //components        
                         planets[d.id] = planetsComponent();
@@ -162,37 +154,51 @@ export default function aimsComponent() {
                             .attr("height", d.height);
                             
                         //name
-                        //console.log("width", width)
-                        //console.log("height", height)
                         const nameCentred = !view.goals && d.id !== "main";
                         const name = nameSettings(d);
+                        const contentsWidth = name.width - name.margin.left - name.margin.right;
+                        const contentsHeight = name.height - name.margin.top - name.margin.bottom;
+                        //top-left name
+                        controlledContentsG.call(nameComponent, {
+                            className:"top-left-name", //note: curr name compo can only take one classname else it messes selection up
+                            shouldDisplay:!nameCentred,
+                            onClick:onClickName,
+                            translate:{ x: name.margin.left, y: name.margin.top },
+                            bg:{
+                                width:contentsWidth,
+                                height:contentsHeight
+                            },
+                            text:{
+                                x:5,
+                                y:contentsHeight / 2,
+                                fontSize:name.fontSize,
+                                stroke:grey10(1),
+                                name:d.name || (d.id === "main" ? "unnamed canvas" : "unnamed group")
+                            }
+                        })
+                        //centred name
+                        //enlarge as font is larger
+                        const centredRectWidth = contentsWidth * 2.2;
+                        const centredRectHeight = contentsHeight * 1.4;
 
-                        const tX = nameCentred ? d.width / 2 : name.margin.left;
-                        const tY = nameCentred ? d.height / 2: name.margin.top;
-
-                        const nameG = controlledContentsG.select("g.name")
-                            .attr("transform", "translate(" + tX + "," +tY +")")
-                            .attr("cursor", "pointer")
-                            .call(d3.drag()) //need drag just to prevent canvas receiving the click - dont know why
-                            .on("click", onClickName)
-                        
-                        const centredRectWidth = name.contentsWidth * 2.2;
-                        const centredRectHeight = name.contentsHeight * 1.4;
-                        nameG.select("rect.bg")
-                            .attr("x", nameCentred ? (d.width - centredRectWidth)/2 : 0)
-                            .attr("y", nameCentred ? (d.height - centredRectHeight)/2 : 0)
-                            .attr("width", nameCentred ? centredRectWidth : name.contentsWidth)
-                            .attr("height", nameCentred ? centredRectHeight :  name.contentsHeight)
-                            .attr("fill", "yellow");
-                            //.attr("fill", "transparent");
-
-                        nameG.select("text.main")
-                            .attr("x", nameCentred ? 0 : 5)
-                            .attr("y", nameCentred ? 0 : name.contentsHeight / 2)
-                            .attr("text-anchor", nameCentred ? "middle" : "start")
-                            .attr("dominant-baseline", "central")
-                            .attr("font-size", nameCentred ? name.fontSize * 3 : name.fontSize)
-                            .text(d.name || (d.id === "main" ? "unnamed canvas" : "unnamed group"))
+                        controlledContentsG.call(nameComponent, {
+                            className:"centred-name",
+                            shouldDisplay:nameCentred,
+                            onClick:onClickName,
+                            translate:{ x: d.width/2, y: d.height/2 },
+                            bg:{
+                                width:centredRectWidth,
+                                height:centredRectHeight,
+                                x:- centredRectWidth / 2,
+                                y: - centredRectHeight / 2
+                            },
+                            text:{
+                                textAnchor:"middle",
+                                fontSize:name.fontSize * 3,
+                                stroke:grey10(1),
+                                name:d.name || "unnamed group"
+                            }
+                        })
 
                         //resize handle
                         //note - d is aim
@@ -292,7 +298,7 @@ export default function aimsComponent() {
 
                         //planets
                         //todo - find out why all the d values that were updated in onResizeDragEnd are undefined
-                        const planetsG = aimG.selectAll("g.planets").data([d.planets]);
+                        const planetsG = aimG.selectAll("g.planets").data(view.goals ? [d.planets] : []);
                         planetsG.enter()
                             .append("g") // @todo - chqnge to insert so its before resize and drag handles so they arent blocked
                                 .attr("class", "planets planets-"+d.id)
@@ -355,6 +361,7 @@ export default function aimsComponent() {
                             //will be multiple exits because of the delay in removing
                             if(!d3.select(this).attr("class").includes("exiting")){
                                 d3.select(this)
+                                    .classed("exiting", true)
                                     .transition()
                                         .duration(100)
                                         .attr("opacity", 0)

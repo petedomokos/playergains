@@ -139,10 +139,7 @@ export default function menuComponent() {
                                 .text(d.label);
 
                         })
-                        .on("click", (e,d) => {
-                            console.log("clk")
-                            onClick(d)
-                        })
+                        .on("click", (e,d) => { onClick(d) })
 
                 })
         })

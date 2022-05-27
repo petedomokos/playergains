@@ -24,7 +24,20 @@ import openedLinkComponent from './openedLinkComponent';
  /*
 leave links turned off whilst...
     AIMS
-    - semantic zoom of aims (use let contentsToShow) - on zoom out, name goes to centre and just see rect, no goals, and links are replaced
+    - semantic zoom of aims 
+        - must make name opacity transition out then back in for planets and nameG (maybe easier to have two elements for name)
+            - 2 ways - use two diff elements, or have a transformTransition property on the aims component.
+            this would be a reusable plug in (ie .extends) and it makes any change in transform property transiotin in the manner stated
+            either slide, fade, or none, to start with. need ot specify teh object eg planetGs, or nameGs
+
+
+
+        - when planets transitoin back in, they shouldnt slide across from actualX to x, just start at x in that case
+         (could be clever and use the opacity transition/delay to hide the slide, but this is a bit of a work aorund)
+        - 
+    
+    
+    (use let contentsToShow) - on zoom out, name goes to centre and just see rect, no goals, and links are replaced
     by a single link to the aim, and completion is calculated same, as all link measures are moved onto the one link for the whole aim
          - update centered names on aim drag and resize (note - try doing with state updates but draghandlers not 
             updating ie not call(drag) and as long as we only deal with e and d then why do we need to rebind drag handlers???
@@ -54,6 +67,11 @@ leave links turned off whilst...
     I mean that is what should happen for an open channel anyway
 
      - BACKLOG:
+      - when zooming out a lot, can no longer see planet behind it's name form
+     - make planet disappear first when converting to aim
+     - semantic zoom transitoins - make a transform funcitn which can be called with settings for what kind of transitoin wyou want,
+     as well as .translate(x, y) and .scale(k) etc
+     
      - BUG - make some links in aims. drag planets around - sometimes teh links refuse to update - seems t be when src-targ flips, or when we have circular refs
       - when dragging aims, need to smoothly transition positions of aim and planets
      when dragging from a ring, the targ candidate ring should stay lit up even when planet is hovered (not just when ring is hovered)
@@ -353,8 +371,6 @@ export default function journeyComponent() {
             function updateAims(){
                 //helper
                 const getView = (zoomK) => {
-                    return { name: true, goals:{}}
-                    /*
                     const viewZoomLevel = zoomLevel(zoomK);
                     switch(viewZoomLevel){
                         case -1:{ return { name: true }; }
@@ -362,7 +378,6 @@ export default function journeyComponent() {
                         case 1 :{ return { name: true, goals: { details: true }} }
                         default:{ return; }
                     }
-                    */
                 }
     
                 aims
