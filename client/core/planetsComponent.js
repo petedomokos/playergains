@@ -105,10 +105,12 @@ export default function planetsComponent() {
     let containerG;
 
     function planets(selection, options={}) {
-        const { transitionEnter, transitionUpdate } = options;
+        const { transitionEnter=true, transitionUpdate=true } = options;
         // expression elements
         selection.each(function (data) {
-            //console.log("planets", data)
+            //console.log("planets..........", data)
+            //plan - dont update dom twice for name form
+            //or have a transitionInProgress flag
             containerG = d3.select(this);
             withClick.onClick(onClick)
             const planetDrag = d3.drag()
@@ -156,19 +158,9 @@ export default function planetsComponent() {
                     menus[d.id] = menuComponent();
                 
                 })
-                .each(function(d,i){
-                    //ENTER - transition position
-                    d3.select(this)
-                        .attr("transform", d => "translate("+adjX(timeScale(d.targetDate)) +"," +d.y +")")
-                        //.attr("transform", d => "translate("+adjX(timeScale(d.targetDate)) +"," +yScale(d.yPC) +")")
-                        .transition()
-                            .delay(50)
-                            .duration(200)
-                            .attr("transform", "translate("+d.x +"," +d.y +")");
-                            //.attr("transform", "translate("+timeScale(d.displayDate) +"," +yScale(d.yPC) +")");
-
-                })
+                .call(transform, { x: d => adjX(timeScale(d.targetDate)), y:d => d.y })
                 .merge(planetG)
+                .call(transform, { x: d => d.x, y:d => d.y }, transitionUpdate)
                 .attr("opacity", 1)
                 .each(function(d){
                     const rx = d.rx(width);
@@ -323,24 +315,29 @@ export default function planetsComponent() {
                     }) 
                 })
             
-            
-            
-            //UPDATE ONLY - transition position
-            planetG.each(function(d){
-                const planetG = d3.select(this);
-                if(transitionUpdate){
-                    const { translateX } = getTransformationFromTrans(planetG.attr("transform"));
-                    planetG
-                        .attr("transform", d => "translate("+translateX +"," +d.y +")")
-                        .transition()
-                            .delay(50)
-                            .duration(200)
-                            .attr("transform", "translate("+d.x +"," +d.y +")");
-                }else{
-                    planetG
-                        .attr("transform", "translate("+d.x +"," +d.y +")");
-                }
-            })
+            //make a transform func
+            //issue - when zooming, deltas are greater than 0.1 as the scale, but it still transitions, causing a delay. we dont want it to transition on zoom
+            function transform(selection, transform={}, transition){
+                const { x = d => 0, y = d => 0, k = d => 1 } = transform;
+                selection.each(function(d){
+                    const planetG = d3.select(this);
+                    const { translateX, translateY } = getTransformationFromTrans(planetG.attr("transform"));
+                    //on call from enter, there will be no translate so deltas are 0 so no transition
+                    //but then transform is called again on entered planets after merge with update
+                    const deltaX = translateX ? Math.abs(translateX - x(d)) : 0;
+                    const deltaY = translateY ? Math.abs(translateY - y(d)) : 0;
+                    if(transition && (deltaX > 0.1 || deltaY > 0.1)){
+                        planetG
+                            .transition()
+                                .delay(transition?.delay || 0)
+                                .duration(transition?.duration || 200)
+                                .attr("transform", "translate("+x(d) +"," +y(d) +") scale("+k(d) +")");
+
+                    }else{
+                        planetG.attr("transform", "translate("+x(d) +"," +y(d) +") scale("+k(d) +")");
+                    }
+                })
+            }
 
             //EXIT
             planetG.exit().each(function(d){

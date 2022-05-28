@@ -298,7 +298,7 @@ export default function aimsComponent() {
 
                         //planets
                         //todo - find out why all the d values that were updated in onResizeDragEnd are undefined
-                        const planetsG = aimG.selectAll("g.planets").data(view.goals ? [d.planets] : []);
+                        const planetsG = aimG.selectAll("g.planets").data((d.id === "main" || view.goals) ? [d.planets] : []);
                         planetsG.enter()
                             .append("g") // @todo - chqnge to insert so its before resize and drag handles so they arent blocked
                                 .attr("class", "planets planets-"+d.id)
@@ -306,6 +306,7 @@ export default function aimsComponent() {
                                     d3.select(this)
                                         .attr("opacity", 0)
                                         .transition()
+                                            .delay(200)
                                             .duration(300)
                                             .attr("opacity", 1)
                                 })
@@ -334,7 +335,7 @@ export default function aimsComponent() {
                                     .onAddLink(onAddLink)
                                     .startEditPlanet(startEditPlanet)
                                     .convertToAim(convertGoalToAim), 
-                                    options.planets);
+                                    options.goals);
                             
                         planetsG.exit().each(function(d){
                             //will be multiple exits because of the delay in removing

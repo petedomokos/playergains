@@ -21,38 +21,45 @@ import dragEnhancements from './enhancedDragHandler';
 import { timeMonth, timeWeek } from "d3-time";
 import openedLinkComponent from './openedLinkComponent';
 
- /*
+/*
 leave links turned off whilst...
     AIMS
-    - semantic zoom of aims 
-        - must make name opacity transition out then back in for planets and nameG (maybe easier to have two elements for name)
-            - 2 ways - use two diff elements, or have a transformTransition property on the aims component.
-            this would be a reusable plug in (ie .extends) and it makes any change in transform property transiotin in the manner stated
-            either slide, fade, or none, to start with. need ot specify teh object eg planetGs, or nameGs
+    - leave main aim planets on always
 
-
-
+     soln - update d3 to show context menu before calling setModalData - dont rely on React update
         - when planets transitoin back in, they shouldnt slide across from actualX to x, just start at x in that case
          (could be clever and use the opacity transition/delay to hide the slide, but this is a bit of a work aorund)
-        - 
-    
-    
-    (use let contentsToShow) - on zoom out, name goes to centre and just see rect, no goals, and links are replaced
-    by a single link to the aim, and completion is calculated same, as all link measures are moved onto the one link for the whole aim
          - update centered names on aim drag and resize (note - try doing with state updates but draghandlers not 
             updating ie not call(drag) and as long as we only deal with e and d then why do we need to rebind drag handlers???
             worth testing once more)
+        - hide links into closed aims once they reach the edge of the aim - just change the start point (x1,y1) of all links
+        whose src is in the aim, so it starts from same x value but y is the bottom or top of the aim, vertically down or up from goal centre
+        For targ links, change x2, y2. OR use trig to calc the distance to edge based on theta
 
-    - BUG - sometimes cliking 'Make Aim' does nothing
-    
-    
-    - integrate aim with open channel (and fix the existing bug around this) (and turn openLinks back on)
-    (note - need to think about how it will work in context of aims - maybe it just stays the same - but what if zoomed out so 
-        goals not displayed, just aim title displayed?)
+        - sort planet transitions on enter and update - have a transform function which we can call with transition settings
+        planet name form should appear after the transiotn not before, so need a transition with delay on name form too
+        (could use d3 in useEffcet in NameForm)
+
+    COMPLETION
+
+     - improve mock comp data function so more flexible
+    - planet and aim completion animations (see paper working)
+    - show the animation and cmpletion for only 1 measure when 1 measure is selected
+
+    PERSISTENCE
+     - api
+     - database
+
+    IMPORTING MEASURES
+
+    OTHER DATA VIEWS (see sketches)
+     - carousel with left/right arrows
+
+    TOUCH/IPAD/SAFARI
 
     - ipad testing
 
-    NEXT
+    OPEN CHANNELS
     consider removing the whole thing of planets sliding into neaest channel end. Instead, do it like inDesign, where the user is in charge but
     //we help them by highlighting the slot when they get near it, and if its near it then it slides in, and that becomes it's actual date 
     // rather than having an actual and a display date. can do same with others. 
@@ -64,19 +71,23 @@ leave links turned off whilst...
     //todo - consider the issue when draggin aim when a channel is open, planets at different locations in the aim may be conflicted about 
     //whether to slide left or right to get to nearest channel. if all channels closed, this wont happen.
     But in this case we simply slide teh channel wider too, and then when channel is closed, aim shortens too.
-    I mean that is what should happen for an open channel anyway
+    I mean that is what should happen for an open channel anyway.
+    - integrate aim with open channel (and fix the existing bug around this) (and turn openLinks back on)
+    (note - need to think about how it will work in context of aims - maybe it just stays the same - but what if zoomed out so 
+        goals not displayed, just aim title displayed?)
 
-     - BACKLOG:
+    BACKLOG:
       - when zooming out a lot, can no longer see planet behind it's name form
      - make planet disappear first when converting to aim
      - semantic zoom transitoins - make a transform funcitn which can be called with settings for what kind of transitoin wyou want,
      as well as .translate(x, y) and .scale(k) etc
      
-     - BUG - make some links in aims. drag planets around - sometimes teh links refuse to update - seems t be when src-targ flips, or when we have circular refs
+    BUGS & ISSUES
+     - zoom out aim, planets slide a little before disappearing, so not in sync with aim name disappearing
+     - make some links in aims. drag planets around - sometimes teh links refuse to update - seems t be when src-targ flips, or when we have circular refs
       - when dragging aims, need to smoothly transition positions of aim and planets
      when dragging from a ring, the targ candidate ring should stay lit up even when planet is hovered (not just when ring is hovered)
       - need to move libnk into side of aim when turning a goal with a link into an aim (or vice versa)
-      - ABLE TO CREATE A LINK FRO A GOLA TO AN AIM, OR VICE VERSA
       - show aim Nameform when converting it from planet if it is unnamed perhaps
       - if not allowing links to be created from aims, then replace the drag handle corners with just a boundary all the way around each aim
     */
@@ -199,7 +210,18 @@ export default function journeyComponent() {
             }
         })
 
-        function update(options={}){
+        function update(settings={}){
+            const { changed="" } = settings;
+            const options = {
+                aims:{
+                    goals:{
+                        transitionUpdate:!(changed === "zoom")
+                    },
+                    links:{
+                        transitionUpdate:!(changed === "zoom")
+                    }
+                }
+            }
             //console.log("measuresbarh", measuresBarHeight)
             //console.log("journey update", selectedPending)
             svg
@@ -281,7 +303,7 @@ export default function journeyComponent() {
                     }
                     currentZoom = e.transform;
                     setZoom(currentZoom);
-                    update();
+                    update({changed: "zoom"});
                 }))
                 .on("end", enhancedZoom())
 
@@ -318,7 +340,7 @@ export default function journeyComponent() {
             updateLinksData();
             //components
             updateAims();
-            updateLinks();
+            //updateLinks();
 
             //if adding a new planet, we must select on next update once x and y pos are defined, as they are used for form position
             if(selectedPending){
@@ -706,7 +728,7 @@ export default function journeyComponent() {
                             measureWasMoved = false;
                         }))
             
-            measuresBarG.exit().remove();        
+            measuresBarG.exit().remove();      
         }
 
         function init(){

@@ -266,7 +266,26 @@ const Journey = ({dimns}) => {
         .height(screenHeight - 35))
         ////.onSetOpenPlanet(setOpenPlanet))
 
-  })
+  }, [journey, canvas, aims, planets, links, withCompletionPaths, measures, measuresBarIsOpen, modalData ])
+
+  /*useEffect(() => {
+      if(!containerRef.current || !journey){return; }
+      if(!shouldD3UpdateRef.current){
+        //reset so always true by default on next state update
+        shouldD3UpdateRef.current = true;
+        return;
+      }
+
+      journey
+          .modalData(modalData)
+
+      d3.select(containerRef.current)
+        .datum({ canvas, aims, planets, links, channels, measures })
+        .call(journey)
+
+  }, [modalData])*/
+
+
 
 
 
