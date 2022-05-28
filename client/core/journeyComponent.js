@@ -24,14 +24,7 @@ import openedLinkComponent from './openedLinkComponent';
 /*
 leave links turned off whilst...
     AIMS
-    - leave main aim planets on always
-
-     soln - update d3 to show context menu before calling setModalData - dont rely on React update
-        - when planets transitoin back in, they shouldnt slide across from actualX to x, just start at x in that case
-         (could be clever and use the opacity transition/delay to hide the slide, but this is a bit of a work aorund)
-         - update centered names on aim drag and resize (note - try doing with state updates but draghandlers not 
-            updating ie not call(drag) and as long as we only deal with e and d then why do we need to rebind drag handlers???
-            worth testing once more)
+        - turn links back on - not on atm
         - hide links into closed aims once they reach the edge of the aim - just change the start point (x1,y1) of all links
         whose src is in the aim, so it starts from same x value but y is the bottom or top of the aim, vertically down or up from goal centre
         For targ links, change x2, y2. OR use trig to calc the distance to edge based on theta
@@ -81,8 +74,11 @@ leave links turned off whilst...
      - make planet disappear first when converting to aim
      - semantic zoom transitoins - make a transform funcitn which can be called with settings for what kind of transitoin wyou want,
      as well as .translate(x, y) and .scale(k) etc
+     - consider this frpom Journey.jsx... journey.modalData(modalData).... could even have a 2nd option to all these settings, which is false by default, which is to update dom 
+      //so journey.modalData(modalData, true) would be all we have to do here, instead of call the update again as we do below
      
     BUGS & ISSUES
+     - aim flashes on resize sometimes
      - zoom out aim, planets slide a little before disappearing, so not in sync with aim name disappearing
      - make some links in aims. drag planets around - sometimes teh links refuse to update - seems t be when src-targ flips, or when we have circular refs
       - when dragging aims, need to smoothly transition positions of aim and planets

@@ -268,22 +268,18 @@ const Journey = ({dimns}) => {
 
   }, [journey, canvas, aims, planets, links, withCompletionPaths, measures, measuresBarIsOpen, modalData ])
 
-  /*useEffect(() => {
-      if(!containerRef.current || !journey){return; }
-      if(!shouldD3UpdateRef.current){
-        //reset so always true by default on next state update
-        shouldD3UpdateRef.current = true;
-        return;
-      }
-
-      journey
-          .modalData(modalData)
+  /*
+  //todo - consider this approach of separate useEffects
+  useEffect(() => {
+      journey.modalData(modalData).... could even have a 2nd option to all these settings, which is false by default, which is to update dom 
+      //so journey.modalData(modalData, true) would be all we have to do here, instead of call the update again as we do below
 
       d3.select(containerRef.current)
         .datum({ canvas, aims, planets, links, channels, measures })
         .call(journey)
 
-  }, [modalData])*/
+  }, [modalData])
+  */
 
 
 

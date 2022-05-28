@@ -155,50 +155,60 @@ export default function aimsComponent() {
                             
                         //name
                         const nameCentred = !view.goals && d.id !== "main";
-                        const name = nameSettings(d);
-                        const contentsWidth = name.width - name.margin.left - name.margin.right;
-                        const contentsHeight = name.height - name.margin.top - name.margin.bottom;
+                        updateTopLeftName(d.name);
+                        updateCentredName(d.width, d.height, d.name);
                         //top-left name
-                        controlledContentsG.call(nameComponent, {
-                            className:"top-left-name", //note: curr name compo can only take one classname else it messes selection up
-                            shouldDisplay:!nameCentred,
-                            onClick:onClickName,
-                            translate:{ x: name.margin.left, y: name.margin.top },
-                            bg:{
-                                width:contentsWidth,
-                                height:contentsHeight
-                            },
-                            text:{
-                                x:5,
-                                y:contentsHeight / 2,
-                                fontSize:name.fontSize,
-                                stroke:grey10(1),
-                                name:d.name || (d.id === "main" ? "unnamed canvas" : "unnamed group")
-                            }
-                        })
-                        //centred name
-                        //enlarge as font is larger
-                        const centredRectWidth = contentsWidth * 2.2;
-                        const centredRectHeight = contentsHeight * 1.4;
+                        function updateTopLeftName(name){
+                            const { width, height, margin, fontSize } = nameSettings(d);
+                            const contentsWidth = width - margin.left - margin.right;
+                            const contentsHeight = height - margin.top - margin.bottom;
 
-                        controlledContentsG.call(nameComponent, {
-                            className:"centred-name",
-                            shouldDisplay:nameCentred,
-                            onClick:onClickName,
-                            translate:{ x: d.width/2, y: d.height/2 },
-                            bg:{
-                                width:centredRectWidth,
-                                height:centredRectHeight,
-                                x:- centredRectWidth / 2,
-                                y: - centredRectHeight / 2
-                            },
-                            text:{
-                                textAnchor:"middle",
-                                fontSize:name.fontSize * 3,
-                                stroke:grey10(1),
-                                name:d.name || "unnamed group"
-                            }
-                        })
+                            controlledContentsG.call(nameComponent, {
+                                className:"top-left-name", //note: curr name compo can only take one classname else it messes selection up
+                                shouldDisplay:!nameCentred,
+                                onClick:onClickName,
+                                translate:{ x: margin.left, y: margin.top },
+                                bg:{
+                                    width:contentsWidth,
+                                    height:contentsHeight
+                                },
+                                text:{
+                                    x:5,
+                                    y:contentsHeight / 2,
+                                    fontSize,
+                                    stroke:grey10(1),
+                                    name:name || (d.id === "main" ? "unnamed canvas" : "unnamed group")
+                                }
+                            })
+                        }
+                        //centred name
+                        function updateCentredName(aimWidth, aimHeight, name){
+                            const { width, height, margin, fontSize } = nameSettings(d);
+                            const contentsWidth = width - margin.left - margin.right;
+                            const contentsHeight = height - margin.top - margin.bottom;
+                            //enlarge as font is larger
+                            const centredRectWidth = contentsWidth * 2.2;
+                            const centredRectHeight = contentsHeight * 1.4;
+
+                            controlledContentsG.call(nameComponent, {
+                                className:"centred-name",
+                                shouldDisplay:nameCentred,
+                                onClick:onClickName,
+                                translate:{ x: aimWidth/2, y: aimHeight/2 },
+                                bg:{
+                                    width:centredRectWidth,
+                                    height:centredRectHeight,
+                                    x:- centredRectWidth / 2,
+                                    y: - centredRectHeight / 2
+                                },
+                                text:{
+                                    textAnchor:"middle",
+                                    fontSize:fontSize * 3,
+                                    stroke:grey10(1),
+                                    name:name || "unnamed group"
+                                }
+                            })
+                        }
 
                         //resize handle
                         //note - d is aim
@@ -288,6 +298,9 @@ export default function aimsComponent() {
                             d3.select(this).select("g.controlled-contents").select("rect")
                                 .attr("width", aim.displayWidth)
                                 .attr("height", aim.height);
+
+                            //centred name
+                            updateCentredName(aim.displayWidth, aim.height, aim.name)
                             
                         }
 
@@ -456,9 +469,9 @@ export default function aimsComponent() {
             d.displayX += e.dx;
             d.y += e.dy;
             d3.select(this).attr("transform", "translate(" + d.displayX +"," + d.y +")")
-            
+
             //goals
-            //one inside aim
+            //ones inside aim
             d3.select(this.parentNode).selectAll("g.planet")
                 .each(function(planetD){
                     planetD.x += e.dx;
