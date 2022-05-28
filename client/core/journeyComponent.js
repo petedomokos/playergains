@@ -12,6 +12,7 @@ import aimsComponent from './aimsComponent';
 import measuresBarComponent from './measuresBarComponent';
 import { calcChartHeight, findFuturePlanets, findFirstFuturePlanet, findNearestDate, getTransformationFromTrans,
     calcTrueX, calcAdjX, findPointChannel, findDateChannel, findNearestChannelByEndDate, createId } from './helpers';
+import { updatePos } from "./domHelpers"
 //import { COLOURS, DIMNS } from "./constants";
 import { addMonths, addWeeks } from "../util/TimeHelpers"
 import { ellipse } from "./ellipse";
@@ -24,13 +25,13 @@ import openedLinkComponent from './openedLinkComponent';
 /*
 leave links turned off whilst...
     AIMS
-        - turn links back on - not on atm
+        - links dont transition on aim drag
+
         - hide links into closed aims once they reach the edge of the aim - just change the start point (x1,y1) of all links
         whose src is in the aim, so it starts from same x value but y is the bottom or top of the aim, vertically down or up from goal centre
         For targ links, change x2, y2. OR use trig to calc the distance to edge based on theta
 
-        - sort planet transitions on enter and update - have a transform function which we can call with transition settings
-        planet name form should appear after the transiotn not before, so need a transition with delay on name form too
+        - planet name form should appear after the transiotn not before, so need a transition with delay on name form too
         (could use d3 in useEffcet in NameForm)
 
     COMPLETION
@@ -42,6 +43,7 @@ leave links turned off whilst...
     PERSISTENCE
      - api
      - database
+     - stop planet and link transitions when loading an existing canvas
 
     IMPORTING MEASURES
 
@@ -212,10 +214,10 @@ export default function journeyComponent() {
                 aims:{
                     goals:{
                         transitionUpdate:!(changed === "zoom")
-                    },
-                    links:{
-                        transitionUpdate:!(changed === "zoom")
                     }
+                },
+                links:{
+                    transitionUpdate:!(changed === "zoom")
                 }
             }
             //console.log("measuresbarh", measuresBarHeight)
@@ -336,7 +338,7 @@ export default function journeyComponent() {
             updateLinksData();
             //components
             updateAims();
-            //updateLinks();
+            updateLinks();
 
             //if adding a new planet, we must select on next update once x and y pos are defined, as they are used for form position
             if(selectedPending){
@@ -426,9 +428,24 @@ export default function journeyComponent() {
                         //aim is raised already in aimComponent
                     })
                     .onClickName((e,d) => { updateSelected(d); })
-                    .onDrag(function(e, d){
-                        //update the links and call the linksComponent again
-                        //console.log("aim drg displayX", d.displayX)
+                    .onDrag(function(e, aim){
+                        //links
+                        //this is the dragged aim, so we get the planets from it
+                        d3.select(this.parentNode).selectAll("g.planet")
+                            .each(function(p){
+                                //update links with this planet as src
+                                d3.selectAll("g.link")
+                                    .filter(l => l.src.id === p.id)
+                                    .selectAll("line") //comp line too
+                                    .call(updatePos, { x1:() => p.x, y1: () => p.y }, false)
+
+                                //update links with this planet as targ
+                                d3.selectAll("g.link")
+                                    .filter(l => l.targ.id === p.id)
+                                    .selectAll("line") //can do comp line too
+                                    .call(updatePos, { x2:() => p.x, y2: () => p.y }, false)
+
+                            })
                     })
                     .onDragEnd(function(e, d, outsidePlanetsToUpdate){
                         const { id, displayWidth, height, displayX, y } = d;
@@ -501,7 +518,7 @@ export default function journeyComponent() {
                             .data([newLinksData])
                             .join("g")
                             .attr("class", "links")
-                            .call(links) //no transitions
+                            .call(links, { transitionUpdate: false }) //no transitions
 
                     })
                     .onDragGoalEnd(function(e , d){

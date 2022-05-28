@@ -9,11 +9,11 @@ import { addWeeks } from "../util/TimeHelpers"
 import { ellipse } from "./ellipse";
 import { grey10 } from "./constants";
 import { findNearestPlanet, distanceBetweenPoints, angleOfRotation } from './geometryHelpers';
+import { updatePos } from "./domHelpers"
 import { OPEN_CHANNEL_EXT_WIDTH } from './constants';
 import dragEnhancements from './enhancedDragHandler';
 import { timeMonth, timeWeek } from "d3-time"
 import menuComponent from './menuComponent';
-import { update } from 'lodash';
 //import openedLinkComponent from './openedLinkComponent';
 /*
 
@@ -44,9 +44,9 @@ export default function linksComponent() {
     let hovered;
 
     function links(selection, options={}) {
-        const { transitionEnter, transitionUpdate } = options;
-
+        const { transitionEnter=true, transitionUpdate=true } = options;
         selection.each(function (data) {
+            //console.log("links comp", transitionUpdate)
             if(data){ linksData = data;}
            
             const linkG = d3.select(this).selectAll("g.link").data(linksData, l => l.id);
@@ -55,7 +55,7 @@ export default function linksComponent() {
                     .attr("class", "link")
                     .attr("id", d => "link-"+d.id)
                     .attr("opacity", 1)
-                    .each(function(d,i){
+                    .each(function(d,i){)
                         const linkG = d3.select(this);
                         //ENTER
                         //line
@@ -64,10 +64,17 @@ export default function linksComponent() {
                                 .attr("class", "main")
                                 .attr("stroke", grey10(5))
                                 .attr("cursor", "pointer")
-                                .attr("x1", d.src.x)
-                                .attr("y1", d.src.y)
-                                .attr("x2", d.targ.x)
-                                .attr("y2", d.targ.y)
+                                //there are no cases where we want an entering link to transition in from actualX1 or actualX2
+                                .call(updatePos, { 
+                                    x1: () => d.src.x,
+                                    y1: ()=> d.src.y,
+                                    x2: () => d.targ.x,
+                                    y2: () => d.targ.y
+                                })
+                                //.attr("x1", d.src.x)
+                                //.attr("y1", d.src.y)
+                                //.attr("x2", d.targ.x)
+                                //.attr("y2", d.targ.y)
                         
                         //completion line
                         linkG
@@ -123,6 +130,12 @@ export default function linksComponent() {
                         //lines
                         d3.select(this).select("line.main")
                             .attr("stroke-width", strokeWidth)
+                            .call(updatePos, { 
+                                x1: () => d.src.x,
+                                y1: ()=> d.src.y,
+                                x2: () => d.targ.x,
+                                y2: () => d.targ.y
+                            }, transitionUpdate)
                             .on("click", onClick)
 
                         d3.select(this).select("line.completion")
@@ -176,7 +189,9 @@ export default function linksComponent() {
                     .on("mousedown", e => { e.stopPropagation(); })
 
             //update only
+            /*
             linkG.each(function(d){
+                console.log("update link ", transitionUpdate)
                 const mainLine = d3.select(this).select("line.main")
                 const compLine = d3.select(this).select("line.completion")
                     .attr("display", withCompletion ? "inline" : "none")
@@ -213,6 +228,9 @@ export default function linksComponent() {
                         .attr("y2", d.compY)
                 }
             })
+            */
+
+            
 
             //EXIT
             linkG.exit().each(function(d){

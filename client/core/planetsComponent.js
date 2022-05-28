@@ -158,9 +158,13 @@ export default function planetsComponent() {
                     menus[d.id] = menuComponent();
                 
                 })
+                //we call both transitions for enter separate to update. This allows us to 
+                //specify when we want the entered nodes to transition. We dont want that to 
+                //occur when loading a pre-existing canvas. In that case, the first call below
+                //will have no effect because transitionEnter=false in the 2nd call
                 .call(transform, { x: d => adjX(timeScale(d.targetDate)), y:d => d.y })
+                .call(transform, { x: d => d.x, y:d => d.y }, transitionEnter)
                 .merge(planetG)
-                .call(transform, { x: d => d.x, y:d => d.y }, transitionUpdate)
                 .attr("opacity", 1)
                 .each(function(d){
                     const rx = d.rx(width);
@@ -314,9 +318,10 @@ export default function planetsComponent() {
                         }
                     }) 
                 })
-            
-            //make a transform func
-            //issue - when zooming, deltas are greater than 0.1 as the scale, but it still transitions, causing a delay. we dont want it to transition on zoom
+
+            //update only
+            planetG.call(transform, { x: d => d.x, y:d => d.y }, transitionUpdate)
+
             function transform(selection, transform={}, transition){
                 const { x = d => 0, y = d => 0, k = d => 1 } = transform;
                 selection.each(function(d){
@@ -329,8 +334,8 @@ export default function planetsComponent() {
                     if(transition && (deltaX > 0.1 || deltaY > 0.1)){
                         planetG
                             .transition()
-                                .delay(transition?.delay || 0)
-                                .duration(transition?.duration || 200)
+                                .delay(transition.delay || 0)
+                                .duration(transition.duration || 200)
                                 .attr("transform", "translate("+x(d) +"," +y(d) +") scale("+k(d) +")");
 
                     }else{

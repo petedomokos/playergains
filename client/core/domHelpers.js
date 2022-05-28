@@ -1,5 +1,53 @@
 import * as d3 from "d3";
 
+export function updatePos(selection, pos={}, transition){
+    const { x, y, x1, y1, x2, y2} = pos;
+    selection.each(function(d){
+        const element = d3.select(this);
+        //on call from enter, there will be no translate so deltas are 0 so no transition
+        //but then transform is called again on entered planets after merge with update
+        const currX = element.attr("x");
+        const currX1 = element.attr("x1");
+        const currX2 = element.attr("x2");
+        const currY = element.attr("y");
+        const currY1 = element.attr("y1");
+        const currY2 = element.attr("y2");
+
+        //may not need the ?: as max filters out undefined
+        const deltaX = currX && x ? Math.abs(+currX - x(d)) : 0;
+        const deltaX1 = currX1 && x1 ? Math.abs(+currX1 - x1(d)) : 0;
+        const deltaX2 = currX2 && x2 ? Math.abs(+currX2 - x2(d)) : 0;
+        const deltaY = currY && y ? Math.abs(+currY - y(d)) : 0;
+        const deltaY1 = currY1 && y1 ? Math.abs(+currY1 - y1(d)) : 0;
+        const deltaY2 = currY2 && y2 ? Math.abs(+currY2 - y2(d)) : 0;
+
+        const delta = d3.max([deltaX, deltaX1, deltaX2, deltaY, deltaY1, deltaY2]);
+
+        //todo - use attrs instead to avoid repetition
+        if(transition && delta > 0.1){
+            element
+                .transition()
+                    .delay(transition.delay || 0)
+                    .duration(transition.duration || 200)
+                    .attr("x", x ? x(d) : (currX ? +currX : null))
+                    .attr("x1", x1 ? x1(d) : (currX1 ? +currX1 : null))
+                    .attr("x2", x2 ? x2(d) : (currX2 ? +currX2 : null))
+                    .attr("y", y ? y(d) : (currY ? +currY : null))
+                    .attr("y1", y1 ? y1(d) : (currY1 ? +currY1 : null))
+                    .attr("y2", y2 ? y2(d) : (currY2 ? +currY2 : null));
+
+        }else{
+            element
+                .attr("x", x ? x(d) : (currX ? +currX : null))
+                .attr("x1", x1 ? x1(d) : (currX1 ? +currX1 : null))
+                .attr("x2", x2 ? x2(d) : (currX2 ? +currX2 : null))
+                .attr("y", y ? y(d) : (currY ? +currY : null))
+                .attr("y1", y1 ? y1(d) : (currY1 ? +currY1 : null))
+                .attr("y2", y2 ? y2(d) : (currY2 ? +currY2 : null));
+        }
+    })
+}
+
 export function oscillate(selection, options = {}) {
     const { interval = 20 } = options;
     let i = 0;
