@@ -29,9 +29,6 @@ leave links turned off whilst...
         whose src is in the aim, so it starts from same x value but y is the bottom or top of the aim, vertically down or up from goal centre
         For targ links, change x2, y2. OR use trig to calc the distance to edge based on theta
 
-        - planet name form should appear after the transiotn not before, so need a transition with delay on name form too
-        (could use d3 in useEffect in NameForm)
-
     COMPLETION
 
      - improve mock comp data function so more flexible
@@ -141,6 +138,7 @@ export default function journeyComponent() {
     let selected;
     let editing;
     let preEditZoom;
+    let zoomViewLevel;
 
     let createAim = function(){};
     let updateAim = function(){};
@@ -330,6 +328,10 @@ export default function journeyComponent() {
             //helpers
             const { trueX, pointChannel } = channelsData;
 
+            //zoomViewLevel
+            const newZoomViewLevel = zoomLevel(currentZoom.k);
+            if(newZoomViewLevel !== zoomViewLevel){ zoomViewLevel = newZoomViewLevel; }
+
             //data
             updatePlanetsData();
             updateAimsData();
@@ -388,9 +390,8 @@ export default function journeyComponent() {
 
             function updateAims(){
                 //helper
-                const getView = (zoomK) => {
-                    const viewZoomLevel = zoomLevel(zoomK);
-                    switch(viewZoomLevel){
+                const getView = () => {
+                    switch(zoomViewLevel){
                         case -1:{ return { name: true }; }
                         case 0:{ return { name: true, goals:{}} }
                         case 1 :{ return { name: true, goals: { details: true }} }
@@ -399,7 +400,7 @@ export default function journeyComponent() {
                 }
     
                 aims
-                    .view(getView(currentZoom.k))
+                    .view(getView())
                     .selected(selected)
                     .selectedMeasure(measuresOpen?.find(m => m.id === measuresBar.selected()))
                     .contentsToShow(aim => modalData?.d.id === aim.id ? "none" : "basic")

@@ -120,15 +120,22 @@ export default function aimsComponent() {
                         const controlledContentsG = aimG.append("g").attr("class", "controlled-contents");
                         const dragHandlesG = aimG.append("g").attr("class", "drag-handles")
 
+                        //@todo - transition this out, so links reappear in aim at same time as planets
                         controlledContentsG
                             .append("rect")
-                                .attr("class", "bg")
+                                .attr("class", "solid-bg bg")
+                                .attr("rx", 15)
+                                .attr("display", d.id === "main" ? "none" : null)
+
+                        controlledContentsG
+                            .append("rect")
+                                .attr("class", "semi-transparent-bg bg")
                                 .attr("rx", 15)
                                 .attr("stroke", "none")
                                 .attr("display", d.id === "main" ? "none" : null)
-                                .attr("fill", d.colour || "transparent")
                                 //.attr("pointer-events", d.id === "main" ? "none" : "all")
                                 .attr("fill-opacity", 0.15);
+
                         
                         //components        
                         planets[d.id] = planetsComponent();
@@ -152,6 +159,12 @@ export default function aimsComponent() {
                         controlledContentsG.selectAll("rect.bg")
                             .attr("width", d.displayWidth)
                             .attr("height", d.height);
+                        
+                        controlledContentsG.select("rect.semi-transparent-bg")
+                            .attr("fill", d.colour || "transparent")
+                        
+                        controlledContentsG.select("rect.solid-bg")
+                            .attr("fill", view.goals ? "none" : COLOURS.canvas);
                             
                         //name
                         const nameCentred = !view.goals && d.id !== "main";
@@ -295,7 +308,7 @@ export default function aimsComponent() {
                             d3.select(this).select("g.controlled-contents")
                                 .attr("transform", "translate(" + (aim.displayX) +"," + aim.y +")");
 
-                            d3.select(this).select("g.controlled-contents").select("rect")
+                            d3.select(this).select("g.controlled-contents").selectAll("rect.bg")
                                 .attr("width", aim.displayWidth)
                                 .attr("height", aim.height);
 
@@ -465,7 +478,7 @@ export default function aimsComponent() {
             onDragStart.call(this, e, d)
         }
         function dragged(e , d){
-            //rect
+            //controlled components
             d.displayX += e.dx;
             d.y += e.dy;
             d3.select(this).attr("transform", "translate(" + d.displayX +"," + d.y +")")
