@@ -1,4 +1,5 @@
-import React, {useState} from 'react'
+import React, { useEffect, useState, useRef } from 'react'
+import * as d3 from 'd3';
 import Card from '@material-ui/core/Card'
 import CardActions from '@material-ui/core/CardActions'
 import CardContent from '@material-ui/core/CardContent'
@@ -58,8 +59,19 @@ export default function NameForm({ data, onUpdate, onClose }) {
         }
     }
 
+    const containerRef = useRef(null);
+    useEffect(() => {
+        d3.select(containerRef.current)
+            .style("opacity", 0)
+                .transition()
+                    .delay(100)
+                    .duration(200)
+                    .style("opacity", 1)
+
+    }, [])
+
     return (
-        <Card className={classes.card} key={aim?.id || planet?.id}>
+        <Card className={classes.card} key={aim?.id || planet?.id} ref={containerRef}>
             <CardContent className={classes.cardContent}>
             <TextField
                 type="submit"

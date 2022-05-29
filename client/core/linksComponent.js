@@ -55,7 +55,7 @@ export default function linksComponent() {
                     .attr("class", "link")
                     .attr("id", d => "link-"+d.id)
                     .attr("opacity", 1)
-                    .each(function(d,i){)
+                    .each(function(d,i){
                         const linkG = d3.select(this);
                         //ENTER
                         //line

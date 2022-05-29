@@ -25,14 +25,12 @@ import openedLinkComponent from './openedLinkComponent';
 /*
 leave links turned off whilst...
     AIMS
-        - links dont transition on aim drag
-
         - hide links into closed aims once they reach the edge of the aim - just change the start point (x1,y1) of all links
         whose src is in the aim, so it starts from same x value but y is the bottom or top of the aim, vertically down or up from goal centre
         For targ links, change x2, y2. OR use trig to calc the distance to edge based on theta
 
         - planet name form should appear after the transiotn not before, so need a transition with delay on name form too
-        (could use d3 in useEffcet in NameForm)
+        (could use d3 in useEffect in NameForm)
 
     COMPLETION
 
