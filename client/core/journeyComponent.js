@@ -23,29 +23,41 @@ import { timeMonth, timeWeek } from "d3-time";
 import openedLinkComponent from './openedLinkComponent';
 
 /*
-leave links turned off whilst...
-    AIMS
-        - hide links into closed aims once they reach the edge of the aim - just change the start point (x1,y1) of all links
-        whose src is in the aim, so it starts from same x value but y is the bottom or top of the aim, vertically down or up from goal centre
-        For targ links, change x2, y2. OR use trig to calc the distance to edge based on theta
+    *** = needed for Brian to test the basic design of a canvas (no measures, just planets, aims, and links)
+    ** = needed for Brian to test assignment of measures and targs meaningfully (ie user sees targets in nice visuals) (but not hooked up to dataset measures)
+    * = needed to 
+
+
+    PRIORITY BUGS/ISSUES
+    - ***change shaope of planet ring into donut that sits on top of planet so user can drag slightly inside a planet too
+
+     - context menu clicks sometimes stop working - may be to do with fact browser has got smaller.
+    everything has reduced in scale, so breakpoints no longer work as expected. There is an attr to add
+    to teh html tag for this i think. need to llok at previous versions of switchplay/playergains
+
+    PERSISTENCE
+     - *** api to save a canvas/aims/planets (with a parents array for when it is target of a link / or do we need link for something?)
+     - ***persist to mongodb server/database
+     - stop planet and link transitions when loading an existing canvas
+
+    MEASURES AND DATAPOINTS
+     - adding datapoints from the canvas -> by dragging bars?
+     -importing datasets to use their measures
+
+    
 
     COMPLETION
-
      - improve mock comp data function so more flexible
     - planet and aim completion animations (see paper working)
     - show the animation and cmpletion for only 1 measure when 1 measure is selected
 
-    PERSISTENCE
-     - api
-     - database
-     - stop planet and link transitions when loading an existing canvas
-
-    IMPORTING MEASURES
+    
 
     OTHER DATA VIEWS (see sketches)
      - carousel with left/right arrows
 
     TOUCH/IPAD/SAFARI
+    - replace dragOver (using mouseover) of ellipse with pointIsInEllipse which uses equation of ellipse
 
     - ipad testing
 
@@ -78,9 +90,6 @@ leave links turned off whilst...
      - aim flashes on resize sometimes
      - zoom out aim, planets slide a little before disappearing, so not in sync with aim name disappearing
      - make some links in aims. drag planets around - sometimes teh links refuse to update - seems t be when src-targ flips, or when we have circular refs
-      - when dragging aims, need to smoothly transition positions of aim and planets
-     when dragging from a ring, the targ candidate ring should stay lit up even when planet is hovered (not just when ring is hovered)
-      - need to move libnk into side of aim when turning a goal with a link into an aim (or vice versa)
       - show aim Nameform when converting it from planet if it is unnamed perhaps
       - if not allowing links to be created from aims, then replace the drag handle corners with just a boundary all the way around each aim
     */

@@ -108,7 +108,7 @@ export default function planetsComponent() {
         const { transitionEnter=true, transitionUpdate=true } = options;
         // expression elements
         selection.each(function (data) {
-            //console.log("planets..........", data)
+            // console.log("planets..........", data)
             //plan - dont update dom twice for name form
             //or have a transitionInProgress flag
             containerG = d3.select(this);
@@ -259,6 +259,7 @@ export default function planetsComponent() {
                         .ry(d => d.ringRy(height))
                         .fill((d, hovered) => hovered ? COLOURS.potentialLinkPlanet : "transparent")
                         .stroke("none")
+                        .opacity(planetOpacity.normal)
                         .onDragStart(onRingDragStart)
                         .onDrag(onRingDrag)
                         .onDragEnd(onRingDragEnd)
@@ -397,6 +398,27 @@ export default function planetsComponent() {
                 const nearestPlanet = findNearestPlanet(e, availablePlanets);
                 //console.log("near", nearestPlanet)
                 const linkPlanet = distanceBetweenPoints(e, nearestPlanet) <= LINK_THRESHOLD ? nearestPlanet : undefined;
+                //change fill to same as planetRing
+                //@todo - consider using temp clasnames to update dom for highlighting like this eg...
+                //d3.selectAll("g.link-planet").classed("link-planet", false);
+                //d3.select("g.planet-"+linkPlanet.id).classed("link-planet", true);
+                const prevLinkPlanet = linkPlanets[1];
+                if(prevLinkPlanet?.id !== linkPlanet?.id){
+                    //remove prev highlighting
+                    if(prevLinkPlanet){
+                        d3.select("g.planet-"+prevLinkPlanet.id).select("ellipse.core")
+                            .transition()
+                            .duration(200)
+                                .attr("fill", colours.planet)
+                    }
+                    //add new highlighting
+                    if(linkPlanet){
+                        d3.select("g.planet-"+linkPlanet.id).select("ellipse.core")
+                            .transition()
+                            .duration(200)
+                                .attr("fill", COLOURS.potentialLinkPlanet)
+                    }
+                }
                 //const { x, y, ...rest } = linkPlanet
                 //console.log("linkPlanet", linkPlanet)
                 linkPlanets = linkPlanet ? [d, linkPlanet] : [d];
@@ -415,8 +437,14 @@ export default function planetsComponent() {
                 //set x2, y2 to centre of nearest planet
                 //...\
                 if(linkPlanets.length === 2){
+                    //clean up
+                    d3.select("g.planet-"+linkPlanets[1].id).select("ellipse.core")
+                        .transition()
+                        .duration(200)
+                            .attr("fill", colours.planet)
+
+                    //save new link
                     const sortedLinks = linkPlanets.sort((a, b) => d3.ascending(a.x, b.x))
-                    //save link
                     onAddLink({ src:sortedLinks[0].id, targ:sortedLinks[1].id })
                 }
             }
