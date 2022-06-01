@@ -13,16 +13,25 @@ import MeasureForm from "./form/MeasureForm";
 import TargetForm from './form/TargetForm';
 import Form from "./form/Form";
 import ImportMeasures from './ImportMeasures';
-import { DIMNS } from './constants';
+import { DIMNS, FONTSIZES } from './constants';
 import EditMeasureFields from './form/EditMeasureFields';
-import { ColorizeRounded } from '@material-ui/icons';
 
 const useStyles = makeStyles((theme) => ({
   root: {
-    position:"relative"
+    position:"relative",
+    marginLeft:DIMNS.journey.margin.left, 
+    marginRight:DIMNS.journey.margin.right,
+    marginTop:DIMNS.journey.margin.top, 
+    marginBottom:DIMNS.journey.margin.bottom
   },
   svg:{
     //position:"absolute"
+  },
+  btn:{
+    width:DIMNS.ctrls.btnWidth,
+    height:DIMNS.ctrls.btnHeight,
+    marginRight:"5px",
+    fontSize:FONTSIZES.ctrls.btn,
   },
   modal:{
       position:"absolute",
@@ -69,7 +78,7 @@ const mockMeasures = [
     { id:"mock3", name:"Drive 2", desc: "nr D2s to Fairway" }
 ]
 
-const Journey = ({dimns}) => {
+const Journey = ({ screenSize, width, height }) => {
   const [journey, setJourney] = useState(undefined)
   //@todo - put into one state object to avoid multiple updates
   const [canvas, setCanvas] = useState({});
@@ -88,7 +97,8 @@ const Journey = ({dimns}) => {
   // console.log("links", links)
   // console.log("modalData", modalData)
 
-  const { screenWidth, screenHeight } = dimns;
+  const journeyWidth = width - DIMNS.journey.margin.left - DIMNS.journey.margin.right
+  const journeyHeight = height - DIMNS.journey.margin.top - DIMNS.journey.margin.bottom;
   let styleProps = {}
 
   if(modalData) {
@@ -97,28 +107,33 @@ const Journey = ({dimns}) => {
 
       if(nameOnly || nameAndTargOnly){
             //could be aim or planet, but use planet width and height as a guide for both
-            //@todo - have more rigorous dimns 
+            //@todo - have more rigorous dimns
             const { width, height } = DIMNS.form.single;
+            const goalNameX = d => d.x - width/2;
+            const goalNameY = d => d.y - height/2;
+            const aimNameX = d => d.displayX + DIMNS.aim.name.margin.left;
+            const aimNameY = d => d.y + DIMNS.aim.name.margin.top;
+
             styleProps = {
                 modal:{
                   width,
                   height,
                   //@todo - sort this out...for now, planet has x whereas aim has displayX
-                  left:(d.dataType === "planet" ? d.x - width/2 : (d.id === "main" ? d.displayX + 35: d.displayX)) + "px",
-                  top:(d.dataType === "planet" ? d.y - height/2 : (d.id === "main" ? d.y + 10 : d.y)) + "px",
+                  left:(d.dataType === "planet" ? goalNameX(d) : (d.id === "main" ? 20: aimNameX(d))) + "px",
+                  top:(d.dataType === "planet" ? goalNameY(d) : (d.id === "main" ? 15 : aimNameY(d))) + "px",
                   targTop:"20px"
                 }
             }
       }else{
             //full form
-            const width = d3.min([screenWidth * 0.725, 500]); 
-            const height = d3.min([screenHeight * 0.725, 700]);
+            const width = d3.min([journeyWidth * 0.725, 500]); 
+            const height = d3.min([journeyHeight * 0.725, 700]);
             styleProps = {
                 modal:{
                   width,
                   height,
-                  left:((screenWidth - width) / 2) + "px",
-                  top:((screenHeight - height) / 2) +"px",
+                  left:((journeyWidth - width) / 2) + "px",
+                  top:((journeyHeight - height) / 2) +"px",
                 }
             }
       }
@@ -139,15 +154,15 @@ const Journey = ({dimns}) => {
   //})
 
   useEffect(() => {
-    const width = d3.min([screenWidth * 0.725, 500]);
-    const height = d3.min([screenHeight * 0.725, 700]);
+    const width = d3.min([journeyWidth * 0.725, 500]);
+    const height = d3.min([journeyHeight * 0.725, 700]);
     modalDimnsRef.current = { 
       width,
       height,
-      left:((screenWidth - width) / 2) + "px",
-      top:((screenHeight - height) / 2) + "px"
+      left:((journeyWidth - width) / 2) + "px",
+      top:((journeyHeight - height) / 2) + "px"
     }
-  }, [screenWidth, screenHeight])
+  }, [journeyWidth, journeyHeight])
 
   //init
   useEffect(() => {
@@ -167,6 +182,9 @@ const Journey = ({dimns}) => {
     }
 
     journey
+        .width(journeyWidth)
+        .height(journeyHeight)
+        .screenSize(screenSize)
         .withCompletionPaths(withCompletionPaths)
         .measuresOpen(measuresBarIsOpen ? measures.filter(m => m.isOpen) : undefined)
         .modalData(modalData)
@@ -258,15 +276,10 @@ const Journey = ({dimns}) => {
         })
 
     d3.select(containerRef.current)
-      ////.datum(data)
       .datum({ canvas, aims, planets, links, channels, measures })
-      .call(journey
-        ////.margin({left: screenWidth * 0.1, right: screenWidth * 0.1, top: screenHeight * 0.1, bottom:40})
-        .width(screenWidth - 20)
-        .height(screenHeight - 35))
-        ////.onSetOpenPlanet(setOpenPlanet))
+      .call(journey)
 
-  }, [journey, canvas, aims, planets, links, withCompletionPaths, measures, measuresBarIsOpen, modalData ])
+  }, [journey, canvas, aims, planets, links, withCompletionPaths, measures, measuresBarIsOpen, modalData, width, height ])
 
   /*
   //todo - consider this approach of separate useEffects
@@ -280,10 +293,6 @@ const Journey = ({dimns}) => {
 
   }, [modalData])
   */
-
-
-
-
 
   const toggleCompletion = () => {
       setWithCompletionPath(prevState => !prevState)
@@ -371,11 +380,11 @@ const Journey = ({dimns}) => {
   }
 
   return (
-    <div className={classes.root} style={{height: screenHeight, marginTop:10, marginLeft:10 }}>
+    <div className={classes.root}>
         <svg className={classes.svg} ref={containerRef}></svg>
         <div className={classes.ctrls}>
-            <Button color="primary" variant="contained" onClick={toggleMeasuresOpen} style={{ width:50, height:10, fontSize:7, marginRight:"5px" }}>measures</Button>
-            <Button color="primary" variant="contained" onClick={toggleCompletion} style={{ width:50, height:10, fontSize:7 }}>completion</Button>
+            <Button className={classes.btn} color="primary" variant="contained" onClick={toggleMeasuresOpen} >measures</Button>
+            <Button className={classes.btn} color="primary" variant="contained" onClick={toggleCompletion} >completion</Button>
         </div>
         {modalData && 
           <div ref={modalRef} className={classes.modal}>

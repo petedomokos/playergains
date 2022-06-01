@@ -16,7 +16,7 @@ import { updatePos } from "./domHelpers"
 //import { COLOURS, DIMNS } from "./constants";
 import { addMonths, addWeeks } from "../util/TimeHelpers"
 import { ellipse } from "./ellipse";
-import { grey10, zoomLevel, DEFAULT_D3_TICK_SIZE, COLOURS, DIMNS, PLANET_RING_MULTIPLIER } from "./constants";
+import { grey10, zoomLevel, DEFAULT_D3_TICK_SIZE, COLOURS, FONTSIZES, DIMNS, PLANET_RING_MULTIPLIER } from "./constants";
 import { pointIsInRect, findNearestPlanet, distanceBetweenPoints, channelContainsPoint, channelContainsDate } from './geometryHelpers';
 import dragEnhancements from './enhancedDragHandler';
 import { timeMonth, timeWeek } from "d3-time";
@@ -26,19 +26,30 @@ import openedLinkComponent from './openedLinkComponent';
     *** = needed for Brian to test the basic design of a canvas (no measures, just planets, aims, and links)
     ** = needed for Brian to test assignment of measures and targs meaningfully (ie user sees targets in nice visuals) (but not hooked up to dataset measures)
     * = needed to 
-
+    
+    DOING NOW/NEXT
 
     PRIORITY BUGS/ISSUES
-    - ***change shaope of planet ring into donut that sits on top of planet so user can drag slightly inside a planet too
-
-     - context menu clicks sometimes stop working - may be to do with fact browser has got smaller.
+    - planet outer-core stays dark sometimes
+    - after creating link, a planet that is in aim doesnt get aim colour back until next update
+    (this may also be true for planets that are not in an aim)
+     - make planets with no measures a slightly different appearance (so they can act as milestones)
+     - sort sizes out - browser has got smaller.
     everything has reduced in scale, so breakpoints no longer work as expected. There is an attr to add
-    to teh html tag for this i think. need to llok at previous versions of switchplay/playergains
+    to html tag for this i think. need to look at previous versions of switchplay/playergains
+    - context menu clicks sometimes stop working - may be to do with the above
 
     PERSISTENCE
      - *** api to save a canvas/aims/planets (with a parents array for when it is target of a link / or do we need link for something?)
      - ***persist to mongodb server/database
-     - stop planet and link transitions when loading an existing canvas
+
+    DEPLOY
+     - chase up azure ppl
+     - decide azure or heroku or netlify?
+
+    MILESTONE: BRIAN NOW ABLE TO TEST CANVAS DESIGN 
+    (aims, goals, links, measure creation, targets, NOT datapoints or imported measures)
+    ----------------------------------------------
 
     MEASURES AND DATAPOINTS
      - adding datapoints from the canvas -> by dragging bars?
@@ -79,6 +90,7 @@ import openedLinkComponent from './openedLinkComponent';
         goals not displayed, just aim title displayed?)
 
     BACKLOG:
+    - consider stopping planet and link transitions when loading an existing canvas
      - planet ellipse core-inner solid-bg shows thorugh arounfd teh edge of the one on top
       - when zooming out a lot, can no longer see planet behind it's name form
      - make planet disappear first when converting to aim
@@ -105,10 +117,9 @@ export default function journeyComponent() {
     let planetMargin = {left:5, right:5, top: 5, bottom:5};
     let width = 4000;
     let height = 2600;
+    let screenSize = "l";
     let contentsWidth;
     let contentsHeight;
-
-    let xAxisHeight = 30;
 
     //canvas will be a lot bigger than the contentsWidth and contentsHeight
     // of svg container, and can be panned/zoomed
@@ -122,7 +133,7 @@ export default function journeyComponent() {
         contentsWidth = width - margin.left - margin.right;
         contentsHeight = height - margin.top - margin.bottom;
         canvasWidth = contentsWidth;// * 5;
-        measuresBarHeight = measuresOpen ? 70 : 0
+        measuresBarHeight = measuresOpen ? DIMNS.measures.height : 0
         //note- for some reason, reducing canvasHeight doesnt seem to move axis properly, so instead just subtract measuresBarHeight for axis translateY
         canvasHeight = contentsHeight;// - measuresBarHeight; //this should be lrge enough for all planets, and rest can be accesed via pan
     };
@@ -175,7 +186,6 @@ export default function journeyComponent() {
     let contentsG;
     let axesG;
     let canvasG;
-    let canvasRect;
 
     let state;
 
@@ -264,7 +274,7 @@ export default function journeyComponent() {
 
             //note- for some reason, reducing canvasHeight doesnt seem to move teh xis properly, so instead just subtract measuresBarHeight
             axesG
-                .attr("transform", "translate(0," +(contentsHeight-xAxisHeight - measuresBarHeight) +")")
+                .attr("transform", "translate(0," +(contentsHeight - DIMNS.xAxis.height - measuresBarHeight) +")")
                 .datum(axesData)
                 .call(axes);
 
@@ -420,12 +430,18 @@ export default function journeyComponent() {
                     .channelsData(channelsData)
                     .linksData(linksData)
                     .nameSettings(d => ({
-                        fontSize: d.id === "main" ? 7 : k * 7, 
-                        width: d.id === "main" ? 100 : k * 60, 
-                        height: d.id === "main" ? 25 : k * 15,
-                        margin: d.id === "main" ? { left: 35, right: 0, top: 15, bottom: 0 } : { left: 0, right: 0, top: 0, bottom: 0 }
+                        fontSize: d.id === "main" ? FONTSIZES.mainAim.name : k * FONTSIZES.aim.name, 
+                        width: d.id === "main" ? DIMNS.mainAim.name.width : k * DIMNS.aim.name.width, 
+                        height: d.id === "main" ? DIMNS.mainAim.name.height : k * DIMNS.aim.name.height,
+                        margin: d.id === "main" ? 
+                            { 
+                                ...DIMNS.mainAim.name.margin,
+                                //shift left to avoid burger menu when smaller screen
+                                left:["s", "m"].includes(screenSize) ? 35 : DIMNS.mainAim.name.margin.left } 
+                            : 
+                            DIMNS.aim.name.margin
                     }))
-                    .planetFontSize(k * 6.5)
+                    .planetFontSize(k * FONTSIZES.planet.name)
                     .onDeleteAim((aimId) => {
                         selected = undefined;
                         editing = undefined;
@@ -763,92 +779,14 @@ export default function journeyComponent() {
 
             canvasG = contentsG.append("g").attr("class", "canvas");
 
-            canvasRect = canvasG 
+            //canvas rect
+            canvasG 
                 .append("rect")
                     .attr("width", canvasWidth)
                     .attr("height", canvasHeight * 5)
                     .attr("fill", COLOURS?.canvas || "#FAEBD7");
 
             axesG = contentsG.append("g").attr("class", "axes");
-
-            //temp
-            /*
-            const defs = svg.append("defs")
-
-            const mask = defs.append("mask")
-                .attr("id", "goal-mask")
-
-            //as fill is black, it does fully hide the middle.
-            //however, masks hide the entire object by default,
-            //so teh rest of the circle is also hidden.
-            //so we need another circle which is filled white to fully reveal the rest of it
-            mask
-                .append("circle")
-                    .attr("cx", 100)
-                    .attr("cy", 100)
-                    .attr("r", 50)
-                    .attr("fill", "white")
-            
-            mask
-                .append("circle")
-                    .attr("cx", 100)
-                    .attr("cy", 100)
-                    .attr("r", 25)
-                    .attr("fill", "black")
-                    .attr("pointer-events", "none")
-
-            svg
-                .append("circle")
-                    .attr("cx", 100)
-                    .attr("cy", 100)
-                    .attr("r", 25)
-                    .attr("fill", "blue")
-                    .on("click", () => { console.log("bottom circ clicked"); })
-            
-            svg
-                .append("circle")
-                    .attr("cx", 100)
-                    .attr("cy", 100)
-                    .attr("r", 50)
-                    .attr("fill", "red")
-                    .attr("mask", "url(#goal-mask)")
-                    .on("click", () => { console.log("top circ clicked"); })
-                    //opts - 1 - lesn how to pass bubble an event up, or just to propagate to the one behind
-                    //2 - just handle the click/drag entirely on pplanetRing, and if its inside the mask then
-                    //its a planetDrag not a ringDrag. But need to use eqn of ellipse to determine this.
-                    // 3 - just use a path to create the ring, so no need to use masks
-                    //4 - ?
-                    //.attr("mask", "#goal-mask")
-
-            function getD(cx, cy, rx, ry, requiresInner) {
-                console.log("getD", requiresInner)
-                var kappa=0.5522847498;
-                var ox = rx * kappa; // x offset for the control point
-                var oy = ry * kappa; // y offset for the control point 
-                let d = `M${cx - rx},${cy}`;
-                    d+= `C${cx - rx}, ${cy - oy}, ${cx - ox}, ${cy - ry}, ${cx}, ${cy - ry},`
-                    d+= `C${cx + ox}, ${cy - ry}, ${cx + rx}, ${cy - oy}, ${cx + rx}, ${cy},`
-                    d+= `C${cx + rx}, ${cy + oy}, ${cx + ox}, ${cy + ry}, ${cx}, ${cy + ry},`
-                    d+= `C${cx - ox}, ${cy + ry}, ${cx - rx}, ${cy + oy}, ${cx - rx}, ${cy},`
-                    if(requiresInner){
-                        d+= "m10,0"
-                        //innerD will attach the z
-                        const innerD = getD(cx, cy, rx - 10, ry - 10, false);
-                        d += innerD;
-                    }else{
-                        d+= `z`;
-                    }
-
-                console.log("d", d)
-                return d;
-            }
-            const ellipseG = svg.append("g").attr("transform", "translate(300, 300)")
-            ellipseG.append("path")
-                .attr("stroke", "blue")
-                .attr("fill", "none")
-                .attr("d", getD(0, 0, 30, 20, true))
-
-            */
         }
 
         updateSelected = (d) => {
@@ -1020,6 +958,11 @@ export default function journeyComponent() {
     journey.height = function (value) {
         if (!arguments.length) { return height; }
         height = value;
+        return journey;
+    };
+    journey.screenSize = function (value) {
+        if (!arguments.length) { return screenSize; }
+        screenSize = value;
         return journey;
     };
     journey.selected = function (goalId, selectOnNextUpdate = true) {

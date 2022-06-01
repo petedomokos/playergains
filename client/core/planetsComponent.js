@@ -53,7 +53,7 @@ export default function planetsComponent() {
         available: 0.3,
         //unavailable: 0.2
     }
-    const availablePlanetSizeMultiplier = 1.3;
+    const availablePlanetSizeMultiplier = 1.5;
 
     //API FUNCTIONS
     let showAvailabilityStatus = function() {};

@@ -1,6 +1,6 @@
 import * as d3 from 'd3';
 //import "d3-selection-multi";
-import { grey10, COLOURS, DIMNS } from "./constants";
+import { grey10, COLOURS, DIMNS, FONTSIZES } from "./constants";
 import { getTransformation } from './helpers';
 import dragEnhancements from './enhancedDragHandler';
 /*
@@ -15,21 +15,21 @@ export default function measureProfileComponent() {
     let contentsWidth;
     let contentsHeight;
 
-    let textMargin = { left: 2.5, right: 2.5, top: 0, bottom: 0 };
+    let textMargin = DIMNS.measure.text.margin;
     let textContentsWidth;
     let textContentsHeight;
 
-    const nameHeight = 20;
+    const nameHeight = DIMNS.measure.name.height;
     const descAndTargetsHeight = contentsHeight - nameHeight;
-    const targsHeight = d3.max([10, descAndTargetsHeight * 0.3])
+    const targsHeight = d3.max([descAndTargetsHeight * 0.3, DIMNS.measure.targs.minHeight])
     let descHeight;
 
     function updateDimns(){
         margin = customMargin || { 
-            left: d3.min([width * 0.05, 10]),
-            right: d3.min([width * 0.05, 10]),
-            top: d3.min([height * 0.05, 10]),
-            bottom: d3.min([height * 0.05, 10])
+            left: d3.min([width * 0.05, DIMNS.measure.maxMargin.left]),
+            right: d3.min([width * 0.05, DIMNS.measure.maxMargin.right]),
+            top: d3.min([height * 0.05, DIMNS.measure.maxMargin.top]),
+            bottom: d3.min([height * 0.05, DIMNS.measure.maxMargin.bottom])
         }
         contentsWidth = width - margin.left - margin.right;
         contentsHeight = height - margin.top - margin.bottom;
@@ -174,21 +174,21 @@ export default function measureProfileComponent() {
             .append("text")
                 .attr("text-anchor", "middle")
                 .attr("dominant-baseline", "central")
-                .attr("font-size", 7);
+                .attr("font-size", FONTSIZES.measure.name);
 
         descG = textContentsG.append("g").attr("class", "desc");
         descText = descG
             .append("text")
                 .attr("text-anchor", "start")
                 .attr("dominant-baseline", "hanging")
-                .attr("font-size", 5);
+                .attr("font-size", FONTSIZES.measure.desc);
 
         targsG = textContentsG.append("g").attr("class", "targs");
         targsText = targsG
             .append("text")
                 .attr("text-anchor", "middle")
                 .attr("dominant-baseline", "central")
-                .attr("font-size", 5);
+                .attr("font-size", FONTSIZES.measure.targs);
 
         contentsG.selectAll("g").style("pointer-events", "none")
 

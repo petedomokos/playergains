@@ -27,31 +27,28 @@ const MainRouter = ({userId, loadUser, loadingUser}) => {
   //trigger re-render once loaded
   const jwt = auth.isAuthenticated();
 
-  const [screenSize, setScreenSize] = useState("m");
+  //480 - portrait phone, 768 - tablets,992 - laptop, 1200 - desktop or large laptop
+  const calcScreenSize = width => width <= 480 ? "s" : width <= 768 ? "m" : "l";
+
+  const [screen, setScreen] = useState({ 
+      width: window.innerWidth,
+      height:window.innerHeight,
+      size:calcScreenSize(window.innerWidth)
+  });
   useEffect(() => {
       if(jwt && !userId && !loadingUser){
         loadUser(jwt.user._id)
       }
-      //menu
-      //console.log("iw", window.innerWidth)
-      //576 - portrait phone, 768 - tablets,992 - laptop, 1200 - desktop or large laptop
-      const newScreenSize = window.innerWidth <= 576 ? "s" : window.innerWidth <= 768 ? "m" : "l";
-      if(newScreenSize !== screenSize){ 
-          setScreenSize(newScreenSize)
-      }
   });
-  //@todo - use dispatch/store instead
+
   useEffect(() => {
-    const handleResize = () => {
-        const newScreenSize = window.innerWidth <= 576 ? "s" : window.innerWidth <= 768 ? "m" : "l";
-        if(newScreenSize !== screenSize){ 
-            setScreenSize(newScreenSize)
-        }
-    };
-    window.addEventListener("resize", handleResize);
-    return () => {
-      window.removeEventListener("resize", handleResize);
-    };
+      const handleResize = () => {
+        setScreen({ width: window.innerWidth, height: window.innerHeight, size: calcScreenSize(window.innerWidth) })
+      };
+      window.addEventListener("resize", handleResize);
+      return () => {
+          window.removeEventListener("resize", handleResize);
+      };
   }, []);
   
  //we dont use?: because we if there is a loading delay for User, we dont want display to revert to NonUserHome 
@@ -59,9 +56,9 @@ const MainRouter = ({userId, loadUser, loadingUser}) => {
   return (
     <div>
       <div style={{background:"red", height:0.05}}></div>
-      <MenuContainer screenSize={screenSize} />
+      <MenuContainer screenSize={screen.size} />
       <div>
-          <Journey dimns={{screenWidth:window.innerWidth, screenHeight:window.innerHeight}}/>
+          <Journey screenSize={screen.size} width={screen.width} height={screen.height - 90} />
       </div>
       {(!jwt || userId) && <Switch>
           {jwt ?

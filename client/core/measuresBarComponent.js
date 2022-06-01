@@ -1,6 +1,6 @@
 import * as d3 from 'd3';
 //import "d3-selection-multi";
-import { grey10, COLOURS, DIMNS } from "./constants";
+import { grey10, COLOURS, DIMNS, FONTSIZES } from "./constants";
 import measureProfileComponent from "./measureProfileComponent";
 /*
 
@@ -14,25 +14,26 @@ export default function measuresBarComponent() {
     let contentsWidth;
     let contentsHeight;
 
-    const mainTitleWidth = 42;
-    const titleHeight = 20;
-    const btnWidth = 30;
-    const btnGap = 5;
-    const btnHeight = 10;
+    const titleWidth = DIMNS.measures.title.width;
+    const titleHeight = DIMNS.measures.title.height;
+    const btnWidth = DIMNS.measures.btn.width;
+    const btnHeight = DIMNS.measures.btn.height;
+    const btnGap = DIMNS.measures.btn.gap;
 
     let measuresHeight;
     //width constant
-    const measureWidth = 60;
+    const measureWidth = DIMNS.measure.width;
     //height varies
     let measureHeight;
+    const measureMargin = DIMNS.measure.margin;
 
 
     function updateDimns(){
         margin = customMargin || { 
-            left: d3.min([width * 0.05, 10]),
-            right: d3.min([width * 0.05, 10]),
-            top: d3.min([height * 0.05, 10]),
-            bottom: d3.min([height * 0.05, 10])
+            left: d3.min([width * 0.05, DIMNS.measures.maxMargin.left]),
+            right: d3.min([width * 0.05, DIMNS.measures.maxMargin.right]),
+            top: d3.min([height * 0.05, DIMNS.measures.maxMargin.top]),
+            bottom: d3.min([height * 0.05, DIMNS.measures.maxMargin.bottom])
         }
         contentsWidth = width - margin.left - margin.right;
         contentsHeight = height - margin.top - margin.bottom;
@@ -96,7 +97,7 @@ export default function measuresBarComponent() {
 
             titleG.attr("transform", "translate(0," +titleHeight/2 +")");
             titleText.text(title);
-            subtitleG.attr("transform", "translate(" +mainTitleWidth +",0)");
+            subtitleG.attr("transform", "translate(" +titleWidth +",0)");
             subtitleText.text(subtitle);
 
             //btns
@@ -133,7 +134,7 @@ export default function measuresBarComponent() {
                                 .bgSettings({ fill: d.isSelected ? COLOURS.selectedMeasure : COLOURS.measure })
                                 .width(measureWidth)
                                 .height(measureHeight)
-                                .margin({ left: 5, right: 5, top: 0, bottom: 0 })
+                                .margin(measureMargin)
                                 .onClick(function(e, d){
                                     dragged = undefined;
                                     clicked = d.id;
@@ -197,13 +198,13 @@ export default function measuresBarComponent() {
             titleText = titleG
                 .append("text")
                     .attr("class", "main")
-                    .attr("font-size", 10);
+                    .attr("font-size", FONTSIZES.measures.title);
             
             titleG.selectAll("text").attr("dominant-baseline", "text-bottom")
 
             subtitleText = subtitleG
                 .append("text")
-                    .attr("font-size", 5);
+                    .attr("font-size", FONTSIZES.measures.subtitle);
 
             //new btn
             newMeasureBtnG = contentsG

@@ -37,8 +37,8 @@ export default function planetsLayout(){
             //but we have already stored that
             const targetX = timeScale(p.targetDate) + axisRangeShift;
             //const targetX = timeScale(p.targetDate) + nrPrevOpenChannels * scaledExtWidth;
-            const rx = (contentsWidth) => currentZoom.k * contentsWidth * 0.8 / 2;
-            const ry = (contentsHeight) => currentZoom.k * contentsHeight * 0.8 / 2;
+            const rx = width => currentZoom.k * width * 0.8 / 2;
+            const ry = height => currentZoom.k * height * 0.8 / 2;
 
             //only coerce targ if it exists, as we dont want it to become NaN in that case or it will display
             const measures = p.measures.map(m => {
@@ -54,8 +54,8 @@ export default function planetsLayout(){
                 targetX,
                 rx,
                 ry,
-                ringRx:contentsWidth => rx(contentsWidth) * PLANET_RING_MULTIPLIER,
-                ringRy:contentsHeight => ry(contentsHeight) * PLANET_RING_MULTIPLIER,
+                ringRx:width => rx(width) * PLANET_RING_MULTIPLIER,
+                ringRy:height => ry(height) * PLANET_RING_MULTIPLIER,
                 isSelected:selected === p.id,
                 measures
             }

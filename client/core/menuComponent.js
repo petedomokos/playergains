@@ -23,9 +23,9 @@ export default function menuComponent() {
 
     let optWrapperWidth;
     let optDimns = {
-        width:40,
-        height:10,
-        spacing:0
+        width:50,
+        height:15,
+        spacing:5
     }
 
     let bg = {
@@ -40,7 +40,7 @@ export default function menuComponent() {
     let optText = {
         stroke: grey10(7),
         fill:grey10(7),
-        fontSize:6,
+        fontSize:10,
         strokeWidth:0.3
     }
 
