@@ -521,12 +521,11 @@ export default function journeyComponent() {
                         //}
                         //temp
                         state.planets = state.planets.map(p => { return p.id === d.id ? d : p });
-                        const newAimsData = myAimsLayout({ aims:state.aims, planets: state.planets });
-                        const newPlanetsData = newAimsData.map(a => a.planets).reduce((a, b) => [...a, ...b], []);
-                        myLinksLayout.planetsData(newPlanetsData);
-                        const newLinksData = myLinksLayout(state.links);
+                        //update aimsData, which also updates planetsData
+                        updateAimsData();
+                        updateLinksData(); //uses the new planetsData
                         canvasG.selectAll("g.links")
-                            .data([newLinksData])
+                            .data([linksData])
                             .join("g")
                             .attr("class", "links")
                             .call(links, { transitionUpdate: false }) //no transitions
