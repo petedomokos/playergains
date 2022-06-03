@@ -48,8 +48,7 @@ export default function aimsLayout(){
 
             return {
                 ...p,
-                aimId:p.aimId || "main",
-                //aimId:aimId(p),
+                aimId: p.aimId || "main",
                 channel,
                 displayDate:p.unaligned ? p.targetDate : channel.endDate,
                 x:p.unaligned ? targetX : channel.endX, //planets positioned on channel end line
@@ -61,7 +60,7 @@ export default function aimsLayout(){
                 ringRy:height => ry(height) * PLANET_RING_MULTIPLIER,
                 //isSelected:selected === p.id,
                 measures,
-                isMilestone:measures.length === 0 && linksData.find(l => l.targ === p.id)
+                isMilestone:measures.length === 0 && linksData.find(l => l.targ === p.id),
             }
         });
 

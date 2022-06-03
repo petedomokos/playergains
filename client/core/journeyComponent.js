@@ -27,10 +27,12 @@ import openedLinkComponent from './openedLinkComponent';
     * = needed to 
     
     DOING NOW/NEXT
-     - next 
+     - next - 
+     BUG - just fixed planet re-enter transition when resize brings it into an aim, usinhg transitionsOn setting.
+     BUT new bug - the aim now flickers again
 
     PRIORITY BUGS/ISSUES
-    - context menu clicks sometimes stop working - may be to do with the above
+    - context menu clicks sometimes stop working - may be to do with dimns of button?
 
     PERSISTENCE
      - *** api to save a canvas/aims/planets (with a parents array for when it is target of a link / or do we need link for something?)
@@ -83,6 +85,7 @@ import openedLinkComponent from './openedLinkComponent';
         goals not displayed, just aim title displayed?)
 
     BACKLOG:
+    - replace ref to planest wth goals everywhere
     - consider stopping planet and link transitions when loading an existing canvas
      - planet ellipse core-inner solid-bg shows thorugh arounfd teh edge of the one on top
       - when zooming out a lot, can no longer see planet behind it's name form
@@ -481,6 +484,8 @@ export default function journeyComponent() {
                         updatePlanets([ ...insidePlanetsToUpdate, ...outsidePlanetsToUpdate ]);
                     })
                     .onResizeDragEnd(function(e, aim, planetDs){
+                        //turn off transitions in the aim comp
+                        aims.transitionsOn(false);
                         //use the latest planetDs from dom, as the aim d.planets have not been updated
                         const planetsToUpdate = planetDs.map(p => ({ id:p.id, aimId:p.aimId }));
                         updatePlanets(planetsToUpdate);

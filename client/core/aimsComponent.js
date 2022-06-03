@@ -20,6 +20,7 @@ import nameComponent from "./nameComponent";
 */
 
 export default function aimsComponent() {
+    let transitionsOn = true;
     // dimensions
     let width = 800;
     let height = 600;
@@ -47,6 +48,7 @@ export default function aimsComponent() {
     let prevData = [];
     let linksData = [];
     let channelsData = [];
+    //helper
     //contents to show can be none, nameOnly, "basic", "all".
     let contentsToShow = aim => "basic";
     let goalContentsToShow = goal => "basic";
@@ -143,6 +145,8 @@ export default function aimsComponent() {
                     })
                     .merge(aimG)
                     .each(function(d){
+                        planets[d.id].transitionsOn(transitionsOn);
+
                         const aimG = d3.select(this);
                         const controlledContentsG = aimG.select("g.controlled-contents")
                             .attr("transform", "translate(" + (d.displayX) +"," + d.y +")")
@@ -415,6 +419,9 @@ export default function aimsComponent() {
                     });
 
             aimG.exit().remove();
+
+            //reset
+            transitionsOn = true;
 
             prevData = data;
         })
@@ -751,6 +758,11 @@ export default function aimsComponent() {
         }
         return aims;
     };
+    aims.transitionsOn = function (value) {
+        if (!arguments.length) { return transitionsOn; }
+        transitionsOn = value;
+        return aims;
+    }
     //functions
     aims.showAvailabilityStatus = function (goals, cb) {
         goals.forEach(g => { planets[g.aimId || "main"].showAvailabilityStatus(g, cb); });

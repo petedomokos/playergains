@@ -16,6 +16,7 @@ import menuComponent from './menuComponent';
 */
 export default function planetsComponent() {
     //API SETTINGS
+    let transitionsOn = true;
     // dimensions
     let width = DIMNS.planet.width;
     let height = DIMNS.planet.height;
@@ -108,7 +109,7 @@ export default function planetsComponent() {
         const { transitionEnter=true, transitionUpdate=true } = options;
         // expression elements
         selection.each(function (data) {
-            // console.log("planets..........", data)
+            console.log("planets..........", transitionsOn)
             //plan - dont update dom twice for name form
             //or have a transitionInProgress flag
             containerG = d3.select(this);
@@ -148,6 +149,7 @@ export default function planetsComponent() {
                 .attr("class", d => "planet planet-"+d.id)
                 .attr("id", d => "planet-"+d.id)
                 .each(function(d,i){
+                    //console.log("entering", d)
                     //ENTER
                     const contentsG = d3.select(this)
                         .append("g")
@@ -196,7 +198,7 @@ export default function planetsComponent() {
                 //occur when loading a pre-existing canvas. In that case, the first call below
                 //will have no effect because transitionEnter=false in the 2nd call
                 .call(transform, { x: d => adjX(timeScale(d.targetDate)), y:d => d.y })
-                .call(transform, { x: d => d.x, y:d => d.y }, transitionEnter)
+                .call(transform, { x: d => d.x, y:d => d.y }, transitionEnter && transitionsOn)
                 .merge(planetG)
                 .attr("opacity", 1)
                 .each(function(d){
@@ -528,6 +530,11 @@ export default function planetsComponent() {
         selectedMeasureIsInGoal = goal => selectedMeasure && goal.measures.find(m => m.id === selectedMeasure.id);
         return planets;
     };
+    planets.transitionsOn = function (value) {
+        if (!arguments.length) { return transitionsOn; }
+        transitionsOn = value;
+        return planets;
+    }
     planets.withRing = function (value) {
         if (!arguments.length) { return withRing; }
         withRing = value;
