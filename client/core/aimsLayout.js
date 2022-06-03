@@ -67,11 +67,11 @@ export default function aimsLayout(){
             const { startDate, endDate, startYPC, endYPC } = aim;
             const aimMargin = DIMNS.aim.margin;
 
-            const planets = planetsData.filter(p => p.aimId === aim.id);
+            const aimPlanets = planets.filter(p => p.aimId === aim.id);
             //for now, we can assume all planets same size, using dimns.planet.width for planet width
-            let planetRX = rx(DIMNS.planet.width) || 0;
-            const planetExtent = d3.extent(planets, p => p.x);
-            //console.log("ext", planetExtent)
+            let planetRX = rx(DIMNS.planet.width);
+            const planetExtent = d3.extent(aimPlanets, p => p.x);
+
             const planetBounds = [
                 planetExtent[0] - planetRX - DIMNS.aim.margin.left, 
                 planetExtent[1] + planetRX + DIMNS.aim.margin.right
@@ -88,7 +88,7 @@ export default function aimsLayout(){
             //console.log("displayWidth", displayWidth)
             return {
                 ...aim,
-                planets,
+                planets:aimPlanets,
                 actualX,
                 y,
                 width,
