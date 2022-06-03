@@ -230,7 +230,7 @@ export default function aimsComponent() {
                             .on("drag", function(e, resizeD) { resizeDragged.call(this.parentNode.parentNode, e, resizeD.loc, d); })
                             .on("end", function(e, resizeD) { resizeDragEnd.call(this.parentNode.parentNode, e, d); })
 
-                        const handleWidth = d3.min([d3.max([d.width * 0.1, d.height * 0.1, 12.5]), 25]);
+                        const handleWidth = d3.min([d3.max([d.width * 0.1, d.height * 0.1, 50]), 75]);
                         const handleHeight = handleWidth;
                         const resizeData = [
                             //{ x: 0, y: 0 },

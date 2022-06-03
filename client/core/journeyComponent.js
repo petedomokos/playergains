@@ -30,11 +30,6 @@ import openedLinkComponent from './openedLinkComponent';
      - next 
 
     PRIORITY BUGS/ISSUES
-     - get rid of extra call to aimsLayout
-     - make planets with no measures a slightly different appearance (so they can act as milestones)
-     - sort sizes out - browser has got smaller.
-    everything has reduced in scale, so breakpoints no longer work as expected. There is an attr to add
-    to html tag for this i think. need to look at previous versions of switchplay/playergains
     - context menu clicks sometimes stop working - may be to do with the above
 
     PERSISTENCE
@@ -98,7 +93,8 @@ import openedLinkComponent from './openedLinkComponent';
       //so journey.modalData(modalData, true) would be all we have to do here, instead of call the update again as we do below
      
     BUGS & ISSUES
-     - aim flashes on resize sometimes
+     - learn about the 'media' tag - do we need to specify it in teh html tag so sizes are consistent? Are sizes consistent atm on differnet devices/browsers?
+     //decide which devices and browsers to suppport - probably just chrome on all devices, including ipad
      - zoom out aim, planets slide a little before disappearing, so not in sync with aim name disappearing
      - make some links in aims. drag planets around - sometimes teh links refuse to update - seems t be when src-targ flips, or when we have circular refs
       - show aim Nameform when converting it from planet if it is unnamed perhaps
