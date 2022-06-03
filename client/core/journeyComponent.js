@@ -4,7 +4,6 @@ import "snapsvg-cjs";
 import channelsLayout from "./channelsLayout";
 import axesLayout from "./axesLayout";
 import linksLayout from "./linksLayout";
-import planetsLayout from "./planetsLayout";
 import aimsLayout from './aimsLayout';
 import axesComponent from "./axesComponent";
 import linksComponent from "./linksComponent";
@@ -28,6 +27,8 @@ import openedLinkComponent from './openedLinkComponent';
     * = needed to 
     
     DOING NOW/NEXT
+     - next 
+        - put goal in aim, drag it so it lands on a channel near the edge. aim should expand to contain it, but doesnt any more.
 
     PRIORITY BUGS/ISSUES
     - planet outer-core stays dark sometimes
@@ -145,7 +146,6 @@ export default function journeyComponent() {
     const myChannelsLayout = channelsLayout();
     const myAxesLayout = axesLayout();
     const myLinksLayout = linksLayout();
-    const myPlanetsLayout = planetsLayout();
     const myAimsLayout = aimsLayout();
 
     const axes = axesComponent();
@@ -201,8 +201,8 @@ export default function journeyComponent() {
 
     //data
     let channelsData;
-    let planetsData;
     let aimsData;
+    let planetsData; //note - this is just derived from aimsData merging all planets - will remove
     let linksData;
     let modalData;
 
@@ -353,7 +353,6 @@ export default function journeyComponent() {
             if(newZoomViewLevel !== zoomViewLevel){ zoomViewLevel = newZoomViewLevel; }
 
             //data
-            updatePlanetsData();
             updateAimsData();
             updateLinksData();
             //components
@@ -367,32 +366,20 @@ export default function journeyComponent() {
                 updateSelected(goal);
             }
 
-            function updatePlanetsData(){
-            //first check aimids dont need updating
-            //eg ....
-            //d3.selectAll("g.planet").call(aims.updateAimForGoals, aimsData)
-
-                myPlanetsLayout
-                    .selected(selected?.id)
+            function updateAimsData(){
+                //note - planetsLayout was also taking in .selected for siSelected n planets, but not needed
+                myAimsLayout
+                    .canvas(state.canvas)
+                    .canvasDimns({ width:canvasWidth, height: canvasHeight })
                     .currentZoom(currentZoom)
                     .timeScale(zoomedTimeScale)
                     .yScale(zoomedYScale)
                     .channelsData(channelsData);
-
-                planetsData = myPlanetsLayout(state.planets);
-            }
-
-            function updateAimsData(){
-                myAimsLayout
-                    .canvas(state.canvas)
-                    .planetsData(planetsData)
-                    .currentZoom(currentZoom)
-                    .timeScale(zoomedTimeScale)
-                    .yScale(zoomedYScale)
-                    .channelsData(channelsData)
-                    .canvasDimns({ width:canvasWidth, height: canvasHeight });
                 
-                aimsData = myAimsLayout([...state.aims])
+                aimsData = myAimsLayout({ aims:state.aims, planets:state.planets });
+                //temp - until we remove places that use it as a dependency
+                planetsData = aimsData.map(a => a.planets).reduce((a, b) => [...a, ...b], []);
+
             }
 
 
@@ -535,8 +522,10 @@ export default function journeyComponent() {
                             //warning - may interrupt drag handling with touch
                             //links layout needs updated planet position and targetDate
                         //}
+                        //temp
                         state.planets = state.planets.map(p => { return p.id === d.id ? d : p });
-                        const newPlanetsData = myPlanetsLayout(state.planets);
+                        const newAimsData = myAimsLayout({ aims:state.aims, planets: state.planets });
+                        const newPlanetsData = newAimsData.map(a => a.planets).reduce((a, b) => [...a, ...b], []);
                         myLinksLayout.planetsData(newPlanetsData);
                         const newLinksData = myLinksLayout(state.links);
                         canvasG.selectAll("g.links")

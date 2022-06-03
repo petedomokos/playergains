@@ -96,7 +96,7 @@ export default function planetsComponent() {
             { key: "edit", label:"Edit" },
             { key: "delete", label:"Delete" }
         ]
-        return d.aimId ? basicOpts : [ { key: "aim", label:"Make Aim" }, ...basicOpts ];
+        return d.aimId !== "main" ? basicOpts : [ { key: "aim", label:"Make Aim" }, ...basicOpts ];
          //put goals on planet, and only show it in bar chart when it is 
         //also on src planet. BUT it does mean we need to also put it on src. Could have a goals library, or just use the dataset library (1 goal per dataset for now)
     };
@@ -226,13 +226,13 @@ export default function planetsComponent() {
                     contentsG.select("ellipse.core-outer.visible")
                         //@todo - add transition to this opacity change
                         .attr("opacity", !selectedMeasure || selectedMeasureIsInGoal(d) ? planetOpacity.normal : planetOpacity.available)
-                        .attr("fill", colours.planet)
+                        .attr("fill", d.fill)
                         .call(outerPlanetDrag);
 
                     contentsG.select("ellipse.core-inner.visible")
                         //@todo - add transition to this opacity change
                         .attr("opacity", !selectedMeasure || selectedMeasureIsInGoal(d) ? planetOpacity.normal : planetOpacity.available)
-                        .attr("fill", colours.planet)
+                        .attr("fill", d.fill)
                    
                     //title
                     contentsG.select("text")
@@ -375,6 +375,7 @@ export default function planetsComponent() {
                 const { x = d => 0, y = d => 0, k = d => 1 } = transform;
                 selection.each(function(d){
                     const planetG = d3.select(this);
+                    //translate is undefined when we drag a planet into an aim and release
                     const { translateX, translateY } = getTransformationFromTrans(planetG.attr("transform"));
                     //on call from enter, there will be no translate so deltas are 0 so no transition
                     //but then transform is called again on entered planets after merge with update
@@ -454,10 +455,17 @@ export default function planetsComponent() {
                 if(prevLinkPlanet?.id !== linkPlanet?.id){
                     //remove prev highlighting
                     if(prevLinkPlanet){
+                        //bug - why is colours.planet back to A8A8A8 here?
+                        //BECAUSE THIW RINGDRAG IS HAPOPOENING IN THE SRC PLANET'S PLANETS COMPONENT
+                        //SO COLOURS.PLANET REFERES TO THAT ONE.
+                        //SO WE NEED A WAY OF EITHER PASSING THE INFO TO TEH CORRECT PLANETS COMP,
+                        // OR PROB BEST TO JUST STORE THE FILL OF THE LINKPLANET. 
+                        // SO MAY ctually be easier to store fill in planets layout instead. so we have colout, which beloings to planet, and fill
+                        // is that if it exists, else aim.colour
                         d3.select("g.planet-"+prevLinkPlanet.id).selectAll("ellipse.core.visible")
                             .transition()
                             .duration(200)
-                                .attr("fill", colours.planet)
+                                .attr("fill", d.fill)
                     }
                     //add new highlighting
                     if(linkPlanet){
@@ -483,14 +491,8 @@ export default function planetsComponent() {
                 ring.fill((d,hovered) => hovered ? COLOURS.potentialLinkPlanet : "transparent");
 
                 //set x2, y2 to centre of nearest planet
-                //...\
                 if(linkPlanets.length === 2){
-                    //clean up
-                    d3.select("g.planet-"+linkPlanets[1].id).selectAll("ellipse.core.visible")
-                        .transition()
-                        .duration(200)
-                            .attr("fill", colours.planet)
-
+                    //note - goal fill will go back to its aim colour on general update so no need to undo highlighting
                     //save new link
                     const sortedLinks = linkPlanets.sort((a, b) => d3.ascending(a.x, b.x))
                     onAddLink({ src:sortedLinks[0].id, targ:sortedLinks[1].id })
@@ -512,11 +514,6 @@ export default function planetsComponent() {
     planets.height = function (value) {
         if (!arguments.length) { return height; }
         height = value;
-        return planets;
-    };
-    planets.colours = function (value) {
-        if (!arguments.length) { return colours; }
-        colours = { ...colours, ...value };
         return planets;
     };
     planets.selected = function (value) {

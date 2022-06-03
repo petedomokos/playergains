@@ -1,21 +1,7 @@
 import * as d3 from 'd3';
-//import "d3-selection-multi";
-import barChartLayout from "./barChartLayout";
-import linksLayout from "./linksLayout";
-import planetsLayout from "./planetsLayout";
-import linksComponent from "./linksComponent";
-import planetsComponent from "./planetsComponent";
-import barChart from "./barChartComponent";
-import { calcChartHeight, findFuturePlanets, findFirstFuturePlanet, findNearestDate, getTransformationFromTrans } from './helpers';
-//import { COLOURS, DIMNS } from "./constants";
-import { addMonths } from "../util/TimeHelpers"
-import { ellipse } from "./ellipse";
-import { grey10, DEFAULT_D3_TICK_SIZE } from "./constants";
-import { findNearestPlanet, distanceBetweenPoints, channelContainsPoint, channelContainsDate } from './geometryHelpers';
-import { OPEN_CHANNEL_EXT_WIDTH } from './constants';
-import dragEnhancements from './enhancedDragHandler';
+import { DEFAULT_D3_TICK_SIZE } from "./constants";
 import { timeMonth } from "d3-time"
-import { parseTransform, shiftTranslate } from './domHelpers';
+import { shiftTranslate } from './domHelpers';
 
 /*
 

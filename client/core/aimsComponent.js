@@ -338,7 +338,6 @@ export default function aimsComponent() {
                                 })
                                 .merge(planetsG)
                                 .call(planets[d.id]
-                                    .colours({ planet: d.colour || COLOURS.planet })
                                     .contentsToShow(goalContentsToShow)
                                     .selected(selectedGoal)
                                     .selectedMeasure(selectedMeasure)
@@ -430,7 +429,7 @@ export default function aimsComponent() {
                     g.aimId = newAim?.id;
                     //@todo - think about how .colours is used, rather tan doing it manually here again
                     //dom
-                    d3.select(this).select("ellipse.core")
+                    d3.select(this).selectAll("ellipse.core.visible")
                         .attr("fill", newAim?.colour || COLOURS.planet);
                 }
             })
