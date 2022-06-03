@@ -146,7 +146,6 @@ export default function aimsComponent() {
                     .merge(aimG)
                     .each(function(d){
                         planets[d.id].transitionsOn(transitionsOn);
-
                         const aimG = d3.select(this);
                         const controlledContentsG = aimG.select("g.controlled-contents")
                             .attr("transform", "translate(" + (d.displayX) +"," + d.y +")")

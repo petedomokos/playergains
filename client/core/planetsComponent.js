@@ -109,7 +109,7 @@ export default function planetsComponent() {
         const { transitionEnter=true, transitionUpdate=true } = options;
         // expression elements
         selection.each(function (data) {
-            console.log("planets..........", transitionsOn)
+            //console.log("planets..........", transitionsOn)
             //plan - dont update dom twice for name form
             //or have a transitionInProgress flag
             containerG = d3.select(this);

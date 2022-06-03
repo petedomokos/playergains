@@ -214,10 +214,12 @@ const Journey = ({ screenSize, width, height }) => {
           //ie if a planet is selected, then updateSelected if not set as selected
           //the below approach may cause an issue if planets hasnt updated yet from the setPlanets call above
         })
-        .updatePlanet(props => {
+        .updatePlanet((props, shouldD3Update=true) => {
+          if(!shouldD3Update){ shouldD3UpdateRef.current = shouldD3Update; }
           setPlanets(prevState => updatedState(prevState, props))
         })
-        .updatePlanets(planetsToUpdate => {
+        .updatePlanets((planetsToUpdate, shouldD3Update=true) => {
+          if(!shouldD3Update){ shouldD3UpdateRef.current = shouldD3Update; }
           setPlanets(prevState => prevState.map(p => {
               const propsToUpdate = planetsToUpdate.find(planet => planet.id === p.id) || {};
               return { ...p, ...propsToUpdate }

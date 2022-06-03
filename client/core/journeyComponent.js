@@ -28,8 +28,6 @@ import openedLinkComponent from './openedLinkComponent';
     
     DOING NOW/NEXT
      - next - 
-     BUG - just fixed planet re-enter transition when resize brings it into an aim, usinhg transitionsOn setting.
-     BUT new bug - the aim now flickers again
 
     PRIORITY BUGS/ISSUES
     - context menu clicks sometimes stop working - may be to do with dimns of button?
@@ -488,7 +486,8 @@ export default function journeyComponent() {
                         aims.transitionsOn(false);
                         //use the latest planetDs from dom, as the aim d.planets have not been updated
                         const planetsToUpdate = planetDs.map(p => ({ id:p.id, aimId:p.aimId }));
-                        updatePlanets(planetsToUpdate);
+                        //dont update d3 until after updateAim
+                        updatePlanets(planetsToUpdate, false);
 
                         //update aim
                         const { id, displayWidth, height, displayX, y } = aim;
