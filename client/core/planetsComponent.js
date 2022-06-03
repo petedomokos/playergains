@@ -164,7 +164,7 @@ export default function planetsComponent() {
                     contentsG
                         .append("ellipse")
                             .attr("class", "core core-outer visible")
-                            .attr("stroke", "none")
+                            .attr("stroke-width", 2) //stroke is none anyway unless milestone
                             .attr("cursor", "crosshair");
 
                     contentsG
@@ -227,6 +227,7 @@ export default function planetsComponent() {
                         //@todo - add transition to this opacity change
                         .attr("opacity", !selectedMeasure || selectedMeasureIsInGoal(d) ? planetOpacity.normal : planetOpacity.available)
                         .attr("fill", d.fill)
+                        .attr("stroke", d.isMilestone ? grey10(1) : "none")
                         .call(outerPlanetDrag);
 
                     contentsG.select("ellipse.core-inner.visible")

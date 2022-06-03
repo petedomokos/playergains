@@ -29,6 +29,7 @@ export default function aimsLayout(){
     function update(data){
         const planetsData = data.planets || [];
         const aimsData = data.aims || [];
+        const linksData = data.links || [];
         const planets = planetsData.map(p => {
             //todo - findNearestChannel needs to take account of open channels too
             const channel = nearestChannelByEndDate(p.targetDate);
@@ -59,7 +60,8 @@ export default function aimsLayout(){
                 ringRx:width => rx(width) * PLANET_RING_MULTIPLIER,
                 ringRy:height => ry(height) * PLANET_RING_MULTIPLIER,
                 //isSelected:selected === p.id,
-                measures
+                measures,
+                isMilestone:measures.length === 0 && linksData.find(l => l.targ === p.id)
             }
         });
 

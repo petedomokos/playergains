@@ -105,6 +105,7 @@ export const DIMNS = {
 export const COLOURS = {
     canvas:"#FAEBD7",
     planet:grey10(5),
+    milestone:grey10(2),
     link:grey10(5),
     potentialLinkPlanet:grey10(3),
     potentialLink:grey10(3),

@@ -28,12 +28,9 @@ import openedLinkComponent from './openedLinkComponent';
     
     DOING NOW/NEXT
      - next 
-        - put goal in aim, drag it so it lands on a channel near the edge. aim should expand to contain it, but doesnt any more.
 
     PRIORITY BUGS/ISSUES
-    - planet outer-core stays dark sometimes
-    - after creating link, a planet that is in aim doesnt get aim colour back until next update
-    (this may also be true for planets that are not in an aim)
+     - get rid of extra call to aimsLayout
      - make planets with no measures a slightly different appearance (so they can act as milestones)
      - sort sizes out - browser has got smaller.
     everything has reduced in scale, so breakpoints no longer work as expected. There is an attr to add
@@ -376,7 +373,7 @@ export default function journeyComponent() {
                     .yScale(zoomedYScale)
                     .channelsData(channelsData);
                 
-                aimsData = myAimsLayout({ aims:state.aims, planets:state.planets });
+                aimsData = myAimsLayout(state);
                 //temp - until we remove places that use it as a dependency
                 planetsData = aimsData.map(a => a.planets).reduce((a, b) => [...a, ...b], []);
 
