@@ -1,5 +1,6 @@
 import { connect } from 'react-redux'
 import { fetchUser } from './actions/UserActions'
+import { updateScreen } from './actions/CommonActions'
 import MainRouter  from './MainRouter'
 
 const mapStateToProps = (state, ownProps) => {
@@ -13,6 +14,10 @@ const mapDispatchToProps = dispatch => ({
 	loadUser(userId){
 		console.log('calling fetchUser signin in again..............')
 		dispatch(fetchUser(userId))
+	},
+	updateScreen(screen){
+		console.log("updateScreen")
+		dispatch(updateScreen(screen))
 	}
 })
 

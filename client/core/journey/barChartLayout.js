@@ -1,6 +1,6 @@
 import { greatest } from 'd3';
 import { linearProjValue } from "./helpers";
-import { addWeeks } from "../util/TimeHelpers"
+import { addWeeks } from "../../util/TimeHelpers"
 
 export default function barChartLayout(planet){
     const { startDate, targetDate } = planet;

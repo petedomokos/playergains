@@ -9,17 +9,12 @@ import axesComponent from "./axesComponent";
 import linksComponent from "./linksComponent";
 import aimsComponent from './aimsComponent';
 import measuresBarComponent from './measuresBarComponent';
-import { calcChartHeight, findFuturePlanets, findFirstFuturePlanet, findNearestDate, getTransformationFromTrans,
-    calcTrueX, calcAdjX, findPointChannel, findDateChannel, findNearestChannelByEndDate, createId } from './helpers';
 import { updatePos } from "./domHelpers"
 //import { COLOURS, DIMNS } from "./constants";
-import { addMonths, addWeeks } from "../util/TimeHelpers"
-import { ellipse } from "./ellipse";
-import { grey10, zoomLevel, DEFAULT_D3_TICK_SIZE, COLOURS, FONTSIZES, DIMNS, PLANET_RING_MULTIPLIER } from "./constants";
-import { pointIsInRect, findNearestPlanet, distanceBetweenPoints, channelContainsPoint, channelContainsDate } from './geometryHelpers';
+import { addWeeks } from "../../util/TimeHelpers"
+import { zoomLevel, DEFAULT_D3_TICK_SIZE, COLOURS, FONTSIZES, DIMNS } from "./constants";
+import { pointIsInRect, distanceBetweenPoints, } from './geometryHelpers';
 import dragEnhancements from './enhancedDragHandler';
-import { timeMonth, timeWeek } from "d3-time";
-import openedLinkComponent from './openedLinkComponent';
 
 /*
     *** = needed for Brian to test the basic design of a canvas (no measures, just planets, aims, and links)
@@ -27,7 +22,11 @@ import openedLinkComponent from './openedLinkComponent';
     * = needed to 
     
     DOING NOW/NEXT
-     - next - 
+     - next - have put in place api and server. now need o try it out,
+     rename an empty journey canvas, just enough to to 1 letter and see if it saves.
+    when it works, then remove saveJurney call from naming functions, until form is closed,
+    to limit api calls to one per rename.
+    - then, get api /server saving aims, goals etc
 
     PRIORITY BUGS/ISSUES
     - context menu clicks sometimes stop working - may be to do with dimns of button?
@@ -83,7 +82,7 @@ import openedLinkComponent from './openedLinkComponent';
         goals not displayed, just aim title displayed?)
 
     BACKLOG:
-    - replace ref to planest wth goals everywhere
+    - replace reference to planets with goals everywhere
     - consider stopping planet and link transitions when loading an existing canvas
      - planet ellipse core-inner solid-bg shows thorugh arounfd teh edge of the one on top
       - when zooming out a lot, can no longer see planet behind it's name form
@@ -92,6 +91,7 @@ import openedLinkComponent from './openedLinkComponent';
      as well as .translate(x, y) and .scale(k) etc
      - consider this frpom Journey.jsx... journey.modalData(modalData).... could even have a 2nd option to all these settings, which is false by default, which is to update dom 
       //so journey.modalData(modalData, true) would be all we have to do here, instead of call the update again as we do below
+    - aims should maybe increase height if a planet is droppped into it but is on the edge?
      
     BUGS & ISSUES
      - learn about the 'media' tag - do we need to specify it in teh html tag so sizes are consistent? Are sizes consistent atm on differnet devices/browsers?
@@ -112,7 +112,7 @@ export default function journeyComponent() {
     let planetMargin = {left:5, right:5, top: 5, bottom:5};
     let width = 4000;
     let height = 2600;
-    let screenSize = "l";
+    let screen = { isLarge: false };
     let contentsWidth;
     let contentsHeight;
 
@@ -207,7 +207,7 @@ export default function journeyComponent() {
         updateDimns();
         selection.each(function (journeyState) {
             state = journeyState;
-            //console.log("state", selectedPending)
+            //console.log("journey")
             if(!svg){
                 //enter
                 init.call(this);
@@ -418,7 +418,7 @@ export default function journeyComponent() {
                             { 
                                 ...DIMNS.mainAim.name.margin,
                                 //shift left to avoid burger menu when smaller screen
-                                left:["s", "m"].includes(screenSize) ? 35 : DIMNS.mainAim.name.margin.left } 
+                                left: screen.isLarge ? DIMNS.mainAim.name.margin.left : 35 } 
                             : 
                             DIMNS.aim.name.margin
                     }))
@@ -945,9 +945,9 @@ export default function journeyComponent() {
         height = value;
         return journey;
     };
-    journey.screenSize = function (value) {
-        if (!arguments.length) { return screenSize; }
-        screenSize = value;
+    journey.screen = function (value) {
+        if (!arguments.length) { return screen; }
+        screen = value;
         return journey;
     };
     journey.selected = function (goalId, selectOnNextUpdate = true) {

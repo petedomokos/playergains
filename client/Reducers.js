@@ -30,6 +30,22 @@ export const user = (state=InitialState.user, act) =>{
 			//this doesnt update administered users or groups, just basic details eg name, email,...
 			return { ...state, ...act.user };
 		}
+		case C.SAVE_JOURNEY:{
+			const { journey } = act;
+			const existingJourney = state.journeys.find(j => j.id === journey.id);
+			if(existingJourney){
+				//replace - note all user journey ids and summary details are stored on initial user load
+				return {
+					...state,
+					journeys:state.journeys.map(j => j.id === journey.id ? journey : j)
+				}
+			}
+			//add new
+			return {
+				...state,
+				journeys:[...state.journeys, journey]
+			}
+		}
 		//OTHER USERS AND GROUPS
 		//CREATE
 		case C.CREATE_NEW_ADMINISTERED_USER:{
@@ -470,6 +486,20 @@ export const dialogs = (state={}, act) =>{
 			return _state			
 		}
 		*/
+		default:
+			return state
+	}
+}
+
+export const system = (state={}, act) => {
+	const { type, screen } = act
+	switch(type){
+		case C.UPDATE_SCREEN:{
+			return {
+				...state,
+				screen
+			}
+		}
 		default:
 			return state
 	}

@@ -1,15 +1,10 @@
 import * as d3 from 'd3';
 //import "d3-selection-multi";
-import { calcTrueX, calcAdjX, findPointChannel, findDateChannel, findNearestChannelByEndDate,
-    calcChartHeight, findFuturePlanets, findFirstFuturePlanet, findNearestDate, getTransformationFromTrans } from './helpers';
-//import { COLOURS, DIMNS } from "./constants";
-import { addWeeks } from "../util/TimeHelpers"
+import { calcAdjX, findPointChannel, findDateChannel, findNearestChannelByEndDate, getTransformationFromTrans } from './helpers';
 import { ellipse } from "./ellipse";
-import { grey10, COLOURS, DIMNS, DEFAULT_PLANET_RX, DEFAULT_PLANET_RY } from "./constants";
+import { grey10, COLOURS, DIMNS } from "./constants";
 import { findNearestPlanet, distanceBetweenPoints, channelContainsPoint, channelContainsDate } from './geometryHelpers';
-import { OPEN_CHANNEL_EXT_WIDTH } from './constants';
 import dragEnhancements from './enhancedDragHandler';
-import { timeMonth, timeWeek } from "d3-time";
 import menuComponent from './menuComponent';
 /*
 

@@ -127,7 +127,6 @@ const list = async (req, res) => {
 }
 
 const update = async (req, res) => {
-  console.log('updating dataset....................')
   let form = new formidable.IncomingForm()
   form.keepExtensions = true
   form.parse(req, async (err, fields, files) => {
@@ -146,13 +145,9 @@ const update = async (req, res) => {
   //fields.admin= JSON.parse(fields.admin);
   fields.tags = JSON.parse(fields.tags);
 
-  console.log('formatted fields', fields)
-
     let dataset = req.dataset
-    console.log("dataset b4 update", req.dataset)
     dataset = extend(dataset, fields)
     dataset.updated = Date.now()
-    console.log("dataset after update", dataset)
     /*if(files.photo){
       dataset.photo.data = fs.readFileSync(files.photo.path)
       dataset.photo.contentType = files.photo.type

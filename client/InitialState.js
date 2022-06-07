@@ -54,5 +54,10 @@ export const InitialState = {
 		deleteUser:false,
 		createGroup:false,
 		deleteGroup:false,
+	},
+	screen:{
+		size:"l",
+		width:0,
+		height:0
 	}
 }

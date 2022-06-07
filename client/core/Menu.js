@@ -141,6 +141,12 @@ const MenuItems = ({ user, history, signingOut, screenSize, onSignout, classes }
             </Link>
           </span>)
         }
+         <Link to={"/games"}>
+          <Button
+            className={classes.menuBtn}
+            style={isActive(history, "/games")}>games
+          </Button>
+        </Link>
         {
           user && (<span>
             <Button
@@ -150,18 +156,6 @@ const MenuItems = ({ user, history, signingOut, screenSize, onSignout, classes }
             </Button>
           </span>)
         }
-        <Link to={"/expression"}>
-              <Button
-                className={classes.menuBtn}
-                style={isActive(history, "/expression")}>expression
-              </Button>
-        </Link>
-        <Link to={"/games"}>
-          <Button
-            className={classes.menuBtn}
-            style={isActive(history, "/games")}>games
-          </Button>
-        </Link>
     </>
 
 export default Menu

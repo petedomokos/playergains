@@ -8,7 +8,7 @@ import Typography from '@material-ui/core/Typography'
 import Icon from '@material-ui/core/Icon'
 import { makeStyles } from '@material-ui/core/styles'
 import MeasureFields from "./MeasureFields";
-import { DropdownSelector } from '../../util/Selector'
+import { DropdownSelector } from '../../../util/Selector'
 
 const useStyles = makeStyles(theme => ({
   root:{

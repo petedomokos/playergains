@@ -58,7 +58,6 @@ export const fetchThenDispatch = (dispatch, asyncProcessesPath, options) => {
 	  .then(status)
 	  .then(parseResponse)
 	  .then(data =>{
-	  	//console.log("Server Response:", data)
 	  	return data
 	  })
 	  .then(data => { dispatch(formatNextAction(data)) })
@@ -84,5 +83,12 @@ export const closeDialog = path => {
 	return {
 		type:C.CLOSE_DIALOG,
 		path:path
+	}
+}
+
+export const updateScreen = screen => {
+	return {
+		type:C.UPDATE_SCREEN,
+		screen
 	}
 }

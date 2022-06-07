@@ -1,5 +1,6 @@
-import React, { useState } from 'react'
-import { Link } from 'react-router-dom'
+import React, { useState, useEffect } from 'react'
+import {Switch, Link, Route } from 'react-router-dom'
+//import PrivateRoute from '../auth/PrivateRoute' - use this if i have a param /:journeyId
 import { makeStyles } from '@material-ui/core/styles'
 import Button from '@material-ui/core/Button'
 //children
@@ -7,7 +8,7 @@ import UserProfile from '../user/UserProfile'
 import UsersContainer from '../user/containers/UsersContainer'
 import GroupsContainer from '../group/containers/GroupsContainer'
 import DatasetsContainer from '../dataset/containers/DatasetsContainer'
-import Journey from "./Journey"
+import JourneyContainer from "./journey/JourneyContainer"
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -52,14 +53,15 @@ const useStyles = makeStyles((theme) => ({
   }
 }))
 
-const UserHome = ({user, loading, loadingError}) => {
-  const topBarHeight = 100;
+const UserHome = ({screen, user, loading, loadingError}) => {
+  const topBarHeight = screen.isLarge ? 90 : 20; //still need a bit of height even if no top bar
   const styleProps = { 
-    availWidth: window.innerWidth, //screen.availWidth, 
-    availHeight:window.innerHeight, //screen.availHeight,
+    availWidth: screen?.width || 0,
+    availHeight:screen.height || 0,
     topBarHeight
   };
-  const classes = useStyles(styleProps) 
+  const classes = useStyles(styleProps)
+
   //for now, keep it simple for page refreshes - until user reloads, dont render the children.
   //note - cant use withRouter in MainRouter as we only want it to load user if signed in
 
@@ -71,9 +73,13 @@ const UserHome = ({user, loading, loadingError}) => {
     <div className={classes.root}>
       {user._id && 
         <>
-          <div className={classes.mainVis}>
-            <Journey dimns={{screenWidth:styleProps.availWidth, screenHeight:styleProps.availHeight}}/>
-          </div>
+            <div className={classes.mainVis}>
+              <Route path="/" render={(match) => 
+                    <JourneyContainer 
+                      screen={screen} width={screen.width} height={screen.height - topBarHeight} match={match} />
+              } />
+            </div>
+          
           {/**
           <div className={classes.topRow} >
               <UserProfile profile={user} />
@@ -98,6 +104,7 @@ const UserHome = ({user, loading, loadingError}) => {
 }
 
 UserHome.defaultProps = {
+  screen:{}
 }
 
 const QuickLinks = ({links}) =>{

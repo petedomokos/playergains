@@ -18,11 +18,12 @@ import MenuContainer from './core/containers/MenuContainer'
 import auth from './auth/auth-helper'
 import Expression from "./expression/Expression"
 import Games from "./games/Games"
-import Journey from "./core/Journey.js"
+//import Journey from "./core/Journey.js"
 //styles
 import './assets/styles/main.css'
 
-const MainRouter = ({userId, loadUser, loadingUser}) => {
+const MainRouter = ({ userId, loadUser, loadingUser, updateScreen }) => {
+  //console.log("MainRouter", userId)
   //load user if page is refreshed. MainRouter is under the store so can 
   //trigger re-render once loaded
   const jwt = auth.isAuthenticated();
@@ -30,39 +31,50 @@ const MainRouter = ({userId, loadUser, loadingUser}) => {
   //480 - portrait phone, 768 - tablets,992 - laptop, 1200 - desktop or large laptop
   const calcScreenSize = width => width <= 480 ? "s" : width <= 768 ? "m" : "l";
 
-  const [screen, setScreen] = useState({ 
-      width: window.innerWidth,
-      height:window.innerHeight,
-      size:calcScreenSize(window.innerWidth)
-  });
-  useEffect(() => {
-      if(jwt && !userId && !loadingUser){
-        loadUser(jwt.user._id)
-      }
-  });
+  const getScreenInfo = () => {
+    const size = calcScreenSize(window.innerWidth);
+    return { 
+      width: window.innerWidth, 
+      height: window.innerHeight, 
+      size,
+      isLarge:["l", "xl"].includes(size)
+    }
+  }
+
+  const [screen, setScreen] = useState(getScreenInfo());
 
   useEffect(() => {
       const handleResize = () => {
-        setScreen({ width: window.innerWidth, height: window.innerHeight, size: calcScreenSize(window.innerWidth) })
+        //setScreen(getScreenInfo())
+        updateScreen(getScreenInfo())
       };
       window.addEventListener("resize", handleResize);
+      //init
+      updateScreen(getScreenInfo())
       return () => {
           window.removeEventListener("resize", handleResize);
       };
   }, []);
+
+  useEffect(() => {
+    if(jwt && !userId && !loadingUser){
+      loadUser(jwt.user._id)
+    }
+  });
   
  //we dont use?: because we if there is a loading delay for User, we dont want display to revert to NonUserHome 
  //todo - find a graceful way of handling this potential issue
+ // <Route exact path="/" render={() => <UserHomeContainer screen={screen} />} />
   return (
     <div>
-      <div style={{background:"red", height:0.05}}></div>
+      <div style={{height:0.05}}></div>
       <MenuContainer screenSize={screen.size} />
-      <div>
+      {/**<div>
           <Journey screenSize={screen.size} width={screen.width} height={screen.height - 90} />
-      </div>
+      </div>*/}
       {(!jwt || userId) && <Switch>
           {jwt ?
-            <Route exact path="/" component={UserHomeContainer}/>
+            <Route exact path="/" component={UserHomeContainer} />
             :
             <Route exact path="/" component={NonUserHome}/>
           }

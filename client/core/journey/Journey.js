@@ -3,18 +3,15 @@ import React, { useEffect, useState, useRef, useCallback } from 'react'
 import * as d3 from 'd3';
 import { makeStyles } from '@material-ui/core/styles'
 import Button from '@material-ui/core/Button'
-import { getPlanetsData, getGoalsData, getStarData } from '../data/planets'
 import { createId, createColour, findFirstFuturePlanet, updatedState } from './helpers';
 import journeyComponent from "./journeyComponent"
-import { addMonths, startOfMonth, idFromDates } from '../util/TimeHelpers';
-import { channelContainsDate } from './geometryHelpers';
+import { addMonths, startOfMonth, idFromDates } from '../../util/TimeHelpers';
 import NameForm from "./form/NameForm";
 import MeasureForm from "./form/MeasureForm";
 import TargetForm from './form/TargetForm';
 import Form from "./form/Form";
 import ImportMeasures from './ImportMeasures';
 import { DIMNS, FONTSIZES } from './constants';
-import EditMeasureFields from './form/EditMeasureFields';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -78,7 +75,9 @@ const mockMeasures = [
     { id:"mock3", name:"Drive 2", desc: "nr D2s to Fairway" }
 ]
 
-const Journey = ({ screenSize, width, height }) => {
+//width and height may be full screen, but may not be
+const Journey = ({ screen, width, height, save, closeDialog }) => {
+  console.log("Journey", screen)
   const [journey, setJourney] = useState(undefined)
   //@todo - put into one state object to avoid multiple updates
   const [canvas, setCanvas] = useState({});
@@ -97,8 +96,9 @@ const Journey = ({ screenSize, width, height }) => {
   // console.log("links", links)
   // console.log("modalData", modalData)
 
+  const ctrlsHeight = 10;
   const journeyWidth = width - DIMNS.journey.margin.left - DIMNS.journey.margin.right
-  const journeyHeight = height - DIMNS.journey.margin.top - DIMNS.journey.margin.bottom;
+  const journeyHeight = height - DIMNS.journey.margin.top - DIMNS.journey.margin.bottom - ctrlsHeight;
   let styleProps = {}
 
   if(modalData) {
@@ -153,6 +153,12 @@ const Journey = ({ screenSize, width, height }) => {
 
   //})
 
+  const saveJourney = useCallback(() => {
+    //could do some front-end checks here
+    const journey = { ...canvas, aims, goals:planets, links, measures };
+    save(journey);
+  }, [canvas, aims, planets, links, measures])
+
   useEffect(() => {
     const width = d3.min([journeyWidth * 0.725, 500]);
     const height = d3.min([journeyHeight * 0.725, 700]);
@@ -184,7 +190,7 @@ const Journey = ({ screenSize, width, height }) => {
     journey
         .width(journeyWidth)
         .height(journeyHeight)
-        .screenSize(screenSize)
+        .screen(screen)
         .withCompletionPaths(withCompletionPaths)
         .measuresOpen(measuresBarIsOpen ? measures.filter(m => m.isOpen) : undefined)
         .modalData(modalData)
@@ -194,6 +200,7 @@ const Journey = ({ screenSize, width, height }) => {
           const colour = createColour(aims.length);
           setAims(prevState => ([ ...prevState, { id , colour, dataType:"aim", ...aim }]))
           setPlanets(prevState => prevState.map(p => planetIds.includes(p.id) ? { ...p, aimId: id } : p))
+          saveJourney();
         })
         .createPlanet((targetDate, yPC, aimId) => {
           const newPlanet = {
@@ -213,10 +220,12 @@ const Journey = ({ screenSize, width, height }) => {
           //todo -0 consider just setting it as selected in state, and handling this in journey ie
           //ie if a planet is selected, then updateSelected if not set as selected
           //the below approach may cause an issue if planets hasnt updated yet from the setPlanets call above
+          saveJourney();
         })
         .updatePlanet((props, shouldD3Update=true) => {
           if(!shouldD3Update){ shouldD3UpdateRef.current = shouldD3Update; }
           setPlanets(prevState => updatedState(prevState, props))
+          saveJourney();
         })
         .updatePlanets((planetsToUpdate, shouldD3Update=true) => {
           if(!shouldD3Update){ shouldD3UpdateRef.current = shouldD3Update; }
@@ -224,10 +233,12 @@ const Journey = ({ screenSize, width, height }) => {
               const propsToUpdate = planetsToUpdate.find(planet => planet.id === p.id) || {};
               return { ...p, ...propsToUpdate }
           }));
+          saveJourney();
         })
         .updateAim((props, shouldD3Update=true) => {
           if(!shouldD3Update){ shouldD3UpdateRef.current = shouldD3Update; }
-          setAims(prevState => updatedState(prevState, props))
+          setAims(prevState => updatedState(prevState, props));
+          saveJourney();
         })
         /*
         done in journeyComp instead
@@ -248,12 +259,14 @@ const Journey = ({ screenSize, width, height }) => {
           setModalData(undefined);
           setAims(prevState => prevState.filter(a => a.id !== aimId));
           setPlanets(prevState => prevState.map(p => ({ ...p, aimId: p.aimId === aimId ? undefined : p.aimId })));
+          saveJourney();
        })
         .deletePlanet(id => {
           setModalData(undefined);
           //must delete link first, but when state is put together this wont matter
           setLinks(prevState => prevState.filter(l => l.src !== id && l.targ !== id));
           setPlanets(prevState => prevState.filter(p => p.id !== id));
+          saveJourney();
         })
         .onAddLink(props => {
           const newLink = {
@@ -261,10 +274,12 @@ const Journey = ({ screenSize, width, height }) => {
             id:props.src + "-" + props.targ,
             dataType:"link"
           }
-          setLinks(prevState => ([ ...prevState, newLink]))
+          setLinks(prevState => ([ ...prevState, newLink]));
+          saveJourney();
         })
         .deleteLink(id => {
           setLinks(prevState => prevState.filter(l => l.id !== id));
+          saveJourney();
         })
         .updateChannel(props => {
           setChannels(prevState => updatedState(prevState, props, (other, updated) => other.nr < updated.nr))
@@ -281,7 +296,7 @@ const Journey = ({ screenSize, width, height }) => {
       .datum({ canvas, aims, planets, links, channels, measures })
       .call(journey)
 
-  }, [journey, canvas, aims, planets, links, withCompletionPaths, measures, measuresBarIsOpen, modalData, width, height ])
+  }, [journey, canvas, aims, planets, links, withCompletionPaths, measures, measuresBarIsOpen, modalData, width, height, screen ])
 
   /*
   //todo - consider this approach of separate useEffects
@@ -315,6 +330,7 @@ const Journey = ({ screenSize, width, height }) => {
 }, [measures]);
 
   const onUpdatePlanetForm = modalType => (name, value) => {
+    console.log("updatePlanetForm")
     const { d , measure } = modalData;
     const planet = planets.find(p => p.id === d.id);
     let props;
@@ -328,6 +344,7 @@ const Journey = ({ screenSize, width, height }) => {
   }
 
   const onUpdateAimForm = (name, value) => {
+    console.log("update aim form")
     const { d } = modalData;
     if(d.id === "main"){
       setCanvas(prevState => ({ ...prevState, [name]: value }))
@@ -349,13 +366,16 @@ const Journey = ({ screenSize, width, height }) => {
   }
 
   const onClosePlanetForm = () => {
+    console.log("close planet form")
     journey.endEditPlanet();
     setModalData(undefined);
   }
 
   const onCloseAimForm = () => {
+    console.log("close aim form")
     //@todo - journey.endEditAim();
     setModalData(undefined);
+    saveJourney();
   }
 
   const addNewMeasure = (details, planetId) => {
@@ -427,6 +447,9 @@ const Journey = ({ screenSize, width, height }) => {
 }
 
 Journey.defaultProps = {
+  screen: {},
+  width: 0,
+  height: 0
 }
 
 export default Journey;

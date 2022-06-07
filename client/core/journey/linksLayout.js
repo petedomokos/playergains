@@ -1,8 +1,7 @@
 import * as d3 from 'd3';
 import barChartLayout from "./barChartLayout";
-import { getGoalsData } from '../data/planets';
+import { getGoalsData } from '../../data/planets';
 import { distanceBetweenPoints, angleOfRotation, angleOfElevation, toRadians } from './geometryHelpers';
-import { mapKeys } from 'lodash';
 
 export default function linkslayout(){
     //const barChartWidth = 100;

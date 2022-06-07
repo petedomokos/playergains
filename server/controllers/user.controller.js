@@ -1,4 +1,5 @@
 import User from '../models/user.model'
+import Journey from '../models/journey/journey.model'
 import extend from 'lodash/extend'
 import errorHandler from './../helpers/dbErrorHandler'
 import formidable from 'formidable'
@@ -66,7 +67,7 @@ const userByID = async (req, res, next, id) => {
       return res.status('400').json({
         error: "User not found"
       })
-    req.profile = user
+    req.user = user
     next()
   } catch (err) {
     return res.status('400').json({
@@ -77,9 +78,9 @@ const userByID = async (req, res, next, id) => {
 
 const read = (req, res) => {
   console.log('read......')
-  req.profile.hashed_password = undefined
-  req.profile.salt = undefined
-  return res.json(req.profile)
+  req.user.hashed_password = undefined
+  req.user.salt = undefined
+  return res.json(req.user)
 }
 
 const list = async (req, res) => {
@@ -112,7 +113,7 @@ const update = async (req, res) => {
 
     //parse array fields which have been stringified
     fields.admin = JSON.parse(fields.admin);
-    let user = req.profile
+    let user = req.user
     user = extend(user, fields)
     user.updated = Date.now()
     console.log('user now', user)
@@ -136,7 +137,7 @@ const update = async (req, res) => {
 const remove = async (req, res) => {
   console.log('remove user..............')
   try {
-    let user = req.profile
+    let user = req.user
     let deletedUser = await user.remove()
     deletedUser.hashed_password = undefined
     deletedUser.salt = undefined
@@ -154,5 +155,5 @@ export default {
   read,
   list,
   remove,
-  update
+  update,
 }

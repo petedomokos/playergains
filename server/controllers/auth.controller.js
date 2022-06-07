@@ -84,16 +84,16 @@ const requireSignin = expressJwt({
   userProperty: 'auth'
 })
 
-//req.profile is the user that is being updated or deleted
+//req.user is the user that is being updated or deleted
 //they have an admin array, which may be a list of userIds or may be a list of user objects
 
 //todo - not sure how to allow systemAdmin todo anything - I think we just need to always send signedInUserId
 //body, because we cant seem to be able to attach it to the jwt sign object on server
 const hasAuthorization = (req, res, next) => {
-  const authorized = req.profile && req.auth && (
-      req.profile._id == req.auth._id ||
-      req.profile.admin.includes(req.auth._id) || 
-      req.profile.admin.map(user => user._id).includes(req.auth._id) ||
+  const authorized = req.user && req.auth && (
+      req.user._id == req.auth._id ||
+      req.user.admin.includes(req.auth._id) || 
+      req.user.admin.map(user => user._id).includes(req.auth._id) ||
       req.auth.isSystemAdmin
   )
   console.log('authorized???????? ', authorized)
