@@ -19,7 +19,11 @@ export const FONTSIZES = {
         name:10
     },
     planet:{
-        name:10,
+        name:{
+            min:10,
+            standard:12
+        },
+
         target:8
     },
     measures:{
@@ -45,7 +49,7 @@ export const DIMNS = {
         height: 30
     },
     measures:{
-        height:120,
+        height:100,
         maxMargin:{ left: 10, right:10, top:10, bottom:10 },
         title:{
             width:50,

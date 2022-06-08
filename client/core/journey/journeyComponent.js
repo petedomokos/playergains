@@ -422,7 +422,10 @@ export default function journeyComponent() {
                             : 
                             DIMNS.aim.name.margin
                     }))
-                    .planetFontSize(k * FONTSIZES.planet.name)
+                    .planetSettings({
+                        fontSize: d3.max([FONTSIZES.planet.name.min, k * FONTSIZES.planet.name.standard]),
+                        availablePlanetSizeMultiplier: 2 / k
+                    })
                     .onDeleteAim((aimId) => {
                         selected = undefined;
                         editing = undefined;

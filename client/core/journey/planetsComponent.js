@@ -49,7 +49,7 @@ export default function planetsComponent() {
         available: 0.3,
         //unavailable: 0.2
     }
-    const availablePlanetSizeMultiplier = 1.5;
+    let availablePlanetSizeMultiplier = 1.5;
 
     //API FUNCTIONS
     let showAvailabilityStatus = function() {};
@@ -557,6 +557,11 @@ export default function planetsComponent() {
     planets.fontSize = function (value) {
         if (!arguments.length) { return fontSize; }
         fontSize = value;
+        return planets;
+    };
+    planets.availablePlanetSizeMultiplier = function (value) {
+        if (!arguments.length) { return availablePlanetSizeMultiplier; }
+        availablePlanetSizeMultiplier = value;
         return planets;
     };
     planets.contentsToShow = function (value) {

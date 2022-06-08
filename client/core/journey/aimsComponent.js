@@ -24,7 +24,10 @@ export default function aimsComponent() {
     }
     let nameSettings = d => defaultNameSettings;
 
-    let planetFontSize = 6;
+    let planetSettings = {
+        fontSize:12,
+        availablePlanetSizeMultiplier:1.5
+    }
 
     let timeScale = x => 0;
     let yScale = x => 0;
@@ -339,7 +342,8 @@ export default function aimsComponent() {
                                     .linksData(linksData) 
                                     .timeScale(timeScale)
                                     .yScale(yScale)
-                                    .fontSize(planetFontSize)
+                                    .fontSize(planetSettings.fontSize)
+                                    .availablePlanetSizeMultiplier(planetSettings.availablePlanetSizeMultiplier)
 
                                     .onClick(onClickGoal)
                                     .onDragStart(dragGoalStart)
@@ -536,9 +540,9 @@ export default function aimsComponent() {
         }
         return aims;
     };
-    aims.planetFontSize= function (value) {
-        if (!arguments.length) { return planetFontSize; }
-        planetFontSize = value;
+    aims.planetSettings = function (value) {
+        if (!arguments.length) { return planetSettings; }
+        planetSettings = { ...planetSettings, ...value };
         return aims;
     };
     aims.contentsToShow = function (value) {
