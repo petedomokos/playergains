@@ -89,7 +89,7 @@ export default function planetsComponent() {
     let menus = {};
     let menuOptions = (d) => {
         const basicOpts = [
-            { key: "edit", label:"Edit" },
+            //{ key: "edit", label:"Edit" },
             { key: "delete", label:"Delete" }
         ]
         return d.aimId !== "main" ? basicOpts : [ { key: "aim", label:"Make Aim" }, ...basicOpts ];

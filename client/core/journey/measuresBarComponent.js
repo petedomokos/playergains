@@ -41,6 +41,8 @@ export default function measuresBarComponent() {
         measureHeight = measuresHeight;
     };
 
+    let importsAvailable = false;
+
     //handlers
     let openNewMeasureForm = () => {};
     let openImportMeasuresComponent = () => {};
@@ -68,7 +70,6 @@ export default function measuresBarComponent() {
     let selected;
     let dragged;
     let clicked;
-
 
     let prevData;
 
@@ -110,10 +111,11 @@ export default function measuresBarComponent() {
                 .attr("transform", "translate("+btnWidth/2 +"," +btnHeight/2 +")");
 
             newMeasureBtnG
-                .attr("transform", "translate("+(contentsWidth - (btnWidth * 2) - btnGap) +",2.5)");
+                .attr("transform", "translate("+(contentsWidth - btnWidth) +",2.5)")
             
             importMeasuresBtnG
-                .attr("transform", "translate("+(contentsWidth - btnWidth) +",2.5)");
+                .attr("transform", "translate("+(contentsWidth - (btnWidth * 2) - btnGap) +",2.5)")
+                .attr("display", importsAvailable ? null : "none");
 
             const measuresData = measures.map(m => ({
                 ...m,

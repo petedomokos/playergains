@@ -38,7 +38,7 @@ export const DIMNS = {
         margin:{ left:10, right:10, top:10, bottom:10 }
     },
     ctrls:{
-        btnWidth:70,
+        btnWidth:130,
         btnHeight:20
     },
     xAxis:{

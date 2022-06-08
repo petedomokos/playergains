@@ -405,8 +405,9 @@ const Journey = ({ screen, width, height, save, closeDialog }) => {
     <div className={classes.root}>
         <svg className={classes.svg} ref={containerRef}></svg>
         <div className={classes.ctrls}>
-            <Button className={classes.btn} color="primary" variant="contained" onClick={toggleMeasuresOpen} >measures</Button>
-            <Button className={classes.btn} color="primary" variant="contained" onClick={toggleCompletion} >completion</Button>
+            <Button className={classes.btn} color="primary" variant="contained" onClick={toggleMeasuresOpen} >
+              {( measuresBarIsOpen ?"Close " : "Open ") +"measures"}</Button>
+            {/**<Button className={classes.btn} color="primary" variant="contained" onClick={toggleCompletion} >completion</Button>**/}
         </div>
         {modalData && 
           <div ref={modalRef} className={classes.modal}>
