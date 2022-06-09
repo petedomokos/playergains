@@ -3,10 +3,11 @@ import { signout } from '../../actions/AuthActions'
 import Menu from '../Menu'
 
 const mapStateToProps = (state, ownProps) => {
+	console.log("menucont", state)
 	//pass signout and signingOut through to Menu from PageTemplateContainer
 	return{
 		signingOut:state.asyncProcesses.signingOut,
-		screenSize:ownProps.screenSize
+		screenSize:state.system.screen.size
 	}
 }
 const mapDispatchToProps = dispatch => ({

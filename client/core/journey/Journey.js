@@ -366,7 +366,6 @@ const Journey = ({ screen, width, height, save, closeDialog }) => {
   }
 
   const onClosePlanetForm = () => {
-    console.log("close planet form")
     journey.endEditPlanet();
     setModalData(undefined);
   }
@@ -450,7 +449,8 @@ const Journey = ({ screen, width, height, save, closeDialog }) => {
 Journey.defaultProps = {
   screen: {},
   width: 0,
-  height: 0
+  height: 0,
+  save:() => {}
 }
 
 export default Journey;

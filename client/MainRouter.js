@@ -18,9 +18,9 @@ import MenuContainer from './core/containers/MenuContainer'
 import auth from './auth/auth-helper'
 import Expression from "./expression/Expression"
 import Games from "./games/Games"
-//import Journey from "./core/Journey.js"
 //styles
 import './assets/styles/main.css'
+import JourneyContainer from './core/journey/JourneyContainer'
 
 const MainRouter = ({ userId, loadUser, loadingUser, updateScreen }) => {
   //console.log("MainRouter", userId)
@@ -41,11 +41,8 @@ const MainRouter = ({ userId, loadUser, loadingUser, updateScreen }) => {
     }
   }
 
-  const [screen, setScreen] = useState(getScreenInfo());
-
   useEffect(() => {
       const handleResize = () => {
-        //setScreen(getScreenInfo())
         updateScreen(getScreenInfo())
       };
       window.addEventListener("resize", handleResize);
@@ -68,10 +65,10 @@ const MainRouter = ({ userId, loadUser, loadingUser, updateScreen }) => {
   return (
     <div>
       <div style={{height:0.05}}></div>
-      <MenuContainer screenSize={screen.size} />
-      {/**<div>
-          <Journey screenSize={screen.size} width={screen.width} height={screen.height - 90} />
-      </div>*/}
+      <MenuContainer />
+      <div>
+          <JourneyContainer />
+      </div>
       {(!jwt || userId) && <Switch>
           {jwt ?
             <Route exact path="/" component={UserHomeContainer} />

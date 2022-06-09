@@ -8,8 +8,8 @@ const mapStateToProps = (state, ownProps) => {
     //const { journeyId }  = ownProps.match.params;
 	return{
 		screen:state.system.screen,
-        width:ownProps.width,
-        height:ownProps.height,
+        width:state.system.screen.width,
+        height:state.system.screen.height - 90,
         //temp put the ? until backend is implemented - will eventually do same as users - we just send a summary at first
 		//journey:state.user.journeys?.find(j => j.id === journeyId),
 		loading:state.asyncProcesses.loading.journey,
