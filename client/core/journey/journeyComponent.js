@@ -390,7 +390,6 @@ export default function journeyComponent() {
             }
 
             function updateAims(){
-                console.log("screen", screen.isLarge)
                 //helper
                 const getView = () => {
                     switch(zoomViewLevel){
