@@ -330,7 +330,7 @@ const Journey = ({ screen, width, height, save, closeDialog }) => {
 }, [measures]);
 
   const onUpdatePlanetForm = modalType => (name, value) => {
-    console.log("updatePlanetForm")
+    //console.log("updatePlanetForm")
     const { d , measure } = modalData;
     const planet = planets.find(p => p.id === d.id);
     let props;
@@ -344,7 +344,7 @@ const Journey = ({ screen, width, height, save, closeDialog }) => {
   }
 
   const onUpdateAimForm = (name, value) => {
-    console.log("update aim form")
+    //console.log("update aim form")
     const { d } = modalData;
     if(d.id === "main"){
       setCanvas(prevState => ({ ...prevState, [name]: value }))

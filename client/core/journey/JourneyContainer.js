@@ -4,7 +4,7 @@ import { saveJourney } from '../../actions/JourneyActions'
 import { closeDialog } from '../../actions/CommonActions'
 
 const mapStateToProps = (state, ownProps) => {
-	console.log('JourneyContainer', state)
+	//console.log('JourneyContainer', state)
     //const { journeyId }  = ownProps.match.params;
 	return{
 		screen:state.system.screen,
