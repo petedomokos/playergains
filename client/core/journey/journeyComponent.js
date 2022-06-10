@@ -426,18 +426,14 @@ export default function journeyComponent() {
                                 left: screen.isLarge ? DIMNS.mainAim.name.margin.left : 35 
                             } 
                         } else if(getView().goals){
-                            //todo - name still needs to be bigger
-                            //todo - fine tune these below fro what we really want
-                            //name is in top left of aim
-                            //todo - do this, including scaling the margin.left (should be able to do 
-                            //it based on something else, but if need be pass through the scale k)
-                            fontSize = d3.max([k * FONTSIZES.aim.name.standard, FONTSIZES.aim.name.min /*make larger min*/]);
+                            //name is top-left
+                            fontSize = d3.max([k * FONTSIZES.aim.name.standard, FONTSIZES.aim.name.min]);
                             width =  d3.max([k * DIMNS.aim.name.width.standard, DIMNS.aim.name.width.min]); 
                             height = d3.max([k * DIMNS.aim.name.height.standard, DIMNS.aim.name.height.min]);
                             margin = DIMNS.aim.name.margin;
                         } else {
                             //name is centred
-                            fontSize = d3.max([k * FONTSIZES.aim.centredName.standard, FONTSIZES.aim.centredName.min /*make larger mins*/]);
+                            fontSize = d3.max([k * FONTSIZES.aim.centredName.standard, FONTSIZES.aim.centredName.min]);
                             width =  d3.max([k * DIMNS.aim.name.width.standard, DIMNS.aim.centredName.width.min]); 
                             height = d3.max([k * DIMNS.aim.name.height.standard, DIMNS.aim.centredName.height.min]);
                             margin = DIMNS.aim.name.margin;
