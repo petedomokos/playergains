@@ -119,25 +119,6 @@ export default function planetsComponent() {
                     onDragEnd.call(this, e, d);
                 }));
 
-            const outerPlanetDrag = d3.drag()
-                .on("start", withClick(onRingDragStart))
-                .on("drag", withClick(onRingDrag))
-                .on("end", withClick(function(e,d){
-                    if(withClick.isClick()) { 
-                        return; }
-                    onRingDragEnd.call(this, e, d);
-                }));
-
-            function onOuterDragStart(e,d){
-                console.log("outer drag start")
-            }
-            function onOuterDrag(e,d){
-                console.log("outer drag")
-            }
-            function onOuterDragEnd(e,d){
-                console.log("outer drag end")
-            }
-
             const planetG = containerG.selectAll("g.planet").data(data, d => d.id);
             planetG.enter()
                 .append("g")
@@ -153,27 +134,13 @@ export default function planetsComponent() {
                     //bg ellipse (stops elements under it showing through when opacity < 1)
                     contentsG
                         .append("ellipse")
-                            .attr("class", "core core-outer bg solid-bg")
-                            .attr("fill", bgColour)
-                            .attr("stroke", "none")
-
-                    //ellipse
-                    contentsG
-                        .append("ellipse")
-                            .attr("class", "core core-outer visible")
-                            .attr("stroke-width", 2) //stroke is none anyway unless milestone
-                            .attr("cursor", "crosshair");
-
-                    contentsG
-                        .append("ellipse")
                             .attr("class", "core core-inner bg solid-bg")
-                            .attr("fill", bgColour)
-                            .attr("stroke", "none");
+                            .attr("fill", bgColour);
 
                     contentsG
                         .append("ellipse")
                             .attr("class", "core core-inner visible")
-                            .attr("stroke", "none")
+                            .attr("stroke-width", 2)
                             .attr("cursor", "pointer")
                     
                     //title text
@@ -197,12 +164,6 @@ export default function planetsComponent() {
                 .merge(planetG)
                 .attr("opacity", 1)
                 .each(function(d){
-                    const rx = d.rx(width);
-                    const ry =  d.ry(height);
-                    const ringRx = d.ringRx(width);
-                    const ringRy = d.ringRy(height);
-                    const deltaRx = ringRx - rx;
-                    const deltaRy = ringRy - ry;
                     //ENTER AND UPDATE
                     const contentsG = d3.select(this).select("g.contents")
 
@@ -211,22 +172,12 @@ export default function planetsComponent() {
                     contentsG.selectAll("text").attr("display", contentsToShow(d) === "none" ? "none" : null);
 
                     //ellipse sizes
-                    contentsG.selectAll("ellipse.core-outer")
-                        .attr("rx", rx)
-                        .attr("ry", ry)
-
                     contentsG.selectAll("ellipse.core-inner")
-                        .attr("rx", rx - deltaRx)
-                        .attr("ry", ry - deltaRy)
+                        .attr("rx", d.rx(width))
+                        .attr("ry", d.ry(height))
+                        .attr("stroke", d.isMilestone ? grey10(1) : "none")
 
                     //ellipse fills and opacities
-                    contentsG.select("ellipse.core-outer.visible")
-                        //@todo - add transition to this opacity change
-                        .attr("opacity", !selectedMeasure || selectedMeasureIsInGoal(d) ? planetOpacity.normal : planetOpacity.available)
-                        .attr("fill", d.fill)
-                        .attr("stroke", d.isMilestone ? grey10(1) : "none")
-                        .call(outerPlanetDrag);
-
                     contentsG.select("ellipse.core-inner.visible")
                         //@todo - add transition to this opacity change
                         .attr("opacity", !selectedMeasure || selectedMeasureIsInGoal(d) ? planetOpacity.normal : planetOpacity.available)
@@ -259,7 +210,7 @@ export default function planetsComponent() {
                                         .style("pointer-events", "none")
                             })
                             .merge(targG)
-                            .attr("transform", "translate(0, " +ry/2 +")")
+                            .attr("transform", "translate(0, " +d.ry(height)/2 +")")
                             .each(function(m){
                                 d3.select(this).select("text")
                                     .attr("opacity", !selectedMeasure || selectedMeasureIsInGoal(d) ? planetOpacity.normal : planetOpacity.unavailable)
@@ -669,29 +620,21 @@ export default function planetsComponent() {
         const deltaRy = ringRy - ry;
 
         const planetG = d3.select("g.planet-"+g.id);
-        const outerEllipses = planetG.selectAll("ellipse.core-outer");
         const innerEllipses = planetG.selectAll("ellipse.core-inner");
         //check - does attr("rx") still return a value when multiple sel?
-        const alreadyIncreased = +outerEllipses.attr("rx") !== rx;
+        const alreadyIncreased = +innerEllipses.attr("rx") !== rx;
         //Math.abs(+coreEllipse.attr("rx") - planetG.datum().rx(width)) > 0.001;
         //console.log("already increased?", alreadyIncreased)
         if(!selectedMeasureIsInGoal(g) && !alreadyIncreased){
             //console.log("increase size", goal.id)
             //increase size to show available
             //ellipses
-            outerEllipses
-                .transition()
-                    .duration(200)
-                    .attr("rx", rx * availablePlanetSizeMultiplier)
-                    .attr("ry", ry * availablePlanetSizeMultiplier);
-
             innerEllipses
                 .transition()
                     .duration(200)
                     .attr("rx", (rx - deltaRx) * availablePlanetSizeMultiplier)
                     .attr("ry", (ry - deltaRy) * availablePlanetSizeMultiplier)
                         .on("end", () => cb(g.id. measureId));
-
         }
         
         return planets;
@@ -708,19 +651,13 @@ export default function planetsComponent() {
 
         const planetG = d3.select("g.planet-"+g.id);
         //ellipses
-        const outerEllipses = planetG.selectAll("ellipse.core-outer");
         const innerEllipses = planetG.selectAll("ellipse.core-inner");
-        const alreadyReset = +outerEllipses.attr("rx") === rx;
+        const alreadyReset = +innerEllipses.attr("rx") === rx;
         //Math.abs(+coreEllipse.attr("rx") - planetG.datum().rx(width)) < 0.001;
         //console.log("already reset?", alreadyReset)
         if(!selectedMeasureIsInGoal(g) && !alreadyReset){
             //console.log("reduce size", goal.id)
             //stop showing available
-            outerEllipses
-                .transition()
-                    .duration(200)
-                        .attr("rx", rx)
-                        .attr("ry", ry)
             innerEllipses
                 .transition()
                     .duration(200)

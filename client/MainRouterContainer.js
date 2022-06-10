@@ -16,7 +16,6 @@ const mapDispatchToProps = dispatch => ({
 		dispatch(fetchUser(userId))
 	},
 	updateScreen(screen){
-		console.log("updateScreen")
 		dispatch(updateScreen(screen))
 	}
 })
