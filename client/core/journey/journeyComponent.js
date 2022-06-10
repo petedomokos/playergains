@@ -12,7 +12,7 @@ import measuresBarComponent from './measuresBarComponent';
 import { updatePos } from "./domHelpers"
 //import { COLOURS, DIMNS } from "./constants";
 import { addWeeks } from "../../util/TimeHelpers"
-import { zoomLevel, DEFAULT_D3_TICK_SIZE, COLOURS, FONTSIZES, DIMNS } from "./constants";
+import { zoomLevel, DEFAULT_D3_TICK_SIZE, COLOURS, FONTSIZES, DIMNS, AVAILABLE_GOAL_MULTIPLIER } from "./constants";
 import { pointIsInRect, distanceBetweenPoints, } from './geometryHelpers';
 import dragEnhancements from './enhancedDragHandler';
 
@@ -442,7 +442,7 @@ export default function journeyComponent() {
                     })
                     .planetSettings({
                         fontSize: d3.max([FONTSIZES.planet.name.min, k * FONTSIZES.planet.name.standard]),
-                        availablePlanetSizeMultiplier: 2 / k
+                        availablePlanetSizeMultiplier: AVAILABLE_GOAL_MULTIPLIER / k
                     })
                     .onDeleteAim((aimId) => {
                         selected = undefined;

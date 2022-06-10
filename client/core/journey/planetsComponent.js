@@ -2,7 +2,7 @@ import * as d3 from 'd3';
 //import "d3-selection-multi";
 import { calcAdjX, findPointChannel, findDateChannel, findNearestChannelByEndDate, getTransformationFromTrans } from './helpers';
 import { ellipse } from "./ellipse";
-import { grey10, COLOURS, DIMNS } from "./constants";
+import { grey10, COLOURS, DIMNS, AVAILABLE_GOAL_MULTIPLIER } from "./constants";
 import { findNearestPlanet, distanceBetweenPoints, channelContainsPoint, channelContainsDate } from './geometryHelpers';
 import dragEnhancements from './enhancedDragHandler';
 import menuComponent from './menuComponent';
@@ -49,7 +49,7 @@ export default function planetsComponent() {
         available: 0.3,
         //unavailable: 0.2
     }
-    let availablePlanetSizeMultiplier = 1.5;
+    let availablePlanetSizeMultiplier = AVAILABLE_GOAL_MULTIPLIER;
 
     //API FUNCTIONS
     let showAvailabilityStatus = function() {};

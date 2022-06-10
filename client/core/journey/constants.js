@@ -6,7 +6,8 @@ export const OPEN_CHANNEL_EXT_WIDTH = 50;
 export const DEFAULT_D3_TICK_SIZE = 6;
 export const DEFAULT_PLANET_RX = 70;
 export const DEFAULT_PLANET_RY = 50;
-export const PLANET_RING_MULTIPLIER = 1.3;
+export const PLANET_RING_MULTIPLIER = 1.4;
+export const AVAILABLE_GOAL_MULTIPLIER = 2;
 
 export const FONTSIZES = {
     ctrls:{
