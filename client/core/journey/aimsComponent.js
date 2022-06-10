@@ -169,9 +169,10 @@ export default function aimsComponent() {
                         updateCentredName(d.width, d.height, d.name);
                         //top-left name
                         function updateTopLeftName(name){
+                            //console.log("set", nameSettings(d))
                             const { width, height, margin, fontSize } = nameSettings(d);
-                            const contentsWidth = width - margin.left - margin.right;
-                            const contentsHeight = height - margin.top - margin.bottom;
+                            const contentsWidth = d3.max([width - margin.left - margin.right, 0]);
+                            const contentsHeight = d3.max([height - margin.top - margin.bottom, 0]);
 
                             controlledContentsG.call(nameComponent, {
                                 className:"top-left-name", //note: curr name compo can only take one classname else it messes selection up
@@ -194,8 +195,8 @@ export default function aimsComponent() {
                         //centred name
                         function updateCentredName(aimWidth, aimHeight, name){
                             const { width, height, margin, fontSize } = nameSettings(d);
-                            const contentsWidth = width - margin.left - margin.right;
-                            const contentsHeight = height - margin.top - margin.bottom;
+                            const contentsWidth = d3.max([width - margin.left - margin.right, 0]);
+                            const contentsHeight = d3.max([height - margin.top - margin.bottom, 0]);
                             //enlarge as font is larger
                             const centredRectWidth = contentsWidth * 2.2;
                             const centredRectHeight = contentsHeight * 1.4;
@@ -213,7 +214,7 @@ export default function aimsComponent() {
                                 },
                                 text:{
                                     textAnchor:"middle",
-                                    fontSize:fontSize * 3,
+                                    fontSize:fontSize,
                                     stroke:grey10(1),
                                     name:name || "unnamed group"
                                 }

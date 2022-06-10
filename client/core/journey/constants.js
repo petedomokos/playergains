@@ -1,7 +1,7 @@
 export const grey10 = (i) => ["#FFFFFF", "#E8E8E8","#D3D3D3", "#BEBEBE", "#A8A8A8", "#888888", "#696969", "#505050", "#303030", "#000000"][i-1];
 
 //1 = summary, 2 = standard, 3 = detail
-export const zoomLevel = k => k < 0.5 ? -1 : k < 1.3 ? 0 : 1;
+export const zoomLevel = k => k < 0.35 ? -1 : k < 1.3 ? 0 : 1;
 export const OPEN_CHANNEL_EXT_WIDTH = 50;
 export const DEFAULT_D3_TICK_SIZE = 6;
 export const DEFAULT_PLANET_RX = 70;
@@ -16,7 +16,14 @@ export const FONTSIZES = {
         name:12
     },
     aim:{
-        name:10
+        name:{
+            min:9,
+            standard:11
+        },
+        centredName:{
+            min:9,
+            standard:40 //appears when zoom is approx 0.3 so it is scaled down
+        }
     },
     planet:{
         name:{
@@ -92,7 +99,26 @@ export const DIMNS = {
     },
     aim:{
         name:{
-            width:100,
+            //todo - usethe below, and we have a diff min for centred name.
+            width:{
+                min:100,
+                standard:100
+            },
+            height:{
+                min:25,
+                standard:25
+            },
+            margin: { left: 10, right: 0, top: 10, bottom: 0 }
+        },
+        centredName:{
+            width:{
+                min:100,
+                standard:100
+            },
+            height:{
+                min:25,
+                standard:25
+            },
             height:25,
             margin: { left: 10, right: 0, top: 10, bottom: 0 }
         },

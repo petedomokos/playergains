@@ -82,6 +82,7 @@ import dragEnhancements from './enhancedDragHandler';
         goals not displayed, just aim title displayed?)
 
     BACKLOG:
+    - aim name margin left should be scaled by zoom scale so it doesnt appear to shoft across to the right
     - replace reference to planets with goals everywhere
     - consider stopping planet and link transitions when loading an existing canvas
      - planet ellipse core-inner solid-bg shows thorugh arounfd teh edge of the one on top
@@ -410,18 +411,39 @@ export default function journeyComponent() {
                     .yScale(zoomedYScale)
                     .channelsData(channelsData)
                     .linksData(linksData)
-                    .nameSettings(d => ({
-                        fontSize: d.id === "main" ? FONTSIZES.mainAim.name : k * FONTSIZES.aim.name, 
-                        width: d.id === "main" ? DIMNS.mainAim.name.width : k * DIMNS.aim.name.width, 
-                        height: d.id === "main" ? DIMNS.mainAim.name.height : k * DIMNS.aim.name.height,
-                        margin: d.id === "main" ? 
-                            { 
+                    .nameSettings(d => {
+                        let fontSize;
+                        let width;
+                        let height;
+                        let margin;
+                        if(d.id === "main"){
+                            fontSize = FONTSIZES.mainAim.name;
+                            width = DIMNS.mainAim.name.width
+                            height = DIMNS.mainAim.name.height
+                            //shift left to avoid burger menu when smaller screen
+                            margin = { 
                                 ...DIMNS.mainAim.name.margin,
-                                //shift left to avoid burger menu when smaller screen
-                                left: screen.isLarge ? DIMNS.mainAim.name.margin.left : 35 } 
-                            : 
-                            DIMNS.aim.name.margin
-                    }))
+                                left: screen.isLarge ? DIMNS.mainAim.name.margin.left : 35 
+                            } 
+                        } else if(getView().goals){
+                            //todo - name still needs to be bigger
+                            //todo - fine tune these below fro what we really want
+                            //name is in top left of aim
+                            //todo - do this, including scaling the margin.left (should be able to do 
+                            //it based on something else, but if need be pass through the scale k)
+                            fontSize = d3.max([k * FONTSIZES.aim.name.standard, FONTSIZES.aim.name.min /*make larger min*/]);
+                            width =  d3.max([k * DIMNS.aim.name.width.standard, DIMNS.aim.name.width.min]); 
+                            height = d3.max([k * DIMNS.aim.name.height.standard, DIMNS.aim.name.height.min]);
+                            margin = DIMNS.aim.name.margin;
+                        } else {
+                            //name is centred
+                            fontSize = d3.max([k * FONTSIZES.aim.centredName.standard, FONTSIZES.aim.centredName.min /*make larger mins*/]);
+                            width =  d3.max([k * DIMNS.aim.name.width.standard, DIMNS.aim.centredName.width.min]); 
+                            height = d3.max([k * DIMNS.aim.name.height.standard, DIMNS.aim.centredName.height.min]);
+                            margin = DIMNS.aim.name.margin;
+                        }
+                        return { fontSize, width, height, margin }
+                    })
                     .planetSettings({
                         fontSize: d3.max([FONTSIZES.planet.name.min, k * FONTSIZES.planet.name.standard]),
                         availablePlanetSizeMultiplier: 2 / k
