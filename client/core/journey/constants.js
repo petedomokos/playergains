@@ -140,7 +140,7 @@ export const COLOURS = {
     potentialLinkPlanet:grey10(3),
     potentialLink:grey10(3),
     measure:"none",
-    selectedMeasure:"aqua"
+    selectedMeasure:"white"
 }
 
 export const SMALL_FONT = 9;

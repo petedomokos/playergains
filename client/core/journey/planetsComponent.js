@@ -233,7 +233,7 @@ export default function planetsComponent() {
                         .attr("fill", d.fill)
                    
                     //title
-                    contentsG.select("text")
+                    contentsG.select("text.title")
                         .attr("opacity", !selectedMeasure || selectedMeasureIsInGoal(d) ? planetOpacity.normal : planetOpacity.available)
                         .attr("font-size", fontSize)
                         .text(d.name || d.id.slice(-1))
@@ -257,13 +257,16 @@ export default function planetsComponent() {
                                         .attr("text-anchor", "middle")
                                         .attr("dominant-baseline", "middle")
                                         .style("pointer-events", "none")
-                                        .style("font-size", 6)
                             })
                             .merge(targG)
                             .attr("transform", "translate(0, " +ry/2 +")")
                             .each(function(m){
                                 d3.select(this).select("text")
                                     .attr("opacity", !selectedMeasure || selectedMeasureIsInGoal(d) ? planetOpacity.normal : planetOpacity.unavailable)
+                                    .style("font-size", fontSize * 1.2)
+                                    //.attr("stroke-width", 0.5)
+                                    .attr("fill", "white")
+                                    //.attr("stroke", COLOURS.selectedMeasure)
                                     .text("target "+(typeof m.targ === "number" ? m.targ : "not set"))
 
                             })

@@ -77,7 +77,7 @@ const mockMeasures = [
 
 //width and height may be full screen, but may not be
 const Journey = ({ screen, width, height, save, closeDialog }) => {
-  console.log("Journey", screen)
+  //console.log("Journey", screen)
   const [journey, setJourney] = useState(undefined)
   //@todo - put into one state object to avoid multiple updates
   const [canvas, setCanvas] = useState({});

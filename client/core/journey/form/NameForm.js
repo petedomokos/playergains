@@ -49,13 +49,13 @@ export default function NameForm({ data, onUpdate, onClose }) {
     })
 
     const handleChange = name => event => {
-        console.log("name change")
+        //console.log("name change")
         setValues({ ...values, [name]: event.target.value })
         onUpdate(name, event.target.value)
     }
 
     const handleKeyDown = (e) =>{
-        console.log("key down 13")
+        //console.log("key down 13")
         if(e.keyCode === 13){
             onClose();
         }
