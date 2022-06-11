@@ -107,7 +107,8 @@ export default function aimsComponent() {
 
             aimG.enter()
                 .append("g")
-                    .attr("class", d => "aim aim-"+d.id + " entering")
+                    .attr("class", d => "aim aim-"+d.id)
+                    .classed("entering", true)
                     .each(function(d){
                         const nameWidth = 100;
                         const nameHeight = 20;
@@ -242,24 +243,33 @@ export default function aimsComponent() {
                             { loc:"bot-left", x: -handleWidth * 0.33, y: d.height - handleHeight * 0.66}
                         ];
 
+                        let enteringAim = false;
                         const resizeG = dragHandlesG.selectAll("g.resize").data(d.id === "main" ? [] : resizeData);
                         resizeG.enter()
                             .append("g")
                                 .attr("class", "resize")
-                                .each(function(d, i){
+                                .each(function(r, i){
+                                    enteringAim = true;
                                     d3.select(this)
                                         .append("rect")
+                                            .attr("opacity", 0)
                                             .attr("fill", "transparent")
                                             .attr("stroke", grey10(4))
                                             .attr("stroke-width", 0.4)
                                             .attr("stroke-dasharray", 1)
                                             .style("cursor", "pointer")
-                                            .attr("opacity", 0)
-                                            .on("mouseover", function(){ d3.select(this).attr("opacity", 1); })
-                                            .on("mouseout", function(){ d3.select(this).attr("opacity", 0); });
+                                            .on("mouseover", function(){
+                                                if(!enteringAim){
+                                                    d3.select(this).attr("opacity", 1); 
+                                                }
+                                            })
+                                            .on("mouseout", function(){ 
+                                                enteringAim = false;
+                                                d3.select(this).attr("opacity", 0); 
+                                            });
                                 })
                                 .merge(resizeG)
-                                .attr("transform", d => "translate("+d.x +"," +d.y +")")
+                                .attr("transform", r => "translate("+r.x +"," +r.y +")")
                                 .each(function(){
                                     d3.select(this).select("rect")
                                         .attr("width", handleWidth)
@@ -267,7 +277,7 @@ export default function aimsComponent() {
                                 })
                                 .call(resizeDrag)
                         
-                        function resizeDragStart(e, d){
+                        function resizeDragStart(){
                             d3.select(this).select("g.drag-handles").attr("opacity", 0)
                         }
 

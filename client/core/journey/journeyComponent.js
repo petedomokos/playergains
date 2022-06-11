@@ -23,10 +23,7 @@ import { getTransformationFromTrans } from './helpers';
     * = needed to 
     
     DOING NOW/NEXT
-     - next - 
-      - when creating aim, the top left resize box shouldnt show immediately, only aftermouseout and in again, 
-        although it will still drag
-    - bug: aim drag rezie doesnt work in top-left, it drags whole aim instead
+     - next -
      
      
      have put in place api and server. now need o try it out,
@@ -89,6 +86,7 @@ import { getTransformationFromTrans } from './helpers';
         goals not displayed, just aim title displayed?)
 
     BACKLOG:
+    - handle user draggin aim top-corner below bottom of aim -> what should happen?
     - aim name margin left should be scaled by zoom scale so it doesnt appear to shoft across to the right
     - replace reference to planets with goals everywhere
     - consider stopping planet and link transitions when loading an existing canvas
