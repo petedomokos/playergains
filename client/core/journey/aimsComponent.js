@@ -264,6 +264,7 @@ export default function aimsComponent() {
                                                 }
                                             })
                                             .on("mouseout", function(){ 
+                                                //because a new aim starts over the mouse, we cn use the first mouse to reset entering aim to false;
                                                 enteringAim = false;
                                                 d3.select(this).attr("opacity", 0); 
                                             });
