@@ -54,25 +54,33 @@ export default function axesComponent() {
                     const isLastAxis = i === data.length - 1;
                     d3.select(this).call(axes[d.key].scale(scale))
                     d3.select(this).selectAll("g.tick")
-                    .attr("display", tickD => {
-                        //if there is another d then go up 
-                        //console.log("tick d", d)
-                        //if its the last axis, then remove the <= condition
-                        if(isFirstAxis){
-                            return tickD <= d.endDate ? "inline" : "none";
-                        }
-                        //if its the first axis, remove the >= conditon
-                        if(isLastAxis){
-                            return tickD >= d.startDate ? "inline" : "none";
-                        }
-                        //if its a middle axis, only show the between ticks
-                        return tickD >= d.startDate && tickD <= d.endDate ? "inline" : "none";
-                    })
-                    .each(function(){
-                        const currTrans = d3.select(this).attr("transform");
-                        d3.select(this)
-                            .attr("transform", shiftTranslate(0, -tickSize + DEFAULT_D3_TICK_SIZE, currTrans))
-                    })
+                        .attr("display", tickD => {
+                            //if there is another d then go up 
+                            //console.log("tick d", d)
+                            //if its the last axis, then remove the <= condition
+                            if(isFirstAxis){
+                                return tickD <= d.endDate ? "inline" : "none";
+                            }
+                            //if its the first axis, remove the >= conditon
+                            if(isLastAxis){
+                                return tickD >= d.startDate ? "inline" : "none";
+                            }
+                            //if its a middle axis, only show the between ticks
+                            return tickD >= d.startDate && tickD <= d.endDate ? "inline" : "none";
+                        })
+                        .each(function(){
+                            const currTrans = d3.select(this).attr("transform");
+                            d3.select(this)
+                                .attr("transform", shiftTranslate(0, -tickSize + DEFAULT_D3_TICK_SIZE, currTrans))
+
+                            //translate text
+                            d3.select(this).select("text")
+                                .attr("text-anchor", "middle")
+                                .attr("dominant-baseline", "central")
+                                //cant work ot how to centre the rotation
+                                //.attr("transform", "rotate(45, 0, 0)")
+
+                        })
 
                     d3.select(this).select("path.domain").attr("display", "none")
     

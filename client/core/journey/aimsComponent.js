@@ -1,6 +1,6 @@
 import * as d3 from 'd3';
 //import "d3-selection-multi";
-import { grey10, COLOURS, DIMNS } from "./constants";
+import { grey10, COLOURS, DIMNS, WIDGET_WIDTH, WIDGET_HEIGHT } from "./constants";
 import dragEnhancements from './enhancedDragHandler';
 import menuComponent from './menuComponent';
 import planetsComponent from './planetsComponent';
@@ -102,12 +102,12 @@ export default function aimsComponent() {
 
         // expression elements
         selection.each(function (data) {
-            //console.log("aims", data)
             containerG = d3.select(this);
             const aimG = containerG.selectAll("g.aim").data(data, d => d.id);
+
             aimG.enter()
                 .append("g")
-                    .attr("class", d => "aim aim-"+d.id)
+                    .attr("class", d => "aim aim-"+d.id + " entering")
                     .each(function(d){
                         const nameWidth = 100;
                         const nameHeight = 20;
@@ -130,7 +130,15 @@ export default function aimsComponent() {
                                 .attr("stroke", "none")
                                 .attr("display", d.id === "main" ? "none" : null)
                                 //.attr("pointer-events", d.id === "main" ? "none" : "all")
-                                .attr("fill-opacity", 0.15);
+                                .attr("fill-opacity", 0.15)
+                                .attr("width", WIDGET_WIDTH)
+                                .attr("height", WIDGET_HEIGHT)
+                                    .transition()
+                                    .duration(350)
+                                        .attr("width", d.displayWidth)
+                                        .attr("height", d.height)
+                                        //prevent updates during this transition
+                                        .on("end", () => { d3.select(this).classed("entering", false) });
 
                         
                         //components        
@@ -139,6 +147,7 @@ export default function aimsComponent() {
                     })
                     .merge(aimG)
                     .each(function(d){
+                        //enter and update
                         planets[d.id].transitionsOn(transitionsOn);
                         const aimG = d3.select(this);
                         const controlledContentsG = aimG.select("g.controlled-contents")
@@ -151,11 +160,6 @@ export default function aimsComponent() {
                         //drag handlers must not be in controlled components else they will be moved during the drag, causing a flicker
                         const dragHandlesG = aimG.select("g.drag-handles")
                             .attr("transform", "translate(" + (d.displayX) +"," + d.y +")")
-
-                        //bg
-                        controlledContentsG.selectAll("rect.bg")
-                            .attr("width", d.displayWidth)
-                            .attr("height", d.height);
                         
                         controlledContentsG.select("rect.semi-transparent-bg")
                             .attr("fill", d.colour || "transparent")
@@ -409,7 +413,14 @@ export default function aimsComponent() {
                                         .attr("opacity", 0)
                                         .on("end", function() { d3.select(this).remove(); });
                             }
-                        }) 
+                        })
+
+                        //update only
+                        if(!d3.select(this).classed("entering")){
+                            d3.select(this).select("rect.bg")
+                                .attr("width", d.displayWidth)
+                                .attr("height", d.height);
+                        }
 
                     });
 

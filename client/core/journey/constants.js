@@ -9,6 +9,11 @@ export const DEFAULT_PLANET_RY = 50;
 export const PLANET_RING_MULTIPLIER = 1.4;
 export const AVAILABLE_GOAL_MULTIPLIER = 2;
 
+export const WIDGETS_HEIGHT = 40;
+export const WIDGETS_WIDTH = 40;
+export const WIDGET_WIDTH = 30;
+export const WIDGET_HEIGHT = 30;
+
 export const FONTSIZES = {
     ctrls:{
         btn:10
@@ -99,6 +104,8 @@ export const DIMNS = {
         }
     },
     aim:{
+        initWidth:230,
+        initHeight:100,
         name:{
             //todo - usethe below, and we have a diff min for centred name.
             width:{

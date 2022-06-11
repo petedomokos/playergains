@@ -12,9 +12,10 @@ import measuresBarComponent from './measuresBarComponent';
 import { updatePos } from "./domHelpers"
 //import { COLOURS, DIMNS } from "./constants";
 import { addWeeks } from "../../util/TimeHelpers"
-import { zoomLevel, DEFAULT_D3_TICK_SIZE, COLOURS, FONTSIZES, DIMNS, AVAILABLE_GOAL_MULTIPLIER } from "./constants";
+import { zoomLevel, DEFAULT_D3_TICK_SIZE,WIDGETS_WIDTH, WIDGETS_HEIGHT, WIDGET_WIDTH, WIDGET_HEIGHT, COLOURS, FONTSIZES, DIMNS, AVAILABLE_GOAL_MULTIPLIER, grey10 } from "./constants";
 import { pointIsInRect, distanceBetweenPoints, } from './geometryHelpers';
 import dragEnhancements from './enhancedDragHandler';
+import { getTransformationFromTrans } from './helpers';
 
 /*
     *** = needed for Brian to test the basic design of a canvas (no measures, just planets, aims, and links)
@@ -22,7 +23,13 @@ import dragEnhancements from './enhancedDragHandler';
     * = needed to 
     
     DOING NOW/NEXT
-     - next - have put in place api and server. now need o try it out,
+     - next - 
+      - when creating aim, the top left resize box shouldnt show immediately, only aftermouseout and in again, 
+        although it will still drag
+    - bug: aim drag rezie doesnt work in top-left, it drags whole aim instead
+     
+     
+     have put in place api and server. now need o try it out,
      rename an empty journey canvas, just enough to to 1 letter and see if it saves.
     when it works, then remove saveJurney call from naming functions, until form is closed,
     to limit api calls to one per rename.
@@ -156,7 +163,7 @@ export default function journeyComponent() {
     let preEditZoom;
     let zoomViewLevel;
 
-    let createAim = function(){};
+    let handleCreateAim = function(){};
     let updateAim = function(){};
     let onDeleteAim = function(){};
     let createPlanet = function(){};
@@ -173,7 +180,7 @@ export default function journeyComponent() {
     let setZoom = function(){};
     let startEditPlanet = function (){};
     let endEditPlanet = function (){};
-    let convertGoalToAim = function (){};
+    let createAim = function (){};
     let updateSelected = function (){};
 
     //dom
@@ -181,6 +188,7 @@ export default function journeyComponent() {
     let contentsG;
     let axesG;
     let canvasG;
+    let widgetsG;
 
     let state;
 
@@ -203,6 +211,7 @@ export default function journeyComponent() {
 
     //state
     let hoveredPlanetId;
+    let draggedWidget;
 
     function journey(selection) {
         updateDimns();
@@ -591,7 +600,6 @@ export default function journeyComponent() {
                     })
                     .updatePlanet(updatePlanet)
                     .startEditPlanet(startEditPlanet)
-                    .convertGoalToAim(convertGoalToAim)
                     .onAddLink(onAddLink)
 
                 //render
@@ -775,6 +783,74 @@ export default function journeyComponent() {
             measuresBarG.exit().remove();      
         }
 
+        updateWidgets();
+
+        function updateWidgets(){
+            const widgetDrag = d3.drag()
+                .on("start", dragWidgetStart)
+                .on("drag", draggedWidget)
+                .on("end", dragWidgetEnd);
+            //bg
+            const widgets = [
+                { key:"aim" }
+            ]
+            const widgetG = widgetsG.selectAll("g.widget").data(widgets)
+            widgetG.enter()
+                .append("g")
+                    .attr("class", "widget")
+                    //we posiiotn each widget separately as an item on the canvas so that drag can simply use e.dx and dy
+                    .attr("transform", "translate("+10 +"," +(canvasHeight - WIDGETS_HEIGHT - 40) +")")
+                    .each(function(d){
+                        //aim
+                        if(d.key === "aim"){
+                            d3.select(this)
+                                .append("rect")
+                                    .attr("class", "widget")
+                                    .attr("rx", 10)
+                                    //.attr("x", WIDGETS_MARGIN.left)
+                                    //.attr("y", WIDGETS_MARGIN.top)
+                                    .attr("width", WIDGET_WIDTH)
+                                    .attr("height", WIDGET_HEIGHT)
+                                    //.attr("fill", "transparent")
+                                    .style("cursor", "pointer")
+                                    .attr("opacity", 0.5);
+                        }
+                    })
+                    .merge(widgetG)
+                    .each(function(d){
+                        //aim
+                        if(d.key === "aim"){
+                            d3.select(this).select("rect.widget")
+                                .attr("fill", grey10(5))
+                                //.attr("stroke", draggedWidget === d.key ? "white" : grey10(5))
+                                //.attr("fill", draggedWidget === d.key ? "white" : grey10(5))
+
+                        }
+                    })
+                    .call(widgetDrag)
+
+                    let cloneG;
+                    function dragWidgetStart(e,d){
+                        //create a clone 
+                        cloneG = d3.select(this)
+                            .clone(true)
+                            .attr("opacity", 1)
+                    }
+                    function draggedWidget(e,d){
+                        const { translateX, translateY } = getTransformationFromTrans(cloneG.attr("transform"));
+                        const newX = translateX + e.dx;
+                        const newY = translateY + e.dy;
+                        //drag the clone
+                        cloneG.attr("transform", "translate("+newX +"," +newY +")");
+                    }
+                    function dragWidgetEnd(e,d){
+                        //remove the clone
+                        cloneG.remove();
+                        createAim(e);
+                        //add item to state eg aim -> and it should start with the small icon dimns and transition to larger
+                    }
+        }
+
         function init(){
             svg = d3.select(this).style("border", "solid");
 
@@ -793,6 +869,20 @@ export default function journeyComponent() {
                     .attr("fill", COLOURS?.canvas || "#FAEBD7");
 
             axesG = contentsG.append("g").attr("class", "axes");
+
+            widgetsG = contentsG
+                .append("g")
+                    .attr("class", "widgets")
+                    //.attr("transform", "translate("+10 +"," +(canvasHeight - WIDGETS_HEIGHT - 40) +")")
+
+            widgetsG
+                .append("rect")
+                    .attr("class", "bg")
+                    .attr("width", WIDGETS_WIDTH)
+                    .attr("height", WIDGETS_HEIGHT)
+                    .attr("fill", COLOURS?.canvas || "#FAEBD7")
+                    //.attr("stroke", "black");
+
         }
 
         updateSelected = (d) => {
@@ -887,7 +977,32 @@ export default function journeyComponent() {
             preEditZoom = undefined;
         }
 
-        convertGoalToAim = function(d){
+        createAim = function(e){
+            console.log("createAim...", e)
+            //todo - transition from icon dimns
+            const width = DIMNS.aim.initWidth
+            const height = DIMNS.aim.initHeight;
+            const aim = {
+                startDate:zoomedTimeScale.invert(e.x - WIDGET_WIDTH/2),
+                endDate:zoomedTimeScale.invert(e.x + width),
+                startYPC:zoomedYScale.invert(e.y - WIDGET_HEIGHT/2),
+                endYPC:zoomedYScale.invert(e.y + height)
+            }
+
+            //calculate here which planets are in based on the actual x (not displayX)
+            const planetIdsInAim = d3.selectAll("g.planet")
+                .filter(g => pointIsInRect(g, { x: e.x, y:e.y, width, height }))
+                .data()
+                .map(g => g.id);
+
+            handleCreateAim(aim, planetIdsInAim);
+            updateSelected(undefined);          
+        }
+
+        return selection;
+    }
+        /*
+        createAim = function(d){
             deletePlanet(d.id);
             //A. remove this planet - transition out should be handled by update in planetsComponent automatically
             
@@ -911,7 +1026,7 @@ export default function journeyComponent() {
             const height = 3 * goalHeight + 2 * vertGap + aimMargin.top + aimMargin.bottom;
 
             const aim = {
-                //id:createAimId(aims), do id in Journey
+                //id:handleCreateAimId(aims), do id in Journey
                 name:d.name,
                 //store pre-scale values so independent of zoom
 
@@ -928,27 +1043,13 @@ export default function journeyComponent() {
                 .data()
                 .map(g => g.id);
 
-            createAim(aim, planetIdsInAim);
+            handleCreateAim(aim, planetIdsInAim);
             updateSelected(undefined);          
-
-            //C: add aim to state with init pos to wrapped around the 3 new planets -> this will be drawn on automatically on update aimsComponent
-            //ach aim just needs an x,y,width,height values, plus id, name (which is the removed planet name)
-            //Note - any measures of the removed planet are just removed. Only gioals can have measures, but if a goal inside and aim has a measure src
-            //goal outside teh aim, the connecting line is drawn to the aim when zoomed out
-
-            //@todo- consider, do we need to refactor so all planets are under one g for an aim, so we just dragg that g
-            //what was teh benefit of having in Designer the planets separate from the clusters?
-            //if its just the force, this could be applied to aims anyway. - if need be, each free top-level planet could be wrapped in its opwn sub-aim
-            //which is just the bbox of he ellipse pretty much
-            //BUT it may complicate the cood system? unless we keep using the same one cood system? but tehn no point in nesting
-            //we can store in state separately, but the layout could convcert to nested structure.
-
-            //could have best of both worlds - a separate g for each aim and its planets, but not positioned, so the cood systems and scales etc are same for all planets and aims
-            //cant use it for drag, but it can be used to stack aims, 
         }
 
         return selection;
     }
+    */
 
     //api
     journey.margin = function (value) {
@@ -997,10 +1098,10 @@ export default function journeyComponent() {
         withCompletionPaths = value;
         return journey;
     };
-    journey.createAim = function (value) {
-        if (!arguments.length) { return createAim; }
+    journey.handleCreateAim = function (value) {
+        if (!arguments.length) { return handleCreateAim; }
         if(typeof value === "function"){
-            createAim = value;
+            handleCreateAim = value;
         }
         return journey;
     };
