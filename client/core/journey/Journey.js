@@ -196,7 +196,6 @@ const Journey = ({ screen, width, height, save, closeDialog }) => {
         .modalData(modalData)
         //@todo - make createId handle prefixes so all ids are unique
         .handleCreateAim(function(aim, planetIds){
-          console.log("handleCreateAim", aim)
           const id = createId(aims.map(a => a.id));
           const colour = createColour(aims.length);
           setAims(prevState => ([ ...prevState, { id , colour, dataType:"aim", ...aim }]))

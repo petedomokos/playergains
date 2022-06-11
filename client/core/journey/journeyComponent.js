@@ -978,7 +978,6 @@ export default function journeyComponent() {
         }
 
         createAim = function(e){
-            console.log("createAim...", e)
             //todo - transition from icon dimns
             const width = DIMNS.aim.initWidth
             const height = DIMNS.aim.initHeight;

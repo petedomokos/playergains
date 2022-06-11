@@ -274,10 +274,10 @@ export default function aimsComponent() {
                         function resizeDragged(e, loc, aim){
                             if(loc === "top-left"){
                                 //reduce width (but dx < 0 this will be an increase) and increase x pos (which is decrease if dx < 0)
-                                //aim.displayWidth -= e.dx;
+                                aim.displayWidth -= e.dx;
                                 aim.displayX += e.dx;
                                 //reduce height (but dy < 0 this will be an increase) and increase y pos (which is decrease if dy < 0)
-                                //aim.height -= e.dy;
+                                aim.height -= e.dy;
                                 aim.y += e.dy;
 
                             } else if(loc === "top-right"){
