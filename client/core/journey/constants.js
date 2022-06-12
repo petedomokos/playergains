@@ -9,8 +9,8 @@ export const DEFAULT_PLANET_RY = 50;
 export const PLANET_RING_MULTIPLIER = 1.4;
 export const AVAILABLE_GOAL_MULTIPLIER = 2;
 
-export const WIDGETS_HEIGHT = 40;
 export const WIDGETS_WIDTH = 40;
+export const WIDGETS_HEIGHT = 40;
 export const WIDGET_WIDTH = 30;
 export const WIDGET_HEIGHT = 30;
 
@@ -52,14 +52,14 @@ export const FONTSIZES = {
 
 export const DIMNS = {
     journey:{
-        margin:{ left:10, right:10, top:10, bottom:10 }
+        margin:{ left:0, right:0, top:0, bottom:0 }
     },
     ctrls:{
         btnWidth:130,
         btnHeight:20
     },
     xAxis:{
-        height: 30
+        height: 60
     },
     measures:{
         height:100,

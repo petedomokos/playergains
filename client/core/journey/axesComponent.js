@@ -75,10 +75,10 @@ export default function axesComponent() {
 
                             //translate text
                             d3.select(this).select("text")
-                                .attr("text-anchor", "middle")
+                                .attr("text-anchor", "end")
                                 .attr("dominant-baseline", "central")
                                 //cant work ot how to centre the rotation
-                                //.attr("transform", "rotate(45, 0, 0)")
+                                .attr("transform", "rotate(-45, 0, 742)")
 
                         })
 

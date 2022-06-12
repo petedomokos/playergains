@@ -86,6 +86,7 @@ import { getTransformationFromTrans } from './helpers';
         goals not displayed, just aim title displayed?)
 
     BACKLOG:
+    - implement delate by longpress+drag fast
     - handle user draggin aim top-corner below bottom of aim -> what should happen?
     - aim name margin left should be scaled by zoom scale so it doesnt appear to shoft across to the right
     - replace reference to planets with goals everywhere
@@ -130,6 +131,9 @@ export default function journeyComponent() {
     let measuresOpen;
     let measuresBarHeight;
 
+    const widgetsX = 10;
+    let widgetsY;
+
     function updateDimns(){
         contentsWidth = width - margin.left - margin.right;
         contentsHeight = height - margin.top - margin.bottom;
@@ -137,6 +141,7 @@ export default function journeyComponent() {
         measuresBarHeight = measuresOpen ? DIMNS.measures.height : 0
         //note- for some reason, reducing canvasHeight doesnt seem to move axis properly, so instead just subtract measuresBarHeight for axis translateY
         canvasHeight = contentsHeight;// - measuresBarHeight; //this should be lrge enough for all planets, and rest can be accesed via pan
+        widgetsY = canvasHeight - WIDGETS_HEIGHT - DIMNS.xAxis.height;
     };
 
     let withCompletionPaths = false;
@@ -430,7 +435,7 @@ export default function journeyComponent() {
                             //shift left to avoid burger menu when smaller screen
                             margin = { 
                                 ...DIMNS.mainAim.name.margin,
-                                left: screen.isLarge ? DIMNS.mainAim.name.margin.left : 35 
+                                left: screen.isLarge ? DIMNS.mainAim.name.margin.left : 45 
                             } 
                         } else if(getView().goals){
                             //name is top-left
@@ -797,7 +802,7 @@ export default function journeyComponent() {
                 .append("g")
                     .attr("class", "widget")
                     //we posiiotn each widget separately as an item on the canvas so that drag can simply use e.dx and dy
-                    .attr("transform", "translate("+10 +"," +(canvasHeight - WIDGETS_HEIGHT - 40) +")")
+                    .attr("transform", "translate("+widgetsX +"," +widgetsY +")")
                     .each(function(d){
                         //aim
                         if(d.key === "aim"){
@@ -850,7 +855,7 @@ export default function journeyComponent() {
         }
 
         function init(){
-            svg = d3.select(this).style("border", "solid");
+            svg = d3.select(this);
 
             contentsG = svg
                 .append("g")
@@ -876,8 +881,8 @@ export default function journeyComponent() {
             widgetsG
                 .append("rect")
                     .attr("class", "bg")
-                    .attr("x", 10)
-                    .attr("y", canvasHeight - WIDGETS_HEIGHT - 40)
+                    .attr("x", widgetsX)
+                    .attr("y", widgetsY)
                     .attr("width", WIDGETS_WIDTH)
                     .attr("height", WIDGETS_HEIGHT)
                     .attr("fill", COLOURS?.canvas || "#FAEBD7")
