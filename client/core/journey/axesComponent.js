@@ -74,11 +74,12 @@ export default function axesComponent() {
                                 .attr("transform", shiftTranslate(0, -tickSize + DEFAULT_D3_TICK_SIZE, currTrans))
 
                             //translate text
-                            d3.select(this).select("text")
+                            const text = d3.select(this).select("text");
+                            text
                                 .attr("text-anchor", "end")
                                 .attr("dominant-baseline", "central")
                                 //cant work ot how to centre the rotation
-                                .attr("transform", "rotate(-45, 0, 742)")
+                                .attr("transform", "rotate(-45, 0, " +text.attr("y") +")")
 
                         })
 
