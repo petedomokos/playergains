@@ -104,8 +104,8 @@ export const DIMNS = {
         }
     },
     aim:{
-        initWidth:230,
-        initHeight:100,
+        initWidth:300,
+        initHeight:150,
         name:{
             //todo - usethe below, and we have a diff min for centred name.
             width:{

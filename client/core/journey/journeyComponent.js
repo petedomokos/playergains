@@ -23,7 +23,7 @@ import { getTransformationFromTrans } from './helpers';
     * = needed to 
     
     DOING NOW/NEXT
-     - next -
+     - next - on aim dragEnd, we want shouldTransitinAimm true
      
      
      have put in place api and server. now need o try it out,
@@ -876,6 +876,8 @@ export default function journeyComponent() {
             widgetsG
                 .append("rect")
                     .attr("class", "bg")
+                    .attr("x", 10)
+                    .attr("y", canvasHeight - WIDGETS_HEIGHT - 40)
                     .attr("width", WIDGETS_WIDTH)
                     .attr("height", WIDGETS_HEIGHT)
                     .attr("fill", COLOURS?.canvas || "#FAEBD7")

@@ -67,7 +67,6 @@ export default function aimsLayout(){
         const subAims = aimsData.map(aim => {
             const { startDate, endDate, startYPC, endYPC } = aim;
             const aimMargin = DIMNS.aim.margin;
-
             const aimPlanets = planets.filter(p => p.aimId === aim.id);
             //for now, we can assume all planets same size, using dimns.planet.width for planet width
             let planetRX = rx(DIMNS.planet.width);
@@ -77,16 +76,18 @@ export default function aimsLayout(){
                 planetExtent[0] - planetRX - DIMNS.aim.margin.left, 
                 planetExtent[1] + planetRX + DIMNS.aim.margin.right
             ];
+            //console.log("timeScale startDate", timeScale(startDate))
+            //console.log("timeScale endDate", timeScale(endDate))
             const actualX = timeScale(startDate);
+            const actualX2 = timeScale(endDate);
             const y = yScale(startYPC);
             const width = timeScale(endDate) - actualX;
             const height = yScale(endYPC) - y;
             //console.log("aimBounds", aimBounds)
             //increase aim size if planets dont fit in when displayed
             const displayX = d3.min([actualX, planetBounds[0]]);
-            const displayWidth = d3.max([width, planetBounds[1] - displayX])
-            //console.log("displayX", displayX)
-            //console.log("displayWidth", displayWidth)
+            const displayX2 = d3.max([actualX2, planetBounds[1]])
+            const displayWidth = d3.max([width, displayX2 - displayX])
             return {
                 ...aim,
                 planets:aimPlanets,

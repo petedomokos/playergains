@@ -92,7 +92,11 @@ export default function aimsComponent() {
     //dom
     let containerG;
 
+    //state
+    let shouldTransitionAim = false;
+
     function aims(selection, options={}) {
+        //console.log("aims", shouldTransitionAim)
         withClick.onClick(onClick)
         const drag = d3.drag()
             .filter((e,d) => d.id !== "main")
@@ -110,49 +114,56 @@ export default function aimsComponent() {
                     .attr("class", d => "aim aim-"+d.id)
                     .classed("entering", true)
                     .each(function(d){
+                        //if(d.id !== "main") console.log("enterng.....", d.displayWidth)
                         const nameWidth = 100;
                         const nameHeight = 20;
                         const aimG = d3.select(this);
 
-                        const controlledContentsG = aimG.append("g").attr("class", "controlled-contents");
+                        const controlledContentsG = aimG.append("g").attr("class", "controlled-contents")
+                            .call(updateTransform, { x:d => d.displayX });
+
                         const dragHandlesG = aimG.append("g").attr("class", "drag-handles")
 
                         //@todo - transition this out, so links reappear in aim at same time as planets
                         controlledContentsG
                             .append("rect")
-                                .attr("class", "solid-bg bg")
-                                .attr("rx", 15)
+                                .attr("class", "solid-bg aim-bg")
                                 .attr("display", d.id === "main" ? "none" : null)
 
                         controlledContentsG
                             .append("rect")
-                                .attr("class", "semi-transparent-bg bg")
-                                .attr("rx", 15)
+                                .attr("class", "semi-transparent-bg aim-bg")
                                 .attr("stroke", "none")
                                 .attr("display", d.id === "main" ? "none" : null)
                                 //.attr("pointer-events", d.id === "main" ? "none" : "all")
                                 .attr("fill-opacity", 0.15)
-                                .attr("width", WIDGET_WIDTH)
-                                .attr("height", WIDGET_HEIGHT)
-                                    .transition()
-                                    .duration(350)
-                                        .attr("width", d.displayWidth)
-                                        .attr("height", d.height)
-                                        //prevent updates during this transition
-                                        .on("end", () => { d3.select(this).classed("entering", false) });
 
-                        
+                        controlledContentsG.selectAll("rect.aim-bg")
+                            .attr("rx", 15)
+                            .call(updateRectDimns, {
+                                width:() => WIDGET_WIDTH, 
+                                height: () => WIDGET_HEIGHT 
+                            })
+                            .call(updateRectDimns, {
+                                width: d => d.displayWidth, 
+                                height: d => d.height, 
+                                transition:true,
+                                //must remove entering from aimG, not the rects
+                                cb:function(){ d3.select("g.aim-"+d.id).classed("entering", false) } })
+             
                         //components        
                         planets[d.id] = planetsComponent();
                         menus[d.id] = menuComponent();
                     })
                     .merge(aimG)
                     .each(function(d){
+                        //if(d.id !== "main") console.log("update.....", d.displayWidth)
                         //enter and update
                         planets[d.id].transitionsOn(transitionsOn);
                         const aimG = d3.select(this);
                         const controlledContentsG = aimG.select("g.controlled-contents")
-                            .attr("transform", "translate(" + (d.displayX) +"," + d.y +")")
+                            //.attr("transform", "translate(" + (d.displayX) +"," + d.y +")")
+                            .call(updateTransform, { x:d => d.displayX, transition:shouldTransitionAim })
                             .call(drag);
 
                         //hide contents if necc eg if aim form open
@@ -319,11 +330,10 @@ export default function aimsComponent() {
                             //dom
                             // note - we will get flickering if we move the drag handle during the drag.
                             d3.select(this).select("g.controlled-contents")
-                                .attr("transform", "translate(" + (aim.displayX) +"," + aim.y +")");
+                                .call(updateTransform, { x: () => aim.displayX, y:() => aim.y });
 
-                            d3.select(this).select("g.controlled-contents").selectAll("rect.bg")
-                                .attr("width", aim.displayWidth)
-                                .attr("height", aim.height);
+                            d3.select(this).select("g.controlled-contents").selectAll("rect.aim-bg")
+                                .call(updateRectDimns, { width: () => aim.displayWidth, height:() => aim.height })
 
                             //centred name
                             updateCentredName(aim.displayWidth, aim.height, aim.name)
@@ -428,9 +438,12 @@ export default function aimsComponent() {
 
                         //update only
                         if(!d3.select(this).classed("entering")){
-                            d3.select(this).select("rect.bg")
-                                .attr("width", d.displayWidth)
-                                .attr("height", d.height);
+                            d3.select(this).selectAll("rect.aim-bg")
+                                .call(updateRectDimns, {
+                                    width: d => d.displayWidth,
+                                    height: d => d.height,
+                                    transition: shouldTransitionAim
+                                })
                         }
 
                     });
@@ -442,6 +455,57 @@ export default function aimsComponent() {
 
             prevData = data;
         })
+
+        function updateRectDimns(selection, options={}){
+            //console.log("uRD options", options)
+            const { width = d => d.width, height = d => d.height, transition, cb = () => {} } = options;
+            selection.each(function(d){
+                if(d.id !== "main"){
+                    //console.log("updateRectDimns", transition)
+                }
+                if(transition){
+                    d3.select(this)
+                        .transition()
+                        .duration(200)
+                            .attr("width", width(d))
+                            .attr("height", height(d))
+                            .on("end", cb);
+                }else{
+                    d3.select(this)
+                        .attr("width", width(d))
+                        .attr("height", height(d));
+                    
+                    cb.call(this);
+                }
+                
+            })
+
+        }
+
+        //todo next - impl this func so aim updates when planet makes it exapnad to the left ie the trans x changes
+        function updateTransform(selection, options={}){
+            //console.log("uRD options", options)
+            const { x = d => d.x, y = d => d.y, transition, cb = () => {} } = options;
+            selection.each(function(d){
+                if(d.id !== "main"){
+                    //console.log("updateTransform", transition)
+                }
+                if(transition){
+                    d3.select(this)
+                        .transition()
+                        .duration(200)
+                            .attr("transform", "translate("+x(d) +"," +y(d) +")")
+                            .on("end", cb);
+                }else{
+                    d3.select(this)
+                        .attr("transform", "translate("+x(d) +"," +y(d) +")");
+                    
+                    cb.call(this);
+                }
+                
+            })
+
+        }
 
         updateAimForGoals = function(planetGs){
             planetGs.each(function(g){
@@ -486,6 +550,8 @@ export default function aimsComponent() {
             onDragGoal.call(this, e, { ...d, targetDate, yPC, unaligned:true }, shouldUpdateSelected)
         }
         function dragGoalEnd(e, d){
+            //we want aim width to transition in next update
+            shouldTransitionAim = true;
             onDragGoalEnd.call(this, e, d);
         }
 
@@ -504,7 +570,9 @@ export default function aimsComponent() {
             //controlled components
             d.displayX += e.dx;
             d.y += e.dy;
-            d3.select(this).attr("transform", "translate(" + d.displayX +"," + d.y +")")
+            d3.select(this)
+                .call(updateTransform, { x: d => d.displayX })
+            //.attr("transform", "translate(" + d.displayX +"," + d.y +")")
 
             //goals
             //ones inside aim
@@ -527,6 +595,9 @@ export default function aimsComponent() {
 
         //note: newX and Y should be stored as d.x and d.y
         function dragEnd(e, d){
+            //on next update, we want aim dimns/pos to transition
+            shouldTransitionAim = true;
+
             if(withClick.isClick()) { return; }
 
             const outsidePlanetsToUpdate = planetGsStartingOutsideAim
@@ -536,6 +607,9 @@ export default function aimsComponent() {
 
             onDragEnd.call(this, e, d, outsidePlanetsToUpdate);
         }
+
+        //reset temp settings
+        shouldTransitionAim = false;
 
         return selection;
     }
