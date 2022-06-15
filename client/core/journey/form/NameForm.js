@@ -55,7 +55,7 @@ export default function NameForm({ data, onUpdate, onClose }) {
     }
 
     const handleKeyDown = (e) =>{
-        //console.log("key down 13")
+        //console.log("key down", e.keyCode)
         if(e.keyCode === 13){
             onClose();
         }

@@ -76,25 +76,16 @@ const mockMeasures = [
 ]
 
 //width and height may be full screen, but may not be
-const Journey = ({ screen, width, height, save, closeDialog }) => {
-  //console.log("Journey", screen)
-  const [journey, setJourney] = useState(undefined)
-  //@todo - put into one state object to avoid multiple updates
-  const [canvas, setCanvas] = useState({});
-  const [aims, setAims] = useState([]);
-  const [planets, setPlanets] =  useState([]);
-  const [links, setLinks] = useState([]);
+const Journey = ({ journeyData, screen, width, height, save, closeDialog }) => {
+  const { aims, goals, links, measures } = journeyData;
+  console.log("Journey", journeyData)
+  const [journey, setJourney] = useState(null);
   const [channels, setChannels] = useState(initChannels);
   const [withCompletionPaths, setWithCompletionPath] = useState(false);
   const [modalData, setModalData] = useState(undefined);
-  const [measures, setMeasures] = useState(mockMeasures);
+  //const [measures, setMeasures] = useState(mockMeasures);
   const [measuresBarIsOpen, setMeasuresBarIsOpen] = useState(false);
   const shouldD3UpdateRef = useRef(true);
-
-  // console.log("aims", aims)
-  // console.log("planets", planets)
-  // console.log("links", links)
-  // console.log("modalData", modalData)
 
   const ctrlsHeight = 10;
   const journeyWidth = width - DIMNS.journey.margin.left - DIMNS.journey.margin.right
@@ -144,20 +135,10 @@ const Journey = ({ screen, width, height, save, closeDialog }) => {
   const containerRef = useRef(null);
   const modalRef = useRef(null);
   const modalDimnsRef = useRef({ width:500, height:700 });
- 
-  //const [nrPlanetsCreated, setNrPlanetsCreated] = useState(0);
-  //console.log("links", links)
-  //console.log("withcomp?", withCompletionPaths)
-  const nrPlanetsCreated = useRef(0);
-  //const goals = getGoalsData().map(g => {
 
-  //})
 
-  const saveJourney = useCallback(() => {
-    //could do some front-end checks here
-    const journey = { ...canvas, aims, goals:planets, links, measures };
-    save(journey);
-  }, [canvas, aims, planets, links, measures])
+  //@todo - make a more robust id function - see my exp builder code
+  const nrGoalsCreated = useRef(journeyData.goals.length);
 
   useEffect(() => {
     const width = d3.min([journeyWidth * 0.725, 500]);
@@ -173,10 +154,8 @@ const Journey = ({ screen, width, height, save, closeDialog }) => {
   //init
   useEffect(() => {
     if(!containerRef.current){return; }
-
     const journey = journeyComponent();
     setJourney(() => journey);
-    
   }, [])
 
   useEffect(() => {
@@ -196,15 +175,19 @@ const Journey = ({ screen, width, height, save, closeDialog }) => {
         .modalData(modalData)
         //@todo - make createId handle prefixes so all ids are unique
         .handleCreateAim(function(aim, planetIds){
+          todo - decide what to do about eg aims - do we call journyData just data and dont destrucutre at all?
           const id = createId(aims.map(a => a.id));
           const colour = createColour(aims.length);
-          setAims(prevState => ([ ...prevState, { id , colour, dataType:"aim", ...aim }]))
-          setPlanets(prevState => prevState.map(p => planetIds.includes(p.id) ? { ...p, aimId: id } : p))
-          saveJourney();
+          //updates
+          const aims = [ ...journeyData.aims, { id , colour, dataType:"aim", ...aim }];
+          const goals = journeyData.goals.map(p => planetIds.includes(p.id) ? { ...p, aimId: id } : p);
+          //setAims(prevState => ([ ...prevState, { id , colour, dataType:"aim", ...aim }]))
+          //setPlanets(prevState => prevState.map(p => planetIds.includes(p.id) ? { ...p, aimId: id } : p))
+          save({ ...journeyData, aims, goals });
         })
         .createPlanet((targetDate, yPC, aimId) => {
-          const newPlanet = {
-              id:"p"+ (nrPlanetsCreated.current + 1),
+          const newGoal = {
+              id:"p"+ (nrGoalsCreated.current + 1),
               aimId,
               targetDate,
               yPC,
@@ -213,60 +196,53 @@ const Journey = ({ screen, width, height, save, closeDialog }) => {
               //goals
           }
           //useStateWithCallback doesnt work as this is called before journeyComponent is updated in the new call to this useEffect
-          setPlanets(prevState => [...prevState, newPlanet]);
-          journey.selected(newPlanet.id);
-          //setNrPlanetsCreated(prevState => prevState + 1);
-          nrPlanetsCreated.current = nrPlanetsCreated.current + 1;
+        
           //todo -0 consider just setting it as selected in state, and handling this in journey ie
           //ie if a planet is selected, then updateSelected if not set as selected
           //the below approach may cause an issue if planets hasnt updated yet from the setPlanets call above
-          saveJourney();
+          //updates
+          const goals = [ ...journeyData.goals,  newGoal];
+          save({ ...journeyData, goals });
+
+          journey.selected(newGoal.id);
+          //setNrPlanetsCreated(prevState => prevState + 1);
+          nrGoalsCreated.current = nrGoalsCreated.current + 1;
         })
         .updatePlanet((props, shouldD3Update=true) => {
           if(!shouldD3Update){ shouldD3UpdateRef.current = shouldD3Update; }
-          setPlanets(prevState => updatedState(prevState, props))
-          saveJourney();
+          //updates
+          const goals = updatedState(journeyData.goals, props);
+          save({ ...journeyData, goals });
         })
         .updatePlanets((planetsToUpdate, shouldD3Update=true) => {
           if(!shouldD3Update){ shouldD3UpdateRef.current = shouldD3Update; }
-          setPlanets(prevState => prevState.map(p => {
+          //updates
+          const goals = journeyData.goals.map(p => {
               const propsToUpdate = planetsToUpdate.find(planet => planet.id === p.id) || {};
               return { ...p, ...propsToUpdate }
-          }));
-          saveJourney();
+          });
+          save({ ...journeyData, goals });
         })
         .updateAim((props, shouldD3Update=true) => {
           if(!shouldD3Update){ shouldD3UpdateRef.current = shouldD3Update; }
-          setAims(prevState => updatedState(prevState, props));
-          saveJourney();
+          //updates
+          const aims = updatedState(journeyData.aims, props);
+          save({ ...journeyData, aims });
         })
-        /*
-        done in journeyComp instead
-        .addMeasureToPlanet((planetId, measureId) => {
-            const planetToUpdate = planets.find(p => p.id === planetId);
-            //console.log("addMeasureToPlanet", planetToUpdate)
-            //@todo - create a transFormForState fuciton which always runs in reducers 9or before going into useState in this
-            //case, to make sure eg targ is a string. Because theoretically, a calc could update a targ and so it copuld be a number
-            const measures = [ ...planetToUpdate.measures, { id: measureId }]
-            setPlanets(prevState => updatedState(prevState, { id: planetId, measures }))
-            //after this is done, show form for measure
-            //setModalData(form stuff)
-        })
-        */
        .onDeleteAim(aimId => {
           //this doesnt work - it deltes a planet instead!
           //@todo - create a Dialog to see if user wants goals deleted too (if aiim has goals), or to cancel
           setModalData(undefined);
-          setAims(prevState => prevState.filter(a => a.id !== aimId));
-          setPlanets(prevState => prevState.map(p => ({ ...p, aimId: p.aimId === aimId ? undefined : p.aimId })));
-          saveJourney();
+          const aims = journeyData.aims.filter(a => a.id !== aimId);
+          const goals = journeyData.goals.map(p => ({ ...p, aimId: p.aimId === aimId ? undefined : p.aimId }));
+          save({ ...journeyData, aims, goals });
        })
         .deletePlanet(id => {
           setModalData(undefined);
           //must delete link first, but when state is put together this wont matter
-          setLinks(prevState => prevState.filter(l => l.src !== id && l.targ !== id));
-          setPlanets(prevState => prevState.filter(p => p.id !== id));
-          saveJourney();
+          const links = journeyData.links.filter(l => l.src !== id && l.targ !== id);
+          const goals = journeyData.goals.filter(p => p.id !== id);
+          save({ ...journeyData, links, goals });
         })
         .onAddLink(props => {
           const newLink = {
@@ -274,12 +250,12 @@ const Journey = ({ screen, width, height, save, closeDialog }) => {
             id:props.src + "-" + props.targ,
             dataType:"link"
           }
-          setLinks(prevState => ([ ...prevState, newLink]));
-          saveJourney();
+          const links = [ ...journeyData.links, newLink];
+          save({ ...journeyData, links });
         })
         .deleteLink(id => {
-          setLinks(prevState => prevState.filter(l => l.id !== id));
-          saveJourney();
+          const links = journeyData.links.filter(l => l.id !== id);
+          save({ journeyData, links });
         })
         .updateChannel(props => {
           setChannels(prevState => updatedState(prevState, props, (other, updated) => other.nr < updated.nr))
@@ -293,23 +269,11 @@ const Journey = ({ screen, width, height, save, closeDialog }) => {
         })
 
     d3.select(containerRef.current)
-      .datum({ canvas, aims, planets, links, channels, measures })
+      .datum({ journeyData, channels })
+      //.datum({ canvas, aims, planets, links, channels, measures })
       .call(journey)
 
-  }, [journey, canvas, aims, planets, links, withCompletionPaths, measures, measuresBarIsOpen, modalData, width, height, screen ])
-
-  /*
-  //todo - consider this approach of separate useEffects
-  useEffect(() => {
-      journey.modalData(modalData).... could even have a 2nd option to all these settings, which is false by default, which is to update dom 
-      //so journey.modalData(modalData, true) would be all we have to do here, instead of call the update again as we do below
-
-      d3.select(containerRef.current)
-        .datum({ canvas, aims, planets, links, channels, measures })
-        .call(journey)
-
-  }, [modalData])
-  */
+  }, [JSON.stringify(journeyData), journey, withCompletionPaths, measuresBarIsOpen, modalData, width, height, screen ])
 
   const toggleCompletion = () => {
       setWithCompletionPath(prevState => !prevState)
@@ -317,22 +281,22 @@ const Journey = ({ screen, width, height, save, closeDialog }) => {
 
   //for now, we just open or close all measures
   const toggleMeasuresOpen = useCallback((planetId) => {
-    setMeasuresBarIsOpen(prevState => !prevState);
-    //todo - if planetId, only close or open those on that planet
-    setMeasures(prevState => {
-        const measuresAreOpen = !!prevState.find(m => m.isOpen);
-        if(measuresAreOpen){
-          return prevState.map(m => ({ ...m, isOpen:false }));
-        }else{
-          return prevState.map(m => ({ ...m, isOpen:true }));
-        }
-    })
-}, [measures]);
+      setMeasuresBarIsOpen(prevState => !prevState);
+      //todo - if planetId, only close or open those on that planet
+      let measures;
+      const measuresAreOpen = !!prevState.find(m => m.isOpen);
+      if(measuresAreOpen){
+          measures = journeyData.measures.map(m => ({ ...m, isOpen:false }));
+      }else{
+          measures = journeyData.measures.map(m => ({ ...m, isOpen:true }));
+      }
+      save({ ...journey, measures })
+}, [JSON.stringify(journeyData.measures)]);
 
   const onUpdatePlanetForm = modalType => (name, value) => {
     //console.log("updatePlanetForm")
     const { d , measure } = modalData;
-    const planet = planets.find(p => p.id === d.id);
+    const planet = goals.find(p => p.id === d.id);
     let props;
     if(modalType === "targOnly"){
       //for now, the only planetMeasureData that can  be updated is that targ.  Everything else that is updated is on the measure itself.
@@ -340,17 +304,21 @@ const Journey = ({ screen, width, height, save, closeDialog }) => {
     }else{
       props = { id:d.id, [name]: value };
     }
-    setPlanets(prevState => updatedState(prevState, props));
+    const goals = updatedState(journeyData.goals, props);
+    //dont persist yet until closed
+    save({ ...journey, goals }, false);
   }
 
   const onUpdateAimForm = (name, value) => {
     //console.log("update aim form")
     const { d } = modalData;
     if(d.id === "main"){
-      setCanvas(prevState => ({ ...prevState, [name]: value }))
+      //dont want to persist name change to db yet
+      save({ ...journey, [name]: value }, false)
     }else{
       const props = { id:d.id, [name]: value };
-      setAims(prevState => updatedState(prevState, props));
+      const aims = updatedState(prevState, props)
+      save({ ...journey, aims }, false);
     }
   }
 
@@ -360,7 +328,8 @@ const Journey = ({ screen, width, height, save, closeDialog }) => {
       addNewMeasure({ ...details, isOpen:true }, planetId)
       setMeasuresBarIsOpen(true);
     }else{
-      setMeasures(prevState => updatedState(prevState, details))
+      const measures = updatedState(journeyData.measures, details)
+      save({ ...journey, measures })
     }
     () => setModalData(undefined);
   }
@@ -368,22 +337,26 @@ const Journey = ({ screen, width, height, save, closeDialog }) => {
   const onClosePlanetForm = () => {
     journey.endEditPlanet();
     setModalData(undefined);
+    //now we want it to persist the changes that have been made
+    save(journey);
   }
 
   const onCloseAimForm = () => {
     console.log("close aim form")
     //@todo - journey.endEditAim();
     setModalData(undefined);
-    saveJourney();
+    //now we want it to persist the changes that have been made
+    save(journey);
   }
 
-  const addNewMeasure = (details, planetId) => {
+  const addNewMeasure = (details, /*planetId*/) => {
     const { name, desc } = details;
     const newMeasureId = createId(measures.map(m => m.id));
     //name and desc are same for all planets where this measure is used
-    const newMeasure = { id: newMeasureId, name, desc, isOpen:true };
-    setMeasures(prevState => [...prevState, newMeasure]);
-    
+    const measures = [ ...journey.measures, { id: newMeasureId, name, desc, isOpen:true }]
+    save({ ...journey, measures })
+    /*
+    //@todo - use this
     if(planetId){
       //measure is also set on a particular planet
       const planet = planets.find(p => p.id === planetId);
@@ -393,6 +366,7 @@ const Journey = ({ screen, width, height, save, closeDialog }) => {
         return updatedState(prevState, props);
       })
     }
+    */
   }
 
   const importMeasures = measureIds => {
@@ -415,12 +389,12 @@ const Journey = ({ screen, width, height, save, closeDialog }) => {
                 onUpdate={onUpdateAimForm} onClose={onCloseAimForm} />}
 
             {modalData.d.dataType === "planet" && (modalData.nameOnly || modalData.nameAndTargOnly) &&
-              <NameForm data={{ ...modalData, planet:planets.find(p => p.id === modalData.d?.id) }}
+              <NameForm data={{ ...modalData, planet:goals.find(p => p.id === modalData.d?.id) }}
                 onUpdate={onUpdatePlanetForm("nameOnly")} onClose={onClosePlanetForm} />}
 
             {modalData.nameAndTargOnly &&
               <div className={classes.targModal}>
-                <TargetForm data={{ ...modalData, planet:planets.find(p => p.id === modalData.d?.id) }}
+                <TargetForm data={{ ...modalData, planet:goals.find(p => p.id === modalData.d?.id) }}
                   onUpdate={onUpdatePlanetForm("targOnly")} onClose={onClosePlanetForm} />
               </div>}
 
@@ -429,13 +403,13 @@ const Journey = ({ screen, width, height, save, closeDialog }) => {
                 onSave={importMeasures} onClose={() => setModalData(undefined)} />}
 
             {modalData.measureOnly && 
-              <MeasureForm data={{ ...modalData, planet:planets.find(p => p.id === modalData.d?.id) }}
+              <MeasureForm data={{ ...modalData, planet:goals.find(p => p.id === modalData.d?.id) }}
               onSave={onSaveMeasureForm} onCancel={() => setModalData(undefined)}
               existingMeasures={measures} />}
 
             {modalData && !modalData.nameOnly && !modalData.measureOnly && !modalData.nameAndTargOnly && !modalData.importing &&
               <Form 
-                  data={{ ...modalData, planet:planets.find(p => p.id === modalData.d?.id) }} 
+                  data={{ ...modalData, planet:goals.find(p => p.id === modalData.d?.id) }} 
                   onUpdate={onUpdatePlanetForm("full")} 
                   onClose={onClosePlanetForm}
                   availableMeasures={measures}
@@ -447,6 +421,13 @@ const Journey = ({ screen, width, height, save, closeDialog }) => {
 }
 
 Journey.defaultProps = {
+  journeyData:{
+    _id:"temp",
+    aims:[],
+    goals:[],
+    links:[],
+    measures:[]
+  },
   screen: {},
   width: 0,
   height: 0,

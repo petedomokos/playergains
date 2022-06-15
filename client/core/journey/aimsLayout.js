@@ -3,7 +3,6 @@ import { PLANET_RING_MULTIPLIER, COLOURS, DIMNS } from './constants';
 import { findNearestChannelByEndDate } from "./helpers";
 
 export default function aimsLayout(){
-    let canvas = {};
     let canvasDimns = { width: 800, height: 600 };
     let timeScale = x => 0;
     let yScale = x => 0;
@@ -27,7 +26,7 @@ export default function aimsLayout(){
     const ry = height => currentZoom.k * height * 0.8 / 2;
 
     function update(data){
-        const planetsData = data.planets || [];
+        const planetsData = data.goals || [];
         const aimsData = data.aims || [];
         const linksData = data.links || [];
         const planets = planetsData.map(p => {
@@ -105,7 +104,7 @@ export default function aimsLayout(){
         const mainAim = {
             id:"main",
             planets:planets.filter(p => p.aimId === "main"),
-            name:canvas.name,
+            name:data.name,
             dataType:"aim",
             actualX:0,
             displayX:0,
@@ -130,11 +129,6 @@ export default function aimsLayout(){
 
         return aims;
     }
-    update.canvas = function (value) {
-        if (!arguments.length) { return canvas; }
-        canvas = value;
-        return update;
-    };
     update.canvasDimns = function (value) {
         if (!arguments.length) { return canvasDimns; }
         canvasDimns = { ...canvasDimns, ...value };

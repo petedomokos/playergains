@@ -88,7 +88,7 @@ const create = async (req, res) => {
   }
   
   const update = async (req, res) => {
-    console.log('updating journey....................')
+    console.log('updating journey....................', req.journey)
     /*
     let form = new formidable.IncomingForm()
     form.keepExtensions = true

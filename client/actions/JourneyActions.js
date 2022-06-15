@@ -4,7 +4,7 @@ import { status, parseResponse, logError,
 import auth from '../auth/auth-helper'
 
 const transformJourneyForServer = journey => {
-	console.log("tJFS", journey)
+	//console.log("tJFS", journey)
 	//dont think we need to store anything on channels, or could just be the setting "monthly"
 	//if we want to persist the users last zoom level. Or maybe just preserve the zoom level then?
 	//for now, we dont anyway
@@ -49,7 +49,7 @@ const transformJourneyForServer = journey => {
 	*/
 
 	return { 
-		id: journey.id, 
+		_id: journey._id, 
 		name: journey.name || "",
 		desc: journey.desc || "",
 		aims,
@@ -62,12 +62,25 @@ const transformJourneyForServer = journey => {
 
 const transformJourneyForClient = journey => {
 	//add channels
-	const { canvas, aims, goals, links } = journey;
+	return journey;
 
 }
 
+//higher-order action
+export const saveJourneyToStore = journey => (
+	{
+		type: C.SAVE_JOURNEY,
+		journey
+	}
+)
+
 export const saveJourney = journey => dispatch => {
 	console.log("saveJourney", journey)
+	//1. save to store
+	dispatch(saveJourneyToStore(journey));
+    //2. save to server
+    //3. on response, undo if errors, add id (if new) or anything else from server to store
+	/*
 	const serverJourney = transformJourneyForServer(journey);
 	console.log("serverJourney", serverJourney);
 	const jwt = auth.isAuthenticated();
@@ -76,7 +89,7 @@ export const saveJourney = journey => dispatch => {
 		'saving.journey',
 		{
 			//journey has id if its already been saved
-			url: '/api/users/'+jwt.user._id+'/journey' +(journey.id ? "/"+journey.id : ""),
+			url: '/api/users/'+jwt.user._id+'/journey' +(journey._id ? "/"+journey._id : ""),
 			method: 'POST',
 			body:JSON.stringify(journey),
 			requireAuth:true,
@@ -85,10 +98,14 @@ export const saveJourney = journey => dispatch => {
 				console.log("saveJourney response", data)
 				if(auth.isAuthenticated()){
 					//in this case, we need the new user and the sign up mesg
-					return { type:C.SAVE_JOURNEY, mesg:data.mesg, userId:data.userId, journey:data.journey }
+					if(!journey._id){
+						return { type:C.SAVE_NEW_JOURNEY_ID, mesg:data.mesg, userId:data.userId, _id:data.journey._id }
+					}
+					//@todo - do we need to process naything else?
 				}
 			}
 		})
+	*/
 }
 
 //to fetch a user in full

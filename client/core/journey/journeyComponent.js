@@ -23,7 +23,11 @@ import { getTransformationFromTrans } from './helpers';
     * = needed to 
     
     DOING NOW/NEXT
-     - next - on aim dragEnd, we want shouldTransitinAimm true
+    checks
+     - make sure onClosePlaneForm is called whenever user clicks away from it, for name and targ. same aim form and measures form
+     - when saved journey returns from server, do we need any otehr processing except adding id if new?
+     - deal with this line about 557  state.journeyData.planets = stateData.journey.planets.map(p => { return p.id === d.id ? d : p });
+     (shouldnt mutate state here)
      
      
      have put in place api and server. now need o try it out,
@@ -220,7 +224,7 @@ export default function journeyComponent() {
         updateDimns();
         selection.each(function (journeyState) {
             state = journeyState;
-            //console.log("journey")
+            console.log("journey", state)
             if(!svg){
                 //enter
                 init.call(this);
@@ -376,14 +380,13 @@ export default function journeyComponent() {
             function updateAimsData(){
                 //note - planetsLayout was also taking in .selected for siSelected n planets, but not needed
                 myAimsLayout
-                    .canvas(state.canvas)
                     .canvasDimns({ width:canvasWidth, height: canvasHeight })
                     .currentZoom(currentZoom)
                     .timeScale(zoomedTimeScale)
                     .yScale(zoomedYScale)
                     .channelsData(channelsData);
                 
-                aimsData = myAimsLayout(state);
+                aimsData = myAimsLayout(state.journeyData);
                 //temp - until we remove places that use it as a dependency
                 planetsData = aimsData.map(a => a.planets).reduce((a, b) => [...a, ...b], []);
 
@@ -398,7 +401,7 @@ export default function journeyComponent() {
                     .channelsData(channelsData)
                     .planetsData(planetsData);
 
-                linksData = myLinksLayout(state.links);
+                linksData = myLinksLayout(state.journeyData.links);
 
             }
 
@@ -553,7 +556,7 @@ export default function journeyComponent() {
                             //links layout needs updated planet position and targetDate
                         //}
                         //temp
-                        state.planets = state.planets.map(p => { return p.id === d.id ? d : p });
+                        state.journeyData.planets = stateData.journey.planets.map(p => { return p.id === d.id ? d : p });
                         //update aimsData, which also updates planetsData
                         updateAimsData();
                         updateLinksData(); //uses the new planetsData

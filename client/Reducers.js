@@ -31,19 +31,28 @@ export const user = (state=InitialState.user, act) =>{
 			return { ...state, ...act.user };
 		}
 		case C.SAVE_JOURNEY:{
+			console.log("reducer saveJourney", act)
 			const { journey } = act;
-			const existingJourney = state.journeys.find(j => j.id === journey.id);
-			if(existingJourney){
-				//replace - note all user journey ids and summary details are stored on initial user load
+			const currentJourney = state.journeys.find(j => j._id === journey._id);
+			if(!currentJourney){
+				//_id will be 'temp' here until saved on server
+				console.log("adding journey to journeys")
 				return {
 					...state,
-					journeys:state.journeys.map(j => j.id === journey.id ? journey : j)
+					journeys:[journey],
+					homeJourney:[journey._id]
 				}
 			}
-			//add new
 			return {
 				...state,
-				journeys:[...state.journeys, journey]
+				journeys:state.journeys.map(j => j._id === journey._id ? journey : j)
+			}
+		}
+		case C.SAVE_NEW_JOURNEY_ID:{
+			const { _id } = act;
+			return {
+				...state,
+				journeys:state.journeys.map(j => j._id === "temp" ? { ...j, _id } : j)
 			}
 		}
 		//OTHER USERS AND GROUPS
