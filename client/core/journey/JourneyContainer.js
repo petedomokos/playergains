@@ -8,7 +8,7 @@ const mapStateToProps = (state, ownProps) => {
     //const { journeyId }  = ownProps.match.params;
 	return{
 		//@todo - use homeJourney instead of first
-		journeyData:state.user.journeys[0], //may be undefined if user has no journeys
+		data:state.user.journeys[0], //may be undefined if user has no journeys
 		screen:state.system.screen,
         width:state.system.screen.width,
         height:state.system.screen.height - 90,

@@ -197,7 +197,7 @@ export default function journeyComponent() {
     let canvasG;
     let widgetsG;
 
-    let state;
+    let data;
 
     let timeScale;
     let zoomedTimeScale;
@@ -222,9 +222,9 @@ export default function journeyComponent() {
 
     function journey(selection) {
         updateDimns();
-        selection.each(function (journeyState) {
-            state = journeyState;
-            console.log("journey", state)
+        selection.each(function (journeyData) {
+            data = journeyData;
+            console.log("journey", data)
             if(!svg){
                 //enter
                 init.call(this);
@@ -263,8 +263,8 @@ export default function journeyComponent() {
             const widthPerMonth = contentsWidth / nrDisplayedMonths;
 
             const domain = [
-                addWeeks(-52, state.channels.find(ch => ch.nr === startDisplayedChannelNr).startDate),
-                state.channels.find(ch => ch.nr === endDisplayedChannelNr).endDate
+                addWeeks(-52, data.channels.find(ch => ch.nr === startDisplayedChannelNr).startDate),
+                data.channels.find(ch => ch.nr === endDisplayedChannelNr).endDate
             ]
             const range = [
                 -widthPerMonth * 12,
@@ -276,7 +276,7 @@ export default function journeyComponent() {
             zoomedYScale = currentZoom.rescaleY(yScale);
 
             myChannelsLayout.scale(zoomedTimeScale).currentZoom(currentZoom).contentsWidth(contentsWidth);
-            channelsData = myChannelsLayout(state.channels);
+            channelsData = myChannelsLayout(data.channels);
 
             const axesData = myAxesLayout(channelsData.filter(ch => ch.isDisplayed));
             axes
@@ -386,7 +386,7 @@ export default function journeyComponent() {
                     .yScale(zoomedYScale)
                     .channelsData(channelsData);
                 
-                aimsData = myAimsLayout(state.journeyData);
+                aimsData = myAimsLayout(data);
                 //temp - until we remove places that use it as a dependency
                 planetsData = aimsData.map(a => a.planets).reduce((a, b) => [...a, ...b], []);
 
@@ -401,7 +401,7 @@ export default function journeyComponent() {
                     .channelsData(channelsData)
                     .planetsData(planetsData);
 
-                linksData = myLinksLayout(state.journeyData.links);
+                linksData = myLinksLayout(data.links);
 
             }
 
@@ -556,7 +556,7 @@ export default function journeyComponent() {
                             //links layout needs updated planet position and targetDate
                         //}
                         //temp
-                        state.journeyData.planets = stateData.journey.planets.map(p => { return p.id === d.id ? d : p });
+                        data.planets = data.planets.map(p => { return p.id === d.id ? d : p });
                         //update aimsData, which also updates planetsData
                         updateAimsData();
                         updateLinksData(); //uses the new planetsData

@@ -92,7 +92,7 @@ export default function planetsComponent() {
             //{ key: "edit", label:"Edit" },
             { key: "delete", label:"Delete" }
         ]
-        return d.aimId !== "main" ? basicOpts : [ { key: "aim", label:"Make Aim" }, ...basicOpts ];
+        return basicOpts;//d.aimId !== "main" ? basicOpts: [ { key: "aim", label:"Make Aim" }, ...basicOpts ];
          //put goals on planet, and only show it in bar chart when it is 
         //also on src planet. BUT it does mean we need to also put it on src. Could have a goals library, or just use the dataset library (1 goal per dataset for now)
     };
