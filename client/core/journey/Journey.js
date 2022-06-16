@@ -220,9 +220,11 @@ const Journey = ({ data, screen, width, height, save, closeDialog }) => {
               const propsToUpdate = planetsToUpdate.find(planet => planet.id === p.id) || {};
               return { ...p, ...propsToUpdate }
           });
+          console.log("updatePlanets")
           save({ ...data, goals:_goals });
         })
         .updateAim((props, shouldD3Update=true) => {
+          console.log("updateAim", props)
           if(!shouldD3Update){ shouldD3UpdateRef.current = shouldD3Update; }
           //updates
           const _aims = updatedState(aims, props);

@@ -116,7 +116,7 @@ export default function linksComponent() {
                     .merge(linkG)
                     .each(function(d){
                         //ENTER AND UPDATE
-                        //console.log("centre x", d.centre[0])
+                        // console.log("update link", d)
                         //lines
                         d3.select(this).select("line.main")
                             .attr("stroke-width", strokeWidth)
