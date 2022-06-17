@@ -13,6 +13,12 @@ import Form from "./form/Form";
 import ImportMeasures from './ImportMeasures';
 import { DIMNS, FONTSIZES } from './constants';
 
+const mockMeasures = [
+	{ id:"mock1", name:"Puts Per Round", desc: "nr of puts in a round" },
+	{ id:"mock2", name:"Drive 1", desc: "nr D1s to Fairway" },
+	{ id:"mock3", name:"Drive 2", desc: "nr D2s to Fairway" }
+  ]
+
 const useStyles = makeStyles((theme) => ({
   root: {
     position:"relative",
@@ -77,7 +83,6 @@ const Journey = ({ data, screen, width, height, save, closeDialog }) => {
   const [channels, setChannels] = useState(initChannels);
   const [withCompletionPaths, setWithCompletionPath] = useState(false);
   const [modalData, setModalData] = useState(undefined);
-  //const [measures, setMeasures] = useState(mockMeasures);
   const [measuresBarIsOpen, setMeasuresBarIsOpen] = useState(false);
   const shouldD3UpdateRef = useRef(true);
 
@@ -290,8 +295,10 @@ const Journey = ({ data, screen, width, height, save, closeDialog }) => {
       if(measuresAreOpen){
           _measures = measures.map(m => ({ ...m, isOpen:false }));
       }else{
+          //for now, open all measures
           _measures = measures.map(m => ({ ...m, isOpen:true }));
       }
+      console.log("save measures", _measures)
       save({ ...data, measures:_measures })
 }, [JSON.stringify(measures)]);
 
@@ -428,7 +435,7 @@ Journey.defaultProps = {
     aims:[],
     goals:[],
     links:[],
-    measures:[]
+    measures:mockMeasures
   },
   screen: {},
   width: 0,
