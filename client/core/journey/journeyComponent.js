@@ -15,7 +15,7 @@ import { addWeeks } from "../../util/TimeHelpers"
 import { zoomLevel, DEFAULT_D3_TICK_SIZE,WIDGETS_WIDTH, WIDGETS_HEIGHT, WIDGET_WIDTH, WIDGET_HEIGHT, COLOURS, FONTSIZES, DIMNS, AVAILABLE_GOAL_MULTIPLIER, grey10 } from "./constants";
 import { pointIsInRect, distanceBetweenPoints, } from './geometryHelpers';
 import dragEnhancements from './enhancedDragHandler';
-import { getTransformationFromTrans } from './helpers';
+import { getTransformationFromTrans, updatedState } from './helpers';
 
 /*
     *** = needed for Brian to test the basic design of a canvas (no measures, just planets, aims, and links)
@@ -202,6 +202,8 @@ export default function journeyComponent() {
     let endEditPlanet = function (){};
     let createAim = function (){};
     let updateSelected = function (){};
+
+    let updateState = () => {};
 
     //dom
     let svg;
@@ -520,15 +522,17 @@ export default function journeyComponent() {
                         //problem - which we update first, the other will have an update with old data!
                         // unless we specify useEffect dependencies,
                         // or just have one state object
-                        updateAim({ 
+                        const aim = { 
                             id:d.id,
                             startDate:zoomedTimeScale.invert(displayX),
                             endDate:zoomedTimeScale.invert(endX),
                             startYPC:zoomedYScale.invert(y),
                             endYPC:zoomedYScale.invert(endY)
-                        }, false)
+                        }
 
-                        updatePlanets([ ...insidePlanetsToUpdate, ...outsidePlanetsToUpdate ]);
+                        const goals = [ ...insidePlanetsToUpdate, ...outsidePlanetsToUpdate ];
+
+                        updateState({ aims:[aim], goals })
                     })
                     .onResizeDragEnd(function(e, aim, planetDs){
                         //turn off transitions in the aim comp
@@ -1116,6 +1120,13 @@ export default function journeyComponent() {
     journey.withCompletionPaths = function (value) {
         if (!arguments.length) { return withCompletionPaths; }
         withCompletionPaths = value;
+        return journey;
+    };
+    journey.updateState = function (value) {
+        if (!arguments.length) { return updateState ; }
+        if(typeof value === "function"){
+            updateState = value;
+        }
         return journey;
     };
     journey.handleCreateAim = function (value) {

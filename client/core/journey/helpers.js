@@ -122,16 +122,21 @@ export const findNearestChannelByEndDate = (channelsData) => (date) => {
     return channelsData.find(ch => ch.endDate === nearestDate)
 }
 
+/*
+receives props, which is an object that includes an id.
+finds teh corresponding item with that id, and replaces any other properties contained in props.
+Then returns the entire state array, maintaining the order if applicable.
+*/
+
 export function updatedState(prevState, props, orderComparator){
-    const updated = { ...prevState.find(ch => ch.id === props.id), ...props };
-    const rest = prevState.filter(ch => ch.id !== props.id);
+    const updated = { ...prevState.find(item => item.id === props.id), ...props };
+    const rest = prevState.filter(item => item.id !== props.id);
     if(orderComparator){
         //ordered
-        const before = rest.filter(ch => orderComparator(ch, updated));
-        const after = rest.filter(ch => !orderComparator(ch, updated));
+        const before = rest.filter(item => orderComparator(item, updated));
+        const after = rest.filter(item => !orderComparator(item, updated));
         const newState = [...before, updated, ...after];
         return newState;
-
     }
     //unordered
     return [updated, ...rest];
