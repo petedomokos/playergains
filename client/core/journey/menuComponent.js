@@ -1,6 +1,7 @@
 import * as d3 from 'd3';
 //import "d3-selection-multi";
 import { COLOURS, grey10 } from "./constants";
+import dragEnhancements from './enhancedDragHandler';
 /*
 
 */
@@ -35,6 +36,7 @@ export default function menuComponent() {
         strokeWidth:0.3
     }
 
+    let withClick = dragEnhancements();
     let onClick = () => {};
 
     function updateDimns(data=[]){
@@ -62,6 +64,15 @@ export default function menuComponent() {
             height = contentsHeight + margin.left + margin.right;
         }
     };
+
+    withClick.onClick((e,d) => onClick(d))
+    const drag = d3.drag()
+        .on("start", withClick())
+        .on("end", withClick(function(e,d){
+            if(withClick.isClick()) { 
+                return; }
+            onDragEnd.call(this, e, d);
+        }));
 
     function menu(selection) {
         selection.each(function (data) {
@@ -130,7 +141,7 @@ export default function menuComponent() {
                                 .text(d.label);
 
                         })
-                        .on("click", (e,d) => { onClick(d) })
+                        .call(drag);
 
                 })
         })
