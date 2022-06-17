@@ -24,13 +24,8 @@ import { getTransformationFromTrans, updatedState } from './helpers';
     
     DOING NOW/NEXT
     new bigs since store
+     - resize aim to include an outside goal => goal colour doesnt update. soln: probably need to use updateState fiunciton to prevent overwrite
      - when measureas are added, I dont think journeyComponent picks them up - maybe todo with useEffect??? we now add teh mock measures in reducer, but they arent coming thru
-     - drag aim, but it goes back to where it was - doesnt save on drag end: 
-     //cause - updatePlanets is called separately, which overwrites the new aim. 
-     // soln - journeyComponent should only ever trigger one React state change per event. Thats why we have journey as one state,
-     // so we can do all of them together
-     //alternative soln: could have a second param of save, which is a boolean, shouldOverwrite, which defaults to true, but if false,
-     // then it only updates the properties of journey that are passed in, not the whole journey
 
      - mock measures not showing anymore - maybe thats a good thing
      - drag a measure over goal - goal size increase is messed up - not large enough anymore
@@ -522,7 +517,7 @@ export default function journeyComponent() {
                         //problem - which we update first, the other will have an update with old data!
                         // unless we specify useEffect dependencies,
                         // or just have one state object
-                        const aim = { 
+                        const _aim = { 
                             id:d.id,
                             startDate:zoomedTimeScale.invert(displayX),
                             endDate:zoomedTimeScale.invert(endX),
@@ -530,17 +525,15 @@ export default function journeyComponent() {
                             endYPC:zoomedYScale.invert(endY)
                         }
 
-                        const goals = [ ...insidePlanetsToUpdate, ...outsidePlanetsToUpdate ];
+                        const _goals = [ ...insidePlanetsToUpdate, ...outsidePlanetsToUpdate ];
 
-                        updateState({ aims:[aim], goals })
+                        updateState({ aims:[_aim], goals:_goals })
                     })
                     .onResizeDragEnd(function(e, aim, planetDs){
                         //turn off transitions in the aim comp
                         aims.transitionsOn(false);
                         //use the latest planetDs from dom, as the aim d.planets have not been updated
-                        const planetsToUpdate = planetDs.map(p => ({ id:p.id, aimId:p.aimId }));
-                        //dont update d3 until after updateAim
-                        updatePlanets(planetsToUpdate, false);
+                        const _goals = planetDs.map(p => ({ id:p.id, aimId:p.aimId }));
 
                         //update aim
                         const { id, displayWidth, height, displayX, y } = aim;
@@ -550,13 +543,14 @@ export default function journeyComponent() {
 
                         //problem - startDate not updating
                         
-                        updateAim({ 
+                        const _aim = { 
                             id:aim.id, 
                             startDate:zoomedTimeScale.invert(displayX),
                             endDate:zoomedTimeScale.invert(endX),
                             startYPC:zoomedYScale.invert(y),
                             endYPC:zoomedYScale.invert(endY)
-                        }) 
+                        };
+                        updateState({ aims:[_aim], goals:_goals })
                     })
                     //.onMouseover(() => {})
                     //.onMouseout(() => {})
