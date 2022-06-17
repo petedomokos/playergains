@@ -24,7 +24,6 @@ import { getTransformationFromTrans, updatedState } from './helpers';
     
     DOING NOW/NEXT
     new bigs since store
-     - plent disappears when measures opened!
      - new measure form isnt up-to-date ( problem existed before store change)
      - delate button click doesnt work (sane old problem with btn click)
     checks
@@ -94,6 +93,7 @@ import { getTransformationFromTrans, updatedState } from './helpers';
         goals not displayed, just aim title displayed?)
 
     BACKLOG:
+    - zooming into goal causes an error
     - implement delate by longpress+drag fast
     - handle user draggin aim top-corner below bottom of aim -> what should happen?
     - aim name margin left should be scaled by zoom scale so it doesnt appear to shoft across to the right
