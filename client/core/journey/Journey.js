@@ -69,16 +69,10 @@ const initChannels = d3.range(numberMonths)
     }
   })
 
-const mockMeasures = [
-    { id:"mock1", name:"Puts Per Round", desc: "nr of puts in a round" },
-    { id:"mock2", name:"Drive 1", desc: "nr D1s to Fairway" },
-    { id:"mock3", name:"Drive 2", desc: "nr D2s to Fairway" }
-]
-
 //width and height may be full screen, but may not be
 const Journey = ({ data, screen, width, height, save, closeDialog }) => {
   console.log("Journey", data)
-  const { aims, goals, links, measures } = data;
+  const { _id, name, aims, goals, links, measures } = data;
   const [journey, setJourney] = useState(null);
   const [channels, setChannels] = useState(initChannels);
   const [withCompletionPaths, setWithCompletionPath] = useState(false);
@@ -220,11 +214,9 @@ const Journey = ({ data, screen, width, height, save, closeDialog }) => {
               const propsToUpdate = planetsToUpdate.find(planet => planet.id === p.id) || {};
               return { ...p, ...propsToUpdate }
           });
-          console.log("updatePlanets")
           save({ ...data, goals:_goals });
         })
         .updateAim((props, shouldD3Update=true) => {
-          console.log("updateAim", props)
           if(!shouldD3Update){ shouldD3UpdateRef.current = shouldD3Update; }
           //updates
           const _aims = updatedState(aims, props);
@@ -285,13 +277,13 @@ const Journey = ({ data, screen, width, height, save, closeDialog }) => {
       setMeasuresBarIsOpen(prevState => !prevState);
       //todo - if planetId, only close or open those on that planet
       let _measures;
-      const measuresAreOpen = !!prevState.find(m => m.isOpen);
+      const measuresAreOpen = !!measures.find(m => m.isOpen);
       if(measuresAreOpen){
           _measures = measures.map(m => ({ ...m, isOpen:false }));
       }else{
           _measures = measures.map(m => ({ ...m, isOpen:true }));
       }
-      save({ ...journey, measures:_measures })
+      save({ ...data, measures:_measures })
 }, [JSON.stringify(measures)]);
 
   const onUpdatePlanetForm = modalType => (name, value) => {
@@ -307,7 +299,7 @@ const Journey = ({ data, screen, width, height, save, closeDialog }) => {
     }
     const _goals = updatedState(goals, props);
     //dont persist yet until closed
-    save({ ...journey, goals:_goals }, false);
+    save({ ...data, goals:_goals }, false);
   }
 
   const onUpdateAimForm = (name, value) => {
@@ -315,11 +307,11 @@ const Journey = ({ data, screen, width, height, save, closeDialog }) => {
     const { d } = modalData;
     if(d.id === "main"){
       //dont want to persist name change to db yet
-      save({ ...journey, [name]: value }, false)
+      save({ ...data, [name]: value }, false)
     }else{
       const props = { id:d.id, [name]: value };
       const _aims = updatedState(prevState, props)
-      save({ ...journey, aims:_aims }, false);
+      save({ ...data, aims:_aims }, false);
     }
   }
 
@@ -330,7 +322,7 @@ const Journey = ({ data, screen, width, height, save, closeDialog }) => {
       setMeasuresBarIsOpen(true);
     }else{
       const _measures = updatedState(measures, details)
-      save({ ...journey, measures:_measures })
+      save({ ...data, measures:_measures })
     }
     () => setModalData(undefined);
   }
@@ -339,7 +331,7 @@ const Journey = ({ data, screen, width, height, save, closeDialog }) => {
     journey.endEditPlanet();
     setModalData(undefined);
     //now we want it to persist the changes that have been made
-    save(journey);
+    save(data);
   }
 
   const onCloseAimForm = () => {
@@ -347,15 +339,15 @@ const Journey = ({ data, screen, width, height, save, closeDialog }) => {
     //@todo - journey.endEditAim();
     setModalData(undefined);
     //now we want it to persist the changes that have been made
-    save(journey);
+    save(data);
   }
 
   const addNewMeasure = (details, /*planetId*/) => {
     const { name, desc } = details;
     const newMeasureId = createId(measures.map(m => m.id));
     //name and desc are same for all planets where this measure is used
-    const _measures = [ ...journey.measures, { id: newMeasureId, name, desc, isOpen:true }]
-    save({ ...journey, measures:_measures })
+    const _measures = [ ...data.measures, { id: newMeasureId, name, desc, isOpen:true }]
+    save({ ...data, measures:_measures })
     /*
     //@todo - use this
     if(planetId){

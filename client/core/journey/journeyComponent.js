@@ -24,6 +24,7 @@ import { getTransformationFromTrans } from './helpers';
     
     DOING NOW/NEXT
     new bigs since store
+     - when measureas are added, I dont think journeyComponent picks them up - maybe todo with useEffect??? we now add teh mock measures in reducer, but they arent coming thru
      - drag aim, but it goes back to where it was - doesnt save on drag end: 
      //cause - updatePlanets is called separately, which overwrites the new aim. 
      // soln - journeyComponent should only ever trigger one React state change per event. Thats why we have journey as one state,
@@ -236,7 +237,7 @@ export default function journeyComponent() {
         updateDimns();
         selection.each(function (journeyData) {
             data = journeyData;
-            console.log("journey", data)
+            //console.log("journey", data)
             if(!svg){
                 //enter
                 init.call(this);

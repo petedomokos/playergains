@@ -66,14 +66,19 @@ const MainRouter = ({ userId, loadUser, loadingUser, updateScreen }) => {
     <div>
       <div style={{height:0.05}}></div>
       <MenuContainer />
-      {/**<div>
+      <div>
           <JourneyContainer />
-      </div>*/}
+      </div>
       {(!jwt || userId) && <Switch>
           {jwt ?
             <Route exact path="/" component={UserHomeContainer} />
             :
-            <Route exact path="/" component={NonUserHome}/>
+            <>
+              <div>
+                <JourneyContainer />
+              </div>
+              <Route exact path="/" component={NonUserHome}/>
+            </>
           }
           <Route path="/expression" component={Expression}/>
           <Route path="/games" component={Games}/>

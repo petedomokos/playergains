@@ -74,8 +74,24 @@ export const saveJourneyToStore = journey => (
 	}
 )
 
+export const saveAdhocJourneyToStore = journey => (
+	{
+		type: C.SAVE_ADHOC_JOURNEY,
+		journey
+	}
+)
+
 export const saveJourney = journey => dispatch => {
-	console.log("saveJourney", journey)
+	//console.log("saveJourney", journey)
+	/*
+	//atm, if no user logged in, we still have  auser object so just store journey in there as normal, but dont persist to server
+	const jwt = auth.isAuthenticated();
+	if(!jwt){
+		console.log("save adhoc")
+		dispatch(saveAdhocJourneyToStore(journey))
+		return;
+	}
+	*/
 	//1. save to store
 	dispatch(saveJourneyToStore(journey));
     //2. save to server

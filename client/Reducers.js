@@ -6,6 +6,11 @@ import { InitialState } from './InitialState'
 import { getGoals } from "./data/goals";
 import { hydrateDataset } from "./data/datasets";
 //HELPERS
+const mockMeasures = [
+	{ id:"mock1", name:"Puts Per Round", desc: "nr of puts in a round" },
+	{ id:"mock2", name:"Drive 1", desc: "nr D1s to Fairway" },
+	{ id:"mock3", name:"Drive 2", desc: "nr D2s to Fairway" }
+  ]
 
 //STORE
 export const user = (state=InitialState.user, act) =>{
@@ -31,15 +36,15 @@ export const user = (state=InitialState.user, act) =>{
 			return { ...state, ...act.user };
 		}
 		case C.SAVE_JOURNEY:{
-			console.log("reducer saveJourney", act)
+			//@todo - abstract this as it is repeated in SAVE_ADHOC_JOURNEY
+			//console.log("reducer saveJourney", act)
 			const { journey } = act;
 			const currentJourney = state.journeys.find(j => j._id === journey._id);
 			if(!currentJourney){
 				//_id will be 'temp' here until saved on server
-				console.log("adding journey to journeys")
 				return {
 					...state,
-					journeys:[journey],
+					journeys:[{ ...journey, measures:mockMeasures }],
 					homeJourney:[journey._id]
 				}
 			}
@@ -507,6 +512,14 @@ export const system = (state={}, act) => {
 			return {
 				...state,
 				screen
+			}
+		}
+		case C.SAVE_ADHOC_JOURNEY:{
+			//@todo - abstract this as it is repeated in SAVE_ADHOC_JOURNEY
+			//console.log("reducer saveAdhocJourney", act)
+			return {
+				...state,
+				journey:{ ...act.journey, measures:mockMeasures },
 			}
 		}
 		default:

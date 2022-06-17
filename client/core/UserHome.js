@@ -74,10 +74,7 @@ const UserHome = ({screen, user, loading, loadingError}) => {
       {user._id && 
         <>
             <div className={classes.mainVis}>
-              <Route path="/" render={(match) => 
-                    <JourneyContainer 
-                      screen={screen} width={screen.width} height={screen.height - topBarHeight} match={match} />
-              } />
+              <Route path="/" component={JourneyContainer} />
             </div>
           
           {/**
