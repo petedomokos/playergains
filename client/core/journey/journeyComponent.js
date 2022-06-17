@@ -24,10 +24,7 @@ import { getTransformationFromTrans, updatedState } from './helpers';
     
     DOING NOW/NEXT
     new bigs since store
-     - when measures are added, I dont think journeyComponent picks them up - maybe todo with useEffect??? we now add teh mock measures in reducer, but they arent coming thru
-
-     - mock measures not showing anymore - maybe thats a good thing
-     - drag a measure over goal - goal size increase is messed up - not large enough anymore
+     - plent disappears when measures opened!
      - new measure form isnt up-to-date ( problem existed before store change)
      - delate button click doesnt work (sane old problem with btn click)
     checks

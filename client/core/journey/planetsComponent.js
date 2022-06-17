@@ -629,6 +629,7 @@ export default function planetsComponent() {
             //console.log("increase size", goal.id)
             //increase size to show available
             //ellipses
+            console.log("available", availablePlanetSizeMultiplier)
             innerEllipses
                 .transition()
                     .duration(200)

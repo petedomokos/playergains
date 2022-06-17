@@ -96,7 +96,7 @@ export default function aimsComponent() {
     let shouldTransitionAim = false;
 
     function aims(selection, options={}) {
-        //console.log("aims", shouldTransitionAim)
+        console.log("aims", planetSettings.availablePlanetSizeMultiplier)
         withClick.onClick(onClick)
         const drag = d3.drag()
             .filter((e,d) => d.id !== "main")
