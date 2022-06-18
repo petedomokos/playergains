@@ -6,7 +6,7 @@ import dragEnhancements from './enhancedDragHandler';
 /*
 
 */
-export default function measureProfileComponent() {
+export default function profileComponent() {
     // dimensions
     let margin;
     let customMargin;
@@ -15,21 +15,21 @@ export default function measureProfileComponent() {
     let contentsWidth;
     let contentsHeight;
 
-    let textMargin = DIMNS.measure.text.margin;
+    let textMargin = DIMNS.menuBarItem.text.margin;
     let textContentsWidth;
     let textContentsHeight;
 
-    const nameHeight = DIMNS.measure.name.height;
+    const nameHeight = DIMNS.menuBarItem.name.height;
     const descAndTargetsHeight = contentsHeight - nameHeight;
-    const targsHeight = d3.max([descAndTargetsHeight * 0.3, DIMNS.measure.targs.minHeight])
+    const targsHeight = d3.max([descAndTargetsHeight * 0.3, DIMNS.menuBarItem.targs.minHeight])
     let descHeight;
 
     function updateDimns(){
         margin = customMargin || { 
-            left: d3.min([width * 0.05, DIMNS.measure.maxMargin.left]),
-            right: d3.min([width * 0.05, DIMNS.measure.maxMargin.right]),
-            top: d3.min([height * 0.05, DIMNS.measure.maxMargin.top]),
-            bottom: d3.min([height * 0.05, DIMNS.measure.maxMargin.bottom])
+            left: d3.min([width * 0.05, DIMNS.menuBarItem.maxMargin.left]),
+            right: d3.min([width * 0.05, DIMNS.menuBarItem.maxMargin.right]),
+            top: d3.min([height * 0.05, DIMNS.menuBarItem.maxMargin.top]),
+            bottom: d3.min([height * 0.05, DIMNS.menuBarItem.maxMargin.bottom])
         }
         contentsWidth = width - margin.left - margin.right;
         contentsHeight = height - margin.top - margin.bottom;
@@ -41,6 +41,8 @@ export default function measureProfileComponent() {
     };
     let outerBgSettings = { fill: "none", stroke:"none", strokeWidth:0 }
     let bgSettings = { fill:"none", stroke:grey10(5), strokeWidth:0.2 }
+
+    let itemsDraggable = true;
 
     //handlers
     let onDragStart = function(){};
@@ -65,12 +67,12 @@ export default function measureProfileComponent() {
 
     let withClick = dragEnhancements();
 
-    function measureProfile(selection) {
+    function profile(selection) {
         updateDimns();
         selection.each(function (data) {
             containerG = d3.select(this);
-            //console.log("measureProfile data", data)
-            if(containerG.select("g.measure-contents").empty()){
+            //console.log("profile data", data)
+            if(containerG.select("g.item-contents").empty()){
                 //enter
                 init.call(this);
                 update(data);
@@ -163,8 +165,8 @@ export default function measureProfileComponent() {
 
     function init(){
 
-        contentsG = containerG.append("g").attr("class", "contents measure-contents")
-        //use a hidden outerBg so mouseover works in gaops between measures
+        contentsG = containerG.append("g").attr("class", "contents item-contents")
+        //use a hidden outerBg so mouseover works in gaops between items
         outerBgRect = contentsG.append("rect").attr("class", "outer-bg")
         bgRect = contentsG.append("rect").attr("class", "bg")
         textContentsG = contentsG.append("g").attr("class", "contents text-contents")
@@ -174,68 +176,73 @@ export default function measureProfileComponent() {
             .append("text")
                 .attr("text-anchor", "middle")
                 .attr("dominant-baseline", "central")
-                .attr("font-size", FONTSIZES.measure.name);
+                .attr("font-size", FONTSIZES.menuBarItem.name);
 
         descG = textContentsG.append("g").attr("class", "desc");
         descText = descG
             .append("text")
                 .attr("text-anchor", "start")
                 .attr("dominant-baseline", "hanging")
-                .attr("font-size", FONTSIZES.measure.desc);
+                .attr("font-size", FONTSIZES.menuBarItem.desc);
 
         targsG = textContentsG.append("g").attr("class", "targs");
         targsText = targsG
             .append("text")
                 .attr("text-anchor", "middle")
                 .attr("dominant-baseline", "central")
-                .attr("font-size", FONTSIZES.measure.targs);
+                .attr("font-size", FONTSIZES.menuBarItem.targs);
 
         contentsG.selectAll("g").style("pointer-events", "none")
 
     }
 
     //api
-    measureProfile.margin = function (value) {
+    profile.margin = function (value) {
         if (!arguments.length) { return customMargin || margin; }
         customMargin = { ...customMargin, ...value};
-        return measureProfile;
+        return profile;
     };
-    measureProfile.width = function (value) {
+    profile.width = function (value) {
         if (!arguments.length) { return width; }
         width = value;
-        return measureProfile;
+        return profile;
     };
-    measureProfile.height = function (value) {
+    profile.height = function (value) {
         if (!arguments.length) { return height; }
         height = value;
-        return measureProfile;
+        return profile;
     };
-    measureProfile.bgSettings = function (value, withUpdate) {
+    profile.bgSettings = function (value, withUpdate) {
         if (!arguments.length) { return bgSettings; }
         bgSettings = { ...bgSettings, ...value};
         if(withUpdate) { update(prevData); }
-        return measureProfile;
+        return profile;
     };
-    measureProfile.onDragStart = function (value) {
+    profile.itemsDraggable = function (value) {
+        if (!arguments.length) { return itemsDraggable; }
+        itemsDraggable = value;
+        return profile;
+    };
+    profile.onDragStart = function (value) {
         if (!arguments.length) { return onDragStart; }
         onDragStart = value;
-        return measureProfile;
+        return profile;
     };
-    measureProfile.onDrag = function (value) {
+    profile.onDrag = function (value) {
         if (!arguments.length) { return onDrag; }
         onDrag = value;
-        return measureProfile;
+        return profile;
     };
-    measureProfile.onDragEnd = function (value) {
+    profile.onDragEnd = function (value) {
         if (!arguments.length) { return onDragEnd; }
         onDragEnd = value;
-        return measureProfile;
+        return profile;
     };
-    measureProfile.onClick = function (value) {
+    profile.onClick = function (value) {
         if (!arguments.length) { return onClick; }
         onClick = value;
-        return measureProfile;
+        return profile;
     };
 
-    return measureProfile;
+    return profile;
 }

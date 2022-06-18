@@ -76,14 +76,14 @@ const initChannels = d3.range(numberMonths)
   })
 
 //width and height may be full screen, but may not be
-const Journey = ({ data, screen, width, height, save, closeDialog }) => {
+const Journey = ({ data, availableJourneys, screen, width, height, save, closeDialog }) => {
   console.log("Journey", data)
   const { _id, name, aims, goals, links, measures } = data;
   const [journey, setJourney] = useState(null);
   const [channels, setChannels] = useState(initChannels);
   const [withCompletionPaths, setWithCompletionPath] = useState(false);
   const [modalData, setModalData] = useState(undefined);
-  const [measuresBarIsOpen, setMeasuresBarIsOpen] = useState(false);
+  const [displayedBar, setDisplayedBar] = useState("");
   const shouldD3UpdateRef = useRef(true);
 
   const ctrlsHeight = 10;
@@ -170,12 +170,20 @@ const Journey = ({ data, screen, width, height, save, closeDialog }) => {
       return;
     }
 
+    let barData = { displayedBar };
+    if(displayedBar === "journeys"){
+      barData = { ...barData, data: availableJourneys, hoverEnabled:false };
+    }else if(displayedBar === "measures"){
+      barData = { ...barData, data: measures.filter(m => m.isOpen) }
+    }
+
     journey
         .width(journeyWidth)
         .height(journeyHeight)
         .screen(screen)
         .withCompletionPaths(withCompletionPaths)
-        .measuresOpen(measuresBarIsOpen ? measures.filter(m => m.isOpen) : undefined)
+        .barData(barData)
+        .measuresOpen(displayedBar === "measures" ? measures.filter(m => m.isOpen) : undefined)
         .modalData(modalData)
         .updateState(updates => {
             //can be used to update multiple items, only needed for aims, goals, links and measures
@@ -291,7 +299,7 @@ const Journey = ({ data, screen, width, height, save, closeDialog }) => {
       //.datum({ canvas, aims, planets, links, channels, measures })
       .call(journey)
 
-  }, [JSON.stringify(data), journey, withCompletionPaths, measuresBarIsOpen, modalData, width, height, screen ])
+  }, [JSON.stringify(data), journey, withCompletionPaths, displayedBar, modalData, width, height, screen ])
 
   const toggleCompletion = () => {
       setWithCompletionPath(prevState => !prevState)
@@ -299,7 +307,30 @@ const Journey = ({ data, screen, width, height, save, closeDialog }) => {
 
   //for now, we just open or close all measures
   const toggleMeasuresOpen = useCallback((planetId) => {
-      setMeasuresBarIsOpen(prevState => !prevState);
+      setDisplayedBar(prevState => prevState === "measures" ? "" : "measures");
+      //todo - if planetId, only close or open those on that planet
+      let _measures;
+      //@todo - why not just use the negation of current displayedBar?
+      const measuresAreOpen = !!measures.find(m => m.isOpen);
+      if(measuresAreOpen){
+          _measures = measures.map(m => ({ ...m, isOpen:false }));
+      }else{
+          //for now, open all measures
+          _measures = measures.map(m => ({ ...m, isOpen:true }));
+      }
+      save({ ...data, measures:_measures })
+}, [JSON.stringify(data)]);
+
+//for now, we just open or close all measures
+const toggleJourneysOpen = useCallback(() => {
+    setDisplayedBar(prevState => prevState === "journeys" ? "" : "journeys");
+}, [JSON.stringify(data)]);
+
+  //for now, we just open or close all measures
+  const openNewJourney = useCallback((planetId) => {
+      //create a new journey, immediately save it to store and it will become the activeJourney
+      // (but not to server yet until first change),
+      setDisplayedBar("");
       //todo - if planetId, only close or open those on that planet
       let _measures;
       const measuresAreOpen = !!measures.find(m => m.isOpen);
@@ -313,84 +344,84 @@ const Journey = ({ data, screen, width, height, save, closeDialog }) => {
 }, [JSON.stringify(data)]);
 
   const onUpdatePlanetForm = modalType => (name, value) => {
-    //console.log("updatePlanetForm")
-    const { d , measure } = modalData;
-    const planet = goals.find(p => p.id === d.id);
-    let props;
-    if(modalType === "targOnly"){
-      //for now, the only planetMeasureData that can  be updated is that targ.  Everything else that is updated is on the measure itself.
-      props = { id:d.id, measures: planet.measures.map(m => m.id === measure.id ? { ...m, targ:value } : m) };
-    }else{
-      props = { id:d.id, [name]: value };
-    }
-    const _goals = updatedState(goals, props);
-    //dont persist yet until closed
-    save({ ...data, goals:_goals }, false);
+      //console.log("updatePlanetForm")
+      const { d , measure } = modalData;
+      const planet = goals.find(p => p.id === d.id);
+      let props;
+      if(modalType === "targOnly"){
+        //for now, the only planetMeasureData that can  be updated is that targ.  Everything else that is updated is on the measure itself.
+        props = { id:d.id, measures: planet.measures.map(m => m.id === measure.id ? { ...m, targ:value } : m) };
+      }else{
+        props = { id:d.id, [name]: value };
+      }
+      const _goals = updatedState(goals, props);
+      //dont persist yet until closed
+      save({ ...data, goals:_goals }, false);
   }
 
   const onUpdateAimForm = (name, value) => {
-    //console.log("update aim form")
-    const { d } = modalData;
-    if(d.id === "main"){
-      //dont want to persist name change to db yet
-      save({ ...data, [name]: value }, false)
-    }else{
-      const props = { id:d.id, [name]: value };
-      const _aims = updatedState(prevState, props)
-      save({ ...data, aims:_aims }, false);
-    }
+      //console.log("update aim form")
+      const { d } = modalData;
+      if(d.id === "main"){
+        //dont want to persist name change to db yet
+        save({ ...data, [name]: value }, false)
+      }else{
+        const props = { id:d.id, [name]: value };
+        const _aims = updatedState(prevState, props)
+        save({ ...data, aims:_aims }, false);
+      }
   }
 
   const onSaveMeasureForm = (details, planetId, isNew) => {
-    if(isNew){
-      //any newly created measure from this form must be open as this form comes from the measures bar
-      addNewMeasure({ ...details, isOpen:true }, planetId)
-      setMeasuresBarIsOpen(true);
-    }else{
-      const _measures = updatedState(measures, details)
-      save({ ...data, measures:_measures })
-    }
-    () => setModalData(undefined);
+      if(isNew){
+        //any newly created measure from this form must be open as this form comes from the measures bar
+        addNewMeasure({ ...details, isOpen:true }, planetId)
+        setDisplayedBar("measures");
+      }else{
+        const _measures = updatedState(measures, details)
+        save({ ...data, measures:_measures })
+      }
+      () => setModalData(undefined);
   }
 
   const onClosePlanetForm = () => {
-    journey.endEditPlanet();
-    setModalData(undefined);
-    //now we want it to persist the changes that have been made
-    save(data);
+      journey.endEditPlanet();
+      setModalData(undefined);
+      //now we want it to persist the changes that have been made
+      save(data);
   }
 
   const onCloseAimForm = () => {
-    //console.log("close aim form")
-    //@todo - journey.endEditAim();
-    setModalData(undefined);
-    //now we want it to persist the changes that have been made
-    save(data);
+      //console.log("close aim form")
+      //@todo - journey.endEditAim();
+      setModalData(undefined);
+      //now we want it to persist the changes that have been made
+      save(data);
   }
 
   const addNewMeasure = (details, /*planetId*/) => {
-    const { name, desc } = details;
-    const newMeasureId = createId(measures.map(m => m.id));
-    //name and desc are same for all planets where this measure is used
-    const _measures = [ ...data.measures, { id: newMeasureId, name, desc, isOpen:true }]
-    save({ ...data, measures:_measures })
-    /*
-    //@todo - use this
-    if(planetId){
-      //measure is also set on a particular planet
-      const planet = planets.find(p => p.id === planetId);
-      const planetMeasureData = { measureId:newMeasureId, targ: details.targ};
-      setPlanets(prevState => {
-        const props = { id: planetId, measures:[...planet.measures, planetMeasureData]};
-        return updatedState(prevState, props);
-      })
-    }
-    */
+      const { name, desc } = details;
+      const newMeasureId = createId(measures.map(m => m.id));
+      //name and desc are same for all planets where this measure is used
+      const _measures = [ ...data.measures, { id: newMeasureId, name, desc, isOpen:true }]
+      save({ ...data, measures:_measures })
+      /*
+      //@todo - use this
+      if(planetId){
+        //measure is also set on a particular planet
+        const planet = planets.find(p => p.id === planetId);
+        const planetMeasureData = { measureId:newMeasureId, targ: details.targ};
+        setPlanets(prevState => {
+          const props = { id: planetId, measures:[...planet.measures, planetMeasureData]};
+          return updatedState(prevState, props);
+        })
+      }
+      */
   }
 
   const importMeasures = measureIds => {
-    setMeasures(prevState => [...measureIds, ...prevState]);
-    setModalData(undefined);
+      setMeasures(prevState => [...measureIds, ...prevState]);
+      setModalData(undefined);
   }
 
   return (
@@ -398,7 +429,11 @@ const Journey = ({ data, screen, width, height, save, closeDialog }) => {
         <svg className={classes.svg} ref={containerRef}></svg>
         <div className={classes.ctrls}>
             <Button className={classes.btn} color="primary" variant="contained" onClick={toggleMeasuresOpen} >
-              {( measuresBarIsOpen ?"Close " : "Open ") +"measures"}</Button>
+              {displayedBar === "measures" ?"Close Measures" : "Measures"}</Button>
+            <Button className={classes.btn} color="primary" variant="contained" onClick={toggleJourneysOpen} >
+              {displayedBar === "journeys" ?"Close Journeys" : "Journeys"}</Button>
+            <Button className={classes.btn} color="primary" variant="contained" onClick={openNewJourney} >
+              New Journey</Button>
             {/**<Button className={classes.btn} color="primary" variant="contained" onClick={toggleCompletion} >completion</Button>**/}
         </div>
         {modalData && 
@@ -450,6 +485,7 @@ Journey.defaultProps = {
     links:[],
     measures:mockMeasures
   },
+  availableJourneys:[],
   screen: {},
   width: 0,
   height: 0,

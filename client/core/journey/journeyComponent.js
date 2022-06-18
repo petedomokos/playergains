@@ -8,7 +8,7 @@ import aimsLayout from './aimsLayout';
 import axesComponent from "./axesComponent";
 import linksComponent from "./linksComponent";
 import aimsComponent from './aimsComponent';
-import measuresBarComponent from './measuresBarComponent';
+import menuBarComponent from './menuBarComponent';
 import { updatePos } from "./domHelpers"
 //import { COLOURS, DIMNS } from "./constants";
 import { addWeeks } from "../../util/TimeHelpers"
@@ -149,7 +149,8 @@ export default function journeyComponent() {
     let canvasHeight;
 
     let measuresOpen;
-    let measuresBarHeight;
+    let menuBarData = {};
+    let menuBarHeight;
 
     const widgetsX = 10;
     let widgetsY;
@@ -158,9 +159,9 @@ export default function journeyComponent() {
         contentsWidth = width - margin.left - margin.right;
         contentsHeight = height - margin.top - margin.bottom;
         canvasWidth = contentsWidth;// * 5;
-        measuresBarHeight = measuresOpen ? DIMNS.measures.height : 0
-        //note- for some reason, reducing canvasHeight doesnt seem to move axis properly, so instead just subtract measuresBarHeight for axis translateY
-        canvasHeight = contentsHeight;// - measuresBarHeight; //this should be lrge enough for all planets, and rest can be accesed via pan
+        menuBarHeight = measuresOpen ? DIMNS.measures.height : 0
+        //note- for some reason, reducing canvasHeight doesnt seem to move axis properly, so instead just subtract menuBarHeight for axis translateY
+        canvasHeight = contentsHeight;// - menuBarHeight; //this should be lrge enough for all planets, and rest can be accesed via pan
         widgetsY = canvasHeight - WIDGETS_HEIGHT - DIMNS.xAxis.height;
     };
 
@@ -177,7 +178,7 @@ export default function journeyComponent() {
     const links = linksComponent();
     const aims = aimsComponent();
     const openedLinks = {};
-    const measuresBar = measuresBarComponent();
+    const menuBar = menuBarComponent();
 
     //api
     let selectedPending;
@@ -265,7 +266,7 @@ export default function journeyComponent() {
                     transitionUpdate:!(changed === "zoom")
                 }
             }
-            //console.log("measuresbarh", measuresBarHeight)
+            //console.log("measuresbarh", menuBarHeight)
             //console.log("journey update", selectedPending)
             svg
                 .attr("width", width)
@@ -301,9 +302,9 @@ export default function journeyComponent() {
                 .scale(zoomedTimeScale)
                 .tickSize(canvasHeight + DEFAULT_D3_TICK_SIZE)
 
-            //note- for some reason, reducing canvasHeight doesnt seem to move teh xis properly, so instead just subtract measuresBarHeight
+            //note- for some reason, reducing canvasHeight doesnt seem to move teh xis properly, so instead just subtract menuBarHeight
             axesG
-                .attr("transform", "translate(0," +(contentsHeight - DIMNS.xAxis.height - measuresBarHeight) +")")
+                .attr("transform", "translate(0," +(contentsHeight - DIMNS.xAxis.height - menuBarHeight) +")")
                 .datum(axesData)
                 .call(axes);
 
@@ -361,7 +362,7 @@ export default function journeyComponent() {
                 //note - on start editing, selected is already set to undefined
                 else if(selected){
                     updateSelected(undefined);
-                //if measuresBar open, we dont want the click to propagate through
+                //if bar open, we dont want the click to propagate through
                 }else{
                     const x = e.sourceEvent.layerX;
                     const y = e.sourceEvent.layerY; 
@@ -437,7 +438,7 @@ export default function journeyComponent() {
                 aims
                     .view(getView())
                     .selected(selected)
-                    .selectedMeasure(measuresOpen?.find(m => m.id === measuresBar.selected()))
+                    .selectedMeasure(measuresOpen?.find(m => m.id === bar.selected()))
                     .contentsToShow(aim => modalData?.d.id === aim.id ? "none" : "basic")
                     .goalContentsToShow(g => modalData?.d.id === g.id ? "none" : "basic")
                     .timeScale(zoomedTimeScale)
@@ -602,10 +603,10 @@ export default function journeyComponent() {
                     //can be doen in planetsComponent, just need to pass it draggedMeasure too. ATM it only has selectedMeasure.
                     /*
                     .onMouseoverGoal(function(e,d){
-                        const selectedMeasureIsInPlanet = !!d.measures.find(m => m.id === measuresBar.selected());
-                        if(measuresBar.selected() && (selectedMeasureIsInPlanet || measuresBar.dragged())){
+                        const selectedMeasureIsInPlanet = !!d.measures.find(m => m.id === bar.selected());
+                        if(bar.selected() && (selectedMeasureIsInPlanet || bar.dragged())){
                             hoveredPlanetId = d.id;
-                            //planets.highlight(hoveredPlanetId, measuresBar.dragged());
+                            //planets.highlight(hoveredPlanetId, bar.dragged());
                             aim.highlightPlanet(hoveredPlanetId);
                         }
                     })
@@ -639,7 +640,7 @@ export default function journeyComponent() {
                 //component
                 links
                     .withCompletion(withCompletionPaths)
-                    .selectedMeasure(measuresOpen?.find(m => m.id === measuresBar.selected()))
+                    .selectedMeasure(measuresOpen?.find(m => m.id === bar.selected()))
                     .yScale(zoomedYScale)
                     //.timeScale(timeScale)
                     .timeScale(zoomedTimeScale)
@@ -715,54 +716,80 @@ export default function journeyComponent() {
             //transition it in and out with data([measuresOpen]) or soemthing like that so its empty
             //and removes if no measuresOpen. Note, could be all measuires open or just one goals' measures
 
-            const measuresData = {
-                title:"Measures",
-                subtitle:"All", //this will show the goal or path etc if restricted
-                measures:measuresOpen
+            const { displayedBar } = menuBarData;
+            let displayedMenuBarData = [];
+            if(displayedBar === "measures"){
+                displayedMenuBarData.push({
+                    key:"measures",
+                    title:"Measures",
+                    subtitle:"All", //this will show the goal or path etc if restricted
+                    itemsData:menuBarData.data
+                })
+            }else if(displayedBar === "journeys"){
+                displayedMenuBarData.push({
+                    key:"journeys",
+                    title:"Journeys",
+                    subtitle:"All", //this will show the goal or path etc if restricted
+                    itemsData:menuBarData.data
+                })
             }
 
             let prevDraggedOverPlanet;
             let goalIsAvailable = () => {};
-            let measureWasMoved = false;
+            let menuItemWasMoved = false;
             //const goalContainsMeasure = measure => goal => !!goal.measures.find(m => m.id === measure.id);
             //let goalIsAvailable;
-            const measuresBarG = contentsG.selectAll("g.measures-bar").data(measuresOpen ? [measuresData] : [])
-            measuresBarG.enter()
+            const menuBarG = contentsG.selectAll("g.menu-bar").data(displayedMenuBarData, d => d.key)
+            //const menuBarG = contentsG.selectAll("g.menu-bar").data(measuresOpen ? [measuresData] : [])
+            menuBarG.enter()
                 .append("g")
-                    .attr("class", "measures-bar")
-                    .merge(measuresBarG)
+                    .attr("class", "menu-bar")
+                    .merge(menuBarG)
                     //.attr("transform", "translate(0," + contentsHeight +")")
                     //note - in journey component, margin bottom is used for the axis. 
-                    .attr("transform", "translate(0," +(contentsHeight - measuresBarHeight) +")")
-                    .call(measuresBar
+                    .attr("transform", "translate(0," +(contentsHeight - menuBarHeight) +")")
+                    .call(menuBar
                         .width(contentsWidth)
-                        .height(measuresBarHeight)
-                        .openNewMeasureForm(() => { 
-                            setModalData({ measureOnly: true });
-                        })
-                        .openImportMeasuresComponent(() => {
+                        .height(menuBarHeight)
+                        .openImportItemsComponent(() => {
                             //note - eventually will have option to pass in filter settings eg tags like fitness, or groupId
                             setModalData({ importing: true, filters:[] })
                         })
                         .onUpdateSelected(updateAims)
-                        .onMeasureDragStart((e, m) => {
+                        .onNewItemButtonClick((item) => {
+                            if(displayedBar === "measures"){
+                                setModalData({ measureOnly: true });
+                            }else{
+                                //journeys
+                                //create a new journey
+                            }
+                        })
+                        .onItemClick(item => {
+                            if(displayedBar === "measures"){
+                                setModalData({ measureOnly: true });
+                            }else{
+                                //journeys
+                                //open journey
+                            }
+                        })
+                        .onItemDragStart((e, m) => {
                             updateSelected(undefined);
                             aims.stopShowingAvailabilityStatus(planetsData);
                             //goalIsAvailable = !goalContainsMeasure(m);
                             //todo - move to aims, and work out why measure not being added to goal
                             //planets.withRing(false);
                         })
-                        .onMeasureDrag((e, m) => {
+                        .onItemDrag((e, m) => {
                             //for now, offsetX and y are used to convert sourceEvent pos to canvas pos
                             const pt = { x: e.sourceEvent.offsetX, y: e.sourceEvent.offsetY };
                             const planetInnerCircleRadius = d3.min([DIMNS.planet.width, DIMNS.planet.height]);
                             const draggedOverPlanet = planetsData.find(p => distanceBetweenPoints(pt, p) < planetInnerCircleRadius);
 
                             //@todo - fix enhancedDrag so it only calls dragStart when its a drag, then can do the following in dragStart
-                            if(!measureWasMoved){
+                            if(!menuItemWasMoved){
                                 //first drag event
                                 aims.stopShowingAvailabilityStatus(planetsData);
-                                measureWasMoved = true;
+                                menuItemWasMoved = true;
                                 prevDraggedOverPlanet = draggedOverPlanet;
                                 return;
                             }
@@ -783,7 +810,7 @@ export default function journeyComponent() {
                             //todo - lookinti what m is  -and follow teh updateProcess to see why measures stays as []
                             //planets.withRing(true);
                         })
-                        .onMeasureDragEnd((e, m) => {
+                        .onItemDragEnd((e, m) => {
                             //stop showing unavailability
                             //aims.stopShowingAvailabilityStatus(planetsData.filter(p => !goalIsAvailable(p)));
                             //stop showing availability of draggedOverPlanet
@@ -800,10 +827,10 @@ export default function journeyComponent() {
                                     prevDraggedOverPlanet = undefined;
                                 }
                             })
-                            measureWasMoved = false;
+                            menuItemWasMoved = false;
                         }))
             
-            measuresBarG.exit().remove();      
+            menuBarG.exit().remove();      
         }
 
         updateWidgets();
@@ -919,8 +946,8 @@ export default function journeyComponent() {
             }
 
             //open name form too, but as selected rather than editing
-            const measureIsOnPlanet = d.dataType === "planet"? d.measures.find(d => d.id === measuresBar.selected()) : false;
-            const measure = measureIsOnPlanet && measuresOpen?.find(m => m.id === measuresBar.selected());
+            const measureIsOnPlanet = d.dataType === "planet"? d.measures.find(d => d.id === bar.selected()) : false;
+            const measure = measureIsOnPlanet && measuresOpen?.find(m => m.id === bar.selected());
             //could be an aim or a planet
             const modalData = measure ? { d, measure, nameAndTargOnly: true } : { d, nameOnly:true };
             setModalData(modalData);
@@ -1025,55 +1052,6 @@ export default function journeyComponent() {
 
         return selection;
     }
-        /*
-        createAim = function(d){
-            deletePlanet(d.id);
-            //A. remove this planet - transition out should be handled by update in planetsComponent automatically
-            
-
-            //B. add 3 planets stacked, same targetDate as planet removed, y value of middle planet is same as target, 
-            //y value of top[ planet will be -(2*ry + gap), and bottom will be +2*ry + gap but need to innvert to yPC
-            //entry transitiopn handled in planetsComp auto
-            const ringRX = +d3.select(this).select("ellipse.ring").attr("rx");
-            const ringRY = +d3.select(this).select("ellipse.ring").attr("ry");
-            //const unzoomedGoalRingWidth = DIMNS.planet.width * PLANET_RING_MULTIPLIER;
-            //const unzoomedGoalRingHeight = DIMNS.planet.height * PLANET_RING_MULTIPLIER;
-            const goalWidth = ringRX * 2;
-            const goalHeight = ringRY * 2;
-
-            const vertGap = DIMNS.aim.vertPlanetGap;
-            const aimMargin = DIMNS.aim.margin;
-            //actualX and y are both zoomed, but when we apply zoomedTiomeScale.invert, it will store them as dates and yPC
-            const actualX = d.targetX - goalWidth/2 - aimMargin.left;
-            const y = d.y - (goalHeight * 1.5) - vertGap - aimMargin.top;
-            const width = goalWidth + aimMargin.left + aimMargin.right;
-            const height = 3 * goalHeight + 2 * vertGap + aimMargin.top + aimMargin.bottom;
-
-            const aim = {
-                //id:handleCreateAimId(aims), do id in Journey
-                name:d.name,
-                //store pre-scale values so independent of zoom
-
-                startDate:zoomedTimeScale.invert(actualX),
-                endDate:zoomedTimeScale.invert(actualX + width),
-                startYPC:zoomedYScale.invert(y),
-                endYPC:zoomedYScale.invert(y + height)
-            }
-
-            //calculate here which planets are in based on the actual x (not displayX)
-            const planetIdsInAim = d3.selectAll("g.planet")
-                .filter(g => g.id !== d.id) //this one has been converted to aim
-                .filter(g => pointIsInRect(g, { x: actualX, y, width, height }))
-                .data()
-                .map(g => g.id);
-
-            handleCreateAim(aim, planetIdsInAim);
-            updateSelected(undefined);          
-        }
-
-        return selection;
-    }
-    */
 
     //api
     journey.margin = function (value) {
@@ -1105,6 +1083,11 @@ export default function journeyComponent() {
             updateSelected(planetsData.find(g => g.id === goalId));
         }
         //selected = value;
+        return journey;
+    };
+    journey.menuBarData = function (value) {
+        if (!arguments.length) { return menuBarData; }
+        menuBarData = value;
         return journey;
     };
     journey.measuresOpen = function (value) {

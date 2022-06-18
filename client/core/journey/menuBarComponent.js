@@ -1,11 +1,11 @@
 import * as d3 from 'd3';
 //import "d3-selection-multi";
 import { grey10, COLOURS, DIMNS, FONTSIZES } from "./constants";
-import measureProfileComponent from "./measureProfileComponent";
+import measureProfileComponent from "./profileComponent";
 /*
 
 */
-export default function measuresBarComponent() {
+export default function menuBarComponent() {
     // dimensions
     let margin;
     let customMargin;
@@ -14,42 +14,43 @@ export default function measuresBarComponent() {
     let contentsWidth;
     let contentsHeight;
 
-    const titleWidth = DIMNS.measures.title.width;
-    const titleHeight = DIMNS.measures.title.height;
-    const btnWidth = DIMNS.measures.btn.width;
-    const btnHeight = DIMNS.measures.btn.height;
-    const btnGap = DIMNS.measures.btn.gap;
+    const titleWidth = DIMNS.menuBar.title.width;
+    const titleHeight = DIMNS.menuBar.title.height;
+    const btnWidth = DIMNS.menuBar.btn.width;
+    const btnHeight = DIMNS.menuBar.btn.height;
+    const btnGap = DIMNS.menuBar.btn.gap;
 
-    let measuresHeight;
+    let menuBarHeight;
     //width constant
-    const measureWidth = DIMNS.measure.width;
+    const itemWidth = DIMNS.menuBarItem.width;
     //height varies
-    let measureHeight;
-    const measureMargin = DIMNS.measure.margin;
+    let itemHeight;
+    const itemMargin = DIMNS.menuBarItem.margin;
 
 
     function updateDimns(){
         margin = customMargin || { 
-            left: d3.min([width * 0.05, DIMNS.measures.maxMargin.left]),
-            right: d3.min([width * 0.05, DIMNS.measures.maxMargin.right]),
-            top: d3.min([height * 0.05, DIMNS.measures.maxMargin.top]),
-            bottom: d3.min([height * 0.05, DIMNS.measures.maxMargin.bottom])
+            left: d3.min([width * 0.05, DIMNS.menuBar.maxMargin.left]),
+            right: d3.min([width * 0.05, DIMNS.menuBar.maxMargin.right]),
+            top: d3.min([height * 0.05, DIMNS.menuBar.maxMargin.top]),
+            bottom: d3.min([height * 0.05, DIMNS.menuBar.maxMargin.bottom])
         }
         contentsWidth = width - margin.left - margin.right;
         contentsHeight = height - margin.top - margin.bottom;
-        measuresHeight = contentsHeight - titleHeight;
-        measureHeight = measuresHeight;
+        menuBarHeight = contentsHeight - titleHeight;
+        itemHeight = menuBarHeight;
     };
 
     let importsAvailable = false;
 
     //handlers
-    let openNewMeasureForm = () => {};
-    let openImportMeasuresComponent = () => {};
+    let onNewItemButtonClick = () => {};
+    let openImportItemsComponent = () => {};
     let onUpdateSelected = () => {};
-    let onMeasureDragStart = () => {};
-    let onMeasureDrag = () => {};
-    let onMeasureDragEnd = () => {};
+    let onItemClick = function(){};
+    let onItemDragStart = function(){};
+    let onItemDrag = function(){};
+    let onItemDragEnd = function(){};
 
     //dom
     let containerG;
@@ -58,9 +59,9 @@ export default function measuresBarComponent() {
     let titleText;
     let subtitleG;
     let subtitleText;
-    let newMeasureBtnG;
-    let importMeasuresBtnG;
-    let measuresG;
+    let newItemBtnG;
+    let importItemsBtnG;
+    let itemsG;
     let bgRect;
 
     //components
@@ -73,12 +74,12 @@ export default function measuresBarComponent() {
 
     let prevData;
 
-    function measuresBar(selection) {
+    function menuBar(selection) {
         updateDimns();
         selection.each(function (data) {
             containerG = d3.select(this);
             //console.log("measures bar data", data)
-            if(containerG.select("g.measures-bar-contents").empty()){
+            if(containerG.select("g.menu-bar-contents").empty()){
                 //enter
                 init.call(this);
                 update(data);
@@ -91,10 +92,10 @@ export default function measuresBarComponent() {
         })
 
         function update(data, options={}){
-            const { measures, title, subtitle } = data;
+            const { key, title, subtitle, itemsData } = data;
 
             bgRect.attr("width", width).attr("height", height);
-            measuresG.attr("transform", "translate(0," +titleHeight +")");
+            itemsG.attr("transform", "translate(0," +titleHeight +")");
 
             titleG.attr("transform", "translate(0," +titleHeight/2 +")");
             titleText.text(title);
@@ -110,33 +111,28 @@ export default function measuresBarComponent() {
             contentsG.selectAll("g.btn").select("text")
                 .attr("transform", "translate("+btnWidth/2 +"," +btnHeight/2 +")");
 
-            newMeasureBtnG
+            newItemBtnG
                 .attr("transform", "translate("+(contentsWidth - btnWidth) +",2.5)")
             
-            importMeasuresBtnG
+            importItemsBtnG
                 .attr("transform", "translate("+(contentsWidth - (btnWidth * 2) - btnGap) +",2.5)")
                 .attr("display", importsAvailable ? null : "none");
-
-            const measuresData = measures.map(m => ({
-                ...m,
-                isSelected:selected === m.id
-            }));
             
-            const measureG = measuresG.selectAll("g.measure").data(measuresData, m => m.id);
-            measureG.enter()
+            const itemG = itemsG.selectAll("g.item").data(itemsData, m => m.id);
+            itemG.enter()
                 .append("g")
-                    .attr("class", "measure")
+                    .attr("class", "item")
                     .attr("pointer-events", "all")
                     .each(function(d){ measureProfiles[d.id] = measureProfileComponent(); })
-                    .merge(measureG)
-                    .attr("transform", (d,i) =>  "translate("+(i * measureWidth) +",0)")
+                    .merge(itemG)
+                    .attr("transform", (d,i) =>  "translate("+(i * itemWidth) +",0)")
                     .each(function(d){
                         d3.select(this)
                             .call(measureProfiles[d.id]
-                                .bgSettings({ fill: d.isSelected ? COLOURS.selectedMeasure : COLOURS.measure })
-                                .width(measureWidth)
-                                .height(measureHeight)
-                                .margin(measureMargin)
+                                .bgSettings({ fill: selected === d.id ? COLOURS.selectedBarMenuItem : COLOURS.barMenuItem })
+                                .width(itemWidth)
+                                .height(itemHeight)
+                                .margin(itemMargin)
                                 .onClick(function(e, d){
                                     dragged = undefined;
                                     clicked = d.id;
@@ -153,13 +149,13 @@ export default function measuresBarComponent() {
                                     }
                                     //and if clicked, measure stays selected until anoither measure is clicked,
                                     //or measure bar is closed or measurebackground clicked
-                                    onMeasureDragStart.call(this, e, d)
+                                    onItemDragStart.call(this, e, d)
                                 })
-                                .onDrag(onMeasureDrag)
-                                .onDragEnd((e,d) => {
+                                .onDrag(onItemDrag)
+                                .onItemDragEnd((e,d) => {
                                     //note - measure stays selected after drag until mouseout or another is clicked
                                     dragged = undefined;
-                                    onMeasureDragEnd.call(this, e, d)
+                                    onItemDragEnd.call(this, e, d)
                                 }));
                     })
                     .on("mouseover", function(e, d){
@@ -192,7 +188,7 @@ export default function measuresBarComponent() {
 
             contentsG = containerG
                 .append("g")
-                    .attr("class", "contents measures-bar-contents")
+                    .attr("class", "contents menu-bar-contents")
                     .attr("transform", "translate(" +margin.left +"," +margin.top +")")
 
             titleG = contentsG.append("g").attr("class", "title");
@@ -200,28 +196,28 @@ export default function measuresBarComponent() {
             titleText = titleG
                 .append("text")
                     .attr("class", "main")
-                    .attr("font-size", FONTSIZES.measures.title);
+                    .attr("font-size", FONTSIZES.menuBar.title);
             
             titleG.selectAll("text").attr("dominant-baseline", "text-bottom")
 
             subtitleText = subtitleG
                 .append("text")
-                    .attr("font-size", FONTSIZES.measures.subtitle);
+                    .attr("font-size", FONTSIZES.menuBar.subtitle);
 
             //new btn
-            newMeasureBtnG = contentsG
+            newItemBtnG = contentsG
                 .append("g")
-                .attr("class", "btn new-measure-btn")
+                .attr("class", "btn new-item-btn")
                 .style("cursor", "pointer")
-                .on("click", openNewMeasureForm);
+                .on("click", onNewItemButtonClick);
 
-            newMeasureBtnG
+            newItemBtnG
                 .append("rect")
                     .attr("fill", "transparent")
                     .attr("stroke", grey10(8))
                     .attr("stroke-width", 0.1);
 
-            newMeasureBtnG
+            newItemBtnG
                 .append("text")
                     .attr("text-anchor", "middle")
                     .attr("dominant-baseline", "central")
@@ -229,26 +225,26 @@ export default function measuresBarComponent() {
                     .text("New");
 
             //import btn
-            importMeasuresBtnG = contentsG
+            importItemsBtnG = contentsG
                 .append("g")
-                .attr("class", "btn import-measures-btn")
+                .attr("class", "btn import-item-btn")
                 .style("cursor", "pointer")
-                .on("click", openImportMeasuresComponent);
+                .on("click", openImportItemsComponent);
 
-            importMeasuresBtnG
+            importItemsBtnG
                 .append("rect")
                     .attr("fill", "transparent")
                     .attr("stroke", grey10(8))
                     .attr("stroke-width", 0.1);
 
-            importMeasuresBtnG
+            importItemsBtnG
                 .append("text")
                     .attr("text-anchor", "middle")
                     .attr("dominant-baseline", "central")
                     .attr("font-size", 8)
                     .text("Import");
 
-            measuresG = contentsG.append("g").attr("class", "measures");
+            itemsG = contentsG.append("g").attr("class", "measures");
 
 
         }
@@ -257,59 +253,64 @@ export default function measuresBarComponent() {
     }
 
     //api
-    measuresBar.margin = function (value) {
+    menuBar.margin = function (value) {
         if (!arguments.length) { return customMargin || margin; }
         customMargin = { ...customMargin, ...value};
-        return measuresBar;
+        return menuBar;
     };
-    measuresBar.width = function (value) {
+    menuBar.width = function (value) {
         if (!arguments.length) { return width; }
         width = value;
-        return measuresBar;
+        return menuBar;
     };
-    measuresBar.height = function (value) {
+    menuBar.height = function (value) {
         if (!arguments.length) { return height; }
         height = value;
-        return measuresBar;
+        return menuBar;
     };
-    measuresBar.openNewMeasureForm = function (value) {
-        if (!arguments.length) { return openNewMeasureForm; }
-        openNewMeasureForm = value;
-        return measuresBar;
+    menuBar.onNewItemButtonClick = function (value) {
+        if (!arguments.length) { return onNewItemButtonClick; }
+        onNewItemButtonClick = value;
+        return menuBar;
     };
-    measuresBar.openImportMeasuresComponent = function (value) {
-        if (!arguments.length) { return openImportMeasuresComponent; }
-        openImportMeasuresComponent = value;
-        return measuresBar;
+    menuBar.openImportItemsComponent = function (value) {
+        if (!arguments.length) { return openImportItemsComponent; }
+        openImportItemsComponent = value;
+        return menuBar;
     };
-    measuresBar.onMeasureDragStart = function (value) {
-        if (!arguments.length) { return onMeasureDragStart; }
-        onMeasureDragStart = value;
-        return measuresBar;
-    };
-    measuresBar.onUpdateSelected = function (value) {
+    menuBar.onUpdateSelected = function (value) {
         if (!arguments.length) { return onUpdateSelected; }
         onUpdateSelected = value;
-        return measuresBar;
+        return menuBar;
     };
-    measuresBar.onMeasureDrag = function (value) {
-        if (!arguments.length) { return onMeasureDrag; }
-        onMeasureDrag = value;
-        return measuresBar;
+    menuBar.onItemClick = function (value) {
+        if (!arguments.length) { return onItemClick; }
+        onItemClick = value;
+        return menuBar;
     };
-    measuresBar.onMeasureDragEnd = function (value) {
-        if (!arguments.length) { return onMeasureDragEnd; }
-        onMeasureDragEnd = value;
-        return measuresBar;
+    menuBar.onItemDragStart = function (value) {
+        if (!arguments.length) { return onItemDragStart; }
+        onItemDragStart = value;
+        return menuBar;
     };
-    measuresBar.selected = function (value) {
+    menuBar.onItemDrag = function (value) {
+        if (!arguments.length) { return onItemDrag; }
+        onItemDrag = value;
+        return menuBar;
+    };
+    menuBar.onItemDragEnd = function (value) {
+        if (!arguments.length) { return onItemDragEnd; }
+        onItemDragEnd = value;
+        return menuBar;
+    };
+    menuBar.selected = function (value) {
         if (!arguments.length) { return selected; }
         selected = value;
-        return measuresBar;
+        return menuBar;
     };
-    measuresBar.dragged = function () {
+    menuBar.dragged = function () {
         return dragged;
     };
 
-    return measuresBar;
+    return menuBar;
 }

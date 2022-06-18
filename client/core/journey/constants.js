@@ -39,11 +39,11 @@ export const FONTSIZES = {
 
         target:8
     },
-    measures:{
+    menuBar:{
         title:12,
         subtitle:8
     },
-    measure:{
+    menuBarItem:{
         name:11,
         desc:8,
         targs:10
@@ -67,7 +67,7 @@ export const DIMNS = {
     xAxis:{
         height: 60
     },
-    measures:{
+    menuBar:{
         height:100,
         maxMargin:{ left: 10, right:10, top:10, bottom:10 },
         title:{
@@ -80,7 +80,7 @@ export const DIMNS = {
             gap:5
         }
     },
-    measure:{
+    menuBarItem:{
         width:100,
         margin:{ left: 5, right: 5, top: 0, bottom: 0 },
         maxMargin:{
@@ -150,8 +150,8 @@ export const COLOURS = {
     link:grey10(5),
     potentialLinkPlanet:grey10(3),
     potentialLink:grey10(3),
-    measure:"none",
-    selectedMeasure:"white"
+    barMenuItem:"none",
+    selectedBarMenuItem:"white"
 }
 
 export const SMALL_FONT = 9;
