@@ -93,40 +93,20 @@ const create = async (req, res) => {
   
   const update = async (req, res) => {
     console.log('updating journey....................', req.user)
-    /*
-    let form = new formidable.IncomingForm()
-    form.keepExtensions = true
-    form.parse(req, async (err, fields, files) => {
-      if (err) {
-        return res.status(400).json({
-          error: "Photo could not be uploaded"
-        })
-      }
-  
-      //parse array fields which have been stringified
-      fields.admin = JSON.parse(fields.admin);
-      let user = req.journey
-      user = extend(user, fields)
-      user.updated = Date.now()
-      console.log('user now', user)
-      if(files.photo){
-        user.photo.data = fs.readFileSync(files.photo.path)
-        user.photo.contentType = files.photo.type
-      }
-      try {
-        await user.save()
-        user.hashed_password = undefined
-        user.salt = undefined
-        res.json(user)
-      } catch (err) {
-        return res.status(400).json({
-          error: errorHandler.getErrorMessage(err)
-        })
-      }
-    })
-    */
+    let journey = req.journey;
+    //console.log("req journey", journey)
+    //console.log("body", req.body)
+    journey = extend(journey, req.body);
+    //console.log("extended journey", journey)
+    try {
+      const result = await journey.save()
+      res.json(result)
+    } catch (err) {
+      return res.status(400).json({
+        error: errorHandler.getErrorMessage(err)
+      })
+    }
   }
-  
   
   const read = (req, res) => {
     console.log('read journey......')

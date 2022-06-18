@@ -63,7 +63,6 @@ const transformJourneyForServer = journey => {
 }
 
 export const transformJourneyForClient = journey => {
-	console.log("transformForClient", journey)
 	const { aims, goals, updated, created } = journey;
 	return {
 		...journey,
