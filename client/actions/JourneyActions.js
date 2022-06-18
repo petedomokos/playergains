@@ -48,8 +48,6 @@ const transformJourneyForServer = journey => {
 	});
 	*/
 
-	console.log("trans id is", journey._id)
-
 	return { 
 		_id: journey._id !== "temp" ? journey._id : undefined, 
 		name: journey.name || "",

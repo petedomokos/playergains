@@ -32,6 +32,8 @@ export default function dragEnhancements() {
     let wasMoved = false;
     let longpressTimer;
     let originalCursor;
+
+    let startCallback;
     function withEnhancements(cb = () => { }) {
         return function (e, d) {
             beforeAll.call(this, e, d);
@@ -50,7 +52,8 @@ export default function dragEnhancements() {
                     if (withLongpress) {
                         setLongpressTimer.call(this, e, d);
                     }
-                    cb.call(this, e, d);
+                    startCallback = () => cb.call(this, e, d);
+                    //cb.call(this, e, d);
                     break;
                 }
                 case "drag":
@@ -74,6 +77,10 @@ export default function dragEnhancements() {
                     }
                     //console.log("was moved")
                     wasMoved = true;
+                    if(!isLongpress && startCallback){
+                        startCallback();
+                        startCallback = undefined;
+                    }
 
                     // if moved before longpress set to true, need to stop the timer
                     if (longpressTimer) {
@@ -86,24 +93,33 @@ export default function dragEnhancements() {
                         }
                         if (!alwaysCallDrag) { break; }
                     }
-
-                    cb.call(this, e, d);
+                    if(!isLongpress){
+                        cb.call(this, e, d);
+                    }
                     break;
                 }
                 case "end": {
+                    const reset = () => {
+                        // internal clean up
+                        if (longpressTimer) { clearLongpressTimer(); }
+                        resetFlags();
+                    }
                     // click flag
                     isClick = withClick && !wasMoved && !isLongpress && !isMultitouch;
 
                     if (isLongpress && onLongpressEnd) {
                         onLongpressEnd.call(this, e, d);
+                        reset();
+                        break;
                     }
-                    if (isClick) { onClick.call(this, e, d); }
+                    if (isClick) { 
+                        onClick.call(this, e, d);
+                        reset();
+                        break; 
+                    }
 
                     cb.call(this, e, d);
-
-                    // internal clean up
-                    if (longpressTimer) { clearLongpressTimer(); }
-                    resetFlags();
+                    reset();
                     break;
                 }
                 default: { break; }

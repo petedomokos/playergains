@@ -60,6 +60,11 @@ export default function planetsComponent() {
     let onDragStart = function() {};
     let onDrag = function() {};
     let onDragEnd = function() {};
+    let onLongpressStart = function() {};
+    let onLongpressDragged = function() {};
+    let onLongpressEnd = function() {};
+
+
     let onMouseover = function(){};
     let onMouseout = function(){};
 
@@ -82,7 +87,7 @@ export default function planetsComponent() {
     //api
 
 
-    let withClick = dragEnhancements();
+    let enhancedDrag = dragEnhancements();
 
     //components
     const ring = ellipse().className("ring");
@@ -109,13 +114,19 @@ export default function planetsComponent() {
             //or have a transitionInProgress flag
             containerG = d3.select(this);
             //can use same enhancements object for outer and inner as click is same for both
-            withClick.onClick(onClick)
+            enhancedDrag
+                .onClick(onClick)
+                .onLongpressStart(longpressStart)
+                .onLongpressDragged(longpressDragged)
+                .onLongpressEnd(longpressEnd);
+
             const planetDrag = d3.drag()
-                .on("start", withClick(onDragStart))
-                .on("drag", withClick(onDrag))
-                .on("end", withClick(function(e,d){
-                    if(withClick.isClick()) { 
-                        return; }
+                .on("start", enhancedDrag(onDragStart))
+                .on("drag", enhancedDrag(onDrag))
+                .on("end", enhancedDrag(function(e,d){
+                    if(enhancedDrag.isClick()) { 
+                        return; 
+                    }
                     onDragEnd.call(this, e, d);
                 }));
 
@@ -357,7 +368,21 @@ export default function planetsComponent() {
                             .attr("opacity", 0)
                             .on("end", function() { d3.select(this).remove(); });
                 }
-            }) 
+            })
+
+            //longpress
+            function longpressStart(e, d) {
+                console.log("lp start")
+                onLongpressStart.call(this, e, d)
+            };
+            function longpressDragged(e, d) {
+                console.log("lp dragged")
+                onLongpressDragged.call(this, e, d)
+            };
+            function longpressEnd(e, d) {
+                console.log("lp end")
+                onLongpressEnd.call(this, e, d)
+            };
 
             //ring
             let linkPlanets = [];
@@ -551,6 +576,27 @@ export default function planetsComponent() {
         if (!arguments.length) { return onDragEnd; }
         if(typeof value === "function"){
             onDragEnd = value;
+        }
+        return planets;
+    };
+    planets.onLongpressStart = function (value) {
+        if (!arguments.length) { return onLongpressStart; }
+        if(typeof value === "function"){
+            onLongpressStart = value;
+        }
+        return planets;
+    };
+    planets.onLongpressDragged = function (value) {
+        if (!arguments.length) { return onLongpressDragged; }
+        if(typeof value === "function"){
+            onLongpressDragged = value;
+        }
+        return planets;
+    };
+    planets.onLongpressEnd = function (value) {
+        if (!arguments.length) { return onLongpressEnd; }
+        if(typeof value === "function"){
+            onLongpressEnd = value;
         }
         return planets;
     };

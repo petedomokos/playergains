@@ -562,7 +562,10 @@ export default function journeyComponent() {
                     })
                     //.onMouseover(() => {})
                     //.onMouseout(() => {})
-                    .onClickGoal((e,d) => { updateSelected(d); })
+                    .onClickGoal((e,d) => {
+                        console.log("click goal")
+                        updateSelected(d); 
+                    })
                     //@TODO WARNING - may cause touch issues as drag handlers are updated - need this to not update planetsComp or at least not teh drag handlers
                     .onDragGoalStart(function(){ updateSelected(undefined); })
                     .onDragGoal(function(e , d, /*shouldUpdateSelected = true*/){ //pass in onDragGoal
