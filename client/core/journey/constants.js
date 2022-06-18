@@ -18,7 +18,7 @@ export const FONTSIZES = {
     ctrls:{
         btn:10
     },
-    mainAim:{
+    journey:{
         name:12
     },
     aim:{
@@ -51,8 +51,14 @@ export const FONTSIZES = {
 }
 
 export const DIMNS = {
+    burgerBarWidth:45,
     journey:{
-        margin:{ left:0, right:0, top:0, bottom:0 }
+        margin:{ left:0, right:0, top:0, bottom:0 },
+        name:{
+            width:100,
+            height:25,
+            margin:{ left: 15, right: 0, top: 15, bottom: 0 }
+        }
     },
     ctrls:{
         btnWidth:130,
@@ -96,13 +102,6 @@ export const DIMNS = {
         width:110,
         height:70
     },
-    mainAim:{
-        name:{
-            width:100,
-            height:25,
-            margin:{ left: 15, right: 0, top: 15, bottom: 0 }
-        }
-    },
     aim:{
         initWidth:300,
         initHeight:150,
@@ -136,6 +135,10 @@ export const DIMNS = {
     form:{
         single:{
             width:85,
+            height:15
+        },
+        journeyName:{
+            width:180,
             height:15
         }
     }

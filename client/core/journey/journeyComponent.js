@@ -295,7 +295,6 @@ export default function journeyComponent() {
 
             myChannelsLayout.scale(zoomedTimeScale).currentZoom(currentZoom).contentsWidth(contentsWidth);
             channelsData = myChannelsLayout(data.channels);
-            console.log("channelsData", channelsData)
 
             const axesData = myAxesLayout(channelsData.filter(ch => ch.isDisplayed));
             axes
@@ -330,7 +329,7 @@ export default function journeyComponent() {
             zoom = d3.zoom()
                 //.scaleExtent([1, 3])
                 .extent(extent)
-                .scaleExtent([0.125, 8])
+                .scaleExtent([0.125, 2])
                 .on("start", enhancedZoom())
                 .on("zoom", enhancedZoom(function(e){
                     if(e.sourceEvent){
@@ -451,13 +450,13 @@ export default function journeyComponent() {
                         let height;
                         let margin;
                         if(d.id === "main"){
-                            fontSize = FONTSIZES.mainAim.name;
-                            width = DIMNS.mainAim.name.width
-                            height = DIMNS.mainAim.name.height
+                            fontSize = FONTSIZES.journey.name;
+                            width = DIMNS.journey.name.width
+                            height = DIMNS.journey.name.height
                             //shift left to avoid burger menu when smaller screen
                             margin = { 
-                                ...DIMNS.mainAim.name.margin,
-                                left: screen.isLarge ? DIMNS.mainAim.name.margin.left : 45 
+                                ...DIMNS.journey.name.margin,
+                                left: screen.isLarge ? DIMNS.journey.name.margin.left : DIMNS.burgerBarWidth 
                             } 
                         } else if(getView().goals){
                             //name is top-left

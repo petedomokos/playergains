@@ -104,13 +104,18 @@ const Journey = ({ data, screen, width, height, save, closeDialog }) => {
             const aimNameX = d => d.displayX + DIMNS.aim.name.margin.left;
             const aimNameY = d => d.y + DIMNS.aim.name.margin.top;
 
+            const journeyNameLeft = screen.isLarge ? DIMNS.journey.name.margin.left : DIMNS.burgerBarWidth;
+            const journeyNameTop = DIMNS.journey.name.margin.top;
+            const journeyNameWidth = DIMNS.form.journeyName.width;
+            const journeyNameHeight = DIMNS.form.journeyName.height;
+
             styleProps = {
                 modal:{
-                  width,
-                  height,
+                  width: d.id === "main" ? journeyNameWidth : width,
+                  height: d.id === "main" ? journeyNameHeight : height,
                   //@todo - sort this out...for now, planet has x whereas aim has displayX
-                  left:(d.dataType === "planet" ? goalNameX(d) : (d.id === "main" ? 20: aimNameX(d))) + "px",
-                  top:(d.dataType === "planet" ? goalNameY(d) : (d.id === "main" ? 15 : aimNameY(d))) + "px",
+                  left:(d.dataType === "planet" ? goalNameX(d) : (d.id === "main" ? journeyNameLeft : aimNameX(d))) + "px",
+                  top:(d.dataType === "planet" ? goalNameY(d) : (d.id === "main" ? journeyNameTop : aimNameY(d))) + "px",
                   targTop:"20px"
                 }
             }
