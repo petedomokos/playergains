@@ -267,12 +267,18 @@ const Journey = ({ data, screen, width, height, save, closeDialog }) => {
         })
         .deleteLink(id => {
           const _links = links.filter(l => l.id !== id);
-          save({ data, links:_links });
+          save({ ...data, links:_links });
         })
         .updateChannel(props => {
           setChannels(prevState => updatedState(prevState, props, (other, updated) => other.nr < updated.nr))
         })
-        .setModalData(setModalData)
+        .setModalData((newModalData) => {
+          if(modalData && !newModalData){
+            //save data to server - changes have already been added to state on change
+            save(data);
+          }
+          setModalData(newModalData)
+        })
         .setZoom(zoom => {
           if(modalData){
             //@todo - what is this for. Should it be formdata.planet.x? or styleprops.left + zoom.x?
@@ -355,7 +361,7 @@ const Journey = ({ data, screen, width, height, save, closeDialog }) => {
   }
 
   const onCloseAimForm = () => {
-    console.log("close aim form")
+    //console.log("close aim form")
     //@todo - journey.endEditAim();
     setModalData(undefined);
     //now we want it to persist the changes that have been made
@@ -398,7 +404,10 @@ const Journey = ({ data, screen, width, height, save, closeDialog }) => {
         {modalData && 
           <div ref={modalRef} className={classes.modal}>
              {modalData.d.dataType === "aim" && modalData.nameOnly && 
-              <NameForm data={{ ...modalData, aim:aims.find(a => a.id === modalData.d.id) }}
+              <NameForm data={{ 
+                  ...modalData, 
+                  aim:aims.find(a => a.id === modalData.d.id) || { id: _id, name }
+                }}
                 onUpdate={onUpdateAimForm} onClose={onCloseAimForm} />}
 
             {modalData.d.dataType === "planet" && (modalData.nameOnly || modalData.nameAndTargOnly) &&

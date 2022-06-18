@@ -47,6 +47,7 @@ export default function aimsLayout(){
 
             return {
                 ...p,
+                dataType: "planet",
                 aimId: p.aimId || "main",
                 channel,
                 displayDate:p.unaligned ? p.targetDate : channel.endDate,

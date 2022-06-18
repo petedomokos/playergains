@@ -21,9 +21,9 @@ const mapStateToProps = (state, ownProps) => {
 	}
 }
 const mapDispatchToProps = dispatch => ({
-    save(journey){
+    save(journey, shouldPersist){
 		//console.log('save', journey)
-		dispatch(saveJourney(journey))
+		dispatch(saveJourney(journey, shouldPersist))
 	},
 	closeDialog(path){
 		//console.log('closing dialog', path)

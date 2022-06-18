@@ -43,7 +43,6 @@ export const fetchUser = id => dispatch => {
 			url: '/api/users/'+id, 
 			requireAuth:true,
 			nextAction: data => {
-				console.log("loading user resp", data)
 				const jwt = auth.isAuthenticated();
 				//may be reloading the signed in user
 				if(jwt.user._id === data._id){
