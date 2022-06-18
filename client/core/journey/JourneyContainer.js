@@ -5,10 +5,11 @@ import { closeDialog } from '../../actions/CommonActions'
 
 const mapStateToProps = (state, ownProps) => {
 	//console.log('JourneyContainer', state)
-    //const { journeyId }  = ownProps.match.params;
+    //const { journeyId }  = ownProps.match.params;state,
+	const { journeys=[], homeJourney } = state.user;
 	return{
 		//@todo - use homeJourney instead of first
-		data:state.user?.journeys[0], /*|| state.system.adhocJourney,*/ //may be undefined if user has no journeys
+		data:journeys.find(j => j._id === homeJourney) || journeys[0], /*|| state.system.adhocJourney,*/ //may be undefined if user has no journeys
 		screen:state.system.screen,
         width:state.system.screen.width,
         height:state.system.screen.height - 90,
@@ -21,7 +22,7 @@ const mapStateToProps = (state, ownProps) => {
 }
 const mapDispatchToProps = dispatch => ({
     save(journey){
-		console.log('save', journey)
+		//console.log('save', journey)
 		dispatch(saveJourney(journey))
 	},
 	closeDialog(path){

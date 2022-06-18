@@ -8,6 +8,7 @@ const signin = async (req, res) => {
   try {
     let user = await User.findOne({ "email": req.body.email})
       .populate('admin', '_id username firstname surname created')
+      .populate('journeys', '_id name aims goals links measures created')
       .populate('administeredUsers', '_id username firstname surname photo created')
       .populate({ 
         path: 'administeredGroups', 
@@ -28,16 +29,13 @@ const signin = async (req, res) => {
       .populate('administeredDatasets', '_id name desc created measures')
       .populate('datasetsMemberOf', '_id name desc created')
 
-    console.log('signin......a')
     if (!user){
-      console.log('signin......b')
       return res.status('401').json({
         error: "User not found"
       })
     }
 
     if (!user.authenticate(req.body.password)) {
-      console.log('signin......c')
       return res.status('401').send({
         error: "Email and password don't match."
       })
@@ -50,7 +48,6 @@ const signin = async (req, res) => {
     res.cookie("t", token, {
       expire: new Date() + 9999
     })
-    console.log('signin......d')
 
     return res.json({
       token,

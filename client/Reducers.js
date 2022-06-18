@@ -32,7 +32,6 @@ export const user = (state=InitialState.user, act) =>{
 		}
 		case C.SAVE_JOURNEY:{
 			//@todo - abstract this as it is repeated in SAVE_ADHOC_JOURNEY
-			console.log("reducer saveJourney", act)
 			const { journey } = act;
 			const currentJourney = state.journeys.find(j => j._id === journey._id);
 			if(!currentJourney){
@@ -49,10 +48,13 @@ export const user = (state=InitialState.user, act) =>{
 			}
 		}
 		case C.SAVE_NEW_JOURNEY_ID:{
+			//note - atm, we auto update homeJourney to be the latest new journey
+			//console.log("reducer saveNewJourneyId")
 			const { _id } = act;
 			return {
 				...state,
-				journeys:state.journeys.map(j => j._id === "temp" ? { ...j, _id } : j)
+				journeys:state.journeys.map(j => j._id === "temp" ? { ...j, _id } : j),
+				homeJourney:_id
 			}
 		}
 		//OTHER USERS AND GROUPS

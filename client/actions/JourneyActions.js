@@ -48,8 +48,10 @@ const transformJourneyForServer = journey => {
 	});
 	*/
 
+	console.log("trans id is", journey._id)
+
 	return { 
-		_id: journey._id, 
+		_id: journey._id !== "temp" ? journey._id : undefined, 
 		name: journey.name || "",
 		desc: journey.desc || "",
 		aims,
@@ -60,10 +62,31 @@ const transformJourneyForServer = journey => {
 	}
 }
 
-const transformJourneyForClient = journey => {
-	//add channels
-	return journey;
-
+export const transformJourneyForClient = journey => {
+	console.log("transformForClient", journey)
+	const { aims, goals, updated, created } = journey;
+	return {
+		...journey,
+		aims:aims.map(a => ({
+			...a,
+			startDate:new Date(a.startDate),
+			endDate:new Date(a.endDate),
+			startYPC:+a.startYPC,
+			endYPC:+a.endYPC
+		})),
+		goals:goals.map(g => ({
+			...g,
+			targetDate:new Date(g.targetDate),
+			yPC:+g.yPC,
+			measures:g.measures.map(m => ({
+				...m,
+				targ:+m.targ
+			})),
+			created:new Date(g.created)
+		})),
+		updated:new Date(updated),
+		created:new Date(created)
+	}
 }
 
 //higher-order action
@@ -96,32 +119,36 @@ export const saveJourney = journey => dispatch => {
 	dispatch(saveJourneyToStore(journey));
     //2. save to server
     //3. on response, undo if errors, add id (if new) or anything else from server to store
-	/*
 	const serverJourney = transformJourneyForServer(journey);
 	console.log("serverJourney", serverJourney);
 	const jwt = auth.isAuthenticated();
+	console.log("jwt", jwt)
 	if(!jwt.user) { return; }
+	const journeyIsNew = !serverJourney._id;
+	console.log("id is", serverJourney._id)
+	const url = '/api/users/'+jwt.user._id+'/journey' +(serverJourney._id ? "/"+serverJourney._id : "")
+	console.log("fetch...", url)
 	fetchThenDispatch(dispatch, 
 		'saving.journey',
 		{
 			//journey has id if its already been saved
-			url: '/api/users/'+jwt.user._id+'/journey' +(journey._id ? "/"+journey._id : ""),
+			url,
 			method: 'POST',
-			body:JSON.stringify(journey),
+			body:JSON.stringify(serverJourney),
 			requireAuth:true,
 			//this action will also set dialog.createUser = true
 			nextAction: data => {
 				console.log("saveJourney response", data)
-				if(auth.isAuthenticated()){
+				console.log("auth?", !!jwt)
+				console.log("new journey?", journeyIsNew)
+				if(jwt && journeyIsNew){
+					console.log("next: user is authenticated && journey is new")
 					//in this case, we need the new user and the sign up mesg
-					if(!journey._id){
-						return { type:C.SAVE_NEW_JOURNEY_ID, mesg:data.mesg, userId:data.userId, _id:data.journey._id }
-					}
-					//@todo - do we need to process naything else?
+					return { type:C.SAVE_NEW_JOURNEY_ID, mesg:data.mesg, userId:data.userId, _id:data.journey._id };
 				}
+				return { type:C.NO_ACTION };
 			}
 		})
-	*/
 }
 
 //to fetch a user in full
@@ -138,7 +165,7 @@ export const fetchJourney = (userId, journeyId) => dispatch => {
                     //if(jwt.user._id === data._id){
                         //return { type:C.SAVE_OTHER_USERS_JOURNEY, mesg:data.mesg, userId:data.userID, journey:data.journey }
                     //}
-					return { type:C.SAVE_JOURNEY, mesg:data.mesg, userId:data.userID, journey:data.journey }
+					return { type:C.SAVE_JOURNEY, mesg:data.mesg, userId:data.userID, journey:transformJourneyForClient(data.journey) }
 				}
 			}
 		}) 

@@ -15,7 +15,7 @@ import { addWeeks } from "../../util/TimeHelpers"
 import { zoomLevel, DEFAULT_D3_TICK_SIZE,WIDGETS_WIDTH, WIDGETS_HEIGHT, WIDGET_WIDTH, WIDGET_HEIGHT, COLOURS, FONTSIZES, DIMNS, AVAILABLE_GOAL_MULTIPLIER, grey10 } from "./constants";
 import { pointIsInRect, distanceBetweenPoints, } from './geometryHelpers';
 import dragEnhancements from './enhancedDragHandler';
-import { getTransformationFromTrans, updatedState } from './helpers';
+import { getTransformationFromTrans } from './helpers';
 
 /*
     *** = needed for Brian to test the basic design of a canvas (no measures, just planets, aims, and links)
@@ -23,9 +23,20 @@ import { getTransformationFromTrans, updatedState } from './helpers';
     * = needed to 
     
     DOING NOW/NEXT
+    1. delete all journeys
+    2. save to server (new and existing)
+    3. load journeys from server (could be more than 1)
+
+    4. user selects which journey to see
+    5. user ids for all 5
+    6. deploy
+    7. mobile friendly
+
+
+
+
     new bigs since store
      - new measure form isnt up-to-date ( problem existed before store change)
-     - delate button click doesnt work (sane old problem with btn click)
     checks
      - make sure onClosePlaneForm is called whenever user clicks away from it, for name and targ. same aim form and measures form
      - when saved journey returns from server, do we need any otehr processing except adding id if new?
@@ -93,6 +104,7 @@ import { getTransformationFromTrans, updatedState } from './helpers';
         goals not displayed, just aim title displayed?)
 
     BACKLOG:
+    - on hover aim, we should sow a deletion icon in the corner, same with planets
     - zooming into goal causes an error
     - implement delate by longpress+drag fast
     - handle user draggin aim top-corner below bottom of aim -> what should happen?
@@ -283,6 +295,7 @@ export default function journeyComponent() {
 
             myChannelsLayout.scale(zoomedTimeScale).currentZoom(currentZoom).contentsWidth(contentsWidth);
             channelsData = myChannelsLayout(data.channels);
+            console.log("channelsData", channelsData)
 
             const axesData = myAxesLayout(channelsData.filter(ch => ch.isDisplayed));
             axes

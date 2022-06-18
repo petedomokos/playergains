@@ -42,6 +42,7 @@ const userByID = async (req, res, next, id) => {
   try {
     let user = await User.findById(id)
       .populate('admin', '_id username firstname surname created')
+      .populate('journeys', '_id name aims goals links measures created')
       .populate('administeredUsers', '_id username firstname surname photo created')
       .populate({ 
         path: 'administeredGroups', 
@@ -62,7 +63,7 @@ const userByID = async (req, res, next, id) => {
       .populate('administeredDatasets', '_id name desc notes photo admin created')
       .populate('datasetsMemberOf', '_id name desc notes photo admin created')
 
-    console.log('user in userById', user)
+    // console.log('user in userById', user)
     if (!user)
       return res.status('400').json({
         error: "User not found"

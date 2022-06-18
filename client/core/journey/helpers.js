@@ -26,7 +26,7 @@ export function findFirstFuturePlanet(planetData){
 }
 
 export function findNearestDate(dateToTest, dates){
-    return d3.least(dates, date => Math.abs(date - dateToTest))
+    return d3.least(dates, date => Math.abs(date - dateToTest) )
 }
 
 export function msToMonths(ms){

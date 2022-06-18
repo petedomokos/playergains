@@ -66,9 +66,8 @@ const MainRouter = ({ userId, loadUser, loadingUser, updateScreen }) => {
     <div>
       <div style={{height:0.05}}></div>
       <MenuContainer />
-      <div>
-          <JourneyContainer />
-      </div>
+      <Route path="/signup" component={CreateUserContainer}/>
+      <Route path="/signin" component={SigninContainer}/>
       {(!jwt || userId) && <Switch>
           {jwt ?
             <Route exact path="/" component={UserHomeContainer} />
@@ -82,8 +81,6 @@ const MainRouter = ({ userId, loadUser, loadingUser, updateScreen }) => {
           }
           <Route path="/expression" component={Expression}/>
           <Route path="/games" component={Games}/>
-          <Route path="/signup" component={CreateUserContainer}/>
-          <Route path="/signin" component={SigninContainer}/>
           <PrivateRoute path="/user/edit/:userId" component={EditUserProfileContainer}/>
           <PrivateRoute path="/dataset/edit/:datasetId" component={EditDatasetProfileContainer}/>
           <PrivateRoute path="/users/new" component={CreateUserContainer}/>

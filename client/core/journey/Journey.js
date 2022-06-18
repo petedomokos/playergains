@@ -77,7 +77,7 @@ const initChannels = d3.range(numberMonths)
 
 //width and height may be full screen, but may not be
 const Journey = ({ data, screen, width, height, save, closeDialog }) => {
-  //console.log("Journey", data)
+  console.log("Journey", data)
   const { _id, name, aims, goals, links, measures } = data;
   const [journey, setJourney] = useState(null);
   const [channels, setChannels] = useState(initChannels);

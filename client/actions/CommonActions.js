@@ -57,9 +57,6 @@ export const fetchThenDispatch = (dispatch, asyncProcessesPath, options) => {
 	fetch(url, fetchSettings)
 	  .then(status)
 	  .then(parseResponse)
-	  .then(data =>{
-	  	return data
-	  })
 	  .then(data => { dispatch(formatNextAction(data)) })
 	  .then(data => { dispatch(fetchEnd(asyncProcessesPath)) })
 	  .catch(err => logError(dispatch, err, asyncProcessesPath))

@@ -1,6 +1,7 @@
 import C from '../Constants'
 import { status, parseResponse, logError, fetchStart, fetchEnd, fetchThenDispatch} from './CommonActions'
 import auth from '../auth/auth-helper'
+import { transformUserForClient } from "./UserActions"
 
 export const signin = (user, history, redirectTo) => dispatch =>{
 	fetchThenDispatch(dispatch, 
@@ -19,7 +20,7 @@ export const signin = (user, history, redirectTo) => dispatch =>{
 		        })
 		        //save to store
 		        return {
-					type:C.SIGN_IN, user:data.user
+					type:C.SIGN_IN, user:transformUserForClient(data.user)
 				}
 			}
 		})

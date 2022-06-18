@@ -3,6 +3,15 @@ import { status, parseResponse, logError,
 	fetchStart, fetchEnd, fetchThenDispatch} from './CommonActions'
 import auth from '../auth/auth-helper'
 import { signout } from './AuthActions.js';
+import { transformJourneyForClient } from "./JourneyActions"
+
+export const transformUserForClient = serverUser => {
+	const { journeys } = serverUser;
+	return {
+		...serverUser,
+		journeys:journeys.map(j => transformJourneyForClient(j))
+	}
+}
 
 
 export const createUser = user => dispatch => {
@@ -17,7 +26,7 @@ export const createUser = user => dispatch => {
 			nextAction: data => {
 				if(auth.isAuthenticated()){
 					//in this case, we need the new user and the sign up mesg
-					return { type:C.CREATE_NEW_ADMINISTERED_USER, mesg:data.mesg, user:data.user }
+					return { type:C.CREATE_NEW_ADMINISTERED_USER, mesg:data.mesg, user:transformUserForClient(data.user) }
 				}else{
 					//in this case, server will send a mesg
 					return { type:C.SIGN_UP, mesg:data.mesg }
@@ -34,14 +43,15 @@ export const fetchUser = id => dispatch => {
 			url: '/api/users/'+id, 
 			requireAuth:true,
 			nextAction: data => {
+				console.log("loading user resp", data)
 				const jwt = auth.isAuthenticated();
 				//may be reloading the signed in user
 				if(jwt.user._id === data._id){
 					console.log('siging in to store again', data.username)
-					return { type:C.SIGN_IN, user:data };
+					return { type:C.SIGN_IN, user:transformUserForClient(data) };
 				}
 				console.log('loading another user into user', data.username)
-				return { type:C.LOAD_USER, user:data };
+				return { type:C.LOAD_USER, user:transformUserForClient(data) };
 			}
 		}) 
 }

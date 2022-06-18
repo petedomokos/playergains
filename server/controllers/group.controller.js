@@ -4,7 +4,6 @@ import errorHandler from './../helpers/dbErrorHandler'
 import formidable from 'formidable'
 import { addRefToGroupArray, addRefToUserArray,
   removeRefFromGroupArray, removeRefFromUserArray } from './../helpers/dbQueries'
-import { useDebugValue } from 'react'
 
 /*
 attempts to create a new group in in db. 
