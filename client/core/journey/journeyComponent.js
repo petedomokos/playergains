@@ -759,9 +759,9 @@ export default function journeyComponent() {
                         .onUpdateSelected(updateAims)
                         .onNewItemButtonClick((item) => {
                             if(displayedBar === "measures"){
-                                setModalData({ measureOnly: true });
+                                //setModalData({ measureOnly: true });
                             }else{
-                                console.log("new journey")
+                                console.log("new journey........")
                                 //journeys
                                 //create a new journey
                             }

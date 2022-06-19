@@ -216,6 +216,7 @@ export default function menuBarComponent() {
                 .append("g")
                 .attr("class", "btn new-item-btn")
                 .style("cursor", "pointer")
+                .call(d3.drag()) //prevent propagation
                 .on("click", onNewItemButtonClick);
 
             newItemBtnG
