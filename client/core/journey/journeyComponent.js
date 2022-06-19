@@ -761,6 +761,7 @@ export default function journeyComponent() {
                             if(displayedBar === "measures"){
                                 setModalData({ measureOnly: true });
                             }else{
+                                console.log("new journey")
                                 //journeys
                                 //create a new journey
                             }

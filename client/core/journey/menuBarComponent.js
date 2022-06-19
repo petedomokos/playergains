@@ -95,7 +95,8 @@ export default function menuBarComponent() {
         function update(data, options={}){
             const { key, title, subtitle, itemsData } = data;
 
-            bgRect.attr("width", width).attr("height", height);
+            //call drag on bg to stop propagation
+            bgRect.attr("width", width).attr("height", height).call(d3.drag())
             itemsG.attr("transform", "translate(0," +titleHeight +")");
 
             titleG.attr("transform", "translate(0," +titleHeight/2 +")");
