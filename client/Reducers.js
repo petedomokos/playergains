@@ -534,7 +534,7 @@ export const system = (state={}, act) => {
 			//newly saved jurney in store becomes active
 			return {
 				...state,
-				activeJourney:journey.id
+				activeJourney:journey._id
 			}
 		}
 		default:

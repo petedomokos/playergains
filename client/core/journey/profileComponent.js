@@ -90,7 +90,7 @@ export default function profileComponent() {
         contentsG.attr("transform", "translate(" +margin.left +"," +margin.top +")")
         textContentsG.attr("transform", "translate(" +textMargin.left +"," +textMargin.top +")")
 
-        const { name="unnamed", desc="", targs=[] } = data;
+        const { id, name="", desc="", targs=[] } = data;
 
         withClick.onClick(onClick)
         const drag = d3.drag()
@@ -116,7 +116,7 @@ export default function profileComponent() {
 
         nameText
             .attr("transform", "translate("+textContentsWidth/2 +"," +nameHeight/2 +")")
-            .text(name);
+            .text(name || (id === "temp" ? "new unnamed" : "unnamed"));
         
         descText
             .attr("transform", "translate(0," +nameHeight +")")

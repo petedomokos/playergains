@@ -93,7 +93,7 @@ export default function menuBarComponent() {
         })
 
         function update(data, options={}){
-            const { key, title, subtitle, itemsData } = data;
+            const { key, title, subtitle, itemsData, withNewButton=true } = data;
 
             //call drag on bg to stop propagation
             bgRect.attr("width", width).attr("height", height).call(d3.drag())
@@ -115,6 +115,7 @@ export default function menuBarComponent() {
 
             newItemBtnG
                 .attr("transform", "translate("+(contentsWidth - btnWidth) +",2.5)")
+                .attr("display", withNewButton ? null : "none")
             
             importItemsBtnG
                 .attr("transform", "translate("+(contentsWidth - (btnWidth * 2) - btnGap) +",2.5)")
@@ -129,6 +130,7 @@ export default function menuBarComponent() {
                     .merge(itemG)
                     .attr("transform", (d,i) =>  "translate("+(i * itemWidth) +",0)")
                     .each(function(d){
+                        const col = selected === d.id ? COLOURS.selectedBarMenuItem : COLOURS.barMenuItem;
                         d3.select(this)
                             .call(profiles[d.id]
                                 .itemsDraggable(getItemsDraggable(data))

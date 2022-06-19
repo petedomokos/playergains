@@ -205,6 +205,7 @@ export default function journeyComponent() {
     let setZoom = function(){};
     let startEditPlanet = function (){};
     let endEditPlanet = function (){};
+    let createJourney = function (){};
     let createAim = function (){};
     let updateSelected = function (){};
 
@@ -733,8 +734,14 @@ export default function journeyComponent() {
                     key:"journeys",
                     title:"Journeys",
                     subtitle:"All", //this will show the goal or path etc if restricted
-                    itemsData:menuBarData.data
+                    //menuBar expects items to have an id not an _id
+                    itemsData:menuBarData.data.map(j => ({ ...j, id:j._id })),
+                    //cant create new if temp already exists as that is new
+                    //@todo - pass this in as a setting func instead
+                    withNewButton:!menuBarData.data.find(j => j._id === "temp")
                 })
+                //set selected to be the current journey
+                menuBar.selected(data._id)
             }
 
             let prevDraggedOverPlanet;
@@ -759,11 +766,10 @@ export default function journeyComponent() {
                         .onUpdateSelected(updateAims)
                         .onNewItemButtonClick((item) => {
                             if(displayedBar === "measures"){
+                                console.log("new measure........")
                                 //setModalData({ measureOnly: true });
                             }else{
-                                console.log("new journey........")
-                                //journeys
-                                //create a new journey
+                                createJourney();
                             }
                         })
                         .onItemClick(item => {
@@ -1108,6 +1114,13 @@ export default function journeyComponent() {
     journey.withCompletionPaths = function (value) {
         if (!arguments.length) { return withCompletionPaths; }
         withCompletionPaths = value;
+        return journey;
+    };
+    journey.createJourney= function (value) {
+        if (!arguments.length) { return createJourney; }
+        if(typeof value === "function"){
+            createJourney = value;
+        }
         return journey;
     };
     journey.updateState = function (value) {

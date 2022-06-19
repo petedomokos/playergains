@@ -17,7 +17,8 @@ const mockMeasures = [
 	{ id:"mock1", name:"Puts Per Round", desc: "nr of puts in a round" },
 	{ id:"mock2", name:"Drive 1", desc: "nr D1s to Fairway" },
 	{ id:"mock3", name:"Drive 2", desc: "nr D2s to Fairway" }
-  ]
+]
+const newJourney = { _id:"temp", aims:[], goals:[], links:[], measures:mockMeasures}
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -188,6 +189,10 @@ const Journey = ({ data, availableJourneys, screen, width, height, save, closeDi
         .menuBarData(menuBarData)
         .measuresOpen(displayedBar === "measures" ? measures : undefined)
         .modalData(modalData)
+        .createJourney(() => {
+          setDisplayedBar("");
+          save(newJourney, false); //dont persist until user actually does something. atm , its temp
+        })
         .updateState(updates => {
             //can be used to update multiple items, only needed for aims, goals, links and measures
             //for each entity that is updated (eg aims), we replace only the properties defined in the update.
@@ -415,8 +420,6 @@ const toggleJourneysOpen = useCallback(() => {
               {displayedBar === "measures" ?"Close Measures" : "Measures"}</Button>
             <Button className={classes.btn} color="primary" variant="contained" onClick={toggleJourneysOpen} >
               {displayedBar === "journeys" ?"Close Journeys" : "Journeys"}</Button>
-            <Button className={classes.btn} color="primary" variant="contained" onClick={openNewJourney} >
-              New Journey</Button>
             {/**<Button className={classes.btn} color="primary" variant="contained" onClick={toggleCompletion} >completion</Button>**/}
         </div>
         {modalData && 
