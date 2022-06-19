@@ -537,6 +537,12 @@ export const system = (state={}, act) => {
 				activeJourney:journey._id
 			}
 		}
+		case C.SET_ACTIVE_JOURNEY:{
+			return {
+				...state,
+				activeJourney:act._id
+			}
+		}
 		default:
 			return state
 	}

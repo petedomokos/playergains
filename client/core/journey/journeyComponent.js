@@ -208,6 +208,7 @@ export default function journeyComponent() {
     let createJourney = function (){};
     let createAim = function (){};
     let updateSelected = function (){};
+    let setActiveJourney = () => {};
 
     let updateState = () => {};
 
@@ -565,7 +566,6 @@ export default function journeyComponent() {
                     //.onMouseover(() => {})
                     //.onMouseout(() => {})
                     .onClickGoal((e,d) => {
-                        console.log("click goal")
                         updateSelected(d); 
                     })
                     //@TODO WARNING - may cause touch issues as drag handlers are updated - need this to not update planetsComp or at least not teh drag handlers
@@ -772,12 +772,13 @@ export default function journeyComponent() {
                                 createJourney();
                             }
                         })
-                        .onItemClick(item => {
+                        .onItemClick((e, item) => {
                             if(displayedBar === "measures"){
                                 setModalData({ measureOnly: true });
                             }else{
                                 //journeys
                                 //open journey
+                                setActiveJourney(item._id);
                             }
                         })
                         .onItemDragStart((e, m) => {
@@ -1204,6 +1205,13 @@ export default function journeyComponent() {
         if (!arguments.length) { return setModalData; }
         if(typeof value === "function"){
             setModalData = value;
+        }
+        return journey;
+    };
+    journey.setActiveJourney = function (value) {
+        if (!arguments.length) { return setActiveJourney; }
+        if(typeof value === "function"){
+            setActiveJourney = value;
         }
         return journey;
     };

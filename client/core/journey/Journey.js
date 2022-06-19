@@ -77,7 +77,7 @@ const initChannels = d3.range(numberMonths)
   })
 
 //width and height may be full screen, but may not be
-const Journey = ({ data, availableJourneys, screen, width, height, save, closeDialog }) => {
+const Journey = ({ data, availableJourneys, screen, width, height, save, setActive, closeDialog }) => {
   console.log("Journey data", data)
   console.log("Journey avail", availableJourneys)
   const { _id, name, aims, goals, links, measures } = data;
@@ -193,6 +193,7 @@ const Journey = ({ data, availableJourneys, screen, width, height, save, closeDi
           setDisplayedBar("");
           save(newJourney, false); //dont persist until user actually does something. atm , its temp
         })
+        .setActiveJourney(setActive)
         .updateState(updates => {
             //can be used to update multiple items, only needed for aims, goals, links and measures
             //for each entity that is updated (eg aims), we replace only the properties defined in the update.

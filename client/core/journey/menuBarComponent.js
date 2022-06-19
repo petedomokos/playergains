@@ -141,6 +141,7 @@ export default function menuBarComponent() {
                                 .onClick(function(e, d){
                                     dragged = undefined;
                                     clicked = d.id;
+                                    onItemClick.call(this, e, d)
                                 })
                                 .onDragStart(function(e,d){
                                     dragged = d.id;

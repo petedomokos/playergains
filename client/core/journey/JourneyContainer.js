@@ -1,6 +1,6 @@
 import { connect } from 'react-redux'
 import Journey  from './Journey'
-import { saveJourney } from '../../actions/JourneyActions'
+import { saveJourney, setActive } from '../../actions/JourneyActions'
 import { closeDialog } from '../../actions/CommonActions'
 
 const mapStateToProps = (state, ownProps) => {
@@ -35,6 +35,9 @@ const mapDispatchToProps = dispatch => ({
     save(journey, shouldPersist){
 		//console.log('save', journey)
 		dispatch(saveJourney(journey, shouldPersist))
+	},
+	setActive(journeyId){
+		dispatch(setActive(journeyId))
 	},
 	closeDialog(path){
 		//console.log('closing dialog', path)

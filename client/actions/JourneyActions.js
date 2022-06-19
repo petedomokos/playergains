@@ -149,6 +149,13 @@ export const saveJourney = (journey, shouldPersist=true)  => dispatch => {
 		})
 }
 
+export const setActive = journeyId => dispatch => {
+	dispatch({
+		type:C.SET_ACTIVE_JOURNEY,
+		_id:journeyId
+	});
+}
+
 //to fetch a user in full
 export const fetchJourney = (userId, journeyId) => dispatch => {
 	fetchThenDispatch(dispatch, 
