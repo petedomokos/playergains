@@ -271,9 +271,6 @@ export default function planetsComponent() {
                         .fill((d, hovered) => hovered ? COLOURS.potentialLinkPlanet : "transparent")
                         .stroke("none")
                         .opacity(planetOpacity.normal)
-                        .onDragStart(onRingDragStart)
-                        .onDrag(onRingDrag)
-                        .onDragEnd(onRingDragEnd)
                         .container("g.contents") 
                     : 
                     function(selection){
@@ -370,27 +367,13 @@ export default function planetsComponent() {
                 }
             })
 
+            let linkPlanets = [];
             //longpress
             function longpressStart(e, d) {
-                console.log("lp start")
-                onLongpressStart.call(this, e, d)
-            };
-            function longpressDragged(e, d) {
-                console.log("lp dragged")
-                onLongpressDragged.call(this, e, d)
-            };
-            function longpressEnd(e, d) {
-                console.log("lp end")
-                onLongpressEnd.call(this, e, d)
-            };
-
-            //ring
-            let linkPlanets = [];
-            function onRingDragStart(e,d){
                 linkPlanets = [d];
                 const planetG = d3.select("g#planet-"+d.id);
                 //update ring fill
-                ring.fill((d,hovered) => hovered || linkPlanets.includes(d.id) ? COLOURS.potentialLinkPlanet : "transparent");
+                ring.fill((d,hovered) => hovered || linkPlanets.find(g => g.id === d.id) ? COLOURS.potentialLinkPlanet : "transparent");
                 
                 planetG.select("g.contents")
                     .insert("line", ":first-child")
@@ -403,9 +386,9 @@ export default function planetsComponent() {
                         .attr("stroke", COLOURS.potentialLink)
                         .attr("fill", COLOURS.potentialLink);
 
-            }
-
-            function onRingDrag(e,d){
+                onLongpressStart.call(this, e, d)
+            };
+            function longpressDragged(e, d) {
                 const planetG = d3.select("g#planet-"+d.id);
                 const line = planetG.select("line.temp-link");
                 planetG.select("line.temp-link")
@@ -414,7 +397,6 @@ export default function planetsComponent() {
 
                 //find nearest planet and if dist is below threshold, set planet as target candidate
                 const LINK_THRESHOLD = 100;
-                //const availablePlanets = data
                 //need all planets not just ones in this aim
                 const availablePlanets = d3.selectAll("g.planet")
                     .filter(p => p.id !== d.id)
@@ -424,21 +406,10 @@ export default function planetsComponent() {
                 const nearestPlanet = findNearestPlanet(e, availablePlanets);
                 //console.log("near", nearestPlanet)
                 const linkPlanet = distanceBetweenPoints(e, nearestPlanet) <= LINK_THRESHOLD ? nearestPlanet : undefined;
-                //change fill to same as planetRing
-                //@todo - consider using temp clasnames to update dom for highlighting like this eg...
-                //d3.selectAll("g.link-planet").classed("link-planet", false);
-                //d3.select("g.planet-"+linkPlanet.id).classed("link-planet", true);
                 const prevLinkPlanet = linkPlanets[1];
                 if(prevLinkPlanet?.id !== linkPlanet?.id){
                     //remove prev highlighting
                     if(prevLinkPlanet){
-                        //bug - why is colours.planet back to A8A8A8 here?
-                        //BECAUSE THIW RINGDRAG IS HAPOPOENING IN THE SRC PLANET'S PLANETS COMPONENT
-                        //SO COLOURS.PLANET REFERES TO THAT ONE.
-                        //SO WE NEED A WAY OF EITHER PASSING THE INFO TO TEH CORRECT PLANETS COMP,
-                        // OR PROB BEST TO JUST STORE THE FILL OF THE LINKPLANET. 
-                        // SO MAY ctually be easier to store fill in planets layout instead. so we have colout, which beloings to planet, and fill
-                        // is that if it exists, else aim.colour
                         d3.select("g.planet-"+prevLinkPlanet.id).selectAll("ellipse.core.visible")
                             .transition()
                             .duration(200)
@@ -457,11 +428,11 @@ export default function planetsComponent() {
                 linkPlanets = linkPlanet ? [d, linkPlanet] : [d];
 
                 //update ring fill
-                ring.fill((d,hovered) => hovered || linkPlanets.map(p => p.id).includes(d.id) ? COLOURS.potentialLinkPlanet : "transparent");
-
-            }
-            
-            function onRingDragEnd(e, d){
+                ring.fill((d,hovered) => hovered || linkPlanets.find(g => g.id === d.id) ? COLOURS.potentialLinkPlanet : "transparent");
+                
+                onLongpressDragged.call(this, e, d)
+            };
+            function longpressEnd(e, d) {
                 const planetG = d3.select("g#planet-"+d.id);
                 //cleanup dom
                 planetG.select("line.temp-link").remove();
@@ -474,7 +445,8 @@ export default function planetsComponent() {
                     const sortedLinks = linkPlanets.sort((a, b) => d3.ascending(a.x, b.x))
                     onAddLink({ src:sortedLinks[0].id, targ:sortedLinks[1].id })
                 }
-            }
+                onLongpressEnd.call(this, e, d)
+            };
 
             prevData = data;
         })
