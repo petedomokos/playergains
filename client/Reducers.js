@@ -38,7 +38,6 @@ export const user = (state=InitialState.user, act) =>{
 				return {
 					...state,
 					journeys:[journey, ...state.journeys],
-					homeJourney:[journey._id] //for now, make it home, but this is temp fix
 				}
 			}
 			return {
@@ -505,6 +504,9 @@ export const dialogs = (state={}, act) =>{
 export const system = (state={}, act) => {
 	const { type, screen } = act
 	switch(type){
+		case C.SIGN_OUT:{
+			return InitialState.system;
+		}
 		case C.UPDATE_SCREEN:{
 			return {
 				...state,
@@ -525,6 +527,14 @@ export const system = (state={}, act) => {
 			return {
 				...state,
 				activeJourney:activeJourney === "temp" ? _id : activeJourney
+			}
+		}
+		case C.SAVE_JOURNEY:{
+			const { journey } = act;
+			//newly saved jurney in store becomes active
+			return {
+				...state,
+				activeJourney:journey.id
 			}
 		}
 		default:

@@ -7,9 +7,19 @@ const mapStateToProps = (state, ownProps) => {
 	//console.log('JourneyContainer', state)
     //const { journeyId }  = ownProps.match.params;state,
 	const { journeys=[], homeJourney } = state.user;
+	let data;
+	if(state.system.activeJourney){
+		data = journeys.find(j => j._id === state.system.activeJourney);
+	}
+	else if(homeJourney){
+		data = journeys.find(j => j._id === homeJourney);
+	}
+	else{
+		data = journeys[0] //may be undefined
+	}
 	return{
 		//@todo - use activeJourney instead of homeJourney. It defaults to homeJourney on home page but user can overide.
-		data:journeys.find(j => j._id === homeJourney) || journeys[0], /*|| state.system.adhocJourney,*/ //may be undefined if user has no journeys
+		data,
 		availableJourneys:journeys,
 		screen:state.system.screen,
         width:state.system.screen.width,

@@ -63,6 +63,7 @@ export const InitialState = {
 			width:0,
 			height:0
 		},
+		activeJourney:"",
 		adhocJourney:{
 			id:"adhoc",
 			aims:[],
