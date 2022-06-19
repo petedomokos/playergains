@@ -375,6 +375,9 @@ export default function aimsComponent() {
                                     .onDragStart(dragGoalStart)
                                     .onDrag(draggedGoal)
                                     .onDragEnd(dragGoalEnd)
+                                    .onLongpressStart(longpressGoalStart)
+                                    .onLongpressDragged(longpressGoalDragged)
+                                    .onLongpressEnd(longpressGoalEnd)
 
                                     .onMouseover(onMouseoverGoal)
                                     .onMouseout(onMouseoutGoal)
@@ -524,6 +527,7 @@ export default function aimsComponent() {
         }
 
         function dragGoalStart(e , d){
+            console.log("drag goal start")
             //const s = Snap(this);
             //console.log("bbox", s.getBBox())
             //works - will use the inner circle
@@ -534,6 +538,7 @@ export default function aimsComponent() {
 
         }
         function draggedGoal(e , d, shouldUpdateSelected){
+            console.log("dragged goal")
             d.x += e.dx;
             d.y += e.dy;
 
@@ -550,10 +555,21 @@ export default function aimsComponent() {
             onDragGoal.call(this, e, { ...d, targetDate, yPC, unaligned:true }, shouldUpdateSelected)
         }
         function dragGoalEnd(e, d){
+            console.log("drag goal end")
             //we want aim width to transition in next update
             shouldTransitionAim = true;
             onDragGoalEnd.call(this, e, d);
         }
+
+        function longpressGoalStart(e, d) {
+        }
+    
+        function longpressGoalDragged(e, d) {
+        }
+    
+        function longpressGoalEnd(e, d) {
+        };
+    
 
         let planetGsStartingOutsideAim;
 

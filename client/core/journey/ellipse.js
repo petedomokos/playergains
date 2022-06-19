@@ -42,7 +42,8 @@ export function ellipse(selection, dispatch) {
                 g.insert("ellipse", "g.contents")
                     .attr("class", className)
                     .attr("id", className + "-" + d.id)
-                    .attr("cursor", "crosshair")
+                    .attr("pointer-events", "none")
+                    //.attr("cursor", "crosshair")
             }
             //update
             g.select("ellipse" +(className ? "."+className : "."))
@@ -64,6 +65,7 @@ export function ellipse(selection, dispatch) {
         selection.each(function(d){
             d3.select(this).select("ellipse" +(className ? "."+className : ""))
                 .attr("fill", fill(d, false))
+                /*
                 .on("mouseover", function(){ 
                     d3.select(this)
                         .transition()
@@ -74,6 +76,7 @@ export function ellipse(selection, dispatch) {
                         .transition()
                             .duration(200)
                             .attr("fill", fill(d, false)) })
+                            */
         })
     }
 
