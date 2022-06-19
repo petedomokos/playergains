@@ -42,6 +42,7 @@ export default function menuBarComponent() {
     };
 
     let importsAvailable = false;
+    let getItemsDraggable = d => true;
 
     //handlers
     let onNewItemButtonClick = () => {};
@@ -78,7 +79,7 @@ export default function menuBarComponent() {
         updateDimns();
         selection.each(function (data) {
             containerG = d3.select(this);
-            console.log("menubar data", data)
+            //console.log("menubar data", data)
             if(containerG.select("g.menu-bar-contents").empty()){
                 //enter
                 init.call(this);
@@ -129,6 +130,7 @@ export default function menuBarComponent() {
                     .each(function(d){
                         d3.select(this)
                             .call(profiles[d.id]
+                                .itemsDraggable(getItemsDraggable(data))
                                 .bgSettings({ fill: selected === d.id ? COLOURS.selectedBarMenuItem : COLOURS.barMenuItem })
                                 .width(itemWidth)
                                 .height(itemHeight)
@@ -137,7 +139,7 @@ export default function menuBarComponent() {
                                     dragged = undefined;
                                     clicked = d.id;
                                 })
-                                .onDragStart((e,d) => {
+                                .onDragStart(function(e,d){
                                     dragged = d.id;
                                     //cant rely on mouseover as may be touch
                                     //@todo - this is a problem as measure bg doesnt change colour as it does for mouseover
@@ -151,8 +153,10 @@ export default function menuBarComponent() {
                                     //or measure bar is closed or measurebackground clicked
                                     onItemDragStart.call(this, e, d)
                                 })
-                                .onDrag(onItemDrag)
-                                .onDragEnd((e,d) => {
+                                .onDrag(function(e,d){
+                                    onItemDrag.call(this, e, d);
+                                })
+                                .onDragEnd(function(e,d){
                                     //note - measure stays selected after drag until mouseout or another is clicked
                                     dragged = undefined;
                                     onItemDragEnd.call(this, e, d)
@@ -268,6 +272,11 @@ export default function menuBarComponent() {
     menuBar.height = function (value) {
         if (!arguments.length) { return height; }
         height = value;
+        return menuBar;
+    };
+    menuBar.getItemsDraggable = function (value) {
+        if (!arguments.length) { return getItemsDraggable; }
+        getItemsDraggable = value;
         return menuBar;
     };
     menuBar.onNewItemButtonClick = function (value) {

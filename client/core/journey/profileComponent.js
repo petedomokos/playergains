@@ -137,6 +137,7 @@ export default function profileComponent() {
         //only call dragEnd on end event if isDrag=true
 
         function dragStart(e,d){
+            if(!itemsDraggable) { return; }
             const { translateX, translateY } = getTransformation(d3.select(this))
             clonePos = [translateX, translateY];
             cloneG = d3.select(this)
@@ -151,12 +152,14 @@ export default function profileComponent() {
         }
 
         function dragged(e,d){
+            if(!itemsDraggable) { return; }
             clonePos = [clonePos[0] += e.dx, clonePos[1] += e.dy]
             cloneG.attr("transform", "translate(" +clonePos[0] +"," +clonePos[1] +")");
             onDrag.call(this, e, d)
         }
 
         function dragEnd(e,d){
+            if(!itemsDraggable) { return; }
             cloneG.remove();
             if(!withClick.isClick()){
                 onDragEnd.call(this, e, d);

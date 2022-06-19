@@ -751,6 +751,7 @@ export default function journeyComponent() {
                     .call(menuBar
                         .width(contentsWidth)
                         .height(menuBarHeight)
+                        .getItemsDraggable(d => d.key === "measures")
                         .openImportItemsComponent(() => {
                             //note - eventually will have option to pass in filter settings eg tags like fitness, or groupId
                             setModalData({ importing: true, filters:[] })
