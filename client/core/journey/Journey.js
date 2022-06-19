@@ -77,7 +77,8 @@ const initChannels = d3.range(numberMonths)
 
 //width and height may be full screen, but may not be
 const Journey = ({ data, availableJourneys, screen, width, height, save, closeDialog }) => {
-  console.log("Journey", data)
+  console.log("Journey data", data)
+  console.log("Journey avail", availableJourneys)
   const { _id, name, aims, goals, links, measures } = data;
   const [journey, setJourney] = useState(null);
   const [channels, setChannels] = useState(initChannels);
@@ -170,11 +171,13 @@ const Journey = ({ data, availableJourneys, screen, width, height, save, closeDi
       return;
     }
 
-    let barData = { displayedBar };
+    let menuBarData = { displayedBar };
     if(displayedBar === "journeys"){
-      barData = { ...barData, data: availableJourneys, hoverEnabled:false };
+      //On first load for a user with no saved journeys, this intial journey is not yet saved to store, so it wont be in availableJourneys, so we add it
+      const allUserJourneys = availableJourneys.length === 0 ? [ ...availableJourneys, data] : availableJourneys;
+      menuBarData = { ...menuBarData, data: allUserJourneys, hoverEnabled:false };
     }else if(displayedBar === "measures"){
-      barData = { ...barData, data: measures.filter(m => m.isOpen) }
+      menuBarData = { ...menuBarData, data: measures }
     }
 
     journey
@@ -182,8 +185,8 @@ const Journey = ({ data, availableJourneys, screen, width, height, save, closeDi
         .height(journeyHeight)
         .screen(screen)
         .withCompletionPaths(withCompletionPaths)
-        .barData(barData)
-        .measuresOpen(displayedBar === "measures" ? measures.filter(m => m.isOpen) : undefined)
+        .menuBarData(menuBarData)
+        .measuresOpen(displayedBar === "measures" ? measures : undefined)
         .modalData(modalData)
         .updateState(updates => {
             //can be used to update multiple items, only needed for aims, goals, links and measures
@@ -308,20 +311,9 @@ const Journey = ({ data, availableJourneys, screen, width, height, save, closeDi
   //for now, we just open or close all measures
   const toggleMeasuresOpen = useCallback((planetId) => {
       setDisplayedBar(prevState => prevState === "measures" ? "" : "measures");
-      //todo - if planetId, only close or open those on that planet
-      let _measures;
-      //@todo - why not just use the negation of current displayedBar?
-      const measuresAreOpen = !!measures.find(m => m.isOpen);
-      if(measuresAreOpen){
-          _measures = measures.map(m => ({ ...m, isOpen:false }));
-      }else{
-          //for now, open all measures
-          _measures = measures.map(m => ({ ...m, isOpen:true }));
-      }
-      save({ ...data, measures:_measures })
 }, [JSON.stringify(data)]);
 
-//for now, we just open or close all measures
+//for now, we just open or close all user's journeys
 const toggleJourneysOpen = useCallback(() => {
     setDisplayedBar(prevState => prevState === "journeys" ? "" : "journeys");
 }, [JSON.stringify(data)]);
@@ -331,16 +323,7 @@ const toggleJourneysOpen = useCallback(() => {
       //create a new journey, immediately save it to store and it will become the activeJourney
       // (but not to server yet until first change),
       setDisplayedBar("");
-      //todo - if planetId, only close or open those on that planet
-      let _measures;
-      const measuresAreOpen = !!measures.find(m => m.isOpen);
-      if(measuresAreOpen){
-          _measures = measures.map(m => ({ ...m, isOpen:false }));
-      }else{
-          //for now, open all measures
-          _measures = measures.map(m => ({ ...m, isOpen:true }));
-      }
-      save({ ...data, measures:_measures })
+
 }, [JSON.stringify(data)]);
 
   const onUpdatePlanetForm = modalType => (name, value) => {
@@ -375,7 +358,7 @@ const toggleJourneysOpen = useCallback(() => {
   const onSaveMeasureForm = (details, planetId, isNew) => {
       if(isNew){
         //any newly created measure from this form must be open as this form comes from the measures bar
-        addNewMeasure({ ...details, isOpen:true }, planetId)
+        addNewMeasure(details, planetId)
         setDisplayedBar("measures");
       }else{
         const _measures = updatedState(measures, details)
@@ -403,7 +386,7 @@ const toggleJourneysOpen = useCallback(() => {
       const { name, desc } = details;
       const newMeasureId = createId(measures.map(m => m.id));
       //name and desc are same for all planets where this measure is used
-      const _measures = [ ...data.measures, { id: newMeasureId, name, desc, isOpen:true }]
+      const _measures = [ ...data.measures, { id: newMeasureId, name, desc }]
       save({ ...data, measures:_measures })
       /*
       //@todo - use this

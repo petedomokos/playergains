@@ -60,8 +60,8 @@ export default function profileComponent() {
     let nameText;
     let descG;
     let descText;
-    let targsG;
-    let targsText;
+    //let targsG;
+    //let targsText;
 
     let prevData;
 
@@ -90,7 +90,7 @@ export default function profileComponent() {
         contentsG.attr("transform", "translate(" +margin.left +"," +margin.top +")")
         textContentsG.attr("transform", "translate(" +textMargin.left +"," +textMargin.top +")")
 
-        const { name="", desc="", targs=[] } = data;
+        const { name="unnamed", desc="", targs=[] } = data;
 
         withClick.onClick(onClick)
         const drag = d3.drag()
@@ -101,11 +101,11 @@ export default function profileComponent() {
         contentsG.call(drag);
 
         outerBgRect
-        .attr("width", width)
-        .attr("height", height)
-        .attr("fill",  outerBgSettings.fill)
-        .attr("stroke", outerBgSettings.stroke)
-        .attr("stroke-width", outerBgSettings.strokeWidth);
+            .attr("width", width)
+            .attr("height", height)
+            .attr("fill",  outerBgSettings.fill)
+            .attr("stroke", outerBgSettings.stroke)
+            .attr("stroke-width", outerBgSettings.strokeWidth);
 
         bgRect
             .attr("width", contentsWidth)
@@ -122,9 +122,11 @@ export default function profileComponent() {
             .attr("transform", "translate(0," +nameHeight +")")
             .text(desc);
 
+        /*
         targsText
             .attr("transform", "translate("+textContentsWidth/2 +"," +(textContentsHeight - targsHeight)+")")
             .text("targets");
+            */
 
         let cloneG;
         let clonePos;
@@ -143,7 +145,7 @@ export default function profileComponent() {
                 .attr("pointer-events", "none");
 
             cloneG.select("rect.bg")
-                .attr("fill", COLOURS.selectedMeasure) //need this as bgSettings havnt been changed yet at this point
+                .attr("fill", COLOURS.selectedBarMenuItem) //need this as bgSettings havnt been changed yet at this point
 
             onDragStart.call(this, e, d);
         }
@@ -185,12 +187,14 @@ export default function profileComponent() {
                 .attr("dominant-baseline", "hanging")
                 .attr("font-size", FONTSIZES.menuBarItem.desc);
 
+        /*
         targsG = textContentsG.append("g").attr("class", "targs");
         targsText = targsG
             .append("text")
                 .attr("text-anchor", "middle")
                 .attr("dominant-baseline", "central")
                 .attr("font-size", FONTSIZES.menuBarItem.targs);
+                */
 
         contentsG.selectAll("g").style("pointer-events", "none")
 

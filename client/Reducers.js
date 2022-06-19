@@ -31,15 +31,14 @@ export const user = (state=InitialState.user, act) =>{
 			return { ...state, ...act.user };
 		}
 		case C.SAVE_JOURNEY:{
-			//@todo - abstract this as it is repeated in SAVE_ADHOC_JOURNEY
 			const { journey } = act;
 			const currentJourney = state.journeys.find(j => j._id === journey._id);
 			if(!currentJourney){
 				//_id will be 'temp' here until saved on server
 				return {
 					...state,
-					journeys:[journey],
-					homeJourney:[journey._id]
+					journeys:[journey, ...state.journeys],
+					homeJourney:[journey._id] //for now, make it home, but this is temp fix
 				}
 			}
 			return {
@@ -54,7 +53,8 @@ export const user = (state=InitialState.user, act) =>{
 			return {
 				...state,
 				journeys:state.journeys.map(j => j._id === "temp" ? { ...j, _id } : j),
-				homeJourney:_id
+				//if homeJoureny is temp, its this one so update with actual id
+				homeJourney:homeJourney === "temp" ? _id : homeJourney
 			}
 		}
 		//OTHER USERS AND GROUPS
@@ -517,6 +517,14 @@ export const system = (state={}, act) => {
 			return {
 				...state,
 				journey:{ ...act.journey, measures:mockMeasures },
+			}
+		}
+		case C.SAVE_NEW_JOURNEY_ID:{
+			const { _id } = act;
+			//if temp, then it is this journey so update with its actual id
+			return {
+				...state,
+				activeJourney:activeJourney === "temp" ? _id : activeJourney
 			}
 		}
 		default:

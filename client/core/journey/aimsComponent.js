@@ -204,7 +204,7 @@ export default function aimsComponent() {
                                     y:contentsHeight / 2,
                                     fontSize,
                                     stroke:grey10(1),
-                                    name:name || (d.id === "main" ? "unnamed canvas" : "unnamed group")
+                                    name:name || (d.id === "main" ? "unnamed journey" : "unnamed group")
                                 }
                             })
                         }

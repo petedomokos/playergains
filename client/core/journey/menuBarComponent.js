@@ -1,7 +1,7 @@
 import * as d3 from 'd3';
 //import "d3-selection-multi";
 import { grey10, COLOURS, DIMNS, FONTSIZES } from "./constants";
-import measureProfileComponent from "./profileComponent";
+import profileComponent from "./profileComponent";
 /*
 
 */
@@ -65,7 +65,7 @@ export default function menuBarComponent() {
     let bgRect;
 
     //components
-    let measureProfiles = {};
+    let profiles = {};
 
     //state
     let selected;
@@ -78,7 +78,7 @@ export default function menuBarComponent() {
         updateDimns();
         selection.each(function (data) {
             containerG = d3.select(this);
-            //console.log("measures bar data", data)
+            console.log("menubar data", data)
             if(containerG.select("g.menu-bar-contents").empty()){
                 //enter
                 init.call(this);
@@ -117,18 +117,18 @@ export default function menuBarComponent() {
             importItemsBtnG
                 .attr("transform", "translate("+(contentsWidth - (btnWidth * 2) - btnGap) +",2.5)")
                 .attr("display", importsAvailable ? null : "none");
-            
+        
             const itemG = itemsG.selectAll("g.item").data(itemsData, m => m.id);
             itemG.enter()
                 .append("g")
                     .attr("class", "item")
                     .attr("pointer-events", "all")
-                    .each(function(d){ measureProfiles[d.id] = measureProfileComponent(); })
+                    .each(function(d){ profiles[d.id] = profileComponent(); })
                     .merge(itemG)
                     .attr("transform", (d,i) =>  "translate("+(i * itemWidth) +",0)")
                     .each(function(d){
                         d3.select(this)
-                            .call(measureProfiles[d.id]
+                            .call(profiles[d.id]
                                 .bgSettings({ fill: selected === d.id ? COLOURS.selectedBarMenuItem : COLOURS.barMenuItem })
                                 .width(itemWidth)
                                 .height(itemHeight)
@@ -152,7 +152,7 @@ export default function menuBarComponent() {
                                     onItemDragStart.call(this, e, d)
                                 })
                                 .onDrag(onItemDrag)
-                                .onItemDragEnd((e,d) => {
+                                .onDragEnd((e,d) => {
                                     //note - measure stays selected after drag until mouseout or another is clicked
                                     dragged = undefined;
                                     onItemDragEnd.call(this, e, d)
@@ -174,6 +174,8 @@ export default function menuBarComponent() {
                         //pass to journey to update planets
                         onUpdateSelected(undefined);
                     })
+
+            itemG.exit().remove();
 
         }
 

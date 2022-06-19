@@ -148,8 +148,9 @@ export default function journeyComponent() {
     let canvasWidth;
     let canvasHeight;
 
-    let measuresOpen;
     let menuBarData = {};
+    let measuresOpen;
+    let journeysOpen;
     let menuBarHeight;
 
     const widgetsX = 10;
@@ -159,7 +160,7 @@ export default function journeyComponent() {
         contentsWidth = width - margin.left - margin.right;
         contentsHeight = height - margin.top - margin.bottom;
         canvasWidth = contentsWidth;// * 5;
-        menuBarHeight = measuresOpen ? DIMNS.measures.height : 0
+        menuBarHeight = menuBarData.displayedBar ? DIMNS.menuBar.height : 0
         //note- for some reason, reducing canvasHeight doesnt seem to move axis properly, so instead just subtract menuBarHeight for axis translateY
         canvasHeight = contentsHeight;// - menuBarHeight; //this should be lrge enough for all planets, and rest can be accesed via pan
         widgetsY = canvasHeight - WIDGETS_HEIGHT - DIMNS.xAxis.height;
@@ -266,8 +267,7 @@ export default function journeyComponent() {
                     transitionUpdate:!(changed === "zoom")
                 }
             }
-            //console.log("measuresbarh", menuBarHeight)
-            //console.log("journey update", selectedPending)
+
             svg
                 .attr("width", width)
                 .attr("height", height)
@@ -438,7 +438,7 @@ export default function journeyComponent() {
                 aims
                     .view(getView())
                     .selected(selected)
-                    .selectedMeasure(measuresOpen?.find(m => m.id === bar.selected()))
+                    .selectedMeasure(measuresOpen?.find(m => m.id === menuBar.selected()))
                     .contentsToShow(aim => modalData?.d.id === aim.id ? "none" : "basic")
                     .goalContentsToShow(g => modalData?.d.id === g.id ? "none" : "basic")
                     .timeScale(zoomedTimeScale)
@@ -643,7 +643,7 @@ export default function journeyComponent() {
                 //component
                 links
                     .withCompletion(withCompletionPaths)
-                    .selectedMeasure(measuresOpen?.find(m => m.id === bar.selected()))
+                    .selectedMeasure(measuresOpen?.find(m => m.id === menuBar.selected()))
                     .yScale(zoomedYScale)
                     //.timeScale(timeScale)
                     .timeScale(zoomedTimeScale)
@@ -738,12 +738,9 @@ export default function journeyComponent() {
             }
 
             let prevDraggedOverPlanet;
-            let goalIsAvailable = () => {};
             let menuItemWasMoved = false;
-            //const goalContainsMeasure = measure => goal => !!goal.measures.find(m => m.id === measure.id);
-            //let goalIsAvailable;
+
             const menuBarG = contentsG.selectAll("g.menu-bar").data(displayedMenuBarData, d => d.key)
-            //const menuBarG = contentsG.selectAll("g.menu-bar").data(measuresOpen ? [measuresData] : [])
             menuBarG.enter()
                 .append("g")
                     .attr("class", "menu-bar")
@@ -950,7 +947,7 @@ export default function journeyComponent() {
 
             //open name form too, but as selected rather than editing
             const measureIsOnPlanet = d.dataType === "planet"? d.measures.find(d => d.id === bar.selected()) : false;
-            const measure = measureIsOnPlanet && measuresOpen?.find(m => m.id === bar.selected());
+            const measure = measureIsOnPlanet && measuresOpen?.find(m => m.id === menuBar.selected());
             //could be an aim or a planet
             const modalData = measure ? { d, measure, nameAndTargOnly: true } : { d, nameOnly:true };
             setModalData(modalData);
@@ -1090,7 +1087,10 @@ export default function journeyComponent() {
     };
     journey.menuBarData = function (value) {
         if (!arguments.length) { return menuBarData; }
+        const { displayedBar, data } = value;
         menuBarData = value;
+        measuresOpen = displayedBar === "measures" ? data : undefined;
+        journeysOpen = displayedBar === "journeys" ? data : undefined;
         return journey;
     };
     journey.measuresOpen = function (value) {
